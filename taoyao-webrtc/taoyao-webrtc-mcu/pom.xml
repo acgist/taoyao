@@ -13,9 +13,14 @@
 	<artifactId>taoyao-webrtc-mcu</artifactId>
 	<packaging>jar</packaging>
 
-	<name>WebRTC MCU架构实现</name>
+	<name>taoyao-webrtc-mcu</name>
 	<description>WebRTC MCU架构实现</description>
 
-	<dependencies></dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-webrtc-mix</artifactId>
+		</dependency>
+	</dependencies>
 
 </project>

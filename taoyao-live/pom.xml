@@ -13,9 +13,14 @@
 	<artifactId>taoyao-live</artifactId>
 	<packaging>jar</packaging>
 
-	<name>直播</name>
-	<description>直播、连麦</description>
+	<name>taoyao-live</name>
+	<description>直播：直播、连麦</description>
 
-	<dependencies></dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+	</dependencies>
 
 </project>

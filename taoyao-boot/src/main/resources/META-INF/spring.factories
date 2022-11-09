@@ -1,0 +1,4 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.acgist.taoyao.boot.config.BootAutoConfiguration,\
+com.acgist.taoyao.boot.config.OpenApiAutoConfiguration,\
+com.acgist.taoyao.boot.config.WebMvcConfigurerAutoConfiguration

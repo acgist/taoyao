@@ -13,7 +13,7 @@
 	<artifactId>taoyao-webrtc-mesh</artifactId>
 	<packaging>jar</packaging>
 
-	<name>WebRTC MESH架构实现</name>
+	<name>taoyao-webrtc-mesh</name>
 	<description>WebRTC MESH架构实现</description>
 
 	<dependencies></dependencies>

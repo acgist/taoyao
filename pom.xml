@@ -16,15 +16,16 @@
 	<packaging>pom</packaging>
 
 	<url>https://gitee.com/acgist/taoyao</url>
-	<name>桃夭</name>
-	<description>基于WebRTC实现信令服务，实现Mesh、MCU和SFU三种媒体通信架构，支持直播会议两种场景。</description>
+	<name>taoyao</name>
+	<description>桃夭：基于WebRTC实现信令服务，实现Mesh、MCU和SFU三种媒体通信架构，支持直播会议两种场景。</description>
 	<inceptionYear>2022</inceptionYear>
 
 	<properties>
 		<!-- 版本 -->
 		<java.version>17</java.version>
 		<lombok.version>1.18.24</lombok.version>
-		<springfox.version>3.0.0</springfox.version>
+		<webrtc.version>1.0.32006</webrtc.version>
+		<springdoc.version>1.6.12</springdoc.version>
 		<mapstruct.version>1.5.3.Final</mapstruct.version>
 		<collections4.version>4.4</collections4.version>
 		<!-- 配置 -->
@@ -35,8 +36,8 @@
 
 	<modules>
 		<module>taoyao-nat</module>
+		<module>taoyao-boot</module>
 		<module>taoyao-live</module>
-		<module>taoyao-model</module>
 		<module>taoyao-media</module>
 		<module>taoyao-client</module>
 		<module>taoyao-signal</module>
@@ -46,6 +47,20 @@
 	</modules>
 
 	<dependencies>
+		<!-- 快速开发 -->
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct-processor</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+		<!-- 工具 -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
@@ -53,6 +68,30 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-collections4</artifactId>
+		</dependency>
+		<!-- Jackson -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
+		<!-- AOP -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+		<!-- 自动配置 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-autoconfigure</artifactId>
+		</dependency>
+		<!-- 日志框架 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-logging</artifactId>
 		</dependency>
 
 		<dependency>
@@ -71,12 +110,12 @@
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-live</artifactId>
+				<artifactId>taoyao-boot</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-model</artifactId>
+				<artifactId>taoyao-live</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -121,30 +160,19 @@
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-webrtc-mesh</artifactId>
+				<artifactId>taoyao-webrtc-mix</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-webrtc-native</artifactId>
+				<artifactId>taoyao-webrtc-mesh</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			<!-- mapstruct -->
+			<!-- WebRTC -->
 			<dependency>
-				<groupId>org.mapstruct</groupId>
-				<artifactId>mapstruct</artifactId>
-				<version>${mapstruct.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.mapstruct</groupId>
-				<artifactId>mapstruct-processor</artifactId>
-				<version>${mapstruct.version}</version>
-			</dependency>
-			<!-- lombok -->
-			<dependency>
-				<groupId>org.projectlombok</groupId>
-				<artifactId>lombok</artifactId>
-				<version>${lombok.version}</version>
+				<groupId>org.webrtc</groupId>
+				<artifactId>google-webrtc</artifactId>
+				<version>${webrtc.version}</version>
 			</dependency>
 			<!-- 集合工具 -->
 			<dependency>
@@ -152,11 +180,25 @@
 				<artifactId>commons-collections4</artifactId>
 				<version>${collections4.version}</version>
 			</dependency>
-			<!-- 文档 -->
+			<!-- mapstruct -->
 			<dependency>
-				<groupId>io.springfox</groupId>
-				<artifactId>springfox-boot-starter</artifactId>
-				<version>${springfox.version}</version>
+				<groupId>org.mapstruct</groupId>
+				<artifactId>mapstruct</artifactId>
+				<version>${mapstruct.version}</version>
+				<scope>provided</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mapstruct</groupId>
+				<artifactId>mapstruct-processor</artifactId>
+				<version>${mapstruct.version}</version>
+				<scope>provided</scope>
+			</dependency>
+			<!-- lombok -->
+			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${lombok.version}</version>
+				<scope>provided</scope>
 			</dependency>
 		</dependencies>
 	</dependencyManagement>
@@ -199,10 +241,6 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
 			</plugin>
 		</plugins>
 
@@ -281,6 +319,15 @@
 					</plugin>
 				</plugins>
 			</build>
+			<dependencyManagement>
+				<dependencies>
+					<dependency>
+						<groupId>org.springdoc</groupId>
+						<artifactId>springdoc-openapi-ui</artifactId>
+						<version>${springdoc.version}</version>
+					</dependency>
+				</dependencies>
+			</dependencyManagement>
 		</profile>
 		<profile>
 			<id>test</id>
@@ -305,9 +352,9 @@
 			<dependencyManagement>
 				<dependencies>
 					<dependency>
-						<groupId>io.springfox</groupId>
-						<artifactId>springfox-boot-starter</artifactId>
-						<version>${springfox.version}</version>
+						<groupId>org.springdoc</groupId>
+						<artifactId>springdoc-openapi-ui</artifactId>
+						<version>${springdoc.version}</version>
 						<scope>provided</scope>
 					</dependency>
 				</dependencies>
@@ -336,9 +383,9 @@
 			<dependencyManagement>
 				<dependencies>
 					<dependency>
-						<groupId>io.springfox</groupId>
-						<artifactId>springfox-boot-starter</artifactId>
-						<version>${springfox.version}</version>
+						<groupId>org.springdoc</groupId>
+						<artifactId>springdoc-openapi-ui</artifactId>
+						<version>${springdoc.version}</version>
 						<scope>provided</scope>
 					</dependency>
 				</dependencies>

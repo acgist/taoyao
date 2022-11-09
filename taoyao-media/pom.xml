@@ -13,8 +13,8 @@
 	<artifactId>taoyao-media</artifactId>
 	<packaging>jar</packaging>
 
-	<name>媒体</name>
-	<description>录制、视频（美颜、AI识别）、音频（混音、变声）</description>
+	<name>taoyao-media</name>
+	<description>媒体：录制、视频（美颜、AI识别）、音频（混音、变声）</description>
 
 	<dependencies></dependencies>
 

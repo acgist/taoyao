@@ -1,0 +1,2 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.acgist.taoyao.signal.config.SignalAutoConfiguration

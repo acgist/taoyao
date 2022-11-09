@@ -13,14 +13,14 @@
 	<artifactId>taoyao-webrtc</artifactId>
 	<packaging>pom</packaging>
 
-	<name>WebRTC模块</name>
+	<name>taoyao-webrtc</name>
 	<description>WebRTC模块</description>
 
 	<modules>
 		<module>taoyao-webrtc-sfu</module>
 		<module>taoyao-webrtc-mcu</module>
+		<module>taoyao-webrtc-mix</module>
 		<module>taoyao-webrtc-mesh</module>
-		<module>taoyao-webrtc-native</module>
 	</modules>
-
+	
 </project>

@@ -7,19 +7,19 @@
 |模块|名称|描述|
 |:--|:--|:--|
 |taoyao|桃夭|桃之夭夭灼灼其华|
-|taoyao-nat|内网穿透|STUN/TURN暂不实现（公共服务或者搭建coturn服务）|
+|taoyao-nat|内网穿透|STUN/TURN暂不实现（请用公共服务或者搭建coturn服务）|
+|taoyao-boot|基础|启动模块|
 |taoyao-live|直播|直播、连麦|
-|taoyao-model|模型|数据模型|
 |taoyao-media|媒体|录制、视频（美颜、AI识别）、音频（混音、变声）|
-|taoyao-client|终端|帐号、摄像头|
+|taoyao-client|终端|帐号（移动端|浏览器）、摄像头|
 |taoyao-signal|信令|信令服务|
 |taoyao-server|服务|启动服务|
 |taoyao-meeting|会议|会议模式、广播模式、单人对讲|
 |taoyao-webrtc|WebRTC模块||
 |taoyao-webrtc-sfu|WebRTC SFU架构实现||
 |taoyao-webrtc-mcu|WebRTC MCU架构实现||
+|taoyao-webrtc-mix|WebRTC混合|MCU/SFU混合媒体服务|
 |taoyao-webrtc-mesh|WebRTC MESH架构实现||
-|taoyao-webrtc-native|WebRTC底层实现|MCU/SFU底层媒体服务|
 
 ## STUN/TURN公共服务
 
@@ -33,7 +33,7 @@ stun:stun.stunprotocol.org:3478
 
 ## 终端
 
-帐号可以管理媒体，摄像头只能被动管理。
+帐号（移动端|浏览器）可以管理媒体，摄像头只能被动管理。
 
 ### 功能
 
@@ -69,3 +69,9 @@ MAC
 ## 会议
 
 ## 
+
+## 证书
+
+```
+keytool -genkeypair -keyalg RSA -dname "CN=localhost, OU=acgist, O=taoyao, L=GZ, ST=GD, C=CN" -alias taoyao -validity 3650 -ext ku:c=dig,keyE -ext eku=serverAuth -ext SAN=dns:localhost,ip:127.0.0.1 -keystore taoyao.jks -keypass 123456 -storepass 123456
+```

@@ -29,7 +29,6 @@ if [ ! -d "$base/../deploy/${project.artifactId}" ]; then
 fi
 # 拷贝文件
 cp -rf ${project.basedir}/target/${project.artifactId}-${project.version}/* $base/../deploy/${project.artifactId}
-cp -rf ${project.basedir}/target/${project.artifactId}-${project.version}.jar $base/../deploy/${project.artifactId}
 
 # 启动服务
 cd $base/../deploy/${project.artifactId}

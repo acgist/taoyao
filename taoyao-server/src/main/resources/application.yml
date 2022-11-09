@@ -1,0 +1,31 @@
+server:
+  port: 8888
+  ssl:
+    key-alias: taoyao
+    key-store: classpath:taoyao.jks
+    key-store-password: 123456
+    key-password: 123456
+spring:
+  profiles:
+    active: dev
+  application:
+    name: taoyao-server
+  jackson:
+    time-zone: GMT+8
+  servlet:
+    multipart:
+      max-file-size: 256MB
+      max-request-size: 256MB
+taoyao:
+  url: https://gitee.com/acgist/taoyao
+  name: 桃夭
+  timeout: 5000
+  version: 1.0.0
+  description: WebRTC信令服务
+  security:
+    realm: taoyao
+    permit: /v3/api-docs/,/swagger-ui/,/error
+    username:
+    password:
+  scheduled:
+    session: 0 * * * * ?

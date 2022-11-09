@@ -13,14 +13,65 @@
 	<artifactId>taoyao-server</artifactId>
 	<packaging>jar</packaging>
 
-	<name>服务</name>
-	<description>启动服务</description>
+	<name>taoyao-server</name>
+	<description>服务：启动服务</description>
+
+	<properties>
+		<system.maven.basedir>${project.parent.basedir}</system.maven.basedir>
+		<system.maven.skip.assembly>false</system.maven.skip.assembly>
+	</properties>
 
 	<dependencies>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-live</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-client</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-signal</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-meeting</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-webrtc-sfu</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-webrtc-mcu</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-webrtc-mesh</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
 		</dependency>
 	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<mainClass>com.acgist.taoyao.TaoyaoApplication</mainClass>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>./</classpathPrefix>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
 
 </project>

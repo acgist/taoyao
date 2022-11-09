@@ -13,9 +13,19 @@
 	<artifactId>taoyao-meeting</artifactId>
 	<packaging>jar</packaging>
 
-	<name>会议</name>
-	<description>会议模式、广播模式、单人对讲</description>
+	<name>taoyao-meeting</name>
+	<description>会议：会议模式、广播模式、单人对讲</description>
 
-	<dependencies></dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
+			<optional>true</optional>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+	</dependencies>
 
 </project>

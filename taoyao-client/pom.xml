@@ -10,12 +10,21 @@
 		<version>1.0.0</version>
 	</parent>
 
-	<artifactId>taoyao-model</artifactId>
+	<artifactId>taoyao-client</artifactId>
 	<packaging>jar</packaging>
 
-	<name>模型</name>
-	<description>数据模型</description>
+	<name>taoyao-client</name>
+	<description>终端：帐号（移动端|浏览器）、摄像头</description>
 
-	<dependencies></dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-boot</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+	</dependencies>
 
 </project>

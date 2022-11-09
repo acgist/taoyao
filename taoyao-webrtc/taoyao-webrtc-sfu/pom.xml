@@ -13,9 +13,14 @@
 	<artifactId>taoyao-webrtc-sfu</artifactId>
 	<packaging>jar</packaging>
 
-	<name>WebRTC SFU架构实现</name>
+	<name>taoyao-webrtc-sfu</name>
 	<description>WebRTC SFU架构实现</description>
 
-	<dependencies></dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-webrtc-mix</artifactId>
+		</dependency>
+	</dependencies>
 
 </project>
