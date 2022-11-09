@@ -15,9 +15,6 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "taoyao")
 public class TaoyaoProperties {
 	
-	private TaoyaoProperties() {
-	}
-
 	/**
 	 * 地址
 	 */

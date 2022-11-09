@@ -6,6 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.acgist.taoyao.boot.utils.JSONUtils;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,6 +19,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@Schema(name = "响应消息", description = "HTTP响应消息")
 public class Message<T> implements Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -25,14 +27,17 @@ public class Message<T> implements Serializable {
 	/**
 	 * 响应编码
 	 */
+	@Schema(name = "响应编码", description = "0000表示成功其他都是失败")
 	private String code;
 	/**
 	 * 响应描述
 	 */
+	@Schema(name = "响应描述", description = "响应编码描述")
 	private String message;
 	/**
-	 * 消息内容
+	 * 响应内容
 	 */
+	@Schema(name = "响应内容", description = "响应内容")
 	private T body;
 
 	/**
@@ -49,7 +54,7 @@ public class Message<T> implements Serializable {
 	/**
 	 * 成功消息
 	 * 
-	 * @param <T>  消息类型
+	 * @param <T> 消息类型
 	 * 
 	 * @param body 消息内容
 	 * 
@@ -77,7 +82,7 @@ public class Message<T> implements Serializable {
 	/**
 	 * 错误消息
 	 * 
-	 * @param <T>     消息类型
+	 * @param <T> 消息类型
 	 * 
 	 * @param message 消息内容
 	 * 
@@ -90,7 +95,7 @@ public class Message<T> implements Serializable {
 	/**
 	 * 错误消息
 	 * 
-	 * @param <T>  消息类型
+	 * @param <T> 消息类型
 	 * 
 	 * @param code 错误编码
 	 * 
@@ -103,9 +108,9 @@ public class Message<T> implements Serializable {
 	/**
 	 * 错误消息
 	 * 
-	 * @param <T>     消息类型
+	 * @param <T> 消息类型
 	 * 
-	 * @param code    错误编码
+	 * @param code 错误编码
 	 * @param message 错误描述
 	 * 
 	 * @return 错误消息
@@ -124,7 +129,7 @@ public class Message<T> implements Serializable {
 	/**
 	 * 错误消息
 	 * 
-	 * @param <T>  消息类型
+	 * @param <T> 消息类型
 	 * 
 	 * @param code 错误编码
 	 * @param body 消息内容
@@ -142,11 +147,11 @@ public class Message<T> implements Serializable {
 	/**
 	 * 错误消息
 	 * 
-	 * @param <T>     消息类型
+	 * @param <T> 消息类型
 	 * 
-	 * @param code    错误编码
+	 * @param code 错误编码
 	 * @param message 错误描述
-	 * @param body    消息内容
+	 * @param body 消息内容
 	 * 
 	 * @return 错误消息
 	 */

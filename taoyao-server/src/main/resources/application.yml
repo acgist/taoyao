@@ -5,6 +5,12 @@ server:
     key-store: classpath:taoyao.jks
     key-store-password: 123456
     key-password: 123456
+  tomcat:
+    remoteip:
+      host-header: X-Forwarded-Host
+      port-header: X-Forwarded-Port
+      protocol-header: X-Forwarded-Proto
+      remote-ip-header: X-Forwarded-For
 spring:
   profiles:
     active: dev
@@ -16,12 +22,33 @@ spring:
     multipart:
       max-file-size: 256MB
       max-request-size: 256MB
+  task:
+    execution:
+      pool:
+        core-size: 8
+        max-size: 128
+        keep-alive: 60s
+        queue-capacity: 100000
+        allow-core-thread-timeout: true
+      shutdown:
+        await-termination: true
+        await-termination-period: 60s
+      thread-name-prefix: ${spring.application.name}-
+    scheduling:
+      pool:
+        size: 4
+      shutdown:
+        await-termination: true
+        await-termination-period: 60s
+      thread-name-prefix: ${spring.application.name}-scheduling-
 taoyao:
   url: https://gitee.com/acgist/taoyao
   name: 桃夭
   timeout: 5000
   version: 1.0.0
   description: WebRTC信令服务
+  webrtc:
+    type: 
   security:
     realm: taoyao
     permit: /v3/api-docs/,/swagger-ui/,/error

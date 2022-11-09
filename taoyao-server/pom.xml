@@ -64,7 +64,7 @@
 				<configuration>
 					<archive>
 						<manifest>
-							<mainClass>com.acgist.taoyao.TaoyaoApplication</mainClass>
+							<mainClass>com.acgist.taoyao.main.TaoyaoApplication</mainClass>
 							<addClasspath>true</addClasspath>
 							<classpathPrefix>./</classpathPrefix>
 						</manifest>

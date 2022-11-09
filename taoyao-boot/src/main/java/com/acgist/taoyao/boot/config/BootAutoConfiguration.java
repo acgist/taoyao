@@ -66,15 +66,12 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Order(Ordered.HIGHEST_PRECEDENCE)
-@Import({
-	TaskExecutionAutoConfiguration.class,
-	TaskSchedulingAutoConfiguration.class
-})
+@Import({ TaskExecutionAutoConfiguration.class, TaskSchedulingAutoConfiguration.class })
 @EnableAsync
 @Configuration
 @EnableScheduling
 @EnableAspectJAutoProxy(exposeProxy = true)
-@EnableConfigurationProperties({ TaoyaoProperties.class, SecurityProperties.class })
+@EnableConfigurationProperties({ TaoyaoProperties.class, WebrtcProperties.class, SecurityProperties.class })
 public class BootAutoConfiguration {
 
 	@Value("${spring.application.name:taoyao}")

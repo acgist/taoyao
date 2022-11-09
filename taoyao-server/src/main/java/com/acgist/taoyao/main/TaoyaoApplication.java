@@ -1,4 +1,4 @@
-package com.acgist.taoyao;
+package com.acgist.taoyao.main;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
