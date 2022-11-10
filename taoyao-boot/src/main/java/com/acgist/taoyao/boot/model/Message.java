@@ -7,61 +7,88 @@ import org.apache.commons.lang3.StringUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * 响应消息
+ * 消息
  * 
  * @author acgist
- *
- * @param <T> 消息类型
  */
 @Getter
 @Setter
-@Schema(name = "响应消息", description = "HTTP响应消息")
-public class Message<T> implements Serializable {
+@Schema(name = "消息", description = "请求响应消息")
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Message implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	/**
 	 * 响应编码
 	 */
-	@Schema(name = "响应编码", description = "0000表示成功其他都是失败")
+	@Schema(name = "响应编码", description = "响应消息标识响应状态")
 	private String code;
 	/**
 	 * 响应描述
 	 */
-	@Schema(name = "响应描述", description = "响应编码描述")
+	@Schema(name = "响应描述", description = "响应消息描述响应编码")
 	private String message;
 	/**
-	 * 响应内容
+	 * 请求响应头部
 	 */
-	@Schema(name = "响应内容", description = "响应内容")
-	private T body;
+	@Schema(name = "请求响应头部", description = "请求响应头部")
+	private Header header;
+	/**
+	 * 请求响应主体
+	 */
+	@Schema(name = "请求响应主体", description = "请求响应主体")
+	private Object body;
+	
+	/**
+	 * @param code 状态编码
+	 * 
+	 * @return this
+	 */
+	public Message setCode(MessageCode code) {
+		this.code = code.getCode();
+		this.message = code.getMessage();
+		return this;
+	}
+	
+	/**
+	 * @param code 状态编码
+	 * @param message
+	 * 
+	 * @return this
+	 */
+	public Message setCode(MessageCode code, String message) {
+		if(StringUtils.isEmpty(message)) {
+			message = code.getMessage();
+		}
+		this.code = code.getCode();
+		this.message = message;
+		return this;
+	}
 
 	/**
-	 * 成功消息
-	 * 
-	 * @param <T> 消息类型
-	 * 
 	 * @return 成功消息
 	 */
-	public static final <T> Message<T> success() {
+	public static final Message success() {
 		return success(null);
 	}
 
 	/**
-	 * 成功消息
-	 * 
-	 * @param <T> 消息类型
-	 * 
-	 * @param body 消息内容
+	 * @param body 主体
 	 * 
 	 * @return 成功消息
 	 */
-	public static final <T> Message<T> success(T body) {
-		final Message<T> message = new Message<>();
+	public static final Message success(Object body) {
+		final Message message = new Message();
 		message.code = MessageCode.CODE_0000.getCode();
 		message.message = MessageCode.CODE_0000.getMessage();
 		message.body = body;
@@ -69,94 +96,65 @@ public class Message<T> implements Serializable {
 	}
 
 	/**
-	 * 错误消息
-	 * 
-	 * @param <T> 消息类型
-	 * 
 	 * @return 错误消息
 	 */
-	public static final <T> Message<T> fail() {
-		return fail(MessageCode.CODE_9999);
+	public static final Message fail() {
+		return fail(null, null, null);
 	}
 
 	/**
-	 * 错误消息
-	 * 
-	 * @param <T> 消息类型
-	 * 
-	 * @param message 消息内容
+	 * @param message 主体
 	 * 
 	 * @return 错误消息
 	 */
-	public static final <T> Message<T> fail(String message) {
-		return fail(MessageCode.CODE_9999, message);
+	public static final Message fail(String message) {
+		return fail(null, message, null);
 	}
 
 	/**
-	 * 错误消息
-	 * 
-	 * @param <T> 消息类型
-	 * 
-	 * @param code 错误编码
+	 * @param code 响应编码
 	 * 
 	 * @return 错误消息
 	 */
-	public static final <T> Message<T> fail(MessageCode code) {
-		return fail(code, null);
+	public static final Message fail(MessageCode code) {
+		return fail(code, null, null);
 	}
 
 	/**
-	 * 错误消息
-	 * 
-	 * @param <T> 消息类型
-	 * 
-	 * @param code 错误编码
-	 * @param message 错误描述
+	 * @param code 响应编码
+	 * @param message 响应描述
 	 * 
 	 * @return 错误消息
 	 */
-	public static final <T> Message<T> fail(MessageCode code, String message) {
-		final Message<T> failMessage = new Message<>();
-		failMessage.code = code.getCode();
-		if (StringUtils.isEmpty(message)) {
-			failMessage.message = code.getMessage();
-		} else {
-			failMessage.message = message;
+	public static final Message fail(MessageCode code, String message) {
+		return fail(code, message, null);
+	}
+
+	/**
+	 * @param code 响应编码
+	 * @param body 主体
+	 * 
+	 * @return 错误消息
+	 */
+	public static final Message fail(MessageCode code, Object body) {
+		return fail(code, null, body);
+	}
+
+	/**
+	 * @param code 响应编码
+	 * @param message 响应描述
+	 * @param body 主体
+	 * 
+	 * @return 错误消息
+	 */
+	public static final Message fail(MessageCode code, String message, Object body) {
+		if(code == null) {
+			code = MessageCode.CODE_9999;
 		}
-		return failMessage;
-	}
-
-	/**
-	 * 错误消息
-	 * 
-	 * @param <T> 消息类型
-	 * 
-	 * @param code 错误编码
-	 * @param body 消息内容
-	 * 
-	 * @return 错误消息
-	 */
-	public static final <T> Message<T> fail(MessageCode code, T body) {
-		final Message<T> message = new Message<>();
-		message.code = code.getCode();
-		message.message = code.getMessage();
-		message.body = body;
-		return message;
-	}
-
-	/**
-	 * 错误消息
-	 * 
-	 * @param <T> 消息类型
-	 * 
-	 * @param code 错误编码
-	 * @param message 错误描述
-	 * @param body 消息内容
-	 * 
-	 * @return 错误消息
-	 */
-	public static final <T> Message<T> fail(MessageCode code, String message, T body) {
-		final Message<T> failMessage = new Message<>();
+		if (StringUtils.isEmpty(message)) {
+			message = code.getMessage();
+		}
+		final Message failMessage = new Message();
 		failMessage.code = code.getCode();
 		failMessage.message = message;
 		failMessage.body = body;

@@ -18,14 +18,23 @@ import lombok.Setter;
 public class WebrtcProperties {
 
 	/**
-	 * 类型
+	 * 架构类型
 	 * 
 	 * @author acgist
 	 */
 	public enum Type {
 		
+		/**
+		 * SFU架构
+		 */
 		SFU,
+		/**
+		 * MCU架构
+		 */
 		MCU,
+		/**
+		 * MESH架构
+		 */
 		MESH;
 		
 	}
@@ -33,7 +42,15 @@ public class WebrtcProperties {
 	/**
 	 * 类型
 	 */
-	@Schema(name = "类型", description = "WebRTC媒体架构")
+	@Schema(name = "架构类型", description = "WebRTC架构类型")
 	private Type type;
+	/**
+	 * stun服务器
+	 */
+	private String[] stun;
+	/**
+	 * turn服务器
+	 */
+	private String[] turn;
 	
 }

@@ -19,7 +19,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-webrtc-mix</artifactId>
+			<artifactId>taoyao-webrtc-jni</artifactId>
 		</dependency>
 	</dependencies>
 

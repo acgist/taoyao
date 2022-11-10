@@ -51,6 +51,8 @@ import com.acgist.taoyao.boot.controller.TaoyaoControllerAdvice;
 import com.acgist.taoyao.boot.controller.TaoyaoErrorController;
 import com.acgist.taoyao.boot.interceptor.SecurityInterceptor;
 import com.acgist.taoyao.boot.model.MessageCode;
+import com.acgist.taoyao.boot.service.IdService;
+import com.acgist.taoyao.boot.service.impl.IdServiceImpl;
 import com.acgist.taoyao.boot.utils.ErrorUtils;
 import com.acgist.taoyao.boot.utils.FileUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
@@ -79,6 +81,12 @@ public class BootAutoConfiguration {
 	
 	@Autowired
 	private ApplicationContext context;
+	
+	@Bean
+	@ConditionalOnMissingBean
+	public IdService idService() {
+		return new IdServiceImpl();
+	}
 	
 	@Bean
 	@Primary

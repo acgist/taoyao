@@ -14,7 +14,7 @@
 	<packaging>jar</packaging>
 
 	<name>taoyao-net</name>
-	<description>内网穿透：STUN/TURN暂不实现（请用公共服务或者搭建coturn服务）</description>
+	<description>内网穿透：STUN/TURN</description>
 
 	<dependencies></dependencies>
 

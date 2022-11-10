@@ -28,10 +28,6 @@
 		</dependency>
 		<dependency>
 			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-client</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.acgist</groupId>
 			<artifactId>taoyao-signal</artifactId>
 		</dependency>
 		<dependency>

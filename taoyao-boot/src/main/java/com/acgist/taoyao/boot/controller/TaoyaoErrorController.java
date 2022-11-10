@@ -24,7 +24,7 @@ public class TaoyaoErrorController implements ErrorController {
 
 	@Operation(summary = "统一错误地址", description = "全局统一错误地址")
 	@RequestMapping(value = ErrorUtils.ERROR_PATH)
-	public Message<String> index(HttpServletRequest request, HttpServletResponse response) {
+	public Message index(HttpServletRequest request, HttpServletResponse response) {
 		return ErrorUtils.message(request, response);
 	}
 

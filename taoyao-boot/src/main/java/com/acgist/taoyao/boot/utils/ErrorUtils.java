@@ -76,7 +76,7 @@ public final class ErrorUtils {
 	 * 
 	 * @return 错误信息
 	 */
-	public static final Message<String> message(HttpServletRequest request, HttpServletResponse response) {
+	public static final Message message(HttpServletRequest request, HttpServletResponse response) {
 		return message(null, request, response);
 	}
 	
@@ -87,11 +87,11 @@ public final class ErrorUtils {
 	 * 
 	 * @return 错误信息
 	 */
-	public static final Message<String> message(Throwable t, HttpServletRequest request, HttpServletResponse response) {
-		final Message<String> message;
+	public static final Message message(Throwable t, HttpServletRequest request, HttpServletResponse response) {
+		final Message message;
 		int status = globalStatus(request, response);
 		final Object globalError = t == null ? globalError(request) : t;
-		final Object rootError = ExceptionUtils.root(globalError);
+		final Object rootError = rootException(globalError);
 		if(rootError instanceof MessageCodeException) {
 			// 自定义的异常
 			final MessageCodeException messageCodeException = (MessageCodeException) rootError;
@@ -218,6 +218,37 @@ public final class ErrorUtils {
 			return message;
 		}
 		return messageCode.getMessage();
+	}
+	
+	/**
+	 * @param t 异常
+	 * 
+	 * @return 原始异常
+	 * 
+	 * @see #rootException(Throwable)
+	 */
+	public static final Object rootException(Object t) {
+		if(t instanceof Throwable) {
+			return rootException((Throwable) t);
+		}
+		return t;
+	}
+
+	/**
+	 * @param t 异常
+	 * 
+	 * @return 原始异常
+	 */
+	public static final Throwable rootException(Throwable t) {
+		Throwable cause = t;
+		do {
+			// 直接返回状态编码异常
+			if(cause instanceof MessageCodeException) {
+				return cause;
+			}
+		} while(cause != null && (cause = cause.getCause()) != null);
+		// 返回原始异常
+		return t;
 	}
 	
 }

@@ -46,7 +46,7 @@ public class SecurityInterceptor implements HandlerInterceptor {
 	/**
 	 * @param request 请求
 	 * 
-	 * @return 是否公共请求
+	 * @return 是否许可请求
 	 */
 	private boolean permit(HttpServletRequest request) {
 		final String uri = request.getRequestURI();
@@ -54,8 +54,8 @@ public class SecurityInterceptor implements HandlerInterceptor {
 			return false;
 		}
 		for (String permit : this.securityProperties.getPermit()) {
-			if(uri.startsWith(permit)) {
-				log.debug("授权成功（公共请求）：{}-{}", uri, permit);
+			if(StringUtils.startsWith(uri, permit)) {
+				log.debug("授权成功（许可请求）：{}-{}", uri, permit);
 				return true;
 			}
 		}
@@ -73,11 +73,10 @@ public class SecurityInterceptor implements HandlerInterceptor {
 		if(StringUtils.isEmpty(authorization)) {
 			return false;
 		}
-		final int index = authorization.indexOf(' ');
-		if(index < 0 || !authorization.substring(0, index).equalsIgnoreCase(SecurityProperties.BASIC)) {
+		if(!StringUtils.startsWithIgnoreCase(authorization, SecurityProperties.BASIC)) {
 			return false;
 		}
-		authorization = authorization.substring(index).strip();
+		authorization = authorization.substring(SecurityProperties.BASIC.length()).strip();
 		authorization = new String(Base64.getDecoder().decode(authorization));
 		if(!authorization.equals(this.securityProperties.getAuthorization())) {
 			return false;

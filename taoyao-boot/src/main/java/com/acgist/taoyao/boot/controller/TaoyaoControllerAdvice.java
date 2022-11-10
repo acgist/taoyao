@@ -18,7 +18,7 @@ import com.acgist.taoyao.boot.utils.ErrorUtils;
 public class TaoyaoControllerAdvice {
 
 	@ExceptionHandler(Exception.class)
-	public Message<String> exception(Exception e, HttpServletRequest request, HttpServletResponse response) {
+	public Message exception(Exception e, HttpServletRequest request, HttpServletResponse response) {
 		return ErrorUtils.message(e, request, response);
 	}
 

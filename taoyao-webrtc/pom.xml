@@ -17,9 +17,9 @@
 	<description>WebRTC模块</description>
 
 	<modules>
+		<module>taoyao-webrtc-jni</module>
 		<module>taoyao-webrtc-sfu</module>
 		<module>taoyao-webrtc-mcu</module>
-		<module>taoyao-webrtc-mix</module>
 		<module>taoyao-webrtc-mesh</module>
 	</modules>
 	

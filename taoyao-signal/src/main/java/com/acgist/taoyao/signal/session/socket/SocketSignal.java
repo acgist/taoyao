@@ -5,6 +5,6 @@ package com.acgist.taoyao.signal.session.socket;
  * 
  * @author acgist
  */
-public class TaoyaoSocket {
+public class SocketSignal {
 
 }

@@ -1,8 +1,6 @@
-package com.acgist.taoyao.signal.message;
+package com.acgist.taoyao.boot.model;
 
 import java.io.Serializable;
-
-import com.acgist.taoyao.boot.utils.JSONUtils;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -11,7 +9,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * 信令消息
+ * 信令头部
  * 
  * @author acgist
  */
@@ -20,22 +18,25 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Message implements Serializable {
+public class Header implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 
 	/**
-	 * 信令头部
+	 * 信令版本
 	 */
-	private Header header;
+	private String v;
 	/**
-	 * 信令主体
+	 * 请求标识
 	 */
-	private Object body;
-	
-	@Override
-	public String toString() {
-		return JSONUtils.toJSON(this);
-	}
+	private Long id;
+	/**
+	 * 终端标识
+	 */
+	private String sn;
+	/**
+	 * 协议标识
+	 */
+	private Integer pid;
 	
 }

@@ -6,25 +6,17 @@
 
 	<parent>
 		<groupId>com.acgist</groupId>
-		<artifactId>taoyao</artifactId>
+		<artifactId>taoyao-webrtc</artifactId>
 		<version>1.0.0</version>
 	</parent>
 
-	<artifactId>taoyao-client</artifactId>
+	<artifactId>taoyao-webrtc-jni</artifactId>
 	<packaging>jar</packaging>
 
-	<name>taoyao-client</name>
-	<description>终端：帐号（移动端|浏览器）、摄像头</description>
+	<name>taoyao-webrtc-jni</name>
+	<description>WebRTC JNI：WebRTC本地接口</description>
 
 	<dependencies>
-		<dependency>
-			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-boot</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
 	</dependencies>
 
 </project>

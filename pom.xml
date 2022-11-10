@@ -39,7 +39,6 @@
 		<module>taoyao-boot</module>
 		<module>taoyao-live</module>
 		<module>taoyao-media</module>
-		<module>taoyao-client</module>
 		<module>taoyao-signal</module>
 		<module>taoyao-webrtc</module>
 		<module>taoyao-server</module>
@@ -125,11 +124,6 @@
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-client</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-signal</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -150,17 +144,17 @@
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-webrtc-jni</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-webrtc-sfu</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-webrtc-mcu</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-webrtc-mix</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -225,15 +219,6 @@
 					<exclude>**/*.properties</exclude>
 				</excludes>
 				<filtering>false</filtering>
-			</resource>
-			<!-- 开源协议 -->
-			<resource>
-				<directory>./</directory>
-				<filtering>false</filtering>
-				<targetPath>META-INF/</targetPath>
-				<includes>
-					<include>LICENSE</include>
-				</includes>
 			</resource>
 		</resources>
 
