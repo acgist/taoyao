@@ -1,0 +1,3 @@
+taoyao:
+  security:
+    permit: /favicon.ico,/error

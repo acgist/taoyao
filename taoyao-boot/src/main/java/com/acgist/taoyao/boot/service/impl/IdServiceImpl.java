@@ -2,30 +2,25 @@ package com.acgist.taoyao.boot.service.impl;
 
 import java.time.LocalDateTime;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import com.acgist.taoyao.boot.config.IdProperties;
 import com.acgist.taoyao.boot.service.IdService;
 
 public class IdServiceImpl implements IdService {
-
-	/**
-	 * 机器序号
-	 */
-	@Value("${taoyao.sn:0}")
-	private int sn = 9;
+	
 	/**
 	 * 当前索引
 	 */
 	private int index;
-	/**
-	 * 最大索引
-	 */
-	private static final int MAX_INDEX = 999999;
+
+	@Autowired
+	private IdProperties idProperties;
 	
 	@Override
 	public long id() {
 		synchronized (this) {
-			if (++this.index > MAX_INDEX) {
+			if (++this.index > this.idProperties.getMaxIndex()) {
 				this.index = 0;
 			}
 		}
@@ -38,7 +33,7 @@ public class IdServiceImpl implements IdService {
 			1000000000L * time.getMinute() +
 			10000000L * time.getSecond() +
 			// 机器序号一位
-			1000000L * this.sn +
+			1000000L * this.idProperties.getSn() +
 			// 每秒并发数量
 			this.index;
 	}

@@ -38,6 +38,7 @@
 		<module>taoyao-nat</module>
 		<module>taoyao-boot</module>
 		<module>taoyao-live</module>
+		<module>taoyao-test</module>
 		<module>taoyao-media</module>
 		<module>taoyao-signal</module>
 		<module>taoyao-webrtc</module>
@@ -115,6 +116,11 @@
 			<dependency>
 				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-live</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-test</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

@@ -22,17 +22,19 @@ public class RegisterListener extends ApplicationListenerAdapter<RegisterEvent> 
 
 	@Autowired
 	private OnlineProtocol onlineProtocol;
-	
+
 	@Async
 	@Override
 	public void onApplicationEvent(RegisterEvent event) {
 		final ClientSession session = event.getSession();
-		if(!session.authorized()) {
+		if (!session.authorized()) {
 			return;
 		}
 		final Message message = this.onlineProtocol.build();
 		message.setBody(Map.of("sn", session.sn()));
-		this.clientSessionManager.broadcast(message);
+		this.clientSessionManager.broadcast(session.sn(), message);
+		// TODO：ip等等
+		// TODO：重新注册上来需要掉线重连
 	}
 
 }

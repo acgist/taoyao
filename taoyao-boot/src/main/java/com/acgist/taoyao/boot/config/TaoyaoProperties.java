@@ -36,5 +36,4 @@ public class TaoyaoProperties {
 	 */
 	private String description;
 
-
 }

@@ -50,6 +50,12 @@
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-ui</artifactId>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>

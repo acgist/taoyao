@@ -125,7 +125,8 @@ public final class ErrorUtils {
 				请求参数：{}
 				请求方法：{}
 				错误信息：{}
-				""", path, query, method, message, globalError);
+				响应状态：{}
+				""", path, query, method, message, status, globalError);
 		} else {
 			log.warn("""
 				请求错误
@@ -133,8 +134,9 @@ public final class ErrorUtils {
 				请求参数：{}
 				请求方法：{}
 				错误信息：{}
+				响应状态：{}
 				原始信息：{}
-				""", path, query, method, message, globalError);
+				""", path, query, method, message, status, globalError);
 		}
 		return message;
 	}

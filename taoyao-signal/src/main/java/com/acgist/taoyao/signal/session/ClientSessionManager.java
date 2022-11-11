@@ -101,9 +101,8 @@ public class ClientSessionManager {
 		try {
 			if(session != null) {
 				session.close();
-			} else {
-				instance.close();
 			}
+			instance.close();
 		} catch (Exception e) {
 			log.error("关闭会话异常", e);
 		} finally {

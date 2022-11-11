@@ -1,11 +1,16 @@
 server:
   port: 8888
+  http2:
+    enabled: true
   ssl:
     key-alias: taoyao
     key-store: classpath:taoyao.jks
     key-store-password: 123456
     key-password: 123456
   tomcat:
+    thread:
+      max: 128
+      min-spare: 4
     remoteip:
       host-header: X-Forwarded-Host
       port-header: X-Forwarded-Port
@@ -16,8 +21,6 @@ spring:
     active: dev
   application:
     name: taoyao-server
-  jackson:
-    time-zone: GMT+8
   servlet:
     multipart:
       max-file-size: 256MB
@@ -47,6 +50,9 @@ taoyao:
   timeout: 5000
   version: 1.0.0
   description: WebRTC信令服务
+  id:
+    sn: 0
+    max-index: 999999
   webrtc:
     type: SFU
     stun:
@@ -56,10 +62,12 @@ taoyao:
       - stun:stun4.l.google.com:19302
       - stun:stun.stunprotocol.org:3478
     turn:
+  record:
+    storage: /data/record
   security:
     realm: taoyao
-    permit: /v3/api-docs/,/swagger-ui/,/error
-    username:
-    password:
+    permit: /v3/api-docs/,/swagger-ui/,/favicon.ico,/error
+    username: taoyao
+    password: taoyao
   scheduled:
     session: 0 * * * * ?

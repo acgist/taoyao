@@ -14,13 +14,13 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * 消息
+ * 请求响应消息
  * 
  * @author acgist
  */
 @Getter
 @Setter
-@Schema(name = "消息", description = "请求响应消息")
+@Schema(title = "请求响应消息", description = "请求响应消息")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -31,22 +31,22 @@ public class Message implements Serializable {
 	/**
 	 * 响应编码
 	 */
-	@Schema(name = "响应编码", description = "响应消息标识响应状态")
+	@Schema(title = "响应编码", description = "响应消息标识响应状态")
 	private String code;
 	/**
 	 * 响应描述
 	 */
-	@Schema(name = "响应描述", description = "响应消息描述响应编码")
+	@Schema(title = "响应描述", description = "响应消息描述响应编码")
 	private String message;
 	/**
 	 * 请求响应头部
 	 */
-	@Schema(name = "请求响应头部", description = "请求响应头部")
+	@Schema(title = "请求响应头部", description = "请求响应头部")
 	private Header header;
 	/**
 	 * 请求响应主体
 	 */
-	@Schema(name = "请求响应主体", description = "请求响应主体")
+	@Schema(title = "请求响应主体", description = "请求响应主体")
 	private Object body;
 	
 	/**

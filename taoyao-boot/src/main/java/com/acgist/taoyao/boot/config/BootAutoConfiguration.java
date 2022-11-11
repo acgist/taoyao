@@ -1,6 +1,7 @@
 package com.acgist.taoyao.boot.config;
 
 import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
@@ -50,6 +51,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 import com.acgist.taoyao.boot.controller.TaoyaoControllerAdvice;
 import com.acgist.taoyao.boot.controller.TaoyaoErrorController;
 import com.acgist.taoyao.boot.interceptor.SecurityInterceptor;
+import com.acgist.taoyao.boot.interceptor.SlowInterceptor;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.boot.service.impl.IdServiceImpl;
@@ -73,7 +75,7 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @EnableScheduling
 @EnableAspectJAutoProxy(exposeProxy = true)
-@EnableConfigurationProperties({ TaoyaoProperties.class, WebrtcProperties.class, SecurityProperties.class })
+@EnableConfigurationProperties({ IdProperties.class, TaoyaoProperties.class, WebrtcProperties.class, SecurityProperties.class })
 public class BootAutoConfiguration {
 
 	@Value("${spring.application.name:taoyao}")
@@ -121,6 +123,12 @@ public class BootAutoConfiguration {
 	
 	@Bean
 	@ConditionalOnMissingBean
+	public SlowInterceptor slowInterceptor() {
+		return new SlowInterceptor();
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
 	public SecurityInterceptor securityInterceptor() {
 		return new SecurityInterceptor();
 	}
@@ -139,15 +147,15 @@ public class BootAutoConfiguration {
 
 	@PostConstruct
 	public void init() {
-		final var runtime = Runtime.getRuntime();
-		final var runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+		final Runtime runtime = Runtime.getRuntime();
+		final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
 		final String freeMemory = FileUtils.formatSize(runtime.freeMemory());
 		final String totalMemory = FileUtils.formatSize(runtime.totalMemory());
 		final String maxMemory = FileUtils.formatSize(runtime.maxMemory());
 		log.info("操作系统名称：{}", System.getProperty("os.name"));
 		log.info("操作系统架构：{}", System.getProperty("os.arch"));
 		log.info("操作系统版本：{}", System.getProperty("os.version"));
-		log.info("操作系统可用处理器数量：{}", runtime.availableProcessors());
+		log.info("可用的处理器数量：{}", runtime.availableProcessors());
 		log.info("Java版本：{}", System.getProperty("java.version"));
 		log.info("Java主目录：{}", System.getProperty("java.home"));
 		log.info("Java库目录：{}", System.getProperty("java.library.path"));
@@ -184,8 +192,8 @@ public class BootAutoConfiguration {
 		ErrorUtils.register(MessageCode.CODE_3400, MethodArgumentNotValidException.class);
 		ErrorUtils.register(MessageCode.CODE_3500, ConversionNotSupportedException.class);
 		ErrorUtils.register(MessageCode.CODE_3500, HttpMessageNotWritableException.class);
-		ErrorUtils.register(MessageCode.CODE_3415, HttpMediaTypeNotSupportedException.class);
 		ErrorUtils.register(MessageCode.CODE_3400, MissingServletRequestPartException.class);
+		ErrorUtils.register(MessageCode.CODE_3415, HttpMediaTypeNotSupportedException.class);
 		ErrorUtils.register(MessageCode.CODE_3406, HttpMediaTypeNotAcceptableException.class);
 		ErrorUtils.register(MessageCode.CODE_3405, HttpRequestMethodNotSupportedException.class);
 		ErrorUtils.register(MessageCode.CODE_3400, MissingServletRequestParameterException.class);

@@ -60,7 +60,7 @@ public final class JSONUtils {
 		try {
 			return MAPPER.writeValueAsString(object);
 		} catch (JsonProcessingException e) {
-			throw MessageCodeException.of(e, "Java转JSON失败：", object);
+			throw MessageCodeException.of(e, "Java转JSON失败：" + object);
 		}
 	}
 	
@@ -81,7 +81,7 @@ public final class JSONUtils {
 			return MAPPER.readValue(json, new TypeReference<T>() {
 			});
 		} catch (IOException e) {
-			throw MessageCodeException.of(e, "JSON转Java失败：", json);
+			throw MessageCodeException.of(e, "JSON转Java失败：" + json);
 		}
 	}
 
@@ -102,7 +102,7 @@ public final class JSONUtils {
 		try {
 			return MAPPER.readValue(json, clazz);
 		} catch (IOException e) {
-			throw MessageCodeException.of(e, "JSON转Java失败：", json);
+			throw MessageCodeException.of(e, "JSON转Java失败：" + json);
 		}
 	}
 
@@ -124,7 +124,7 @@ public final class JSONUtils {
 			return MAPPER.readValue(json, new TypeReference<Map<K, V>>() {
 			});
 		} catch (IOException e) {
-			throw MessageCodeException.of(e, "JSON转Map失败：", json);
+			throw MessageCodeException.of(e, "JSON转Map失败：" + json);
 		}
 	}
 
@@ -145,7 +145,7 @@ public final class JSONUtils {
 			return MAPPER.readValue(json, new TypeReference<List<T>>() {
 			});
 		} catch (IOException e) {
-			throw MessageCodeException.of(e, "JSON转List失败：", json);
+			throw MessageCodeException.of(e, "JSON转List失败：" + json);
 		}
 	}
 	
@@ -169,7 +169,7 @@ public final class JSONUtils {
 			return MAPPER.readValue(json, new TypeReference<List<T>>() {
 			});
 		} catch (IOException e) {
-			throw MessageCodeException.of(e, "JSON转List失败：", json);
+			throw MessageCodeException.of(e, "JSON转List失败：" + json);
 		}
 	}
 	

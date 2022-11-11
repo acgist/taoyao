@@ -10,7 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.servlet.HandlerInterceptor;
 
 import com.acgist.taoyao.boot.config.SecurityProperties;
 
@@ -22,20 +21,29 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-public class SecurityInterceptor implements HandlerInterceptor {
+public class SecurityInterceptor extends InterceptorAdapter {
 
-	/**
-	 * 时间
-	 */
-	private ThreadLocal<Long> local = new ThreadLocal<>();
-	
 	@Autowired
 	private SecurityProperties securityProperties;
 	
 	@Override
+	public String name() {
+		return "安全拦截";
+	}
+	
+	@Override
+	public String[] pathPattern() {
+		return new String[] { "/**" };
+	}
+
+	@Override
+	public int getOrder() {
+		return Integer.MIN_VALUE + 1;
+	}
+	
+	@Override
 	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
 		if(this.permit(request) || this.authorization(request)) {
-			this.local.set(System.currentTimeMillis());
 			return true;
 		}
 		response.setStatus(HttpStatus.UNAUTHORIZED.value());
@@ -83,16 +91,6 @@ public class SecurityInterceptor implements HandlerInterceptor {
 		}
 		log.debug("授权成功（Basic）：{}-{}", uri, authorization);
 		return true;
-	}
-	
-	@Override
-	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-		final long duration;
-		final Long last = this.local.get();
-		if(last != null && (duration = System.currentTimeMillis() - last) > 1000) {
-			log.info("执行时间过慢：{}-{}", request.getRequestURI(), duration);
-		}
-		this.local.remove();
 	}
 	
 }

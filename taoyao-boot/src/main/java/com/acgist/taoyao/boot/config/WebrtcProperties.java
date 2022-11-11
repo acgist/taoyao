@@ -13,7 +13,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@Schema(name = "WebRTC配置")
+@Schema(title = "WebRTC配置", description = "WebRTC配置")
 @ConfigurationProperties(prefix = "taoyao.webrtc")
 public class WebrtcProperties {
 
@@ -42,15 +42,17 @@ public class WebrtcProperties {
 	/**
 	 * 类型
 	 */
-	@Schema(name = "架构类型", description = "WebRTC架构类型")
+	@Schema(title = "架构类型", description = "WebRTC架构类型")
 	private Type type;
 	/**
 	 * stun服务器
 	 */
+	@Schema(title = "stun服务器", description = "stun服务器")
 	private String[] stun;
 	/**
 	 * turn服务器
 	 */
+	@Schema(title = "turn服务器", description = "turn服务器")
 	private String[] turn;
 	
 }

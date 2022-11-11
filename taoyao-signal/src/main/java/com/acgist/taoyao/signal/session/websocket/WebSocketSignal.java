@@ -1,7 +1,5 @@
 package com.acgist.taoyao.signal.session.websocket;
 
-import java.io.IOException;
-
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -70,8 +68,12 @@ public class WebSocketSignal {
 	 */
 	private void push(Session session, Message message) {
 		try {
-			session.getBasicRemote().sendText(message.toString());
-		} catch (IOException e) {
+			if(session.isOpen()) {
+				session.getBasicRemote().sendText(message.toString());
+			} else {
+				log.error("会话已经关闭：{}", session);
+			}
+		} catch (Exception e) {
 			log.error("推送消息异常：{}", message, e);
 		}
 	}

@@ -60,6 +60,7 @@ public class ProtocolManager {
 	 * @param instance 会话实例
 	 */
 	public void execute(String message, AutoCloseable instance) {
+		log.debug("执行信令消息：{}", message);
 		if(StringUtils.isEmpty(message)) {
 			log.warn("消息为空：{}", message);
 			return;

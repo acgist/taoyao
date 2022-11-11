@@ -5,10 +5,10 @@ import lombok.Getter;
 /**
  * 状态编码
  * 
- * 1xxx=前置错误：前置校验错误（数据校验）
- * 2xxx=内部错误：服务内部错误
+ * 1xxx=前置错误：数据校验
+ * 2xxx=内部错误
  * 3xxx=请求错误：HTTP错误
- * 9999=未知错误：没有适配异常
+ * 9999=未知错误
  * 
  * @author acgist
  */
@@ -41,7 +41,7 @@ public enum MessageCode {
 	CODE_9999("9999", 500, "未知错误");
 	
 	/**
-	 * HTTP状态编码头部
+	 * HTTP状态编码前缀
 	 */
 	public static final String HTTP_STATUS = "3";
 
@@ -54,7 +54,7 @@ public enum MessageCode {
 	 */
 	private final Integer status;
 	/**
-	 * 状态信息
+	 * 状态描述
 	 */
 	private final String message;
 
@@ -85,14 +85,7 @@ public enum MessageCode {
 	 * @return 状态编码
 	 */
 	public static final MessageCode of(Integer status) {
-		final String code = HTTP_STATUS + status;
-		final MessageCode[] values = MessageCode.values();
-		for (MessageCode value : values) {
-			if (value.code.equals(code)) {
-				return value;
-			}
-		}
-		return of(String.valueOf(status));
+		return of(HTTP_STATUS + status);
 	}
 	
 }

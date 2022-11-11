@@ -1,7 +1,7 @@
 package com.acgist.taoyao.boot.service;
 
 /**
- * ID
+ * ID生成器
  * 
  * @author acgist
  */

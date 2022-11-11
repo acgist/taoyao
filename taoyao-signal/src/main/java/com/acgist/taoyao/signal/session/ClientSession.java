@@ -1,6 +1,8 @@
 package com.acgist.taoyao.signal.session;
 
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.signal.media.ClientMediaPublisher;
+import com.acgist.taoyao.signal.media.ClientMediaSubscriber;
 
 /**
  * 会话
@@ -15,6 +17,21 @@ public interface ClientSession extends AutoCloseable {
 	 * @return 终端标识
 	 */
 	String sn();
+
+	/**
+	 * @return 终端状态
+	 */
+	ClientSessionStatus status();
+	
+	/**
+	 * @return 终端媒体发布者
+	 */
+	ClientMediaPublisher publisher();
+	
+	/**
+	 * @return 终端媒体订阅者
+	 */
+	ClientMediaSubscriber subscriber();
 	
 	/**
 	 * 推送消息

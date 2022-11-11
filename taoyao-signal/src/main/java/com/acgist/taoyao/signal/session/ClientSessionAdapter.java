@@ -2,6 +2,9 @@ package com.acgist.taoyao.signal.session;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.acgist.taoyao.signal.media.ClientMediaPublisher;
+import com.acgist.taoyao.signal.media.ClientMediaSubscriber;
+
 /**
  * 会话适配器
  * 
@@ -25,16 +28,46 @@ public abstract class ClientSessionAdapter<T extends AutoCloseable> implements C
 	 * 是否授权
 	 */
 	protected boolean authorized;
+	/**
+	 * 终端状态
+	 */
+	protected ClientSessionStatus status;
+	/**
+	 * 终端媒体发布者
+	 */
+	protected ClientMediaPublisher publisher;
+	/**
+	 * 终端媒体订阅者
+	 */
+	protected ClientMediaSubscriber subscriber;
 	
 	protected ClientSessionAdapter(T instance) {
 		this.time = System.currentTimeMillis();
 		this.instance = instance;
 		this.authorized = false;
+		this.status = new ClientSessionStatus();
+		this.publisher = new ClientMediaPublisher();
+		this.subscriber = new ClientMediaSubscriber();
 	}
 
 	@Override
 	public String sn() {
 		return this.sn;
+	}
+	
+	@Override
+	public ClientSessionStatus status() {
+		return this.status;
+	}
+	
+	@Override
+	public ClientMediaPublisher publisher() {
+		return this.publisher;
+	}
+	
+	@Override
+	public ClientMediaSubscriber subscriber() {
+		return this.subscriber;
 	}
 	
 	@Override
