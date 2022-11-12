@@ -10,13 +10,21 @@
 		<version>1.0.0</version>
 	</parent>
 
-	<artifactId>taoyao-webrtc-jni</artifactId>
+	<artifactId>taoyao-webrtc-jitsi</artifactId>
 	<packaging>jar</packaging>
 
-	<name>taoyao-webrtc-jni</name>
-	<description>WebRTC JNI：WebRTC本地接口</description>
+	<name>taoyao-webrtc-jitsi</name>
+	<description>WebRTC协议簇实现：jitsi</description>
 
 	<dependencies>
+		<dependency>
+			<groupId>org.jitsi</groupId>
+			<artifactId>ice4j</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.jitsi</groupId>
+			<artifactId>libjitsi</artifactId>
+		</dependency>
 	</dependencies>
 
 </project>

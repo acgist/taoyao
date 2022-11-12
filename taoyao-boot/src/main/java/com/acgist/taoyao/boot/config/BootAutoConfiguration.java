@@ -75,7 +75,7 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @EnableScheduling
 @EnableAspectJAutoProxy(exposeProxy = true)
-@EnableConfigurationProperties({ IdProperties.class, TaoyaoProperties.class, WebrtcProperties.class, SecurityProperties.class })
+@EnableConfigurationProperties({ IdProperties.class, MediaProperties.class, TaoyaoProperties.class, WebrtcProperties.class, SecurityProperties.class })
 public class BootAutoConfiguration {
 
 	@Value("${spring.application.name:taoyao}")

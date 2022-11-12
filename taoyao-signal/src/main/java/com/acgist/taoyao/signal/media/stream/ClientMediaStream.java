@@ -1,5 +1,7 @@
 package com.acgist.taoyao.signal.media.stream;
 
+import java.io.IOException;
+
 /**
  * 终端媒体流
  * 
@@ -58,23 +60,31 @@ public interface ClientMediaStream {
 	
 	/**
 	 * 打开终端媒体流
+	 * 
+	 * @throws IO异常
 	 */
-	void open();
+	void open() throws IOException;
 	
 	/**
 	 * 暂停终端媒体流
+	 * 
+	 * @throws IO异常
 	 */
-	void pause();
+	void pause() throws IOException;
 	
 	/**
 	 * 恢复终端媒体流
+	 * 
+	 * @throws IO异常
 	 */
-	void resume();
+	void resume() throws IOException;
 	
 	/**
 	 * 关闭终端媒体流
+	 * 
+	 * @throws IO异常
 	 */
-	void close();
+	void close() throws IOException;
 	
 	/**
 	 * @return 终端媒体流类型

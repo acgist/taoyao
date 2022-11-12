@@ -24,18 +24,19 @@
 		<!-- 版本 -->
 		<java.version>17</java.version>
 		<lombok.version>1.18.24</lombok.version>
-		<webrtc.version>1.0.32006</webrtc.version>
+		<kurento.version>6.18.0</kurento.version>
 		<springdoc.version>1.6.12</springdoc.version>
 		<mapstruct.version>1.5.3.Final</mapstruct.version>
 		<collections4.version>4.4</collections4.version>
+		<jitsi.ice4j.version>3.0-59-g71e244d</jitsi.ice4j.version>
+		<jitsi.libjitsi.version>1.1-22-g5c9346c5</jitsi.libjitsi.version>
 		<!-- 配置 -->
-		<system.maven.basedir>${project.basedir}</system.maven.basedir>
-		<system.maven.encoding>UTF-8</system.maven.encoding>
-		<system.maven.skip.assembly>true</system.maven.skip.assembly>
+		<taoyao.maven.basedir>${project.basedir}</taoyao.maven.basedir>
+		<taoyao.maven.encoding>UTF-8</taoyao.maven.encoding>
+		<taoyao.maven.skip.assembly>true</taoyao.maven.skip.assembly>
 	</properties>
 
 	<modules>
-		<module>taoyao-nat</module>
 		<module>taoyao-boot</module>
 		<module>taoyao-live</module>
 		<module>taoyao-test</module>
@@ -105,11 +106,6 @@
 		<dependencies>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-nat</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-boot</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -150,11 +146,6 @@
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-webrtc-jni</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-webrtc-sfu</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -168,11 +159,32 @@
 				<artifactId>taoyao-webrtc-mesh</artifactId>
 				<version>${project.version}</version>
 			</dependency>
-			<!-- WebRTC -->
 			<dependency>
-				<groupId>org.webrtc</groupId>
-				<artifactId>google-webrtc</artifactId>
-				<version>${webrtc.version}</version>
+				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-webrtc-jitsi</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-webrtc-kurento</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<!-- WebRTC：jitsi -->
+			<dependency>
+				<groupId>org.jitsi</groupId>
+				<artifactId>ice4j</artifactId>
+				<version>${jitsi.ice4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.jitsi</groupId>
+				<artifactId>libjitsi</artifactId>
+				<version>${jitsi.libjitsi.version}</version>
+			</dependency>
+			<!-- WebRTC：kurento -->
+			<dependency>
+				<groupId>org.kurento</groupId>
+				<artifactId>kurento-client</artifactId>
+				<version>${kurento.version}</version>
 			</dependency>
 			<!-- 集合工具 -->
 			<dependency>
@@ -243,7 +255,7 @@
 					<configuration>
 						<source>${java.version}</source>
 						<target>${java.version}</target>
-						<encoding>${system.maven.encoding}</encoding>
+						<encoding>${taoyao.maven.encoding}</encoding>
 					</configuration>
 				</plugin>
 				<plugin>
@@ -276,7 +288,7 @@
 							</goals>
 							<configuration>
 								<attach>false</attach>
-								<skipAssembly>${system.maven.skip.assembly}</skipAssembly>
+								<skipAssembly>${taoyao.maven.skip.assembly}</skipAssembly>
 								<appendAssemblyId>false</appendAssemblyId>
 							</configuration>
 						</execution>
@@ -294,8 +306,8 @@
 			</activation>
 			<properties>
 				<profile>dev</profile>
-				<system.maven.jvm.arg></system.maven.jvm.arg>
-				<system.maven.jvm.mem>-Xms512M -Xmx1024M -XX:NewRatio=1 -XX:SurvivorRatio=2</system.maven.jvm.mem>
+				<taoyao.maven.jvm.arg></taoyao.maven.jvm.arg>
+				<taoyao.maven.jvm.mem>-Xms512M -Xmx1024M -XX:NewRatio=1 -XX:SurvivorRatio=2</taoyao.maven.jvm.mem>
 			</properties>
 			<build>
 				<plugins>
@@ -304,7 +316,7 @@
 						<artifactId>maven-assembly-plugin</artifactId>
 						<configuration>
 							<descriptors>
-								<descriptor>${system.maven.basedir}/docs/assembly/dev.xml</descriptor>
+								<descriptor>${taoyao.maven.basedir}/docs/assembly/dev.xml</descriptor>
 							</descriptors>
 						</configuration>
 					</plugin>
@@ -324,8 +336,8 @@
 			<id>test</id>
 			<properties>
 				<profile>test</profile>
-				<system.maven.jvm.arg></system.maven.jvm.arg>
-				<system.maven.jvm.mem>-Xms512M -Xmx1024M -XX:NewRatio=1 -XX:SurvivorRatio=2</system.maven.jvm.mem>
+				<taoyao.maven.jvm.arg></taoyao.maven.jvm.arg>
+				<taoyao.maven.jvm.mem>-Xms512M -Xmx1024M -XX:NewRatio=1 -XX:SurvivorRatio=2</taoyao.maven.jvm.mem>
 			</properties>
 			<build>
 				<plugins>
@@ -334,7 +346,7 @@
 						<artifactId>maven-assembly-plugin</artifactId>
 						<configuration>
 							<descriptors>
-								<descriptor>${system.maven.basedir}/docs/assembly/test.xml</descriptor>
+								<descriptor>${taoyao.maven.basedir}/docs/assembly/test.xml</descriptor>
 							</descriptors>
 						</configuration>
 					</plugin>
@@ -355,8 +367,8 @@
 			<id>release</id>
 			<properties>
 				<profile>release</profile>
-				<system.maven.jvm.arg>-Dtaoyao.password=123456</system.maven.jvm.arg>
-				<system.maven.jvm.mem>-Xms2048M -Xmx4096M -XX:NewRatio=1 -XX:SurvivorRatio=2</system.maven.jvm.mem>
+				<taoyao.maven.jvm.arg>-Dtaoyao.password=123456</taoyao.maven.jvm.arg>
+				<taoyao.maven.jvm.mem>-Xms2048M -Xmx4096M -XX:NewRatio=1 -XX:SurvivorRatio=2</taoyao.maven.jvm.mem>
 			</properties>
 			<build>
 				<plugins>
@@ -365,7 +377,7 @@
 						<artifactId>maven-assembly-plugin</artifactId>
 						<configuration>
 							<descriptors>
-								<descriptor>${system.maven.basedir}/docs/assembly/release.xml</descriptor>
+								<descriptor>${taoyao.maven.basedir}/docs/assembly/release.xml</descriptor>
 							</descriptors>
 						</configuration>
 					</plugin>

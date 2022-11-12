@@ -17,8 +17,8 @@
 	<description>服务：启动服务</description>
 
 	<properties>
-		<system.maven.basedir>${project.parent.basedir}</system.maven.basedir>
-		<system.maven.skip.assembly>false</system.maven.skip.assembly>
+		<taoyao.maven.basedir>${project.parent.basedir}</taoyao.maven.basedir>
+		<taoyao.maven.skip.assembly>false</taoyao.maven.skip.assembly>
 	</properties>
 
 	<dependencies>
@@ -33,18 +33,6 @@
 		<dependency>
 			<groupId>com.acgist</groupId>
 			<artifactId>taoyao-meeting</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-webrtc-sfu</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-webrtc-mcu</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-webrtc-mesh</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springdoc</groupId>

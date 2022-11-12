@@ -19,7 +19,11 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-webrtc-jni</artifactId>
+			<artifactId>taoyao-webrtc-jitsi</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-webrtc-kurento</artifactId>
 		</dependency>
 	</dependencies>
 

@@ -29,7 +29,7 @@ public class SecurityProperties {
 	 */
 	private String[] permit;
 	/**
-	 * 用户
+	 * 名称
 	 */
 	private String username;
 	/**

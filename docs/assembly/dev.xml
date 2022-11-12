@@ -12,14 +12,14 @@
 
 	<fileSets>
 		<fileSet>
-			<directory>${system.maven.basedir}/docs</directory>
+			<directory>${taoyao.maven.basedir}/docs</directory>
 			<outputDirectory>./</outputDirectory>
 			<includes>
 				<include>README.md</include>
 			</includes>
 		</fileSet>
 		<fileSet>
-			<directory>${system.maven.basedir}/docs/bin</directory>
+			<directory>${taoyao.maven.basedir}/docs/bin</directory>
 			<outputDirectory>bin</outputDirectory>
 			<fileMode>0755</fileMode>
 			<filtered>true</filtered>

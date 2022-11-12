@@ -18,11 +18,11 @@ import lombok.Setter;
 public class WebrtcProperties {
 
 	/**
-	 * 架构类型
+	 * 架构模型
 	 * 
 	 * @author acgist
 	 */
-	public enum Type {
+	public enum Model {
 		
 		/**
 		 * SFU架构
@@ -40,10 +40,33 @@ public class WebrtcProperties {
 	}
 
 	/**
-	 * 类型
+	 * 基础框架
+	 * 
+	 * @author acgist
 	 */
-	@Schema(title = "架构类型", description = "WebRTC架构类型")
-	private Type type;
+	public enum Framework {
+		
+		/**
+		 * jitsi
+		 */
+		JITSI,
+		/**
+		 * kurento
+		 */
+		KURENTO;
+		
+	}
+
+	/**
+	 * 模型
+	 */
+	@Schema(title = "架构模型", description = "WebRTC架构模型")
+	private Model model;
+	/**
+	 * 框架
+	 */
+	@Schema(title = "基础框架", description = "WebRTC基础框架")
+	private Framework framework;
 	/**
 	 * stun服务器
 	 */

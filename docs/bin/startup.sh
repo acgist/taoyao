@@ -20,10 +20,10 @@ fi
 
 # 启动参数
 JAVA_OPTS_GC="-XX:+UseG1GC -Xlog:gc:./logs/gc.log:time,level"
-JAVA_OPTS_MEM="-server ${system.maven.jvm.mem}"
-JAVA_OPTS_EXT="-Dfile.encoding=${system.maven.encoding} -Djava.awt.headless=true -Djava.net.preferIPv4Stack=true"
+JAVA_OPTS_MEM="-server ${taoyao.maven.jvm.mem}"
+JAVA_OPTS_EXT="-Dfile.encoding=${taoyao.maven.encoding} -Djava.awt.headless=true -Djava.net.preferIPv4Stack=true"
 JAVA_OPTS_APP="-Dspring.profiles.active=${profile}"
-JAVA_OPTS="$JAVA_OPTS_MEM $JAVA_OPTS_EXT $JAVA_OPTS_APP ${system.maven.jvm.arg}"
+JAVA_OPTS="$JAVA_OPTS_MEM $JAVA_OPTS_EXT $JAVA_OPTS_APP ${taoyao.maven.jvm.arg}"
 echo "启动参数：$JAVA_OPTS"
 
 # 启动应用

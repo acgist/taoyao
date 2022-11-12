@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>会议</title>
+<link rel="stylesheet" type="text/css" href="./css/font.min.css" />
+<link rel="stylesheet" type="text/css" href="./css/style.css" />
+<script type="text/javascript" src="./javascript/taoyao.js"></script>
+</head>
+<body>
+	<div class="taoyao">
+		<div class="handler">
+			<a class="create icon-svg" title="创建房间"></a>
+			<a class="invite icon-address-book" title="邀请房间"></a>
+			<a class="enter icon-enter" title="进入房间"></a>
+			<a class="leave icon-exit" title="离开房间"></a>
+			<a class="close icon-switch" title="关闭房间"></a>
+		</div>
+		<div class="list" id="list">
+			<div class="meeting me">
+				<div class="video">
+					<video id="local"></video>
+				</div>
+				<div class="handler">
+					<a class="audio icon-volume-medium" title="音频状态"></a>
+					<a class="video icon-play2" title="视频状态"></a>
+					<a class="record icon-radio-checked" title="录制视频"></a>
+					<a class="kick icon-cancel-circle" title="踢出房间"></a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<script type="text/javascript">
+	const list = document.getElementById('list');
+	const template = `
+		<div class="video">
+			<video></video>
+		</div>
+		<div class="handler">
+			<a class="audio icon-volume-medium" title="音频状态"></a>
+			<a class="video icon-play2" title="视频状态"></a>
+			<a class="record icon-radio-checked" title="录制视频"></a>
+			<a class="kick icon-cancel-circle" title="踢出房间"></a>
+		</div>
+	`;
+	for(let i = 0; i < 10; i++) {
+		const child = document.createElement('div');
+		child.className = 'meeting';
+		child.innerHTML = template;
+		list.appendChild(child);
+	}
+	const taoyao = new Taoyao();
+	taoyao
+		.init()
+		.buildUserMedia()
+		.then(stream => taoyao.local('local', stream))
+		.catch((e) => alert('获取终端媒体失败：' + e));
+	</script>
+</body>
+</html>

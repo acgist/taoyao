@@ -14,8 +14,29 @@
 	<packaging>jar</packaging>
 
 	<name>taoyao-media</name>
-	<description>媒体：录制、视频（美颜、AI识别）、音频（混音、变声）</description>
+	<description>媒体：录制、视频（美颜、AI识别）、音频（混音、变声、降噪）</description>
 
-	<dependencies></dependencies>
+	<dependencies>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-webrtc-mcu</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-webrtc-sfu</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-webrtc-mesh</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-webrtc-jitsi</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-webrtc-kurento</artifactId>
+		</dependency>
+	</dependencies>
 
 </project>
