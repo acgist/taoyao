@@ -5,16 +5,17 @@
 <title>会议</title>
 <link rel="stylesheet" type="text/css" href="./css/font.min.css" />
 <link rel="stylesheet" type="text/css" href="./css/style.css" />
+<script type="text/javascript" src="./javascript/app.js"></script>
 <script type="text/javascript" src="./javascript/taoyao.js"></script>
 </head>
 <body>
 	<div class="taoyao">
 		<div class="handler">
-			<a class="create icon-svg" title="创建房间"></a>
-			<a class="invite icon-address-book" title="邀请房间"></a>
-			<a class="enter icon-enter" title="进入房间"></a>
-			<a class="leave icon-exit" title="离开房间"></a>
-			<a class="close icon-switch" title="关闭房间"></a>
+			<a class="create icon-svg" title="创建房间" onclick="create"></a>
+			<a class="invite icon-address-book" title="邀请房间" onclick="invite"></a>
+			<a class="enter icon-enter" title="进入房间" onclick="enter"></a>
+			<a class="leave icon-exit" title="离开房间" onclick="leave"></a>
+			<a class="close icon-switch" title="关闭房间" onclick="close"></a>
 		</div>
 		<div class="list" id="list">
 			<div class="meeting me">
@@ -22,10 +23,10 @@
 					<video id="local"></video>
 				</div>
 				<div class="handler">
-					<a class="audio icon-volume-medium" title="音频状态"></a>
-					<a class="video icon-play2" title="视频状态"></a>
-					<a class="record icon-radio-checked" title="录制视频"></a>
-					<a class="kick icon-cancel-circle" title="踢出房间"></a>
+					<a class="audio icon-volume-medium" title="音频状态" onclick="audio"></a>
+					<a class="video icon-play2" title="视频状态" onclick="video"></a>
+					<a class="record icon-radio-checked" title="录制视频" onclick="record(this)"></a>
+					<a class="kick icon-cancel-circle" title="踢出房间" onclick="kick"></a>
 				</div>
 			</div>
 		</div>
@@ -50,8 +51,8 @@
 		list.appendChild(child);
 	}
 	const taoyao = new Taoyao();
-	// 初始
-	taoyao.init();
+	// 检查设备
+	taoyao.checkDevice();
 	// 配置媒体
 	taoyao.request('/config/media', {}, 'GET', false)
 	.then(response => {
@@ -68,10 +69,34 @@
 	// 信令回调
 	function callback(data) {
 		switch(data.header.pid) {
-		case 1000:
+		case protocol.pid.heartbeat:
 			// 心跳
 			break;
+		case protocol.pid.register:
+			// 录制
+			break;
 		}
+	}
+	// 创建房间
+	function create() {
+	}
+	// 进入房间
+	function enter() {
+	}
+	// 声音控制
+	function audio() {
+	}
+	// 视频控制
+	function video() {
+	}
+	// 录制视频
+	function record(e) {
+		taoyao.push(protocol.buildProtocol(config.sn, protocol.pid.heartbeat), () => {
+			classSwitch(e, 'active');
+		});
+	}
+	// 踢出会议
+	function kick() {
 	}
 	// 信令通道
 	/*

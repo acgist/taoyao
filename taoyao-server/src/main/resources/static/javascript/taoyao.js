@@ -1,6 +1,4 @@
-/**
- * 桃夭WebRTC终端示例
- */
+/** 桃夭WebRTC终端核心功能 */
 /** 配置 */
 const config = {
 	// 当前终端SN
@@ -77,8 +75,10 @@ function Taoyao(
 	this.clientMedia = {};
 	/** 信令通道 */
 	this.signalChannel = null;
-	/** 初始 */
-	this.init = function() {
+	/** 发送信令 */
+	this.push = null;
+	/** 检查设备 */
+	this.checkDevice = function() {
 		let self = this;
 		if(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
 			navigator.mediaDevices.enumerateDevices()
@@ -153,6 +153,10 @@ function Taoyao(
 	this.buildChannel = function(callback) {
 		this.signalChannel = signalChannel;
 		this.signalChannel.connect(this.webSocket, callback);
+		// 不能直接this.push = this.signalChannel.push这样导致this对象错误
+		this.push = function(data, callback) {
+			this.signalChannel.push(data, callback)
+		};
 	};
 	/** 本地媒体 */
 	this.buildLocalMedia = function() {
@@ -221,7 +225,7 @@ const protocol = {
 			},
 			"body": body
 		};
-		return JSON.stringify(message);
+		return message;
 	}
 };
 /** 信令消息 */
@@ -233,6 +237,8 @@ const signalChannel = {
 	address: null,
 	/** 回调 */
 	callback: null,
+	/** 回调事件 */
+	callbackMapping: new Map(),
 	/** 心跳时间 */
 	heartbeatTime: 10 * 1000,
 	/** 心跳定时器 */
@@ -256,7 +262,7 @@ const signalChannel = {
 		let self = this;
 		self.heartbeatTimer = setTimeout(function() {
 			if (self.channel && self.channel.readyState == WebSocket.OPEN) {
-				self.channel.send(protocol.buildProtocol(config.sn, protocol.pid.heartbeat));
+				self.push(protocol.buildProtocol(config.sn, protocol.pid.heartbeat));
 				self.heartbeat();
 			} else {
 				console.log('发送心跳失败', self.channel);
@@ -297,7 +303,7 @@ const signalChannel = {
 			self.channel = new WebSocket(address);
 			self.channel.onopen = function(e) {
 				console.log('信令通道打开', e);
-				self.channel.send(protocol.buildProtocol(
+				self.push(protocol.buildProtocol(
 					config.sn,
 					protocol.pid.register,
 					{
@@ -329,11 +335,30 @@ const signalChannel = {
 			};
 			self.channel.onmessage = function(e) {
 				console.log('信令消息', e.data);
+				let data = JSON.parse(e.data);
+				// 注册回调
 				if(callback) {
-					callback(JSON.parse(e.data));
+					callback(data);
+				}
+				// 请求回调
+				if(self.callbackMapping.has(data.header.id)) {
+					self.callbackMapping.get(data.header.id)();
+					self.callbackMapping.delete(data.header.id);
 				}
 			};
 		});
+	},
+	/** 信令消息 */
+	push: function(data, callback) {
+		// 注册回调
+		if(data && callback) {
+			this.callbackMapping.set(data.header.id, callback);
+		}
+		if(data && data.header) {
+			this.channel.send(JSON.stringify(data));
+		} else {
+			this.channel.send(data);
+		}
 	}
 };
 /*
