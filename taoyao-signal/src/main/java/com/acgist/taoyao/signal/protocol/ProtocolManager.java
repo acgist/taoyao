@@ -86,7 +86,7 @@ public class ProtocolManager {
 		final ClientSession session = this.clientSessionManager.session(instance);
 		if(session != null && protocol instanceof RegisterProtocol) {
 			event = protocol.execute(sn, value, session);
-		} else if(session != null) {
+		} else if(session != null && session.authorized()) {
 			event = protocol.execute(sn, value, session);
 		} else {
 			log.warn("会话没有权限：{}", message);

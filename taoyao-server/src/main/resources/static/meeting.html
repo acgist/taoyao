@@ -50,11 +50,35 @@
 		list.appendChild(child);
 	}
 	const taoyao = new Taoyao();
-	taoyao
-		.init()
-		.buildUserMedia()
-		.then(stream => taoyao.local('local', stream))
-		.catch((e) => alert('获取终端媒体失败：' + e));
+	// 初始
+	taoyao.init();
+	// 配置媒体
+	taoyao.request('/config/media', {}, 'GET', false)
+	.then(response => {
+		taoyao.configMedia(response.audio, response.video);
+	})
+	.catch(e => console.error('获取媒体配置失败', e));
+	// 配置WebRTC
+	taoyao.request('/config/webrtc', {}, 'GET', false)
+	.then(response => {
+		taoyao.configWebrtc(response);
+		taoyao.buildChannel(callback);
+	})
+	.catch(e => console.error('获取WebRTC配置失败', e));
+	// 信令回调
+	function callback(data) {
+		switch(data.header.pid) {
+		case 1000:
+			// 心跳
+			break;
+		}
+	}
+	// 信令通道
+	/*
+	taoyao.buildLocalMedia()
+	.then(stream => taoyao.localMedia('local', stream))
+	.catch((e) => alert('获取终端媒体失败：' + e));
+	*/
 	</script>
 </body>
 </html>

@@ -12,6 +12,13 @@ public interface IdService {
 	 * 
 	 * @return ID
 	 */
-	long id();
+	long buildId();
+	
+	/**
+	 * @see #buildId()
+	 * 
+	 * @return ID
+	 */
+	String buildIdToString();
 
 }

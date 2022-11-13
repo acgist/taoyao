@@ -72,7 +72,7 @@ public abstract class ClientSessionAdapter<T extends AutoCloseable> implements C
 	
 	@Override
 	public boolean timeout(long timeout) {
-		return !(this.authorized && System.currentTimeMillis() - this.time <= timeout);
+		return !this.authorized && System.currentTimeMillis() - this.time > timeout;
 	}
 	
 	@Override

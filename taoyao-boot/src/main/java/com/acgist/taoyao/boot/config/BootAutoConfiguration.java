@@ -50,8 +50,6 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.acgist.taoyao.boot.controller.TaoyaoControllerAdvice;
 import com.acgist.taoyao.boot.controller.TaoyaoErrorController;
-import com.acgist.taoyao.boot.interceptor.SecurityInterceptor;
-import com.acgist.taoyao.boot.interceptor.SlowInterceptor;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.boot.service.impl.IdServiceImpl;
@@ -119,18 +117,6 @@ public class BootAutoConfiguration {
 				log.info("项目启动成功：{}", BootAutoConfiguration.this.name);
 			}
 		};
-	}
-	
-	@Bean
-	@ConditionalOnMissingBean
-	public SlowInterceptor slowInterceptor() {
-		return new SlowInterceptor();
-	}
-	
-	@Bean
-	@ConditionalOnMissingBean
-	public SecurityInterceptor securityInterceptor() {
-		return new SecurityInterceptor();
 	}
 	
 	@Bean

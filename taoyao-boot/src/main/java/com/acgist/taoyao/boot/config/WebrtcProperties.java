@@ -77,5 +77,33 @@ public class WebrtcProperties {
 	 */
 	@Schema(title = "turn服务器", description = "turn服务器")
 	private String[] turn;
+	/**
+	 * 信令主机
+	 */
+	@Schema(title = "信令主机", description = "信令主机")
+	private String host;
+	/**
+	 * 信令端口
+	 */
+	@Schema(title = "信令端口", description = "信令端口")
+	private Integer port;
+	/**
+	 * 信令协议
+	 */
+	@Schema(title = "信令协议", description = "信令协议")
+	private String schema;
+	/**
+	 * 信令地址
+	 */
+	@Schema(title = "信令地址", description = "信令地址")
+	private String websocket;
+	
+	/**
+	 * 完整信令地址
+	 */
+	@Schema(title = "完整信令地址", description = "完整信令地址")
+	public String getSignalAddress() {
+		return this.schema + "://" + this.host + ":" + this.port + this.websocket;
+	}
 	
 }

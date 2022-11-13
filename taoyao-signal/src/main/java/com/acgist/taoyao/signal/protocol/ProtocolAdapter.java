@@ -37,7 +37,7 @@ public abstract class ProtocolAdapter implements Protocol {
 	public Message build() {
 		final Header header = Header.builder()
 			.v(this.taoyaoProperties.getVersion())
-			.id(this.idService.id())
+			.id(this.idService.buildIdToString())
 			.pid(this.protocol)
 			.build();
 		final Message message = Message.builder()

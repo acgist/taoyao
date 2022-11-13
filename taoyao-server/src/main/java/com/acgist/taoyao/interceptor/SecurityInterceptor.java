@@ -1,4 +1,4 @@
-package com.acgist.taoyao.boot.interceptor;
+package com.acgist.taoyao.interceptor;
 
 import java.util.Base64;
 
@@ -12,6 +12,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
 import com.acgist.taoyao.boot.config.SecurityProperties;
+import com.acgist.taoyao.boot.interceptor.InterceptorAdapter;
 
 import lombok.extern.slf4j.Slf4j;
 

@@ -74,6 +74,10 @@ taoyao:
       - stun:stun4.l.google.com:19302
       - stun:stun.stunprotocol.org:3478
     turn:
+    host: localhost
+    port: ${server.port:8888}
+    schema: wss
+    websocket: /websocket.signal
   record:
     storage: /data/record
   security:

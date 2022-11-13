@@ -33,7 +33,7 @@ public class Header implements Serializable {
 	 * 请求响应标识
 	 */
 	@Schema(title = "请求响应标识", description = "请求响应标识")
-	private Long id;
+	private String id;
 	/**
 	 * 终端标识
 	 */

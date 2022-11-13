@@ -22,14 +22,14 @@ class IdServiceTest {
 //	@Rollback()
 //	@RepeatedTest(10)
 	void testId() {
-		final long id = this.idService.id();
+		final long id = this.idService.buildId();
 		log.info("生成ID：{}", id);
 	}
 	
 	@Test
 	@CostedTest(count = 100000, thread = 10)
 	void testIdCosted() {
-		this.idService.id();
+		this.idService.buildId();
 	}
 	
 }

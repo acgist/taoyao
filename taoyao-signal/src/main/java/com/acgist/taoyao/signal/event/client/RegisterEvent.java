@@ -1,5 +1,7 @@
 package com.acgist.taoyao.signal.event.client;
 
+import java.util.Map;
+
 import org.springframework.context.ApplicationEvent;
 
 import com.acgist.taoyao.signal.session.ClientSession;
@@ -22,10 +24,15 @@ public class RegisterEvent extends ApplicationEvent {
 	 * 会话
 	 */
 	private ClientSession session;
+	/**
+	 * 参数
+	 */
+	private Map<?, ?> data;
 	
-	public RegisterEvent(ClientSession session) {
+	public RegisterEvent(ClientSession session, Map<?, ?> data) {
 		super(session);
 		this.session = session;
+		this.data = data;
 	}
 
 }

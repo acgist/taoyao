@@ -1,6 +1,14 @@
 /**
  * 桃夭WebRTC终端示例
  */
+/** 配置 */
+const config = {
+	// 当前终端SN
+	sn: 'taoyao',
+	// 信令授权
+	username: 'taoyao',
+	password: 'taoyao'
+};
 /** 音频配置 */
 const defaultAudioConfig = {
 	// 音量：0~1
@@ -33,29 +41,45 @@ const defaultVideoConfig = {
 	// 设备
 	// deviceId: '', 
 	// 帧率
-	frameRate: 30,
+	frameRate: 24,
 	// 裁切
 	// resizeMode: '',
 	// 选摄像头：user|left|right|environment 
 	facingMode: 'environment'
 }
 /** 兼容 */
+const XMLHttpRequest = window.XMLHttpRequest;
 const PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 /** 桃夭 */
 function Taoyao(
 	webSocket,
-	iceServer
+	iceServer,
+	audioConfig,
+	videoConfig
 ) {
 	this.webSocket = webSocket;
 	this.iceServer = iceServer;
+	/** 媒体状态 */
 	this.audioStatus = true;
 	this.videoStatus = true;
+	/** 设备状态 */
+	this.audioEnabled = true;
+	this.videoEnabled = true;
+	/** 媒体信息 */
 	this.audioStreamId = null;
 	this.videoStreamId = null;
-	this.audioConfig = defaultAudioConfig;
-	this.videoConfig = defaultVideoConfig;
+	/** 媒体配置 */
+	this.audioConfig = audioConfig || defaultAudioConfig;
+	this.videoConfig = videoConfig || defaultVideoConfig;
+	/** 本地视频 */
+	this.localVideo = null;
+	/** 终端媒体 */
+	this.clientMedia = {};
+	/** 信令通道 */
+	this.signalChannel = null;
 	/** 初始 */
 	this.init = function() {
+		let self = this;
 		if(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
 			navigator.mediaDevices.enumerateDevices()
 			.then(list => {
@@ -71,57 +95,247 @@ function Taoyao(
 				});
 				if(!audioDevice) {
 					console.log('终端没有音频输入设备');
-					this.audioConfig = false;
+					self.audioEnabled = false;
 				}
 				if(!videoDevice) {
 					console.log('终端没有视频输入设备');
-					this.videoConfig = false;
+					self.videoEnabled = false;
 				}
 			})
-			.catch(e => console.log('获取终端设备失败', e));
+			.catch(e => {
+				console.log('获取终端设备失败', e);
+				self.videoEnabled = false;
+				self.videoEnabled = false;
+			});
 		}
 		return this;
 	};
-	/** 媒体 */
-	this.buildUserMedia = function() {
+	/** 请求 */
+	this.request = function(url, data = {}, method = 'GET', async = true, timeout = 5000, mime = 'json') {
 		return new Promise((resolve, reject) => {
-			console.log("获取终端媒体：", this.audioConfig, this.videoConfig);
+			let xhr = new XMLHttpRequest();
+			xhr.open(method, url, async);
+			if(async) {
+				xhr.timeout = timeout;
+				xhr.responseType = mime;
+				xhr.send(data);
+				xhr.onload = function() {
+					if(xhr.readyState === 4 && xhr.status === 200) {
+						resolve(xhr.response);
+					} else {
+						reject(xhr.response);
+					}
+				}
+				xhr.onerror = reject;
+			} else {
+				xhr.send(data);
+				if(xhr.readyState === 4 && xhr.status === 200) {
+					resolve(JSON.parse(xhr.response));
+				} else {
+					reject(JSON.parse(xhr.response));
+				}
+			}
+		});
+	};
+	/** 媒体配置 */
+	this.configMedia = function(audio = {}, video = {}) {
+		this.audioConfig = {...this.audioConfig, ...audio};
+		this.videoCofnig = {...this.videoCofnig, ...video};
+		console.log('终端媒体配置', this.audioConfig, this.videoConfig);
+	};
+	/** WebRTC配置 */
+	this.configWebrtc = function(config = {}) {
+		this.webSocket = config.signalAddress;
+		this.iceServer = config.stun;
+		console.log('WebRTC配置', this.webSocket, this.iceServer);
+	};
+	/** 信令通道 */
+	this.buildChannel = function(callback) {
+		this.signalChannel = signalChannel;
+		this.signalChannel.connect(this.webSocket, callback);
+	};
+	/** 本地媒体 */
+	this.buildLocalMedia = function() {
+		console.log("获取终端媒体：", this.audioConfig, this.videoConfig);
+		let self = this;
+		return new Promise((resolve, reject) => {
 			if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
 				navigator.mediaDevices.getUserMedia({
-					audio: this.audioConfig,
-					video: this.videoConfig
+					audio: self.audioConfig,
+					video: self.videoConfig
 				})
 				.then(resolve)
 				.catch(reject);
 			} else if(navigator.getUserMedia) {
 				navigator.getUserMedia({
-					audio: this.audioConfig,
-					video: this.videoConfig
+					audio: self.audioConfig,
+					video: self.videoConfig
 				}, resolve, reject);
 			} else {
 				reject("获取终端媒体失败");
 			}
 		});
 	};
-	/** 本地 */
-	this.local = async function(localVideoId, stream) {
-		const localVideo = document.getElementById(localVideoId);
-		if ('srcObject' in localVideo) {
-			localVideo.srcObject = stream;
+	/** 本地媒体 */
+	this.localMedia = async function(localVideoId, stream) {
+		this.localVideo = document.getElementById(localVideoId);
+		if ('srcObject' in this.localVideo) {
+			this.localVideo.srcObject = stream;
 		} else {
-			localVideo.src = URL.createObjectURL(stream);;
+			this.localVideo.src = URL.createObjectURL(stream);;
 		}
-		await localVideo.play();
+		await this.localVideo.play();
 	};
-	/** 连接 */
-	this.connect = function() {
-	};
-	/** 重连 */
-	/** 定时 */
 	/** 媒体 */
 	/** 视频 */
+};
+/** 信令协议 */
+const protocol = {
+	pid: {
+		/** 心跳 */
+		heartbeat: 1000,
+		/** 注册 */
+		register:  2000
+	},
+	/** 当前索引 */
+	index: 100000,
+	/** 最小索引 */
+	minIndex: 100000,
+	/** 最大索引 */
+	maxIndex: 999999,
+	/** 生成ID */
+	buildId: function() {
+		if(this.index++ >= this.maxIndex) {
+			this.index = this.minIndex;
+		}
+		return Date.now() + '' + this.index;
+	},
+	/** 生成协议 */
+	buildProtocol: function(sn, pid, body) {
+		let message = {
+			header: {
+				v: '1.0.0',
+				id: this.buildId(),
+				sn: sn,
+				pid: pid,
+			},
+			"body": body
+		};
+		return JSON.stringify(message);
+	}
+};
+/** 信令消息 */
+/** 信令通道 */
+const signalChannel = {
+	/** 通道 */
+	channel: null,
+	/** 地址 */
+	address: null,
+	/** 回调 */
+	callback: null,
+	/** 心跳时间 */
+	heartbeatTime: 10 * 1000,
+	/** 心跳定时器 */
+	heartbeatTimer: null,
+	/** 防止重连 */
+	lockReconnect: false,
+	/** 重连时间 */
+	connectionTimeout: 5 * 1000,
+	/** 最小重连时间 */
+	minReconnectionDelay: 5 * 1000,
+	/** 最大重连时间 */
+	maxReconnectionDelay: 5 * 60 * 1000,
+	/** 自动重连失败后重连时间增长倍数 */
+	reconnectionDelayGrowFactor: 1.5,
+	/** 关闭 */
+	close: function() {
+		clearTimeout(this.heartbeatTimer);
+	},
 	/** 心跳 */
-}
+	heartbeat: function() {
+		let self = this;
+		self.heartbeatTimer = setTimeout(function() {
+			if (self.channel && self.channel.readyState == WebSocket.OPEN) {
+				self.channel.send(protocol.buildProtocol(config.sn, protocol.pid.heartbeat));
+				self.heartbeat();
+			} else {
+				console.log('发送心跳失败', self.channel);
+			}
+		}, self.heartbeatTime);
+	},
+	/** 重连 */
+	reconnect: function() {
+		let self = this;
+		if (self.lockReconnect) {
+			return;
+		}
+		self.lockReconnect = true;
+		// 关闭旧的通道
+		if(self.channel && self.channel.readyState == WebSocket.OPEN) {
+			self.channel.close();
+			self.channel = null;
+		}
+		// 打开定时重连
+		setTimeout(function() {
+			console.log('信令通道重连', self.address);
+			self.connect(self.address, self.callback, true);
+			self.lockReconnect = false;
+		}, self.connectionTimeout);
+		if (self.connectionTimeout >= self.maxReconnectionDelay) {
+			self.connectionTimeout = self.maxReconnectionDelay;
+		} else {
+			self.connectionTimeout = self.connectionTimeout * self.reconnectionDelayGrowFactor
+		}
+	},
+	/** 连接 */
+	connect: function(address, callback, reconnection = true) {
+		let self = this;
+		this.address = address;
+		this.callback = callback;
+		console.log("连接信令通道", address);
+		return new Promise((resolve, reject) => {
+			self.channel = new WebSocket(address);
+			self.channel.onopen = function(e) {
+				console.log('信令通道打开', e);
+				self.channel.send(protocol.buildProtocol(
+					config.sn,
+					protocol.pid.register,
+					{
+						ip: null,
+						mac: null,
+						signal: 100,
+						battery: 100,
+						username: config.username,
+						password: config.password
+					}
+				));
+				self.connectionTimeout = self.minReconnectionDelay
+				self.heartbeat();
+				resolve(e);
+			};
+			self.channel.onclose = function(e) {
+				console.log('信令通道关闭', self.channel, e);
+				if(reconnection) {
+					self.reconnect();
+				}
+				reject(e);
+			};
+			self.channel.onerror = function(e) {
+				console.error('信令通道异常', self.channel, e);
+				if(reconnection) {
+					self.reconnect();
+				}
+				reject(e);
+			};
+			self.channel.onmessage = function(e) {
+				console.log('信令消息', e.data);
+				if(callback) {
+					callback(JSON.parse(e.data));
+				}
+			};
+		});
+	}
+};
 /*
 var peer;
 var socket; // WebSocket

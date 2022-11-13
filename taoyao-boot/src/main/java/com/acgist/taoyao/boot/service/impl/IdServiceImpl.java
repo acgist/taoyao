@@ -18,7 +18,7 @@ public class IdServiceImpl implements IdService {
 	private IdProperties idProperties;
 	
 	@Override
-	public long id() {
+	public long buildId() {
 		synchronized (this) {
 			if (++this.index > this.idProperties.getMaxIndex()) {
 				this.index = 0;
@@ -36,6 +36,11 @@ public class IdServiceImpl implements IdService {
 			1000000L * this.idProperties.getSn() +
 			// 每秒并发数量
 			this.index;
+	}
+	
+	@Override
+	public String buildIdToString() {
+		return String.valueOf(this.buildId());
 	}
 	
 }

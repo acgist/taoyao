@@ -54,16 +54,6 @@
 
 > 只有公网Mesh架构才需要真正的内网穿透
 
-### STUN/TURN公共服务地址
-
-```
-stun:stun1.l.google.com:19302
-stun:stun2.l.google.com:19302
-stun:stun3.l.google.com:19302
-stun:stun4.l.google.com:19302
-stun:stun.stunprotocol.org:3478
-```
-
 ## 信令
 
 |功能|描述|标识|响应|

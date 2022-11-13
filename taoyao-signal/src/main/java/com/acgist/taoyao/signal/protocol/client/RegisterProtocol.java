@@ -48,7 +48,7 @@ public class RegisterProtocol extends ProtocolBodyMapAdapter {
 			message.setCode(MessageCode.CODE_3401);
 		}
 		session.push(message);
-		return new RegisterEvent(session);
+		return new RegisterEvent(session, body);
 	}
 
 }
