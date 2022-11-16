@@ -14,16 +14,9 @@
 	<packaging>jar</packaging>
 
 	<name>taoyao-boot</name>
-	<description>基础：启动模型</description>
+	<description>启动模块：启动模块</description>
 
 	<dependencies>
-		<!-- 文档 -->
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-ui</artifactId>
-			<optional>true</optional>
-		</dependency>
-		<!-- Web -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-web</artifactId>

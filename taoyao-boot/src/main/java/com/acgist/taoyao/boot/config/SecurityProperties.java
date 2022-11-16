@@ -21,6 +21,10 @@ public class SecurityProperties {
 	public static final String BASIC = "Basic";
 
 	/**
+	 * 是否启用
+	 */
+	private Boolean enabled;
+	/**
 	 * 范围
 	 */
 	private String realm;

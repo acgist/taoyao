@@ -50,8 +50,3 @@ SDP只是一种信息格式的描述标准，不属于传输协议，但是可�
 |会话通道|SIP/SDP|
 |媒体通道|RTP/RTCP/SRTP/SRTCP|
 
-## WebRTC资料
-
-[GB28181](https://blog.csdn.net/jisuanji111111/article/details/121634199)
-[WebRTC协议](http://www.manoner.com/post/音视频基础/WebRTC核心组件和协议栈/)
-[WebRTC开源项目](https://blog.csdn.net/ababab12345/article/details/115585378)

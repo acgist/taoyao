@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 系统配置
+ * 平台配置
  * 
  * @author acgist
  */

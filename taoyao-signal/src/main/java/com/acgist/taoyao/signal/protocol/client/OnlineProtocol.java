@@ -1,14 +1,13 @@
 package com.acgist.taoyao.signal.protocol.client;
 
-import org.springframework.context.ApplicationEvent;
 import org.springframework.stereotype.Component;
 
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
-import com.acgist.taoyao.signal.session.ClientSession;
 
 /**
- * 上线信令协议
+ * 上线信令
  * 
  * @author acgist
  */
@@ -21,12 +20,12 @@ public class OnlineProtocol extends ProtocolAdapter {
 	public static final Integer PID = 2002;
 	
 	public OnlineProtocol() {
-		super(PID);
+		super(PID, "上线信令");
 	}
 	
 	@Override
-	public ApplicationEvent execute(String sn, Message message, ClientSession session) {
-		return null;
+	public void execute(String sn, Message message, ClientSession session) {
+		// 忽略
 	}
 
 }

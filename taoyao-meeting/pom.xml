@@ -19,7 +19,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-signal</artifactId>
+			<artifactId>taoyao-media</artifactId>
 		</dependency>
 	</dependencies>
 

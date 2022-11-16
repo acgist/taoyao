@@ -14,7 +14,7 @@
 	<packaging>jar</packaging>
 
 	<name>taoyao-server</name>
-	<description>服务：启动服务</description>
+	<description>启动服务：启动服务</description>
 
 	<properties>
 		<taoyao.maven.basedir>${project.parent.basedir}</taoyao.maven.basedir>
@@ -28,15 +28,7 @@
 		</dependency>
 		<dependency>
 			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-signal</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.acgist</groupId>
 			<artifactId>taoyao-meeting</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-ui</artifactId>
 		</dependency>
 		
 		<dependency>

@@ -24,6 +24,8 @@
 		<!-- 版本 -->
 		<java.version>17</java.version>
 		<lombok.version>1.18.24</lombok.version>
+		<javacv.version>1.5.8</javacv.version>
+		<ffmpeg.version>5.1.2</ffmpeg.version>
 		<kurento.version>6.18.0</kurento.version>
 		<springdoc.version>1.6.12</springdoc.version>
 		<mapstruct.version>1.5.3.Final</mapstruct.version>
@@ -61,7 +63,7 @@
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
 		</dependency>
-		<!-- 工具 -->
+		<!-- 开发工具 -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
@@ -69,6 +71,11 @@
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-collections4</artifactId>
+		</dependency>
+		<!-- 接口文档 -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-ui</artifactId>
 		</dependency>
 		<!-- Jackson -->
 		<dependency>
@@ -186,11 +193,61 @@
 				<artifactId>kurento-client</artifactId>
 				<version>${kurento.version}</version>
 			</dependency>
+			<!--
+				媒体：FFmpeg
+				android-arm
+				android-arm64
+				android-x86
+				android-x86_64
+				linux-arm64
+				linux-armhf
+				linux-ppc64le
+				linux-x86
+				linux-x86_64
+				macosx-arm64
+				macosx-x86_64
+				windows-x86
+				windows-x86_64
+			-->
+			<dependency>
+			    <groupId>org.bytedeco</groupId>
+			    <artifactId>ffmpeg-platform</artifactId>
+			    <version>${ffmpeg.version}-${javacv.version}</version>
+			    <exclusions>
+				    <exclusion>
+					    <groupId>org.bytedeco</groupId>
+					    <artifactId>ffmpeg</artifactId>
+				    </exclusion>
+				    <exclusion>
+					    <groupId>org.bytedeco</groupId>
+					    <artifactId>javacpp</artifactId>
+				    </exclusion>
+			    </exclusions>
+			</dependency>
+			<dependency>
+			    <groupId>org.bytedeco</groupId>
+			    <artifactId>ffmpeg</artifactId>
+			    <version>${ffmpeg.version}-${javacv.version}</version>
+			    <classifier>${javacv.os.version}</classifier>
+			</dependency>
+			<dependency>
+			    <groupId>org.bytedeco</groupId>
+			    <artifactId>javacpp</artifactId>
+			    <version>${javacv.version}</version>
+			    <classifier>${javacv.os.version}</classifier>
+			</dependency>
 			<!-- 集合工具 -->
 			<dependency>
 				<groupId>org.apache.commons</groupId>
 				<artifactId>commons-collections4</artifactId>
 				<version>${collections4.version}</version>
+			</dependency>
+			<!-- lombok -->
+			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${lombok.version}</version>
+				<scope>provided</scope>
 			</dependency>
 			<!-- mapstruct -->
 			<dependency>
@@ -203,13 +260,6 @@
 				<groupId>org.mapstruct</groupId>
 				<artifactId>mapstruct-processor</artifactId>
 				<version>${mapstruct.version}</version>
-				<scope>provided</scope>
-			</dependency>
-			<!-- lombok -->
-			<dependency>
-				<groupId>org.projectlombok</groupId>
-				<artifactId>lombok</artifactId>
-				<version>${lombok.version}</version>
 				<scope>provided</scope>
 			</dependency>
 		</dependencies>
@@ -306,6 +356,7 @@
 			</activation>
 			<properties>
 				<profile>dev</profile>
+				<javacv.os.version>windows-x86_64</javacv.os.version>
 				<taoyao.maven.jvm.arg></taoyao.maven.jvm.arg>
 				<taoyao.maven.jvm.mem>-Xms512M -Xmx1024M -XX:NewRatio=1 -XX:SurvivorRatio=2</taoyao.maven.jvm.mem>
 			</properties>
@@ -336,6 +387,7 @@
 			<id>test</id>
 			<properties>
 				<profile>test</profile>
+				<javacv.os.version>linux-x86_64</javacv.os.version>
 				<taoyao.maven.jvm.arg></taoyao.maven.jvm.arg>
 				<taoyao.maven.jvm.mem>-Xms512M -Xmx1024M -XX:NewRatio=1 -XX:SurvivorRatio=2</taoyao.maven.jvm.mem>
 			</properties>
@@ -367,7 +419,8 @@
 			<id>release</id>
 			<properties>
 				<profile>release</profile>
-				<taoyao.maven.jvm.arg>-Dtaoyao.password=123456</taoyao.maven.jvm.arg>
+				<javacv.os.version>linux-x86_64</javacv.os.version>
+				<taoyao.maven.jvm.arg></taoyao.maven.jvm.arg>
 				<taoyao.maven.jvm.mem>-Xms2048M -Xmx4096M -XX:NewRatio=1 -XX:SurvivorRatio=2</taoyao.maven.jvm.mem>
 			</properties>
 			<build>

@@ -27,7 +27,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-boot</artifactId>
+			<artifactId>taoyao-signal</artifactId>
 		</dependency>
 	</dependencies>
 

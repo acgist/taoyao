@@ -5,19 +5,19 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.annotation.PostConstruct;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationEvent;
 import org.springframework.stereotype.Service;
 
 import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.JSONUtils;
+import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.ClientSessionManager;
 import com.acgist.taoyao.signal.protocol.client.RegisterProtocol;
-import com.acgist.taoyao.signal.session.ClientSession;
-import com.acgist.taoyao.signal.session.ClientSessionManager;
+import com.acgist.taoyao.signal.protocol.platform.ErrorProtocol;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,18 +38,25 @@ public class ProtocolManager {
 	@Autowired
 	private ApplicationContext context;
 	@Autowired
+	private ErrorProtocol errorProtocol;
+	@Autowired
 	private ClientSessionManager clientSessionManager;
 	
 	@PostConstruct
 	public void init() {
 		final Map<String, Protocol> map = this.context.getBeansOfType(Protocol.class);
-		map.forEach((k, v) -> {
-			final Integer protocol = v.protocol();
-			if(this.protocolMapping.containsKey(protocol)) {
-				throw MessageCodeException.of("存在重复信令协议：" + protocol);
+		map.entrySet().stream()
+		.sorted((a, z) -> Integer.compare(a.getValue().pid(), z.getValue().pid()))
+		.forEach(e -> {
+			final String k = e.getKey();
+			final Protocol v = e.getValue();
+			final Integer pid = v.pid();
+			final String name = v.name();
+			if(this.protocolMapping.containsKey(pid)) {
+				throw MessageCodeException.of("存在重复信令协议：" + pid);
 			}
-			log.info("注册信令协议：{}-{}", protocol, k);
-			this.protocolMapping.put(protocol, v);
+			log.info("注册信令协议：{}-{}-{}", pid, name, k);
+			this.protocolMapping.put(pid, v);
 		});
 	}
 	
@@ -61,38 +68,39 @@ public class ProtocolManager {
 	 */
 	public void execute(String message, AutoCloseable instance) {
 		log.debug("执行信令消息：{}", message);
-		if(StringUtils.isEmpty(message)) {
-			log.warn("消息为空：{}", message);
+		// 验证请求
+		final Message value = JSONUtils.toJava(message, Message.class);
+		if(value == null) {
+			log.warn("消息格式错误（解析失败）：{}", message);
 			return;
 		}
-		final Message value = JSONUtils.toJava(message, Message.class);
 		final Header header = value.getHeader();
 		if(header == null) {
 			log.warn("消息格式错误（没有头部）：{}", message);
 			return;
 		}
+		final String id = header.getId();
 		final String sn = header.getSn();
 		final Integer pid = header.getPid();
-		if(sn == null || pid == null) {
-			log.warn("消息格式错误（没有SN或者PID）：{}", message);
+		if(id == null || sn == null || pid == null) {
+			log.warn("消息格式错误（id|sn|pid）：{}", message);
 			return;
 		}
+		// 设置缓存ID
+		this.errorProtocol.set(id);
+		// 开始处理协议
 		final Protocol protocol = this.protocolMapping.get(pid);
 		if(protocol == null) {
 			log.warn("不支持的信令协议：{}", message);
 			return;
 		}
-		ApplicationEvent event = null;
 		final ClientSession session = this.clientSessionManager.session(instance);
-		if(session != null && protocol instanceof RegisterProtocol) {
-			event = protocol.execute(sn, value, session);
-		} else if(session != null && session.authorized()) {
-			event = protocol.execute(sn, value, session);
+		if(protocol instanceof RegisterProtocol) {
+			protocol.execute(sn, value, session);
+		} else if(session.authorized() && sn.equals(session.sn())) {
+			protocol.execute(sn, value, session);
 		} else {
-			log.warn("会话没有权限：{}", message);
-		}
-		if(event != null) {
-			this.context.publishEvent(event);
+			session.push(this.errorProtocol.build(MessageCode.CODE_3401, "终端会话没有授权"));
 		}
 	}
 

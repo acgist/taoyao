@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
-import com.acgist.taoyao.signal.session.websocket.WebSocketSignal;
+import com.acgist.taoyao.signal.client.websocket.WebSocketSignal;
 
 /**
  * 信令配置

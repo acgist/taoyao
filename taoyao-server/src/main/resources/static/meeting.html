@@ -71,11 +71,12 @@
 		switch(data.header.pid) {
 		case protocol.pid.heartbeat:
 			// 心跳
-			break;
+			return true;
 		case protocol.pid.register:
-			// 录制
-			break;
+			// 注册
+			return true;
 		}
+		return false;
 	}
 	// 创建房间
 	function create() {
@@ -91,7 +92,7 @@
 	}
 	// 录制视频
 	function record(e) {
-		taoyao.push(protocol.buildProtocol(config.sn, protocol.pid.heartbeat), () => {
+		taoyao.push(protocol.buildProtocol(taoyaoConfig.sn, protocol.pid.heartbeat), () => {
 			classSwitch(e, 'active');
 		});
 	}

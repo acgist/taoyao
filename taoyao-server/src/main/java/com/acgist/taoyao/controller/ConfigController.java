@@ -7,8 +7,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.acgist.taoyao.boot.config.MediaProperties;
 import com.acgist.taoyao.boot.config.WebrtcProperties;
+import com.acgist.taoyao.boot.model.Message;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
@@ -28,14 +32,16 @@ public class ConfigController {
 	
 	@Operation(summary = "媒体配置", description = "媒体配置")
 	@GetMapping("/media")
-	public MediaProperties media() {
-		return this.mediaProperties;
+	@ApiResponse(content = @Content(schema = @Schema(implementation = MediaProperties.class)))
+	public Message media() {
+		return Message.success(this.mediaProperties);
 	}
 	
 	@Operation(summary = "WebRTC配置", description = "WebRTC配置")
 	@GetMapping("/webrtc")
-	public WebrtcProperties webrtc() {
-		return this.webrtcProperties;
+	@ApiResponse(content = @Content(schema = @Schema(implementation = WebrtcProperties.class)))
+	public Message webrtc() {
+		return Message.success(this.webrtcProperties);
 	}
 	
 }

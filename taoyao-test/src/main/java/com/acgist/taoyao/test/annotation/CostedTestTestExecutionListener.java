@@ -22,6 +22,9 @@ public class CostedTestTestExecutionListener implements TestExecutionListener {
 	@Override
 	public void afterTestMethod(TestContext testContext) throws Exception {
 		final CostedTest costedTest = testContext.getTestMethod().getDeclaredAnnotation(CostedTest.class);
+		if(costedTest == null) {
+			return;
+		}
 		final int count  = costedTest.count();
 		final int thread  = costedTest.thread();
 		final long timeout = costedTest.timeout();

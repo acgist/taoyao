@@ -24,7 +24,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Message implements Serializable {
+public class Message implements Cloneable, Serializable {
 
 	private static final long serialVersionUID = 1L;
 
@@ -61,8 +61,8 @@ public class Message implements Serializable {
 	}
 	
 	/**
-	 * @param code 状态编码
-	 * @param message
+	 * @param code 响应编码
+	 * @param message 响应描述
 	 * 
 	 * @return this
 	 */
@@ -161,6 +161,30 @@ public class Message implements Serializable {
 		return failMessage;
 	}
 
+	@Override
+	public Message clone() {
+		try {
+			return (Message) super.clone();
+		} catch (CloneNotSupportedException e) {
+			return new Message(this.code, this.message, this.header, this.body);
+		}
+	}
+	
+	/**
+	 * 克隆排除主体
+	 * 
+	 * @return 请求响应消息
+	 */
+	public Message cloneWidthoutBody() {
+		try {
+			final Message message = (Message) super.clone();
+			message.setBody(null);
+			return message;
+		} catch (CloneNotSupportedException e) {
+			return new Message(this.code, this.message, this.header, null);
+		}
+	}
+	
 	@Override
 	public String toString() {
 		return JSONUtils.toJSON(this);

@@ -81,6 +81,7 @@ taoyao:
   record:
     storage: /data/record
   security:
+    enabled: true
     realm: taoyao
     permit: /v3/api-docs/,/swagger-ui/,/favicon.ico,/error
     username: taoyao
