@@ -6,11 +6,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
-import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.client.ClientSessionStatus;
 import com.acgist.taoyao.signal.event.client.RegisterEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
+import com.acgist.taoyao.signal.protocol.client.ConfigProtocol;
 import com.acgist.taoyao.signal.protocol.client.OnlineProtocol;
 
 /**
@@ -22,6 +22,8 @@ import com.acgist.taoyao.signal.protocol.client.OnlineProtocol;
 public class RegisterListener extends ApplicationListenerAdapter<RegisterEvent> {
 
 	@Autowired
+	private ConfigProtocol configProtocol;
+	@Autowired
 	private OnlineProtocol onlineProtocol;
 
 	@Async
@@ -31,11 +33,13 @@ public class RegisterListener extends ApplicationListenerAdapter<RegisterEvent> 
 		if (!session.authorized()) {
 			return;
 		}
+		// 下发配置
+		session.push(this.configProtocol.build());
 		// 广播上线事件
-		final Message message = this.onlineProtocol.build(
-			Map.of("sn", session.sn())
+		this.clientSessionManager.broadcast(
+			session.sn(),
+			this.onlineProtocol.build(Map.of("sn", session.sn()))
 		);
-		this.clientSessionManager.broadcast(session.sn(), message);
 		// 修改终端状态
 		final Map<?, ?> body = event.getBody();
 		final ClientSessionStatus status = session.status();

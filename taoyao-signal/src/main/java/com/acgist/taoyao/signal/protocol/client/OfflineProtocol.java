@@ -14,9 +14,6 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 @Component
 public class OfflineProtocol extends ProtocolAdapter {
 	
-	/**
-	 * 信令协议标识
-	 */
 	public static final Integer PID = 2003;
 
 	public OfflineProtocol() {

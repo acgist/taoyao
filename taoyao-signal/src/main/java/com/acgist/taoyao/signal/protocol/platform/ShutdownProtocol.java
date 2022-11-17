@@ -18,9 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class ShutdownProtocol extends ProtocolAdapter {
 
-	/**
-	 * 信令协议标识
-	 */
 	public static final Integer PID = 1000;
 	
 	public ShutdownProtocol() {

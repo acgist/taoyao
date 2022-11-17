@@ -1,5 +1,6 @@
 package com.acgist.taoyao.signal.protocol.client;
 
+import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
@@ -17,9 +18,6 @@ import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 @Component
 public class HeartbeatProtocol extends ProtocolMapAdapter {
 
-	/**
-	 * 信令协议标识
-	 */
 	public static final Integer PID = 2005;
 	
 	public HeartbeatProtocol() {
@@ -34,6 +32,7 @@ public class HeartbeatProtocol extends ProtocolMapAdapter {
 		final ClientSessionStatus status = session.status();
 		status.setSignal((Integer) body.get("signal"));
 		status.setBattery((Integer) body.get("battery"));
+		status.setLastHeartbeat(LocalDateTime.now());
 	}
 
 }

@@ -17,9 +17,6 @@ import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 @Component
 public class ScriptProtocol extends ProtocolMapAdapter {
 
-	/**
-	 * 信令协议标识
-	 */
 	public static final Integer PID = 1001;
 	
 	public ScriptProtocol() {

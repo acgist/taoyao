@@ -1,0 +1,52 @@
+package com.acgist.taoyao.signal.protocol.client;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
+
+import com.acgist.taoyao.boot.config.MediaProperties;
+import com.acgist.taoyao.boot.config.WebrtcProperties;
+import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.utils.DateUtils;
+import com.acgist.taoyao.boot.utils.DateUtils.DateTimeStyle;
+import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
+
+/**
+ * 下发配置信令
+ * 
+ * @author acgist
+ */
+@Component
+public class ConfigProtocol extends ProtocolAdapter {
+
+	public static final Integer PID = 2004;
+	
+	@Autowired
+	private MediaProperties mediaProperties;
+	@Autowired
+	private WebrtcProperties webrtcProperties;
+	
+	public ConfigProtocol() {
+		super(PID, "信令协议标识");
+	}
+
+	@Override
+	public void execute(String sn, Message message, ClientSession session) {
+		// 忽略
+	}
+	
+	@Override
+	public Message build() {
+		final Message message = super.build();
+		message.setBody(Map.of(
+			"time", DateUtils.format(LocalDateTime.now(), DateTimeStyle.YYYYMMDDHH24MMSS),
+			"media", this.mediaProperties,
+			"webrtc", this.webrtcProperties
+		));
+		return message;
+	}
+
+}

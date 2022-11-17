@@ -77,7 +77,7 @@ public abstract class ProtocolAdapter implements Protocol {
 	@Override
 	public Message build(String id, MessageCode code, String message, Object body) {
 		if(StringUtils.isEmpty(id)) {
-			id = this.taoyaoProperties.getVersion();
+			id = this.idService.buildIdToString();
 		}
 		final Header header = Header.builder()
 			.v(this.taoyaoProperties.getVersion())

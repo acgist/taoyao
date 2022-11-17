@@ -22,9 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class StatusProtocol extends ProtocolMapAdapter {
 
-	/**
-	 * 信令协议标识
-	 */
 	public static final Integer PID = 2007;
 	
 	@Autowired

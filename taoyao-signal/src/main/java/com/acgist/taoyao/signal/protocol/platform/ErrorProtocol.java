@@ -1,6 +1,5 @@
 package com.acgist.taoyao.signal.protocol.platform;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
 import com.acgist.taoyao.boot.model.Message;
@@ -16,9 +15,6 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 @Component
 public class ErrorProtocol extends ProtocolAdapter {
 
-	/**
-	 * 信令协议标识
-	 */
 	public static final Integer PID = 1999;
 	
 	/**
@@ -44,7 +40,7 @@ public class ErrorProtocol extends ProtocolAdapter {
 	@Override
 	public Message build(String id, MessageCode code, String message, Object body) {
 		final String oldId = this.idLocal.get();
-		if(StringUtils.isEmpty(oldId)) {
+		if(oldId == null) {
 			id = this.idService.buildIdToString();
 		} else {
 			id = oldId;

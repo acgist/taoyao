@@ -1,5 +1,9 @@
 package com.acgist.taoyao.signal.client;
 
+import java.time.LocalDateTime;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import lombok.Getter;
 import lombok.Setter;
 
@@ -32,5 +36,10 @@ public class ClientSessionStatus {
 	 * 电量（0~100）
 	 */
 	private Integer battery = 0;
+	/**
+	 * 最后心跳时间
+	 */
+	@JsonIgnore
+	private LocalDateTime lastHeartbeat = LocalDateTime.now();
 	
 }
