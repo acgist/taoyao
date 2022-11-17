@@ -10,7 +10,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.event.client.CloseEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
-import com.acgist.taoyao.signal.protocol.client.OfflineProtocol;
+import com.acgist.taoyao.signal.protocol.client.ClientOfflineProtocol;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 public class CloseListener extends ApplicationListenerAdapter<CloseEvent> {
 
 	@Autowired
-	private OfflineProtocol offlineProtocol;
+	private ClientOfflineProtocol offlineProtocol;
 	
 	@Override
 	public void onApplicationEvent(CloseEvent event) {

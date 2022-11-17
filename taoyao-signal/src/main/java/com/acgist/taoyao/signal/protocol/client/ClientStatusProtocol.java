@@ -11,23 +11,20 @@ import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.client.ClientSessionManager;
 import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * 终端状态信令
  * 
  * @author acgist
  */
-@Slf4j
 @Component
-public class StatusProtocol extends ProtocolMapAdapter {
+public class ClientStatusProtocol extends ProtocolMapAdapter {
 
-	public static final Integer PID = 2007;
+	public static final Integer PID = 2998;
 	
 	@Autowired
 	private ClientSessionManager clientSessionManager;
 	
-	public StatusProtocol() {
+	public ClientStatusProtocol() {
 		super(PID, "终端状态信令");
 	}
 
@@ -38,13 +35,8 @@ public class StatusProtocol extends ProtocolMapAdapter {
 		if(StringUtils.isEmpty(querySn)) {
 			querySn = sn;
 		}
-		final ClientSession clientSession = this.clientSessionManager.session(querySn);
-		if(clientSession != null) {
-			message.setBody(clientSession.status());
-			session.push(message);
-		} else {
-			log.warn("终端无效：{}", querySn);
-		}
+		message.setBody(this.clientSessionManager.status(querySn));
+		session.push(message);
 	}
 	
 }

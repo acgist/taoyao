@@ -20,14 +20,14 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Component
-public class UnicastProtocol extends ProtocolMapAdapter {
+public class ClientUnicastProtocol extends ProtocolMapAdapter {
 
-	public static final Integer PID = 2008;
+	public static final Integer PID = 2006;
 	
 	@Autowired
 	private ClientSessionManager clientSessionManager;
 	
-	public UnicastProtocol() {
+	public ClientUnicastProtocol() {
 		super(PID, "单播信令");
 	}
 

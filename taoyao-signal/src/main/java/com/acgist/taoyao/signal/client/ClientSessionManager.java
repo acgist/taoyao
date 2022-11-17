@@ -107,6 +107,16 @@ public class ClientSessionManager {
 			.findFirst()
 			.orElse(null);
 	}
+
+	/**
+	 * @param sn 终端标识
+	 * 
+	 * @return 终端状态
+	 */
+	public ClientSessionStatus status(String sn) {
+		final ClientSession session = this.session(sn);
+		return session == null ? null : session.status();
+	}
 	
 	/**
 	 * @return 所有终端会话

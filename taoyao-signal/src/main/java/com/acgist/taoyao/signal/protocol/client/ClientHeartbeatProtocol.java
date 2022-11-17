@@ -16,11 +16,11 @@ import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
  * @author acgist
  */
 @Component
-public class HeartbeatProtocol extends ProtocolMapAdapter {
+public class ClientHeartbeatProtocol extends ProtocolMapAdapter {
 
 	public static final Integer PID = 2005;
 	
-	public HeartbeatProtocol() {
+	public ClientHeartbeatProtocol() {
 		super(PID, "心跳信令");
 	}
 	

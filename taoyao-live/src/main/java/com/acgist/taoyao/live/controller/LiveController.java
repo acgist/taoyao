@@ -1,6 +1,7 @@
 package com.acgist.taoyao.live.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -27,6 +28,18 @@ public class LiveController {
 	@GetMapping("/list")
 	@ApiResponse(content = @Content(schema = @Schema(implementation = Live.class)))
 	public Message list() {
+		return Message.success();
+	}
+	
+	@Operation(summary = "直播状态", description = "直播状态")
+	@GetMapping("/status/{id}")
+	public Message status(@PathVariable String id) {
+		return Message.success();
+	}
+	
+	@Operation(summary = "直播终端列表", description = "直播终端列表")
+	@GetMapping("/list/client")
+	public Message listClient() {
 		return Message.success();
 	}
 	

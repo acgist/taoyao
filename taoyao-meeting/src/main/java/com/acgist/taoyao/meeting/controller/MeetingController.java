@@ -1,6 +1,7 @@
 package com.acgist.taoyao.meeting.controller;
 
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,4 +31,16 @@ public class MeetingController {
 		return Message.success();
 	}
 
+	@Operation(summary = "会议状态", description = "会议状态")
+	@GetMapping("/status/{id}")
+	public Message status(@PathVariable String id) {
+		return Message.success();
+	}
+	
+	@Operation(summary = "会议终端列表", description = "会议终端列表")
+	@GetMapping("/list/client")
+	public Message listClient() {
+		return Message.success();
+	}
+	
 }

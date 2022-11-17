@@ -10,8 +10,8 @@ import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.client.ClientSessionStatus;
 import com.acgist.taoyao.signal.event.client.RegisterEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
-import com.acgist.taoyao.signal.protocol.client.ConfigProtocol;
-import com.acgist.taoyao.signal.protocol.client.OnlineProtocol;
+import com.acgist.taoyao.signal.protocol.client.ClientConfigProtocol;
+import com.acgist.taoyao.signal.protocol.client.ClientOnlineProtocol;
 
 /**
  * 注册监听
@@ -22,9 +22,9 @@ import com.acgist.taoyao.signal.protocol.client.OnlineProtocol;
 public class RegisterListener extends ApplicationListenerAdapter<RegisterEvent> {
 
 	@Autowired
-	private ConfigProtocol configProtocol;
+	private ClientConfigProtocol configProtocol;
 	@Autowired
-	private OnlineProtocol onlineProtocol;
+	private ClientOnlineProtocol onlineProtocol;
 
 	@Async
 	@Override

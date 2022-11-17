@@ -2,6 +2,7 @@ package com.acgist.taoyao.signal.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -28,6 +29,12 @@ public class ClientController {
 	@GetMapping("/list")
 	public Message list() {
 		return Message.success(this.clientSessionManager.status());
+	}
+	
+	@Operation(summary = "终端状态", description = "终端状态")
+	@GetMapping("/status/{sn}")
+	public Message status(@PathVariable String sn) {
+		return Message.success(this.clientSessionManager.status(sn));
 	}
 	
 }

@@ -9,26 +9,25 @@ import com.acgist.taoyao.signal.client.ClientSessionManager;
 import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 
 /**
- * 终端列表信令
+ * 广播信令
  * 
  * @author acgist
  */
 @Component
-public class ListProtocol extends ProtocolAdapter {
+public class ClientBroadcastProtocol extends ProtocolAdapter {
 
-	public static final Integer PID = 2006;
+	public static final Integer PID = 2007;
 	
 	@Autowired
 	private ClientSessionManager clientSessionManager;
 	
-	public ListProtocol() {
-		super(PID, "终端列表信令");
+	public ClientBroadcastProtocol() {
+		super(PID, "广播信令");
 	}
 
 	@Override
 	public void execute(String sn, Message message, ClientSession session) {
-		message.setBody(this.clientSessionManager.status());
-		session.push(message);
+		this.clientSessionManager.broadcast(sn, message);
 	}
-	
+
 }

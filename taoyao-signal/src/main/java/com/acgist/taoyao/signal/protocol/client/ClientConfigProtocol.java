@@ -20,7 +20,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
  * @author acgist
  */
 @Component
-public class ConfigProtocol extends ProtocolAdapter {
+public class ClientConfigProtocol extends ProtocolAdapter {
 
 	public static final Integer PID = 2004;
 	
@@ -29,7 +29,7 @@ public class ConfigProtocol extends ProtocolAdapter {
 	@Autowired
 	private WebrtcProperties webrtcProperties;
 	
-	public ConfigProtocol() {
+	public ClientConfigProtocol() {
 		super(PID, "信令协议标识");
 	}
 

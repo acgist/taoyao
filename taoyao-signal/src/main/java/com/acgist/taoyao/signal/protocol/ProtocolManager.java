@@ -16,7 +16,7 @@ import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.client.ClientSessionManager;
-import com.acgist.taoyao.signal.protocol.client.RegisterProtocol;
+import com.acgist.taoyao.signal.protocol.client.ClientRegisterProtocol;
 import com.acgist.taoyao.signal.protocol.platform.ErrorProtocol;
 
 import lombok.extern.slf4j.Slf4j;
@@ -95,7 +95,7 @@ public class ProtocolManager {
 			return;
 		}
 		final ClientSession session = this.clientSessionManager.session(instance);
-		if(protocol instanceof RegisterProtocol) {
+		if(protocol instanceof ClientRegisterProtocol) {
 			protocol.execute(sn, value, session);
 		} else if(session.authorized() && sn.equals(session.sn())) {
 			protocol.execute(sn, value, session);

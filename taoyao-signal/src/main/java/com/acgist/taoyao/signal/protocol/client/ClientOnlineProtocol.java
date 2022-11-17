@@ -12,11 +12,11 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
  * @author acgist
  */
 @Component
-public class OnlineProtocol extends ProtocolAdapter {
+public class ClientOnlineProtocol extends ProtocolAdapter {
 
 	public static final Integer PID = 2002;
 	
-	public OnlineProtocol() {
+	public ClientOnlineProtocol() {
 		super(PID, "上线信令");
 	}
 	

@@ -19,14 +19,14 @@ import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
  * @author acgist
  */
 @Component
-public class RegisterProtocol extends ProtocolMapAdapter {
+public class ClientRegisterProtocol extends ProtocolMapAdapter {
 
 	public static final Integer PID = 2000;
 	
 	@Autowired
 	private SecurityProperties securityProperties;
 	
-	public RegisterProtocol() {
+	public ClientRegisterProtocol() {
 		super(PID, "注册信令");
 	}
 
