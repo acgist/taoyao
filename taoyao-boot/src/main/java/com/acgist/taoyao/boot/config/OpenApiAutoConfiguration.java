@@ -1,7 +1,5 @@
 package com.acgist.taoyao.boot.config;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 
 import org.springdoc.core.GroupedOpenApi;
@@ -69,9 +67,9 @@ public class OpenApiAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public OpenAPI openAPI() {
+		// 本地测试不要配置服务器的信息
 		return new OpenAPI()
 			.info(this.buildInfo())
-			.servers(this.buildServers())
 			.security(this.buildSecurity())
 			.components(this.buildComponents());
 	}
@@ -106,22 +104,6 @@ public class OpenApiAutoConfiguration {
 			.url("https://www.apache.org/licenses/LICENSE-2.0.html");
 	}
 
-	/**
-	 * @return 服务器的信息
-	 */
-	private List<Server> buildServers() {
-		try {
-			return List.of(
-				new Server()
-				.url(String.format("https://%s:%d", InetAddress.getLocalHost().getHostAddress(), this.port))
-				.description(this.taoyaoProperties.getDescription())
-			);
-		} catch (UnknownHostException e) {
-			log.error("获取服务器的信息异常", e);
-		}
-		return List.of();
-	}
-	
 	/**
 	 * @return 授权
 	 */

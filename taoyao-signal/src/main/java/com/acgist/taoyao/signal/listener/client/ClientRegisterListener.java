@@ -8,18 +8,18 @@ import org.springframework.stereotype.Component;
 
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.client.ClientSessionStatus;
-import com.acgist.taoyao.signal.event.client.RegisterEvent;
+import com.acgist.taoyao.signal.event.client.ClientRegisterEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
 import com.acgist.taoyao.signal.protocol.client.ClientConfigProtocol;
 import com.acgist.taoyao.signal.protocol.client.ClientOnlineProtocol;
 
 /**
- * 注册监听
+ * 终端注册监听
  * 
  * @author acgist
  */
 @Component
-public class RegisterListener extends ApplicationListenerAdapter<RegisterEvent> {
+public class ClientRegisterListener extends ApplicationListenerAdapter<ClientRegisterEvent> {
 
 	@Autowired
 	private ClientConfigProtocol configProtocol;
@@ -28,7 +28,7 @@ public class RegisterListener extends ApplicationListenerAdapter<RegisterEvent> 
 
 	@Async
 	@Override
-	public void onApplicationEvent(RegisterEvent event) {
+	public void onApplicationEvent(ClientRegisterEvent event) {
 		final ClientSession session = event.getSession();
 		if (!session.authorized()) {
 			return;

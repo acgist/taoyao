@@ -22,6 +22,8 @@ public abstract class ProtocolMapAdapter extends ProtocolAdapter {
 		final Object body = message.getBody();
 		if(body instanceof Map<?, ?> map) {
 			this.execute(sn, map, message, session);
+		} else if(body == null) {
+			this.execute(sn, Map.of(), message, session);
 		} else {
 			throw MessageCodeException.of("信令主体类型错误：" + message);
 		}

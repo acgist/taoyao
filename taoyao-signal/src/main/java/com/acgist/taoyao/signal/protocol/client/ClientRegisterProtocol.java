@@ -10,11 +10,11 @@ import com.acgist.taoyao.boot.config.SecurityProperties;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.signal.client.ClientSession;
-import com.acgist.taoyao.signal.event.client.RegisterEvent;
+import com.acgist.taoyao.signal.event.client.ClientRegisterEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 
 /**
- * 注册信令
+ * 终端注册信令
  * 
  * @author acgist
  */
@@ -27,7 +27,7 @@ public class ClientRegisterProtocol extends ProtocolMapAdapter {
 	private SecurityProperties securityProperties;
 	
 	public ClientRegisterProtocol() {
-		super(PID, "注册信令");
+		super(PID, "终端注册信令");
 	}
 
 	@Override
@@ -48,7 +48,7 @@ public class ClientRegisterProtocol extends ProtocolMapAdapter {
 		// 推送消息
 		session.push(message.cloneWidthoutBody());
 		// 发送事件
-		this.publishEvent(new RegisterEvent(body, message, session));
+		this.publishEvent(new ClientRegisterEvent(body, message, session));
 	}
 
 }

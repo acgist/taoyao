@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.event.client.CloseEvent;
+import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -152,7 +152,7 @@ public class ClientSessionManager {
 				// 移除管理
 				this.sessions.remove(session);
 				// 关闭事件
-				this.context.publishEvent(new CloseEvent(null, session));
+				this.context.publishEvent(new ClientCloseEvent(null, session));
 			}
 		}
 	}

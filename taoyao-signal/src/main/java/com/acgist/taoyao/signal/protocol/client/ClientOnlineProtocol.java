@@ -7,7 +7,7 @@ import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 
 /**
- * 上线信令
+ * 终端上线信令
  * 
  * @author acgist
  */
@@ -17,7 +17,7 @@ public class ClientOnlineProtocol extends ProtocolAdapter {
 	public static final Integer PID = 2002;
 	
 	public ClientOnlineProtocol() {
-		super(PID, "上线信令");
+		super(PID, "终端上线信令");
 	}
 	
 	@Override

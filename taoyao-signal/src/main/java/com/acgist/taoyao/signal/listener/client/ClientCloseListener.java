@@ -8,26 +8,26 @@ import org.springframework.stereotype.Component;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
-import com.acgist.taoyao.signal.event.client.CloseEvent;
+import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
 import com.acgist.taoyao.signal.protocol.client.ClientOfflineProtocol;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 关闭监听
+ * 终端关闭监听
  * 
  * @author acgist
  */
 @Slf4j
 @Component
-public class CloseListener extends ApplicationListenerAdapter<CloseEvent> {
+public class ClientCloseListener extends ApplicationListenerAdapter<ClientCloseEvent> {
 
 	@Autowired
 	private ClientOfflineProtocol offlineProtocol;
 	
 	@Override
-	public void onApplicationEvent(CloseEvent event) {
+	public void onApplicationEvent(ClientCloseEvent event) {
 		final ClientSession session = event.getSession();
 		final String sn = session.sn();
 		if(StringUtils.isEmpty(sn)) {

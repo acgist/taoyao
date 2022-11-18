@@ -9,7 +9,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 关闭信令
+ * 终端关闭信令
  * 
  * @author acgist
  */
@@ -20,7 +20,7 @@ public class ClientCloseProtocol extends ProtocolAdapter {
 	public static final Integer PID = 2001;
 	
 	public ClientCloseProtocol() {
-		super(PID, "关闭信令");
+		super(PID, "终端关闭信令");
 	}
 
 	@Override
