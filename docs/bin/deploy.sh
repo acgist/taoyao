@@ -15,22 +15,23 @@ fi
 # 编译代码
 if [ -z $mvned ]; then
   echo "编译代码：${project.artifactId}-${project.version}"
-  mvn clean package install -pl "${project.groupId}:${project.artifactId}" -am -D skipTests -P ${env}
+  cd $base/taoyao
+  mvn clean package -D skipTests -P ${profile}
 fi
 
 # 删除文件：注意不要删除日志
-rm -rf $base/../deploy/${project.artifactId}/bin
-rm -rf $base/../deploy/${project.artifactId}/lib
-rm -rf $base/../deploy/${project.artifactId}/config
+rm -rf $base/${project.artifactId}/bin
+rm -rf $base/${project.artifactId}/lib
+rm -rf $base/${project.artifactId}/config
 # 运行目录
 echo "拷贝文件：${project.artifactId}-${project.version}"
-if [ ! -d "$base/../deploy/${project.artifactId}" ]; then
-  mkdir -p $base/../deploy/${project.artifactId}
+if [ ! -d "$base/${project.artifactId}" ]; then
+  mkdir -p $base/${project.artifactId}
 fi
 # 拷贝文件
-cp -rf ${project.basedir}/target/${project.artifactId}-${project.version}/* $base/../deploy/${project.artifactId}
+cp -rf ${project.basedir}/target/${project.artifactId}-${project.version}/* $base/${project.artifactId}
 
 # 启动服务
-#cd $base/../deploy/${project.artifactId}
+#cd $base/${project.artifactId}
 #sh bin/startup.sh
 systemctl restart taoyao

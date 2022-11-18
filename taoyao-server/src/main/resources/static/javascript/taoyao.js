@@ -1,24 +1,18 @@
 /** 桃夭WebRTC终端核心功能 */
-/** 配置 */
-const taoyaoConfig = {
-	// 当前终端SN
-	sn: 'taoyao',
-	// 信令授权
-	username: 'taoyao',
-	password: 'taoyao'
-};
-/** 音频配置 */
+/** 兼容 */
+const PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+/** 默认音频配置 */
 const defaultAudioConfig = {
 	// 音量：0~1
 	volume: 0.5,
 	// 设备
 	// deviceId : '',
 	// 采样率：8000|16000|32000|48000
-	sampleRate: 32000,
+	sampleRate: 48000,
 	// 采样数：16
 	sampleSize: 16,
 	// 延迟大小（单位毫秒）：500毫秒以内较好
-	latency: 0.3,
+	latency: 0.4,
 	// 声道数量：1|2
 	channelCount : 1,
 	// 是否开启自动增益：true|false
@@ -30,7 +24,7 @@ const defaultAudioConfig = {
 	// 消除回音方式：system|browser
 	echoCancellationType: 'system'
 };
-/** 视频配置 */
+/** 默认视频配置 */
 const defaultVideoConfig = {
 	// 宽度
 	width: 1280,
@@ -45,9 +39,244 @@ const defaultVideoConfig = {
 	// 选摄像头：user|left|right|environment 
 	facingMode: 'environment'
 }
-/** 兼容 */
-const XMLHttpRequest = window.XMLHttpRequest;
-const PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+/** 信令配置 */
+const signalConfig = {
+	/** 当前终端SN */
+	sn: 'taoyao',
+	/** 当前版本 */
+	version: '1.0.0',
+	// 信令授权
+	username: 'taoyao',
+	password: 'taoyao'
+};
+/** 信令协议 */
+const signalProtocol = {
+	/** 直播信令 */
+	live: {
+	},
+	/** 媒体信令 */
+	media: {
+	},
+	/** 终端信令 */
+	client: {
+		/** 注册 */
+		register:  2000,
+		/** 下发配置 */
+		config: 2004,
+		/** 心跳 */
+		heartbeat: 2005,
+	},
+	/** 会议信令 */
+	meeting: {
+	},
+	/** 平台信令 */
+	platform: {
+	},
+	/** 当前索引 */
+	index: 100000,
+	/** 最小索引 */
+	minIndex: 100000,
+	/** 最大索引 */
+	maxIndex: 999999,
+	/** 生成索引 */
+	buildId: function() {
+		if(this.index++ >= this.maxIndex) {
+			this.index = this.minIndex;
+		}
+		return Date.now() + '' + this.index;
+	},
+	/** 生成信令消息 */
+	buildProtocol: function(sn, pid, body, id) {
+		let message = {
+			header: {
+				v: signalConfig.version,
+				id: id || this.buildId(),
+				sn: sn,
+				pid: pid,
+			},
+			'body': body
+		};
+		return message;
+	}
+};
+/** 信令通道 */
+const signalChannel = {
+	/** 桃夭 */
+	taoyao: null,
+	/** 通道 */
+	channel: null,
+	/** 地址 */
+	address: null,
+	/** 回调 */
+	callback: null,
+	/** 回调事件 */
+	callbackMapping: new Map(),
+	/** 心跳时间 */
+	heartbeatTime: 30 * 1000,
+	/** 心跳定时器 */
+	heartbeatTimer: null,
+	/** 重连定时器 */
+	reconnectTimer: null,
+	/** 防止重复重连 */
+	lockReconnect: false,
+	/** 当前重连时间 */
+	connectionTimeout: 5 * 1000,
+	/** 最小重连时间 */
+	minReconnectionDelay: 5 * 1000,
+	/** 最大重连时间 */
+	maxReconnectionDelay: 60 * 1000,
+	/** 重连失败时间增长倍数 */
+	reconnectionDelayGrowFactor: 2,
+	/** 心跳 */
+	heartbeat: function() {
+		let self = this;
+		if(self.heartbeatTimer) {
+			clearTimeout(self.heartbeatTimer);
+		}
+		self.heartbeatTimer = setTimeout(function() {
+			if (self.channel && self.channel.readyState == WebSocket.OPEN) {
+				self.push(signalProtocol.buildProtocol(
+					signalConfig.sn,
+					signalProtocol.client.heartbeat,
+					{
+						signal: 100,
+						battery: 100
+					}
+				));
+				self.heartbeat();
+			} else {
+				console.warn('发送心跳失败', self.channel);
+			}
+		}, self.heartbeatTime);
+	},
+	/** 连接 */
+	connect: function(address, callback, reconnection = true) {
+		let self = this;
+		self.address = address;
+		self.callback = callback;
+		return new Promise((resolve, reject) => {
+			console.debug('连接信令通道', address);
+			self.channel = new WebSocket(address);
+			self.channel.onopen = function(e) {
+				console.debug('打开信令通道', e);
+				// 注册终端
+				self.push(signalProtocol.buildProtocol(
+					signalConfig.sn,
+					signalProtocol.client.register,
+					{
+						ip: null,
+						mac: null,
+						signal: 100,
+						battery: 100,
+						username: signalConfig.username,
+						password: signalConfig.password
+					}
+				));
+				// 重置时间
+				self.connectionTimeout = self.minReconnectionDelay
+				// 开始心跳
+				self.heartbeat();
+				// 成功回调
+				resolve(e);
+			};
+			self.channel.onclose = function(e) {
+				console.error('信令通道关闭', self.channel, e);
+				if(reconnection) {
+					self.reconnect();
+				}
+				reject(e);
+			};
+			self.channel.onerror = function(e) {
+				console.error('信令通道异常', self.channel, e);
+				if(reconnection) {
+					self.reconnect();
+				}
+				reject(e);
+			};
+			self.channel.onmessage = function(e) {
+				console.debug('信令通道消息', e.data);
+				let done = false;
+				let data = JSON.parse(e.data);
+				// 注册回调
+				if(self.callback) {
+					done = self.callback(data);
+				}
+				// 默认回调
+				if(!done) {
+					self.defaultCallback(data);
+				}
+				// 请求回调
+				if(self.callbackMapping.has(data.header.id)) {
+					self.callbackMapping.get(data.header.id)();
+					self.callbackMapping.delete(data.header.id);
+				}
+			};
+		});
+	},
+	/** 重连 */
+	reconnect: function() {
+		let self = this;
+		if (self.lockReconnect) {
+			return;
+		}
+		self.lockReconnect = true;
+		// 关闭旧的通道
+		if(self.channel && self.channel.readyState == WebSocket.OPEN) {
+			self.channel.close();
+			self.channel = null;
+		}
+		if(self.reconnectTimer) {
+			clearTimeout(self.reconnectTimer);
+		}
+		// 打开定时重连
+		self.reconnectTimer = setTimeout(function() {
+			console.info('信令通道重连', self.address, new Date());
+			self.connect(self.address, self.callback, true);
+			self.lockReconnect = false;
+		}, self.connectionTimeout);
+		if (self.connectionTimeout >= self.maxReconnectionDelay) {
+			self.connectionTimeout = self.maxReconnectionDelay;
+		} else {
+			self.connectionTimeout = self.connectionTimeout * self.reconnectionDelayGrowFactor
+		}
+	},
+	/** 发送消息 */
+	push: function(data, callback) {
+		// 注册回调
+		if(data && callback) {
+			this.callbackMapping.set(data.header.id, callback);
+		}
+		// 发送消息
+		if(data && data.header) {
+			this.channel.send(JSON.stringify(data));
+		} else {
+			this.channel.send(data);
+		}
+	},
+	/** 关闭通道 */
+	close: function() {
+		clearTimeout(this.heartbeatTimer);
+	},
+	/** 默认回调 */
+	defaultCallback: function(data) {
+		console.debug('没有适配信令消息默认处理', data);
+		switch(data.header.pid) {
+		case signalProtocol.client.register:
+			console.debug('终端注册成功');
+		break;
+		case signalProtocol.client.config:
+			if(this.taoyao) {
+				this.taoyao
+				.configMedia(data.body.media)
+				.configWebrtc(data.body.webrtc);
+			}
+		break;
+		case signalProtocol.client.heartbeat:
+			console.debug('心跳');
+		break;
+		}
+	}
+};
 /** 桃夭 */
 function Taoyao(
 	webSocket,
@@ -55,7 +284,9 @@ function Taoyao(
 	audioConfig,
 	videoConfig
 ) {
+	/** WebSocket地址 */
 	this.webSocket = webSocket;
+	/** IceServer地址 */
 	this.iceServer = iceServer;
 	/** 媒体状态 */
 	this.audioStatus = true;
@@ -87,12 +318,16 @@ function Taoyao(
 				let videoDevice = false;
 				list.forEach(v => {
 					console.debug('终端媒体设备', v.kind, v.label);
-					if(v.kind === 'audioinput') {
+					switch(v.kind) {
+					case 'audioinput':
 						audioDevice = true;
-					} else if(v.kind === 'videoinput') {
+					break;
+					case 'videoinput':
 						videoDevice = true;
-					} else {
+					break;
+					default:
 						console.debug('没有适配设备', v.kind, v.label);
+					break;
 					}
 				});
 				if(!audioDevice) {
@@ -105,76 +340,41 @@ function Taoyao(
 				}
 			})
 			.catch(e => {
-				console.error('获取终端设备失败', e);
+				console.error('检查终端设备异常', e);
 				self.videoEnabled = false;
 				self.videoEnabled = false;
 			});
 		}
 		return this;
 	};
-	/** 请求 */
-	this.request = function(url, data = {}, method = 'GET', async = true, timeout = 5000, mime = 'json') {
-		return new Promise((resolve, reject) => {
-			let xhr = new XMLHttpRequest();
-			xhr.open(method, url, async);
-			if(async) {
-				xhr.timeout = timeout;
-				xhr.responseType = mime;
-				xhr.send(data);
-				xhr.onload = function() {
-					let response = xhr.response;
-					if(xhr.readyState === 4 && xhr.status === 200) {
-						if(response.code === '0000') {
-							resolve(response.body);
-						} else {
-							reject(response.body || response);
-						}
-					} else {
-						reject(response.body || response);
-					}
-				}
-				xhr.onerror = reject;
-			} else {
-				xhr.send(data);
-				let response;
-				try {
-					response = JSON.parse(xhr.response);
-				} catch(e) {
-					console.error('响应解析失败', xhr);
-					response = xhr.response;
-				}
-				if(xhr.readyState === 4 && xhr.status === 200) {
-					resolve(response.body || response);
-				} else {
-					reject(response.body || response);
-				}
-			}
-		});
-	};
 	/** 媒体配置 */
 	this.configMedia = function(audio = {}, video = {}) {
 		this.audioConfig = {...this.audioConfig, ...audio};
 		this.videoCofnig = {...this.videoCofnig, ...video};
 		console.debug('终端媒体配置', this.audioConfig, this.videoConfig);
+		return this;
 	};
 	/** WebRTC配置 */
 	this.configWebrtc = function(config = {}) {
 		this.webSocket = config.signalAddress;
 		this.iceServer = config.stun;
 		console.debug('WebRTC配置', this.webSocket, this.iceServer);
+		return this;
 	};
-	/** 信令通道 */
+	/** 打开信令通道 */
 	this.buildChannel = function(callback) {
+		signalChannel.taoyao = this;
 		this.signalChannel = signalChannel;
 		this.signalChannel.connect(this.webSocket, callback);
 		// 不能直接this.push = this.signalChannel.push这样导致this对象错误
 		this.push = function(data, callback) {
 			this.signalChannel.push(data, callback)
 		};
+		return this;
 	};
-	/** 本地媒体 */
+	/** 打开本地媒体 */
 	this.buildLocalMedia = function() {
-		console.debug("获取终端媒体：", this.audioConfig, this.videoConfig);
+		console.debug('打开终端媒体', this.audioConfig, this.videoConfig);
 		let self = this;
 		return new Promise((resolve, reject) => {
 			if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
@@ -190,11 +390,11 @@ function Taoyao(
 					video: self.videoConfig
 				}, resolve, reject);
 			} else {
-				reject("获取终端媒体失败");
+				reject('打开本地媒体失败');
 			}
 		});
 	};
-	/** 本地媒体 */
+	/** 设置本地媒体 */
 	this.localMedia = async function(localVideoId, stream) {
 		this.localVideo = document.getElementById(localVideoId);
 		if ('srcObject' in this.localVideo) {
@@ -214,195 +414,6 @@ function Taoyao(
 	}
 	/** 媒体 */
 	/** 视频 */
-};
-/** 信令协议 */
-const protocol = {
-	pid: {
-		/** 心跳 */
-		heartbeat: 2005,
-		/** 注册 */
-		register:  2000
-	},
-	/** 当前索引 */
-	index: 100000,
-	/** 最小索引 */
-	minIndex: 100000,
-	/** 最大索引 */
-	maxIndex: 999999,
-	/** 生成ID */
-	buildId: function() {
-		if(this.index++ >= this.maxIndex) {
-			this.index = this.minIndex;
-		}
-		return Date.now() + '' + this.index;
-	},
-	/** 生成协议 */
-	buildProtocol: function(sn, pid, body) {
-		let message = {
-			header: {
-				v: '1.0.0',
-				id: this.buildId(),
-				sn: sn,
-				pid: pid,
-			},
-			"body": body
-		};
-		return message;
-	}
-};
-/** 信令消息 */
-/** 信令通道 */
-const signalChannel = {
-	/** 通道 */
-	channel: null,
-	/** 地址 */
-	address: null,
-	/** 回调 */
-	callback: null,
-	/** 回调事件 */
-	callbackMapping: new Map(),
-	/** 心跳时间 */
-	heartbeatTime: 30 * 1000,
-	/** 心跳定时器 */
-	heartbeatTimer: null,
-	/** 防止重连 */
-	lockReconnect: false,
-	/** 重连时间 */
-	connectionTimeout: 5 * 1000,
-	/** 最小重连时间 */
-	minReconnectionDelay: 5 * 1000,
-	/** 最大重连时间 */
-	maxReconnectionDelay: 60 * 1000,
-	/** 自动重连失败后重连时间增长倍数 */
-	reconnectionDelayGrowFactor: 2,
-	/** 关闭 */
-	close: function() {
-		clearTimeout(this.heartbeatTimer);
-	},
-	/** 心跳 */
-	heartbeat: function() {
-		let self = this;
-		self.heartbeatTimer = setTimeout(function() {
-			if (self.channel && self.channel.readyState == WebSocket.OPEN) {
-				self.push(protocol.buildProtocol(
-					taoyaoConfig.sn,
-					protocol.pid.heartbeat,
-					{
-						signal: 100,
-						battery: 100
-					}
-				));
-				self.heartbeat();
-			} else {
-				console.warn('发送心跳失败', self.channel);
-			}
-		}, self.heartbeatTime);
-	},
-	/** 重连 */
-	reconnect: function() {
-		let self = this;
-		if (self.lockReconnect) {
-			return;
-		}
-		self.lockReconnect = true;
-		// 关闭旧的通道
-		if(self.channel && self.channel.readyState == WebSocket.OPEN) {
-			self.channel.close();
-			self.channel = null;
-		}
-		// 打开定时重连
-		setTimeout(function() {
-			console.info('信令通道重连', self.address);
-			self.connect(self.address, self.callback, true);
-			self.lockReconnect = false;
-		}, self.connectionTimeout);
-		if (self.connectionTimeout >= self.maxReconnectionDelay) {
-			self.connectionTimeout = self.maxReconnectionDelay;
-		} else {
-			self.connectionTimeout = self.connectionTimeout * self.reconnectionDelayGrowFactor
-		}
-	},
-	/** 连接 */
-	connect: function(address, callback, reconnection = true) {
-		let self = this;
-		this.address = address;
-		this.callback = callback;
-		console.debug("连接信令通道", address);
-		return new Promise((resolve, reject) => {
-			self.channel = new WebSocket(address);
-			self.channel.onopen = function(e) {
-				console.debug('信令通道打开', e);
-				self.push(protocol.buildProtocol(
-					taoyaoConfig.sn,
-					protocol.pid.register,
-					{
-						ip: null,
-						mac: null,
-						signal: 100,
-						battery: 100,
-						username: taoyaoConfig.username,
-						password: taoyaoConfig.password
-					}
-				));
-				self.connectionTimeout = self.minReconnectionDelay
-				self.heartbeat();
-				resolve(e);
-			};
-			self.channel.onclose = function(e) {
-				console.error('信令通道关闭', self.channel, e);
-				if(reconnection) {
-					self.reconnect();
-				}
-				reject(e);
-			};
-			self.channel.onerror = function(e) {
-				console.error('信令通道异常', self.channel, e);
-				if(reconnection) {
-					self.reconnect();
-				}
-				reject(e);
-			};
-			self.channel.onmessage = function(e) {
-				console.debug('信令消息', e.data);
-				let data = JSON.parse(e.data);
-				// 注册回调
-				let done = false;
-				if(callback) {
-					done = callback(data);
-				}
-				// 请求回调
-				if(self.callbackMapping.has(data.header.id)) {
-					self.callbackMapping.get(data.header.id)();
-					self.callbackMapping.delete(data.header.id);
-				}
-				// 默认回调
-				done || this.defaultCallback(data);
-			};
-		});
-	},
-	/** 信令消息 */
-	push: function(data, callback) {
-		// 注册回调
-		if(data && callback) {
-			this.callbackMapping.set(data.header.id, callback);
-		}
-		// 发送请求
-		if(data && data.header) {
-			this.channel.send(JSON.stringify(data));
-		} else {
-			this.channel.send(data);
-		}
-	},
-	/** 默认回调 */
-	defaultCallback: function(data) {
-		console.debug('没有适配信令消息默认处理', data);
-		switch(data.header.pid) {
-		case protocol.pid.heartbeat:
-		break;
-		case protocol.pid.register:
-		break;
-		}
-	}
 };
 /*
 var peer;

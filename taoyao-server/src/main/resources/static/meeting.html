@@ -50,30 +50,19 @@
 		child.innerHTML = template;
 		list.appendChild(child);
 	}
-	const taoyao = new Taoyao();
+	const taoyao = new Taoyao("wss://localhost:8888/websocket.signal");
 	// 检查设备
-	taoyao.checkDevice();
-	// 配置媒体
-	taoyao.request('/config/media', {}, 'GET', false)
-	.then(response => {
-		taoyao.configMedia(response.audio, response.video);
-	})
-	.catch(e => console.error('获取媒体配置失败', e));
-	// 配置WebRTC
-	taoyao.request('/config/webrtc', {}, 'GET', false)
-	.then(response => {
-		taoyao.configWebrtc(response);
-		taoyao.buildChannel(callback);
-	})
-	.catch(e => console.error('获取WebRTC配置失败', e));
+	taoyao
+	.checkDevice()
+	.buildChannel(callback)
+	//.buildLocalMedia()
+	//.then(stream => taoyao.localMedia('local', stream))
+	//.catch((e) => alert('获取终端媒体失败：' + e));
 	// 信令回调
 	function callback(data) {
 		switch(data.header.pid) {
-		case protocol.pid.heartbeat:
+		case signalProtocol.client.heartbeat:
 			// 心跳
-			return true;
-		case protocol.pid.register:
-			// 注册
 			return true;
 		}
 		return false;
@@ -92,19 +81,13 @@
 	}
 	// 录制视频
 	function record(e) {
-		taoyao.push(protocol.buildProtocol(taoyaoConfig.sn, protocol.pid.heartbeat), () => {
+		taoyao.push(signalProtocol.buildProtocol(signalConfig.sn, signalProtocol.client.heartbeat), () => {
 			classSwitch(e, 'active');
 		});
 	}
 	// 踢出会议
 	function kick() {
 	}
-	// 信令通道
-	/*
-	taoyao.buildLocalMedia()
-	.then(stream => taoyao.localMedia('local', stream))
-	.catch((e) => alert('获取终端媒体失败：' + e));
-	*/
 	</script>
 </body>
 </html>

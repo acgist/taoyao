@@ -2,7 +2,6 @@ server:
   port: 8888
   http2:
     enabled: true
-  # 如果Nginx代理可以不用配置SSL提升性能
   ssl:
     key-alias: taoyao
     key-store: classpath:taoyao.jks
