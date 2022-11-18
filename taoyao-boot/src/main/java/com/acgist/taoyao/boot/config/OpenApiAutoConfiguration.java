@@ -1,9 +1,12 @@
 package com.acgist.taoyao.boot.config;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 
 import org.springdoc.core.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -17,17 +20,22 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
+import io.swagger.v3.oas.models.servers.Server;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文档配置
  * 
  * @author acgist
  */
+@Slf4j
 @Profile("dev")
 @Configuration
 @ConditionalOnClass(OpenAPI.class)
 public class OpenApiAutoConfiguration {
 
+	@Value("${server.port:8888}")
+	private Integer port;
 	@Autowired
 	private TaoyaoProperties taoyaoProperties;
 
@@ -63,6 +71,7 @@ public class OpenApiAutoConfiguration {
 	public OpenAPI openAPI() {
 		return new OpenAPI()
 			.info(this.buildInfo())
+			.servers(this.buildServers())
 			.security(this.buildSecurity())
 			.components(this.buildComponents());
 	}
@@ -98,10 +107,29 @@ public class OpenApiAutoConfiguration {
 	}
 
 	/**
+	 * @return 服务器的信息
+	 */
+	private List<Server> buildServers() {
+		try {
+			return List.of(
+				new Server()
+				.url(String.format("https://%s:%d", InetAddress.getLocalHost().getHostAddress(), this.port))
+				.description(this.taoyaoProperties.getDescription())
+			);
+		} catch (UnknownHostException e) {
+			log.error("获取服务器的信息异常", e);
+		}
+		return List.of();
+	}
+	
+	/**
 	 * @return 授权
 	 */
 	private List<SecurityRequirement> buildSecurity() {
-		return List.of(new SecurityRequirement().addList(SecurityProperties.BASIC));
+		return List.of(
+			new SecurityRequirement()
+			.addList(SecurityProperties.BASIC)
+		);
 	}
 	
 	/**

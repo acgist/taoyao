@@ -1,0 +1,17 @@
+[Unit]
+Description=桃夭
+After=network.target
+Wants=network.target
+
+[Service]
+User=root
+Type=forking
+KillMode=process
+ExecStart=/data/taoyao/bin/startup.sh
+ExecReload=/bin/kill -HUP $MAINPID
+ExecStop=/bin/kill -QUIT $MAINPID
+Restart=always
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target

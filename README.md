@@ -71,8 +71,3 @@ MCU/SFU声音视频控制在服务端实现，如果没有终端订阅并且没�
 
 终端推流到服务端，由服务端分流没有混音。
 
-## 证书
-
-```
-keytool -genkeypair -keyalg RSA -dname "CN=localhost, OU=acgist, O=taoyao, L=GZ, ST=GD, C=CN" -alias taoyao -validity 3650 -ext ku:c=dig,keyE -ext eku=serverAuth -ext SAN=dns:localhost,ip:127.0.0.1 -keystore taoyao.jks -keypass 123456 -storepass 123456
-```

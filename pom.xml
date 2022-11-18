@@ -384,38 +384,6 @@
 			</dependencyManagement>
 		</profile>
 		<profile>
-			<id>test</id>
-			<properties>
-				<profile>test</profile>
-				<javacv.os.version>linux-x86_64</javacv.os.version>
-				<taoyao.maven.jvm.arg></taoyao.maven.jvm.arg>
-				<taoyao.maven.jvm.mem>-Xms512M -Xmx1024M -XX:NewRatio=1 -XX:SurvivorRatio=2</taoyao.maven.jvm.mem>
-			</properties>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-assembly-plugin</artifactId>
-						<configuration>
-							<descriptors>
-								<descriptor>${taoyao.maven.basedir}/docs/assembly/test.xml</descriptor>
-							</descriptors>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-			<dependencyManagement>
-				<dependencies>
-					<dependency>
-						<groupId>org.springdoc</groupId>
-						<artifactId>springdoc-openapi-ui</artifactId>
-						<version>${springdoc.version}</version>
-						<scope>provided</scope>
-					</dependency>
-				</dependencies>
-			</dependencyManagement>
-		</profile>
-		<profile>
 			<id>release</id>
 			<properties>
 				<profile>release</profile>

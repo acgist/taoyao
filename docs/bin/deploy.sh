@@ -31,5 +31,6 @@ fi
 cp -rf ${project.basedir}/target/${project.artifactId}-${project.version}/* $base/../deploy/${project.artifactId}
 
 # 启动服务
-cd $base/../deploy/${project.artifactId}
-sh bin/startup.sh
+#cd $base/../deploy/${project.artifactId}
+#sh bin/startup.sh
+systemctl restart taoyao

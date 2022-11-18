@@ -97,6 +97,16 @@ public class WebrtcProperties {
 	 */
 	@Schema(title = "信令地址", description = "信令地址")
 	private String websocket;
+	/**
+	 * 媒体最小端口
+	 */
+	@Schema(title = "媒体最小端口", description = "媒体最小端口")
+	private Integer minPort;
+	/**
+	 * 媒体最大端口
+	 */
+	@Schema(title = "媒体最大端口", description = "媒体最大端口")
+	private Integer maxPort;
 	
 	/**
 	 * 完整信令地址
