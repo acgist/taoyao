@@ -1,0 +1,3 @@
+com.acgist.taoyao.boot.config.BootAutoConfiguration
+com.acgist.taoyao.boot.config.OpenApiAutoConfiguration
+com.acgist.taoyao.boot.config.WebMvcConfigurerAutoConfiguration

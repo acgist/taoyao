@@ -6,9 +6,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
@@ -20,6 +17,8 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**

@@ -1,13 +1,12 @@
 package com.acgist.taoyao.interceptor;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.boot.interceptor.InterceptorAdapter;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**

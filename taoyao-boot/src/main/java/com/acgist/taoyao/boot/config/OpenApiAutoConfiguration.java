@@ -18,15 +18,12 @@ import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
 import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
-import io.swagger.v3.oas.models.servers.Server;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 文档配置
  * 
  * @author acgist
  */
-@Slf4j
 @Profile("dev")
 @Configuration
 @ConditionalOnClass(OpenAPI.class)

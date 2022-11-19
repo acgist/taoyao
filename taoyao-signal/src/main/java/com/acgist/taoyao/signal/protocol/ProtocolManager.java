@@ -3,8 +3,6 @@ package com.acgist.taoyao.signal.protocol;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.annotation.PostConstruct;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
@@ -19,6 +17,7 @@ import com.acgist.taoyao.signal.client.ClientSessionManager;
 import com.acgist.taoyao.signal.protocol.client.ClientRegisterProtocol;
 import com.acgist.taoyao.signal.protocol.platform.ErrorProtocol;
 
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 /**

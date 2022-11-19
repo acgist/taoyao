@@ -1,12 +1,5 @@
 package com.acgist.taoyao.signal.client.websocket;
 
-import javax.websocket.OnClose;
-import javax.websocket.OnError;
-import javax.websocket.OnMessage;
-import javax.websocket.OnOpen;
-import javax.websocket.Session;
-import javax.websocket.server.ServerEndpoint;
-
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.model.Message;
@@ -14,6 +7,12 @@ import com.acgist.taoyao.signal.client.ClientSessionManager;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
 import com.acgist.taoyao.signal.protocol.platform.ErrorProtocol;
 
+import jakarta.websocket.OnClose;
+import jakarta.websocket.OnError;
+import jakarta.websocket.OnMessage;
+import jakarta.websocket.OnOpen;
+import jakarta.websocket.Session;
+import jakarta.websocket.server.ServerEndpoint;
 import lombok.extern.slf4j.Slf4j;
 
 /**

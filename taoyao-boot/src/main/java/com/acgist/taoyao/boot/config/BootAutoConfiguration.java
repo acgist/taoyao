@@ -6,9 +6,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
 import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.ConversionNotSupportedException;
@@ -59,6 +56,8 @@ import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.qos.logback.classic.LoggerContext;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -72,7 +71,7 @@ import lombok.extern.slf4j.Slf4j;
 @EnableAsync
 @Configuration
 @EnableScheduling
-@EnableAspectJAutoProxy(exposeProxy = true)
+@EnableAspectJAutoProxy(exposeProxy = false)
 @EnableConfigurationProperties({ IdProperties.class, MediaProperties.class, TaoyaoProperties.class, WebrtcProperties.class, SecurityProperties.class })
 public class BootAutoConfiguration {
 
