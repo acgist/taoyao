@@ -34,6 +34,6 @@ input::-webkit-calendar-picker-indicator{color:#1155AA;background:none;}
 .taoyao .meeting > .video video{width:100%;height:100%;}
 .taoyao .meeting .handler{position:absolute;bottom:0rem;text-align:center;width:100%;background:rgba(0,0,0,0.2);padding:0.2rem 0;}
 .taoyao .meeting .handler a{color:#fff;}
-.taoyao .meeting .handler a.record:hover{color:#060!important;}
+.taoyao .meeting .handler a:hover{color:#060!important;}
+.taoyao .meeting .handler a.expel:hover{color:#C00!important;}
 .taoyao .meeting .handler a.record.active{color:#C00;}
-.taoyao .meeting .handler a.kick:hover{color:#C00;}

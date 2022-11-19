@@ -26,5 +26,21 @@ public class Meeting {
 	 */
 	@Schema(title = "终端会话标识列表", description = "终端会话标识列表")
 	private List<String> sns;
+	/**
+	 * 创建终端标识
+	 */
+	@Schema(title = "创建终端标识", description = "创建终端标识")
+	private String creator;
+	
+	/**
+	 * 新增终端会话标识
+	 * 
+	 * @param sn 终端会话标识
+	 */
+	public void addSn(String sn) {
+		synchronized (this.sns) {
+			this.sns.add(sn);
+		}
+	}
 
 }

@@ -3,6 +3,8 @@ package com.acgist.taoyao.signal.media;
 /**
  * 终端媒体操作
  * 
+ * TODO：注意暂停心跳防止端口关闭
+ * 
  * @author acgist
  */
 public interface ClientMediaHandler {

@@ -277,6 +277,70 @@ const signalChannel = {
 		}
 	}
 };
+/** 终端 */
+function TaoyaoClient(
+	sn
+) {
+	/** 终端标识 */
+	this.sn = sn;
+	/** 视频对象 */
+	this.video = null;
+	/** 媒体状态 */
+	this.audioStatus = true;
+	this.videoStatus = true;
+	this.recordStatus = false;
+	/** 媒体信息 */
+	this.audioStreamId = null;
+	this.videoStreamId = null;
+	/** 播放视频 */
+	this.play = async function() {
+		await this.video.play();
+		return this;
+	};
+	/** 重新加载 */
+	this.load = function() {
+		this.video.load();
+		return this;
+	}
+	/** 暂停视频 */
+	this.pause = function() {
+		this.video.pause();
+		return this;
+	};
+	/** 关闭视频 */
+	this.close = function() {
+		this.video.close();
+		return this;
+	};
+	/** 设置视频对象 */
+	this.buildVideo = async function(videoId, stream) {
+		if(!this.video) {
+			this.video = document.getElementById(videoId);
+		}
+		await this.buildStream(stream);
+		return this;
+	};
+	/** 设置媒体流 */
+	this.buildStream = async function(stream) {
+		if(stream) {
+			if ('srcObject' in this.video) {
+				this.video.srcObject = stream;
+			} else {
+				this.video.src = URL.createObjectURL(stream);;
+			}
+		}
+		await this.play();
+		return this;
+	};
+	/** 设置音频流 */
+	this.buildAudioStream = function() {
+		
+	};
+	/** 设置视频流 */
+	this.buildVideoStream = function() {
+		
+	};
+}
 /** 桃夭 */
 function Taoyao(
 	webSocket,
@@ -288,26 +352,20 @@ function Taoyao(
 	this.webSocket = webSocket;
 	/** IceServer地址 */
 	this.iceServer = iceServer;
-	/** 媒体状态 */
-	this.audioStatus = true;
-	this.videoStatus = true;
 	/** 设备状态 */
 	this.audioEnabled = true;
 	this.videoEnabled = true;
-	/** 媒体信息 */
-	this.audioStreamId = null;
-	this.videoStreamId = null;
 	/** 媒体配置 */
 	this.audioConfig = audioConfig || defaultAudioConfig;
 	this.videoConfig = videoConfig || defaultVideoConfig;
-	/** 本地视频 */
-	this.localVideo = null;
-	/** 终端媒体 */
-	this.clientMedia = {};
-	/** 信令通道 */
-	this.signalChannel = null;
 	/** 发送信令 */
 	this.push = null;
+	/** 本地终端 */
+	this.localClient = null;
+	/** 远程终端 */
+	this.remoteClient = [];
+	/** 信令通道 */
+	this.signalChannel = null;
 	/** 检查设备 */
 	this.checkDevice = function() {
 		let self = this;
@@ -394,15 +452,10 @@ function Taoyao(
 			}
 		});
 	};
-	/** 设置本地媒体 */
-	this.localMedia = async function(localVideoId, stream) {
-		this.localVideo = document.getElementById(localVideoId);
-		if ('srcObject' in this.localVideo) {
-			this.localVideo.srcObject = stream;
-		} else {
-			this.localVideo.src = URL.createObjectURL(stream);;
-		}
-		await this.localVideo.play();
+	/** 设置本地终端 */
+	this.buildLocalClient = async function(localVideoId, stream) {
+		this.localClient = new TaoyaoClient(signalConfig.sn);
+		await this.localClient.buildVideo(localVideoId, stream);
 	};
 	/** 关闭：关闭媒体 */
 	this.close = function() {

@@ -3,7 +3,10 @@ package com.acgist.taoyao.meeting;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import com.acgist.taoyao.boot.service.IdService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -15,6 +18,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class MeetingManager {
+
+	@Autowired
+	private IdService idService;
 
 	/**
 	 * 会议列表
@@ -48,6 +54,24 @@ public class MeetingManager {
 	public List<String> sns(String id) {
 		final Meeting meeting = this.meeting(id);
 		return meeting == null ? List.of() : meeting.getSns();
+	}
+
+	/**
+	 * 创建会议
+	 * 
+	 * @param sn 创建会议终端标识
+	 * 
+	 * @return 会议信息
+	 */
+	public Meeting create(String sn) {
+		final Meeting meeting = new Meeting();
+		meeting.setId(this.idService.buildIdToString());
+		meeting.setSns(new CopyOnWriteArrayList<>());
+		meeting.setCreator(sn);
+		meeting.addSn(sn);
+		this.meetings.add(meeting);
+		log.info("创建会议：{}", meeting.getId());
+		return meeting;
 	}
 	
 }

@@ -5,91 +5,128 @@
 <title>会议</title>
 <link rel="stylesheet" type="text/css" href="./css/font.min.css" />
 <link rel="stylesheet" type="text/css" href="./css/style.css" />
-<script type="text/javascript" src="./javascript/app.js"></script>
+<script src="https://unpkg.com/vue@2.6.11/dist/vue.js"></script>
 <script type="text/javascript" src="./javascript/taoyao.js"></script>
 </head>
 <body>
-	<div class="taoyao">
+	<div class="taoyao" id="app">
 		<div class="handler">
-			<a class="create icon-svg" title="创建房间" onclick="create(this)"></a>
-			<a class="invite icon-address-book" title="邀请房间" onclick="invite"></a>
-			<a class="enter icon-enter" title="进入房间" onclick="enter"></a>
-			<a class="leave icon-exit" title="离开房间" onclick="leave"></a>
-			<a class="close icon-switch" title="关闭房间" onclick="close"></a>
+			<a class="create icon-svg" title="创建房间" @click="create"></a>
+			<a class="invite icon-address-book" title="邀请房间" @click="invite"></a>
+			<a class="enter icon-enter" title="进入房间" @click="enter"></a>
+			<a class="leave icon-exit" title="离开房间" @click="leave"></a>
+			<a class="close icon-switch" title="关闭房间" @click="close"></a>
 		</div>
-		<div class="list" id="list">
+		<div class="list">
 			<div class="meeting me">
 				<div class="video">
 					<video id="local"></video>
 				</div>
 				<div class="handler">
-					<a class="audio icon-volume-medium" title="音频状态" onclick="audio"></a>
-					<a class="video icon-play2" title="视频状态" onclick="video"></a>
-					<a class="record icon-radio-checked" title="录制视频" onclick="record(this)"></a>
-					<a class="kick icon-cancel-circle" title="踢出房间" onclick="kick"></a>
+					<a class="audio icon-volume-medium" title="音频状态" @click="audioSelf"></a>
+					<a class="video icon-play2" title="视频状态" @click="videoSelf"></a>
+					<a class="record icon-radio-checked" title="录制视频" @click="recordSelf"></a>
+				</div>
+			</div>
+			<div class="meeting" v-for="client in this.clients" :key="client.sn">
+				<div class="video">
+					<video v-bind:id="client.sn"></video>
+				</div>
+				<div class="handler">
+					<a class="audio" title="音频状态" v-bind:class="client.audio?'icon-volume-medium':'icon-volume-mute2'" @click="audio(client.sn)"></a>
+					<a class="video" title="视频状态" v-bind:class="client.video?'icon-play2':'icon-stop'" @click="video(client.sn)"></a>
+					<a class="record icon-radio-checked" title="录制视频" v-bind:class="client.record?'active':''" @click="record(client.sn)"></a>
+					<a class="expel icon-cancel-circle" title="踢出房间" @click="expel(client.sn)"></a>
 				</div>
 			</div>
 		</div>
 	</div>
 	<script type="text/javascript">
-	const list = document.getElementById('list');
-	const template = `
-		<div class="video">
-			<video></video>
-		</div>
-		<div class="handler">
-			<a class="audio icon-volume-medium" title="音频状态"></a>
-			<a class="video icon-play2" title="视频状态"></a>
-			<a class="record icon-radio-checked" title="录制视频"></a>
-			<a class="kick icon-cancel-circle" title="踢出房间"></a>
-		</div>
-	`;
-	for(let i = 0; i < 10; i++) {
-		const child = document.createElement('div');
-		child.className = 'meeting';
-		child.innerHTML = template;
-		list.appendChild(child);
-	}
-	const taoyao = new Taoyao("wss://localhost:8888/websocket.signal");
-	// 检查设备
-	taoyao
-	.checkDevice()
-	.buildChannel(callback)
-	//.buildLocalMedia()
-	//.then(stream => taoyao.localMedia('local', stream))
-	//.catch((e) => alert('获取终端媒体失败：' + e));
-	// 信令回调
-	function callback(data) {
-		switch(data.header.pid) {
-		case signalProtocol.client.heartbeat:
-			// 心跳
-			return true;
+	const vue = new Vue({
+		el: "#app",
+		data: {
+			clients: [
+				{sn:"1", audio: true, video: true, record: false},
+				{sn:"2", audio: true, video: true, record: false},
+				{sn:"3", audio: true, video: true, record: false}
+			],
+			taoyao: null,
+			meetingId: null
+		},
+		mounted() {
+			if(signalConfig.sn) {
+				// TODO：修改sn
+			}
+			this.taoyao = new Taoyao("wss://localhost:8888/websocket.signal");
+			// 检查设备
+			this.taoyao
+				.checkDevice()
+				.buildChannel(this.callback)
+				//.buildLocalMedia()
+				//.then(stream => this.taoyao.buildLocalClient('local', stream))
+				//.catch((e) => console.error('打开终端媒体失败', e));
+		},
+		beforeDestroy() {
+		},
+		methods: {
+			// 信令回调：返回true表示已经处理
+			callback: function(data) {
+				switch(data.header.pid) {
+				case signalProtocol.client.heartbeat:
+					// 心跳
+					return true;
+				}
+				return false;
+			},
+			// 创建会议
+			create: function(event) {
+				let self = this;
+				this.taoyao.createMeeting(data => {
+					self.meetingId = data.body.id;
+				});
+			},
+			// 返回终端
+			client: function(sn) {
+				return this.clients.filter(v => v.sn === sn)[0];
+			},
+			// 会议邀请
+			invite: function(sn) {
+			},
+			// 进入会议
+			enter: function(sn) {
+			},
+			// 离开会议
+			leave: function(sn) {
+			},
+			// 关闭会议
+			close: function(sn) {
+			},
+			// 控制音频
+			audio: function(sn) {
+				this.client(sn).audio = !this.client(sn).audio;
+			},
+			// 控制视频
+			video: function(sn) {
+				this.client(sn).video = !this.client(sn).video;
+			},
+			// 录制视频
+			record: function(sn) {
+				this.client(sn).record = !this.client(sn).record;
+			},
+			// 踢出会议
+			expel: function(sn) {
+			},
+			// 控制音频
+			audioSelf: function(sn) {
+			},
+			// 控制视频
+			videoSelf: function(sn) {
+			},
+			// 录制视频
+			recordSelf: function(sn) {
+			}
 		}
-		return false;
-	}
-	// 创建房间
-	function create() {
-		taoyao.createMeeting(data => {
-		});
-	}
-	// 进入房间
-	function enter() {
-	}
-	// 声音控制
-	function audio() {
-	}
-	// 视频控制
-	function video() {
-	}
-	// 录制视频
-	function record(e) {
-		taoyao.push(signalProtocol.buildProtocol(signalConfig.sn, signalProtocol.client.heartbeat), () => {
-			classSwitch(e, 'active');
-		});
-	}
-	// 踢出会议
-	function kick() {
-	}
+	});
 	</script>
 </body>
 </html>

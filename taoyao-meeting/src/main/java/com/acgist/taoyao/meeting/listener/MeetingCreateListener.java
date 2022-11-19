@@ -6,32 +6,34 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.meeting.Meeting;
 import com.acgist.taoyao.meeting.MeetingManager;
 import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.ClientSessionManager;
 import com.acgist.taoyao.signal.event.meeting.MeetingCreateEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 创建会议监听
  * 
  * @author acgist
  */
-@Slf4j
 @Component
 public class MeetingCreateListener extends ApplicationListenerAdapter<MeetingCreateEvent> {
 
 	@Autowired
 	private MeetingManager meetingManager;
+	@Autowired
+	private ClientSessionManager clientSessionManager;
 	
 	@Override
 	public void onApplicationEvent(MeetingCreateEvent event) {
-//		this.meetingManager.create();
 		final ClientSession session = event.getSession();
+		final Meeting meeting = this.meetingManager.create(session.sn());
 		final Message message = event.getMessage();
-		message.setBody(Map.of("id", "1234"));
-		session.push(message);
+		message.setBody(Map.of("id", meeting.getId()));
+		// 广播：不改ID触发创建终端事件回调
+		this.clientSessionManager.broadcast(message);
 	}
 
 }
