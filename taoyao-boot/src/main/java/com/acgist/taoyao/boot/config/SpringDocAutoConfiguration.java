@@ -2,7 +2,7 @@ package com.acgist.taoyao.boot.config;
 
 import java.util.List;
 
-import org.springdoc.core.GroupedOpenApi;
+import org.springdoc.core.models.GroupedOpenApi;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -27,7 +27,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 @Profile("dev")
 @Configuration
 @ConditionalOnClass(OpenAPI.class)
-public class OpenApiAutoConfiguration {
+public class SpringDocAutoConfiguration {
 
 	@Value("${server.port:8888}")
 	private Integer port;

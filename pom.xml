@@ -27,7 +27,7 @@
 		<ffmpeg.version>5.1.2</ffmpeg.version>
 		<lombok.version>1.18.24</lombok.version>
 		<kurento.version>6.18.0</kurento.version>
-		<springdoc.version>1.6.12</springdoc.version>
+		<springdoc.version>2.0.0-RC1</springdoc.version>
 		<mapstruct.version>1.5.3.Final</mapstruct.version>
 		<collections4.version>4.4</collections4.version>
 		<jitsi.ice4j.version>3.0-59-g71e244d</jitsi.ice4j.version>
@@ -72,11 +72,6 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-collections4</artifactId>
 		</dependency>
-		<!-- 接口文档 -->
-		<dependency>
-			<groupId>org.springdoc</groupId>
-			<artifactId>springdoc-openapi-ui</artifactId>
-		</dependency>
 		<!-- Jackson -->
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
@@ -85,6 +80,11 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
+		<!-- 接口文档 -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 		</dependency>
 		<!-- AOP -->
 		<dependency>
@@ -377,7 +377,7 @@
 				<dependencies>
 					<dependency>
 						<groupId>org.springdoc</groupId>
-						<artifactId>springdoc-openapi-ui</artifactId>
+						<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 						<version>${springdoc.version}</version>
 					</dependency>
 				</dependencies>
@@ -408,7 +408,7 @@
 				<dependencies>
 					<dependency>
 						<groupId>org.springdoc</groupId>
-						<artifactId>springdoc-openapi-ui</artifactId>
+						<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
 						<version>${springdoc.version}</version>
 						<scope>provided</scope>
 					</dependency>
