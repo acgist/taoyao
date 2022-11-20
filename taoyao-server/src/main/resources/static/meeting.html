@@ -62,9 +62,9 @@
 			this.taoyao
 				.checkDevice()
 				.buildChannel(this.callback)
-				//.buildLocalMedia()
-				//.then(stream => this.taoyao.buildLocalClient('local', stream))
-				//.catch((e) => console.error('打开终端媒体失败', e));
+				.buildLocalMedia()
+				.then(stream => this.taoyao.buildLocalClient('local', stream))
+				.catch((e) => console.error('打开终端媒体失败', e));
 		},
 		beforeDestroy() {
 		},

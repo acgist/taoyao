@@ -1,6 +1,6 @@
 /** 桃夭WebRTC终端核心功能 */
 /** 兼容 */
-const PeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 /** 默认音频配置 */
 const defaultAudioConfig = {
 	// 音量：0~1
@@ -38,6 +38,21 @@ const defaultVideoConfig = {
 	// resizeMode: '',
 	// 选摄像头：user|left|right|environment 
 	facingMode: 'environment'
+}
+/** 默认RTCPeerConnection配置 */
+const defaultRPCConfig = {
+	// ICE代理的服务器
+	// iceServers: null,
+	// 证书
+	// certificates: null,
+	// 传输通道绑定策略：balanced|max-compat|max-bundle
+	bundlePolicy: 'balanced',
+	// RTCP多路复用策略：require|negotiate
+	rtcpMuxPolicy: 'negotiate',
+	// ICE传输策略：all|relay
+	iceTransportPolicy: 'all'
+	// ICE候选个数
+	// iceCandidatePoolSize: 10
 }
 /** 信令配置 */
 const signalConfig = {
@@ -328,13 +343,9 @@ function TaoyaoClient(
 	/** 设置媒体流 */
 	this.buildStream = async function(stream) {
 		if(stream) {
-			if ('srcObject' in this.video) {
-				this.video.srcObject = stream;
-			} else {
-				this.video.src = URL.createObjectURL(stream);;
-			}
+			this.video.srcObject = stream;
+			await this.play();
 		}
-		await this.play();
 		return this;
 	};
 	/** 设置音频流 */

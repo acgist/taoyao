@@ -9,27 +9,34 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.meeting.Meeting;
 import com.acgist.taoyao.meeting.MeetingManager;
 import com.acgist.taoyao.signal.client.ClientSession;
-import com.acgist.taoyao.signal.event.meeting.MeetingCreateEvent;
+import com.acgist.taoyao.signal.event.meeting.MeetingEnterEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
 
 /**
- * 创建会议监听
+ * 进入会议监听
  * 
  * @author acgist
  */
 @Component
-public class MeetingCreateListener extends ApplicationListenerAdapter<MeetingCreateEvent> {
+public class MeetingEnterListener extends ApplicationListenerAdapter<MeetingEnterEvent> {
 
 	@Autowired
 	private MeetingManager meetingManager;
 	
 	@Override
-	public void onApplicationEvent(MeetingCreateEvent event) {
+	public void onApplicationEvent(MeetingEnterEvent event) {
+		final Map<?, ?> body = event.getBody();
 		final ClientSession session = event.getSession();
-		final Meeting meeting = this.meetingManager.create(session.sn());
+		final String sn = session.sn();
+		final String id = (String) body.get("id");
+		final Meeting meeting = this.meetingManager.meeting(id);
+		meeting.addSn(sn);
 		final Message message = event.getMessage();
-		message.setBody(Map.of("id", meeting.getId()));
-		this.clientSessionManager.broadcast(message);
+		message.setBody(Map.of(
+			"id", meeting.getId(),
+			"sn", sn
+		));
+		this.clientSessionManager.broadcast(sn, message);
 	}
 
 }

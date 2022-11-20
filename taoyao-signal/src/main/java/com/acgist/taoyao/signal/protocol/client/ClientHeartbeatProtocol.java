@@ -26,7 +26,7 @@ public class ClientHeartbeatProtocol extends ProtocolMapAdapter {
 	
 	@Override
 	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		// 回应心跳
+		// 响应心跳
 		session.push(message.cloneWidthoutBody());
 		// 设置状态
 		final ClientSessionStatus status = session.status();

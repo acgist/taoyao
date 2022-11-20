@@ -39,6 +39,9 @@ public class Meeting {
 	 */
 	public void addSn(String sn) {
 		synchronized (this.sns) {
+			if(this.sns.contains(sn)) {
+				return;
+			}
 			this.sns.add(sn);
 		}
 	}
