@@ -26,8 +26,11 @@ public class ShutdownProtocol extends ProtocolAdapter {
 
 	@Override
 	public void execute(String sn, Message message, ClientSession session) {
+		// 全员广播
+		this.clientSessionManager.broadcast(message);
+		// 关闭信令服务
 		if(this.context instanceof ConfigurableApplicationContext context) {
-			log.info("关闭服务：{}", sn);
+			log.info("关闭信令服务：{}", sn);
 			if(context.isActive()) {
 				context.close();
 			}

@@ -9,6 +9,7 @@ import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.service.IdService;
+import com.acgist.taoyao.signal.client.ClientSessionManager;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
 
 /**
@@ -24,6 +25,8 @@ public abstract class ProtocolAdapter implements Protocol {
 	protected ApplicationContext context;
 	@Autowired
 	protected TaoyaoProperties taoyaoProperties;
+	@Autowired
+	protected ClientSessionManager clientSessionManager;
 	
 	/**
 	 * 信令标识

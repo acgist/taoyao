@@ -96,7 +96,7 @@ taoyao:
   security:
     enabled: true
     realm: taoyao
-    permit: /v3/api-docs/,/swagger-ui/,/favicon.ico,/error
+    permit: /v3/api-docs/,/swagger-ui/,/swagger-ui.html,/favicon.ico,/error
     username: taoyao
     password: taoyao
   scheduled:
