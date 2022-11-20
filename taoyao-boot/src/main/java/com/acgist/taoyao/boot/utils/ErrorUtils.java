@@ -29,6 +29,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class ErrorUtils {
 	
+	private ErrorUtils() {
+	}
+	
 	/**
 	 * 异常映射
 	 */
@@ -54,9 +57,6 @@ public final class ErrorUtils {
 	 * SpringBoot异常
 	 */
 	public static final String EXCEPTION_SPRINGBOOT = "org.springframework.boot.web.servlet.error.DefaultErrorAttributes.ERROR";
-
-	private ErrorUtils() {
-	}
 	
 	/**
 	 * 注册异常（注意继承顺序）

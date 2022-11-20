@@ -74,10 +74,6 @@
 		</dependency>
 		<!-- Jackson -->
 		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-		</dependency>
-		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jsr310</artifactId>
 		</dependency>
@@ -113,17 +109,17 @@
 		<dependencies>
 			<dependency>
 				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-test</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-boot</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-live</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-test</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

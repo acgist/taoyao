@@ -1,11 +1,14 @@
 package com.acgist.taoyao.signal.listener.platform;
 
 import java.io.InputStream;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.event.platform.ScriptEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
 
@@ -23,21 +26,29 @@ public class ScriptListener extends ApplicationListenerAdapter<ScriptEvent> {
 	@Async
 	@Override
 	public void onApplicationEvent(ScriptEvent event) {
-		final String script = (String) event.getBody().get("script");
+		final Message message = event.getMessage();
+		final ClientSession session = event.getSession();
+		final Map<?, ?> body = event.getBody();
+		final String script = (String) body.get("script");
 		log.debug("执行命令：{}", script);
-		this.execute(script);
+		final String result = this.execute(script);
+		message.setBody(Map.of("result", result));
+		session.push(message);
 	}
 
 	/**
 	 * 执行命令
 	 * 
 	 * @param script 命令
+	 * 
+	 * @return 执行结果
 	 */
-	private void execute(String script) {
+	private String execute(String script) {
 		if(StringUtils.isEmpty(script)) {
 			log.warn("执行命令失败：{}", script);
-			return;
+			return "命令为空";
 		}
+		String result = null;
 		Process process = null;
 		try {
 			process = Runtime.getRuntime().exec(script);
@@ -45,22 +56,27 @@ public class ScriptListener extends ApplicationListenerAdapter<ScriptEvent> {
 				final InputStream input = process.getInputStream();
 				final InputStream error = process.getErrorStream();
 			) {
+				final String inputValue = new String(input.readAllBytes());
+				final String errorValue = new String(input.readAllBytes());
 				log.info("""
 					执行命令：{}
 					执行结果：{}
 					失败结果：{}
-					""", script, new String(input.readAllBytes()), new String(error.readAllBytes()));
+					""", script, inputValue, errorValue);
+				result = StringUtils.isEmpty(inputValue) ? errorValue : inputValue;
 			} catch (Exception e) {
 				log.error("命令执行异常：{}", script, e);
+				result = e.getMessage();
 			}
 		} catch (Exception e) {
 			log.error("执行命令异常：{}", script, e);
+			result = e.getMessage();
 		} finally {
 			if(process != null) {
 				process.destroy();
-//				process.destroyForcibly();
 			}
 		}
+		return result;
 	}
 	
 }
