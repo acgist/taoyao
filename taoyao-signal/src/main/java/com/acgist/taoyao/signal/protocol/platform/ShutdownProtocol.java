@@ -30,6 +30,7 @@ public class ShutdownProtocol extends ProtocolAdapter {
 		if(this.context instanceof ConfigurableApplicationContext context) {
 			log.info("关闭信令服务：{}", sn);
 			if(context.isActive()) {
+				// 如果需要完整广播可以设置延时
 				context.close();
 			}
 		} else {

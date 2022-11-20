@@ -67,22 +67,27 @@ public class ProtocolManager {
 	 */
 	public void execute(String message, AutoCloseable instance) {
 		log.debug("执行信令消息：{}", message);
+		final ClientSession session = this.clientSessionManager.session(instance);
 		// 验证请求
 		final Message value = JSONUtils.toJava(message, Message.class);
 		if(value == null) {
 			log.warn("消息格式错误（解析失败）：{}", message);
+			session.push(this.errorProtocol.build("消息格式错误（解析失败）"));
 			return;
 		}
 		final Header header = value.getHeader();
 		if(header == null) {
 			log.warn("消息格式错误（没有头部）：{}", message);
+			session.push(this.errorProtocol.build("消息格式错误（没有头部）"));
 			return;
 		}
+		final String v = header.getV();
 		final String id = header.getId();
 		final String sn = header.getSn();
 		final Integer pid = header.getPid();
-		if(id == null || sn == null || pid == null) {
-			log.warn("消息格式错误（id|sn|pid）：{}", message);
+		if(v == null || id == null || sn == null || pid == null) {
+			log.warn("消息格式错误（缺失头部关键参数）：{}", message);
+			session.push(this.errorProtocol.build("消息格式错误（缺失头部关键参数）"));
 			return;
 		}
 		// 设置缓存ID
@@ -91,14 +96,15 @@ public class ProtocolManager {
 		final Protocol protocol = this.protocolMapping.get(pid);
 		if(protocol == null) {
 			log.warn("不支持的信令协议：{}", message);
+			session.push(this.errorProtocol.build("不支持的信令协议"));
 			return;
 		}
-		final ClientSession session = this.clientSessionManager.session(instance);
 		if(protocol instanceof ClientRegisterProtocol) {
 			protocol.execute(sn, value, session);
 		} else if(session.authorized() && sn.equals(session.sn())) {
 			protocol.execute(sn, value, session);
 		} else {
+			log.warn("终端会话没有授权：{}", message);
 			session.push(this.errorProtocol.build(MessageCode.CODE_3401, "终端会话没有授权"));
 		}
 	}
