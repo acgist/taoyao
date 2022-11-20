@@ -5,7 +5,6 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
@@ -20,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-@Component
 public class ScriptListener extends ApplicationListenerAdapter<ScriptEvent> {
 	
 	@Async

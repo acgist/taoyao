@@ -1,7 +1,6 @@
 package com.acgist.taoyao.signal.protocol.platform;
 
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.stereotype.Component;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
@@ -15,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-@Component
 public class ShutdownProtocol extends ProtocolAdapter {
 
 	public static final Integer PID = 1000;

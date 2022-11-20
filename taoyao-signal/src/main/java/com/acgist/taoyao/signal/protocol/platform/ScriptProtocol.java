@@ -2,8 +2,6 @@ package com.acgist.taoyao.signal.protocol.platform;
 
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
-
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.event.platform.ScriptEvent;
@@ -14,7 +12,6 @@ import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
  * 
  * @author acgist
  */
-@Component
 public class ScriptProtocol extends ProtocolMapAdapter {
 
 	public static final Integer PID = 1001;
