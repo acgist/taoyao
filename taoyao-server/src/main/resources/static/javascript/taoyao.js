@@ -71,6 +71,8 @@ const signalProtocol = {
 	},
 	/** 平台信令 */
 	platform: {
+		/** 异常 */
+		error: 1999
 	},
 	/** 当前索引 */
 	index: 100000,
@@ -273,6 +275,9 @@ const signalChannel = {
 		break;
 		case signalProtocol.client.heartbeat:
 			console.debug('心跳');
+		break;
+		case signalProtocol.platform.error:
+			console.error('信令发生错误', data);
 		break;
 		}
 	}

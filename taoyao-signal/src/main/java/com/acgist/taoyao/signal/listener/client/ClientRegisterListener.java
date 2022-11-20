@@ -29,25 +29,25 @@ public class ClientRegisterListener extends ApplicationListenerAdapter<ClientReg
 	@Async
 	@Override
 	public void onApplicationEvent(ClientRegisterEvent event) {
+		final Map<?, ?> body = event.getBody();
 		final ClientSession session = event.getSession();
 		if (!session.authorized()) {
 			return;
 		}
 		// 下发配置
 		session.push(this.configProtocol.build());
-		// 广播上线事件
-		this.clientSessionManager.broadcast(
-			session.sn(),
-			this.onlineProtocol.build(Map.of("sn", session.sn()))
-		);
 		// 修改终端状态
-		final Map<?, ?> body = event.getBody();
 		final ClientSessionStatus status = session.status();
 		status.setSn(session.sn());
 		status.setIp((String) body.get("ip"));
 		status.setMac((String) body.get("mac"));
 		status.setSignal((Integer) body.get("signal"));
 		status.setBattery((Integer) body.get("battery"));
+		// 广播上线事件
+		this.clientSessionManager.broadcast(
+			session.sn(),
+			this.onlineProtocol.build(status)
+		);
 	}
 
 }
