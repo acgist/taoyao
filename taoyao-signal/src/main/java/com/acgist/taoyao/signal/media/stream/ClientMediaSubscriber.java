@@ -1,9 +1,7 @@
-package com.acgist.taoyao.signal.media;
+package com.acgist.taoyao.signal.media.stream;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
-import com.acgist.taoyao.signal.media.stream.ClientMediaStream;
 
 /**
  * 终端媒体订阅者（终端拉流）

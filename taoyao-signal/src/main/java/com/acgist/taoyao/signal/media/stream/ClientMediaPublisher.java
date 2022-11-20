@@ -1,15 +1,15 @@
-package com.acgist.taoyao.signal.media;
+package com.acgist.taoyao.signal.media.stream;
 
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import com.acgist.taoyao.signal.media.stream.ClientMediaStream;
-
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * 终端媒体流发布者（终端推流）
+ * 
+ * 通过处理器发送给订阅者
  * 
  * @author acgist
  */
@@ -21,7 +21,6 @@ public class ClientMediaPublisher implements ClientMediaHandler {
 	 */
 	private Map<String, ClientMediaStream> streams = new ConcurrentHashMap<>();
 
-	
 	/**
 	 * 发布
 	 * 

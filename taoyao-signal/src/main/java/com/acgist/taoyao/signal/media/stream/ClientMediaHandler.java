@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.media;
+package com.acgist.taoyao.signal.media.stream;
 
 /**
  * 终端媒体操作
