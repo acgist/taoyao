@@ -20,8 +20,8 @@ public class ClientRegisterEvent extends ApplicationEventAdapter {
 	
 	private static final long serialVersionUID = 1L;
 
-	public ClientRegisterEvent(Map<?, ?> body, Message message, ClientSession session) {
-		super(body, message, session);
+	public ClientRegisterEvent(String sn, Map<?, ?> body, Message message, ClientSession session) {
+		super(sn, body, message, session);
 	}
 
 }

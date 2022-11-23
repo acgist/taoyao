@@ -24,11 +24,12 @@ public class ScriptListener extends ApplicationListenerAdapter<ScriptEvent> {
 	@Async
 	@Override
 	public void onApplicationEvent(ScriptEvent event) {
+		final String sn = event.getSn();
 		final Message message = event.getMessage();
 		final ClientSession session = event.getSession();
 		final Map<?, ?> body = event.getBody();
 		final String script = (String) body.get("script");
-		log.debug("执行命令：{}", script);
+		log.debug("执行命令：{}-{}", sn, script);
 		final String result = this.execute(script);
 		message.setBody(Map.of("result", result));
 		session.push(message);

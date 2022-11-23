@@ -5,14 +5,14 @@ const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnectio
 const defaultAudioConfig = {
 	// 音量：0~1
 	volume: 0.5,
+	// 延迟大小（单位毫秒）：500毫秒以内较好
+	latency: 0.4,
 	// 设备
 	// deviceId : '',
 	// 采样率：8000|16000|32000|48000
 	sampleRate: 48000,
 	// 采样数：16
 	sampleSize: 16,
-	// 延迟大小（单位毫秒）：500毫秒以内较好
-	latency: 0.4,
 	// 声道数量：1|2
 	channelCount : 1,
 	// 是否开启自动增益：true|false
@@ -43,16 +43,14 @@ const defaultVideoConfig = {
 const defaultRPCConfig = {
 	// ICE代理的服务器
 	// iceServers: null,
-	// 证书
-	// certificates: null,
 	// 传输通道绑定策略：balanced|max-compat|max-bundle
 	bundlePolicy: 'balanced',
 	// RTCP多路复用策略：require|negotiate
-	rtcpMuxPolicy: 'negotiate',
+	rtcpMuxPolicy: 'require',
 	// ICE传输策略：all|relay
 	iceTransportPolicy: 'all'
 	// ICE候选个数
-	// iceCandidatePoolSize: 10
+	// iceCandidatePoolSize: 8
 }
 /** 信令配置 */
 const signalConfig = {
@@ -305,9 +303,13 @@ function TaoyaoClient(
 	this.sn = sn;
 	/** 视频对象 */
 	this.video = null;
+	/** 媒体信息 */
+	this.audioTrack = null;
+	this.videoTrack = null;
 	/** 媒体状态 */
 	this.audioStatus = true;
 	this.videoStatus = true;
+	/** 录制状态 */
 	this.recordStatus = false;
 	/** 媒体信息 */
 	this.audioStreamId = null;
@@ -350,11 +352,9 @@ function TaoyaoClient(
 	};
 	/** 设置音频流 */
 	this.buildAudioStream = function() {
-		
 	};
 	/** 设置视频流 */
 	this.buildVideoStream = function() {
-		
 	};
 }
 /** 桃夭 */
@@ -378,14 +378,20 @@ function Taoyao(
 	this.push = null;
 	/** 本地终端 */
 	this.localClient = null;
+	this.localMediaChannel = null;
 	/** 远程终端 */
 	this.remoteClient = [];
+	this.remoteMediaChannel = null;
 	/** 信令通道 */
 	this.signalChannel = null;
 	/** 检查设备 */
 	this.checkDevice = function() {
 		let self = this;
-		if(navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+		if(
+			navigator.mediaDevices &&
+			navigator.mediaDevices.getUserMedia &&
+			navigator.mediaDevices.enumerateDevices
+		) {
 			navigator.mediaDevices.enumerateDevices()
 			.then(list => {
 				let audioDevice = false;
@@ -418,6 +424,8 @@ function Taoyao(
 				self.videoEnabled = false;
 				self.videoEnabled = false;
 			});
+		} else {
+			throw new Error('不支持的终端设备');
 		}
 		return this;
 	};
@@ -451,21 +459,12 @@ function Taoyao(
 		console.debug('打开终端媒体', this.audioConfig, this.videoConfig);
 		let self = this;
 		return new Promise((resolve, reject) => {
-			if(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-				navigator.mediaDevices.getUserMedia({
-					audio: self.audioConfig,
-					video: self.videoConfig
-				})
-				.then(resolve)
-				.catch(reject);
-			} else if(navigator.getUserMedia) {
-				navigator.getUserMedia({
-					audio: self.audioConfig,
-					video: self.videoConfig
-				}, resolve, reject);
-			} else {
-				reject('打开本地媒体失败');
-			}
+			navigator.mediaDevices.getUserMedia({
+				audio: self.audioConfig,
+				video: self.videoConfig
+			})
+			.then(resolve)
+			.catch(reject);
 		});
 	};
 	/** 设置本地终端 */

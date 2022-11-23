@@ -6,17 +6,22 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
 
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * 执行命令事件
  * 
  * @author acgist
  */
+@Getter
+@Setter
 public class ScriptEvent extends ApplicationEventAdapter {
 
 	private static final long serialVersionUID = 1L;
 	
-	public ScriptEvent(Map<?, ?> body, Message message, ClientSession session) {
-		super(body, message, session);
+	public ScriptEvent(String sn, Map<?, ?> body, Message message, ClientSession session) {
+		super(sn, body, message, session);
 	}
 
 }

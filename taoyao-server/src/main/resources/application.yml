@@ -69,7 +69,7 @@ taoyao:
     quality: high|standard|quick
   # WebRTC配置
   webrtc:
-    model: SFU
+    model: MESH
     framework: JITSI
     stun:
       - stun:stun1.l.google.com:19302

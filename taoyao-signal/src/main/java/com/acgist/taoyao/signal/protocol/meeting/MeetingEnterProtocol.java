@@ -25,7 +25,7 @@ public class MeetingEnterProtocol extends ProtocolMapAdapter {
 
 	@Override
 	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		this.publishEvent(new MeetingEnterEvent(body, message, session));
+		this.publishEvent(new MeetingEnterEvent(sn, body, message, session));
 	}
 
 }

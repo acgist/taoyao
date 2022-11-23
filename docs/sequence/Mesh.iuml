@@ -1,0 +1,34 @@
+@startuml
+
+title WebRTC-Mesh
+
+actor ClientA as ClientA
+participant "Signal" as Signal
+actor ClientB as ClientB
+actor ClientC as ClientC
+
+autonumber
+
+ClientA -> Signal: 进入房间
+
+activate ClientA
+activate Signal
+Signal -> ClientB: ClientA进入房间
+activate ClientB
+ClientB -> Signal: 订阅ClientA
+Signal -> ClientA: ClientB订阅ClientA
+ClientA --> Signal: ClientA发布ClientB
+Signal --> ClientB: ClientA发布
+deactivate ClientB
+
+Signal -> ClientC: ClientA进入房间
+activate ClientC
+ClientC -> Signal: 订阅ClientA
+Signal -> ClientA: ClientC订阅ClientA
+ClientA --> Signal: ClientA发布ClientC
+Signal --> ClientC: ClientA发布
+deactivate ClientC
+deactivate Signal
+deactivate ClientA
+
+@enduml

@@ -18,6 +18,11 @@ import lombok.Setter;
 @Schema(title = "终端状态", description = "终端状态")
 public class ClientSessionStatus {
 
+	public static final String IP = "ip";
+	public static final String MAC = "mac";
+	public static final String SIGNAL = "signal";
+	public static final String BATTERY = "battery";
+	
 	/**
 	 * 终端标识
 	 */

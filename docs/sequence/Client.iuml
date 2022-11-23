@@ -1,0 +1,36 @@
+@startuml
+
+title Client
+
+actor ClientA as ClientA
+participant "Signal" as Signal
+actor ClientB as ClientB
+actor ClientC as ClientC
+
+autonumber
+
+ClientA -> Signal: 注册
+activate ClientA
+activate Signal
+Signal --> ClientA: 注册成功
+Signal -> ClientA: 下发配置
+Signal -> ClientB: ClientA上线
+Signal -> ClientC: ClientA上线
+loop 直到关闭
+    ClientA -> Signal: 心跳
+    Signal --> ClientA: 心跳
+end
+deactivate Signal
+deactivate ClientA
+
+ClientA -> Signal: 关闭
+activate Signal
+activate ClientA
+Signal -> ClientA: 关闭ClientA通道
+deactivate ClientA
+Signal -> ClientB: ClientA下线
+Signal -> ClientC: ClientA下线
+Signal -> Signal: 释放ClientA资源（直播、会议、媒体）
+deactivate Signal
+
+@enduml

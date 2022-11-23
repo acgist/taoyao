@@ -31,23 +31,24 @@ public class ClientRegisterListener extends ApplicationListenerAdapter<ClientReg
 	@Async
 	@Override
 	public void onApplicationEvent(ClientRegisterEvent event) {
-		final Map<?, ?> body = event.getBody();
 		final ClientSession session = event.getSession();
 		if (!session.authorized()) {
 			return;
 		}
+		final String sn = event.getSn();
+		final Map<?, ?> body = event.getBody();
 		// 下发配置
 		session.push(this.configProtocol.build());
 		// 修改终端状态
 		final ClientSessionStatus status = session.status();
-		status.setSn(session.sn());
-		status.setIp((String) body.get("ip"));
-		status.setMac((String) body.get("mac"));
-		status.setSignal((Integer) body.get("signal"));
-		status.setBattery((Integer) body.get("battery"));
+		status.setSn(sn);
+		status.setIp((String) body.get(ClientSessionStatus.IP));
+		status.setMac((String) body.get(ClientSessionStatus.MAC));
+		status.setSignal((Integer) body.get(ClientSessionStatus.SIGNAL));
+		status.setBattery((Integer) body.get(ClientSessionStatus.BATTERY));
 		// 广播上线事件
 		this.clientSessionManager.broadcast(
-			session.sn(),
+			sn,
 			this.onlineProtocol.build(status)
 		);
 	}

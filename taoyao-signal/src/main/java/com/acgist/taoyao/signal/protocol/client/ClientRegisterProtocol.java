@@ -48,7 +48,7 @@ public class ClientRegisterProtocol extends ProtocolMapAdapter {
 		// 推送消息
 		session.push(message.cloneWidthoutBody());
 		// 发送事件
-		this.publishEvent(new ClientRegisterEvent(body, message, session));
+		this.publishEvent(new ClientRegisterEvent(sn, body, message, session));
 	}
 
 }

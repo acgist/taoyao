@@ -25,7 +25,7 @@ public class MeetingCreateProtocol extends ProtocolMapAdapter {
 
 	@Override
 	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		this.publishEvent(new MeetingCreateEvent(body, message, session));
+		this.publishEvent(new MeetingCreateEvent(sn, body, message, session));
 	}
 
 }

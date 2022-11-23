@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.meeting.Meeting;
 import com.acgist.taoyao.meeting.MeetingManager;
-import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.event.meeting.MeetingEnterEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
 
@@ -25,9 +24,8 @@ public class MeetingEnterListener extends ApplicationListenerAdapter<MeetingEnte
 	
 	@Override
 	public void onApplicationEvent(MeetingEnterEvent event) {
+		final String sn = event.getSn();
 		final Map<?, ?> body = event.getBody();
-		final ClientSession session = event.getSession();
-		final String sn = session.sn();
 		final String id = (String) body.get("id");
 		final Meeting meeting = this.meetingManager.meeting(id);
 		meeting.addSn(sn);

@@ -22,7 +22,7 @@ public class ScriptProtocol extends ProtocolMapAdapter {
 
 	@Override
 	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		this.publishEvent(new ScriptEvent(body, message, session));
+		this.publishEvent(new ScriptEvent(sn, body, message, session));
 	}
 	
 }
