@@ -27,8 +27,7 @@ public class ScriptListener extends ApplicationListenerAdapter<ScriptEvent> {
 		final String sn = event.getSn();
 		final Message message = event.getMessage();
 		final ClientSession session = event.getSession();
-		final Map<?, ?> body = event.getBody();
-		final String script = (String) body.get("script");
+		final String script = event.get("script");
 		log.debug("执行命令：{}-{}", sn, script);
 		final String result = this.execute(script);
 		message.setBody(Map.of("result", result));

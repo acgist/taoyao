@@ -53,5 +53,37 @@ public abstract class ApplicationEventAdapter extends ApplicationEvent {
 		this.message = message;
 		this.session = session;
 	}
+	
+	/**
+	 * @param <T> 参数泛型
+	 * 
+	 * @param key 参数名称
+	 * 
+	 * @return 值
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T get(String key) {
+		if(this.body == null) {
+			return null;
+		}
+		return (T) this.body.get(key);
+	}
+
+	/**
+	 * @param <T> 参数泛型
+	 * 
+	 * @param key 参数名称
+	 * @param defaultValue 默认值
+	 * 
+	 * @return 值
+	 */
+	@SuppressWarnings("unchecked")
+	public <T> T get(String key, T defaultValue) {
+		if(this.body == null) {
+			return defaultValue;
+		}
+		final T t = (T) this.body.get(key);
+		return t == null ? defaultValue : t;
+	}
 
 }

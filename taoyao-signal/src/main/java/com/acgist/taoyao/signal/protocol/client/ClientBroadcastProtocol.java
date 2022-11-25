@@ -1,8 +1,8 @@
 package com.acgist.taoyao.signal.protocol.client;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
+import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.client.ClientSessionManager;
@@ -13,7 +13,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
  * 
  * @author acgist
  */
-@Component
+@Protocol
 public class ClientBroadcastProtocol extends ProtocolAdapter {
 
 	public static final Integer PID = 2007;

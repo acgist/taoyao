@@ -3,8 +3,7 @@ package com.acgist.taoyao.signal.protocol.client;
 import java.time.LocalDateTime;
 import java.util.Map;
 
-import org.springframework.stereotype.Component;
-
+import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.client.ClientSessionStatus;
@@ -15,7 +14,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
  * 
  * @author acgist
  */
-@Component
+@Protocol
 public class ClientHeartbeatProtocol extends ProtocolMapAdapter {
 
 	public static final Integer PID = 2005;

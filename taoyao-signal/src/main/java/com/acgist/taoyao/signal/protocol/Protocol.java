@@ -27,6 +27,17 @@ public interface Protocol {
 	 * @return 信令名称
 	 */
 	String name();
+	
+	/**
+	 * 鉴权
+	 * 
+	 * @param message 信令
+	 * 
+	 * @return 是否成功
+	 */
+	default boolean authenticate(Message message) {
+		return true;
+	}
 
 	/**
 	 * 处理信令消息

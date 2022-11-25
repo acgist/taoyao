@@ -1,11 +1,9 @@
 package com.acgist.taoyao.signal.listener.client;
 
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
-import org.springframework.stereotype.Component;
 
+import com.acgist.taoyao.boot.annotation.EventListener;
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.client.ClientSessionStatus;
 import com.acgist.taoyao.signal.event.client.ClientRegisterEvent;
@@ -20,7 +18,7 @@ import com.acgist.taoyao.signal.protocol.client.ClientOnlineProtocol;
  * 
  * @author acgist
  */
-@Component
+@EventListener
 public class ClientRegisterListener extends ApplicationListenerAdapter<ClientRegisterEvent> {
 
 	@Autowired
@@ -36,16 +34,15 @@ public class ClientRegisterListener extends ApplicationListenerAdapter<ClientReg
 			return;
 		}
 		final String sn = event.getSn();
-		final Map<?, ?> body = event.getBody();
 		// 下发配置
 		session.push(this.configProtocol.build());
 		// 修改终端状态
 		final ClientSessionStatus status = session.status();
 		status.setSn(sn);
-		status.setIp((String) body.get(ClientSessionStatus.IP));
-		status.setMac((String) body.get(ClientSessionStatus.MAC));
-		status.setSignal((Integer) body.get(ClientSessionStatus.SIGNAL));
-		status.setBattery((Integer) body.get(ClientSessionStatus.BATTERY));
+		status.setIp(event.getIp());
+		status.setMac(event.getMac());
+		status.setSignal(event.getSignal());
+		status.setBattery(event.getBattery());
 		// 广播上线事件
 		this.clientSessionManager.broadcast(
 			sn,

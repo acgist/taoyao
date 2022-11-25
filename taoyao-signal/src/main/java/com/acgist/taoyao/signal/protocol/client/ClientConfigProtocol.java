@@ -4,8 +4,8 @@ import java.time.LocalDateTime;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
+import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.MediaProperties;
 import com.acgist.taoyao.boot.config.WebrtcProperties;
 import com.acgist.taoyao.boot.model.Message;
@@ -19,7 +19,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
  * 
  * @author acgist
  */
-@Component
+@Protocol
 public class ClientConfigProtocol extends ProtocolAdapter {
 
 	public static final Integer PID = 2004;

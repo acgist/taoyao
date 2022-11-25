@@ -11,11 +11,11 @@
 <body>
 	<div class="taoyao" id="app">
 		<div class="handler">
-			<a class="create icon-make-group" title="创建房间" @click="create"></a>
-			<a class="invite icon-address-book" title="邀请房间" @click="invite"></a>
-			<a class="enter icon-enter" title="进入房间" @click="enter"></a>
-			<a class="leave icon-exit" title="离开房间" @click="leave"></a>
-			<a class="close icon-switch" title="关闭房间" @click="close"></a>
+			<a class="create icon-make-group" title="创建会议" @click="create"></a>
+			<a class="invite icon-address-book" title="邀请会议" @click="invite"></a>
+			<a class="enter icon-enter" title="进入会议" @click="enter"></a>
+			<a class="leave icon-exit" title="离开会议" @click="leave"></a>
+			<a class="close icon-switch" title="关闭会议" @click="close"></a>
 		</div>
 		<div class="list">
 			<div class="meeting me">
@@ -36,7 +36,7 @@
 					<a class="audio" title="音频状态" v-bind:class="client.audio?'icon-volume-medium':'icon-volume-mute2'" @click="audio(client.sn)"></a>
 					<a class="video" title="视频状态" v-bind:class="client.video?'icon-play2':'icon-stop'" @click="video(client.sn)"></a>
 					<a class="record icon-radio-checked" title="录制视频" v-bind:class="client.record?'active':''" @click="record(client.sn)"></a>
-					<a class="expel icon-cancel-circle" title="踢出房间" @click="expel(client.sn)"></a>
+					<a class="expel icon-cancel-circle" title="踢出会议" @click="expel(client.sn)"></a>
 				</div>
 			</div>
 		</div>
@@ -57,14 +57,18 @@
 			if(signalConfig.sn) {
 				// TODO：修改sn
 			}
+			let self = this;
 			this.taoyao = new Taoyao("wss://localhost:8888/websocket.signal");
-			// 检查设备
+			// 打开信令通道
 			this.taoyao
-				.checkDevice()
-				.buildChannel(this.callback)
-				.buildLocalMedia()
-				.then(stream => this.taoyao.buildLocalClient('local', stream))
-				.catch((e) => console.error('打开终端媒体失败', e));
+				.buildChannel(self.callback)
+				.then(e => console.debug('连接成功'));
+			// 打开媒体通道
+			this.taoyao.buildLocalMedia()
+				.then(stream => {
+					self.taoyao.buildMediaChannel('local', stream);
+				})
+				.catch(e => console.error('打开终端媒体失败', e));
 		},
 		beforeDestroy() {
 		},
@@ -81,19 +85,21 @@
 			// 创建会议
 			create: function(event) {
 				let self = this;
-				this.taoyao.createMeeting(data => {
-					self.meetingId = data.body.id;
+				this.taoyao.meetingCreate(data => {
+					console.log(data)
+					self.taoyao.meetingEnter(data.body.id);
+					return true;
 				});
-			},
-			// 返回终端
-			client: function(sn) {
-				return this.clients.filter(v => v.sn === sn)[0];
 			},
 			// 会议邀请
 			invite: function(sn) {
 			},
 			// 进入会议
 			enter: function(sn) {
+				let id = prompt('房间标识');
+				if(id) {
+					this.taoyao.meetingEnter(id);
+				}
 			},
 			// 离开会议
 			leave: function(sn) {

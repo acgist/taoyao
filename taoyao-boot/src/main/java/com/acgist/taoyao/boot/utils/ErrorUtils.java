@@ -42,10 +42,6 @@ public final class ErrorUtils {
 	 */
 	public static final String ERROR_PATH = "/error";
 	/**
-	 * Servlet错误异常
-	 */
-	public static final String EXCEPTION_SERVLET = "javax.servlet.error.exception";
-	/**
 	 * Servlet错误编码
 	 */
 	public static final String SERVLET_STATUS_CODE = "javax.servlet.error.status_code";
@@ -53,6 +49,10 @@ public final class ErrorUtils {
 	 * Servlet错误地址
 	 */
 	public static final String SERVLET_REQUEST_URI = "javax.servlet.error.request_uri";
+	/**
+	 * Servlet错误异常
+	 */
+	public static final String EXCEPTION_SERVLET = "javax.servlet.error.exception";
 	/**
 	 * SpringBoot异常
 	 */

@@ -1,7 +1,6 @@
 package com.acgist.taoyao.signal.protocol.client;
 
-import org.springframework.stereotype.Component;
-
+import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
@@ -11,7 +10,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
  * 
  * @author acgist
  */
-@Component
+@Protocol
 public class ClientOfflineProtocol extends ProtocolAdapter {
 	
 	public static final Integer PID = 2003;

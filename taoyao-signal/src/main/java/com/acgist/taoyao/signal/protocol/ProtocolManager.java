@@ -5,8 +5,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
-import org.springframework.stereotype.Service;
 
+import com.acgist.taoyao.boot.annotation.Manager;
 import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
@@ -16,6 +16,7 @@ import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.client.ClientSessionManager;
 import com.acgist.taoyao.signal.protocol.client.ClientRegisterProtocol;
 import com.acgist.taoyao.signal.protocol.platform.ErrorProtocol;
+import com.acgist.taoyao.signal.service.SecurityService;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-@Service
+@Manager
 public class ProtocolManager {
 
 	/**
@@ -38,6 +39,8 @@ public class ProtocolManager {
 	private ApplicationContext context;
 	@Autowired
 	private ErrorProtocol errorProtocol;
+	@Autowired
+	private SecurityService securityService;
 	@Autowired
 	private ClientSessionManager clientSessionManager;
 	
@@ -101,7 +104,7 @@ public class ProtocolManager {
 		}
 		if(protocol instanceof ClientRegisterProtocol) {
 			protocol.execute(sn, value, session);
-		} else if(session.authorized() && sn.equals(session.sn())) {
+		} else if(this.securityService.authenticate(value, session, protocol)) {
 			protocol.execute(sn, value, session);
 		} else {
 			log.warn("终端会话没有授权：{}", message);

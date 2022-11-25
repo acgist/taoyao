@@ -38,7 +38,7 @@ public class WebSocketSignal {
 	public void message(Session session, String message) {
 		log.debug("会话消息：{}-{}", session, message);
 		try {
-			WebSocketSignal.protocolManager.execute(message, session);
+			WebSocketSignal.protocolManager.execute(message.strip(), session);
 		} catch (Exception e) {
 			log.error("处理会话消息异常", e);
 			final Message errorMessage = WebSocketSignal.errorProtocol.build();

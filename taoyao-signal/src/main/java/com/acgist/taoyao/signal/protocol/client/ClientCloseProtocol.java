@@ -1,7 +1,6 @@
 package com.acgist.taoyao.signal.protocol.client;
 
-import org.springframework.stereotype.Component;
-
+import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
@@ -14,7 +13,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-@Component
+@Protocol
 public class ClientCloseProtocol extends ProtocolAdapter {
 
 	public static final Integer PID = 2001;

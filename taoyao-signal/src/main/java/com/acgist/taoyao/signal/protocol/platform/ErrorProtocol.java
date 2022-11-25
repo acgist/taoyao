@@ -1,7 +1,6 @@
 package com.acgist.taoyao.signal.protocol.platform;
 
-import org.springframework.stereotype.Component;
-
+import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.signal.client.ClientSession;
@@ -12,7 +11,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
  * 
  * @author acgist
  */
-@Component
+@Protocol
 public class ErrorProtocol extends ProtocolAdapter {
 
 	public static final Integer PID = 1999;

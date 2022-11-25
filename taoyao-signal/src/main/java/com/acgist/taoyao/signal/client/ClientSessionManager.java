@@ -7,8 +7,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Service;
 
+import com.acgist.taoyao.boot.annotation.Manager;
 import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-@Service
+@Manager
 public class ClientSessionManager {
 	
 	@Autowired
@@ -169,5 +169,5 @@ public class ClientSessionManager {
 			this.close(v);
 		});
 	}
-	
+
 }

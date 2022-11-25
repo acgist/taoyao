@@ -3,8 +3,8 @@ package com.acgist.taoyao.signal.listener.client;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
+import com.acgist.taoyao.boot.annotation.EventListener;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-@Component
+@EventListener
 public class ClientCloseListener extends ApplicationListenerAdapter<ClientCloseEvent> {
 
 	@Autowired

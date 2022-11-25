@@ -1,13 +1,11 @@
 package com.acgist.taoyao.signal.media.stream;
 
-import java.io.IOException;
-
 /**
  * 终端媒体流
  * 
  * @author acgist
  */
-public interface MediaStream {
+public interface MediaStream extends MediaHandler {
 
 	/**
 	 * 终端媒体类型
@@ -16,6 +14,10 @@ public interface MediaStream {
 	 */
 	public enum Type {
 		
+		/**
+		 * 混合：音视频
+		 */
+		MIX,
 		/**
 		 * 音频
 		 */
@@ -59,34 +61,6 @@ public interface MediaStream {
 	String id();
 	
 	/**
-	 * 打开终端媒体流
-	 * 
-	 * @throws IO异常
-	 */
-	void open() throws IOException;
-	
-	/**
-	 * 暂停终端媒体流
-	 * 
-	 * @throws IO异常
-	 */
-	void pause() throws IOException;
-	
-	/**
-	 * 恢复终端媒体流
-	 * 
-	 * @throws IO异常
-	 */
-	void resume() throws IOException;
-	
-	/**
-	 * 关闭终端媒体流
-	 * 
-	 * @throws IO异常
-	 */
-	void close() throws IOException;
-	
-	/**
 	 * @return 终端媒体流类型
 	 */
 	Type type();
@@ -95,5 +69,15 @@ public interface MediaStream {
 	 * @return 终端媒体流状态
 	 */
 	Status status();
+	
+	/**
+	 * @return 发布者
+	 */
+	String publisher();
+	
+	/**
+	 * @return 订阅者
+	 */
+	String subscriber();
 	
 }

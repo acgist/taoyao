@@ -4,8 +4,8 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
 
+import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.SecurityProperties;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
@@ -18,7 +18,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
  * 
  * @author acgist
  */
-@Component
+@Protocol
 public class ClientRegisterProtocol extends ProtocolMapAdapter {
 
 	public static final Integer PID = 2000;

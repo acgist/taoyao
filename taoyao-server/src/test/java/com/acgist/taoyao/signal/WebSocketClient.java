@@ -10,6 +10,7 @@ import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.CountDownLatch;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
@@ -21,6 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 public class WebSocketClient {
 
 	public static final WebSocket build(String uri, String sn) throws InterruptedException {
+		return build(uri, sn, null);
+	}
+	
+	public static final WebSocket build(String uri, String sn, CountDownLatch count) throws InterruptedException {
 		final Object lock = new Object();
 		try {
 			return HttpClient
@@ -32,7 +37,7 @@ public class WebSocketClient {
 					@Override
 					public void onOpen(WebSocket webSocket) {
 						webSocket.sendText(String.format("""
-							{"header":{"pid":2000,"v":"1.0.0","id":"1","sn":"%s"},"body":{"username":"taoyao","password":"taoyao"}}
+							{"header":{"pid":2000,"v":"1.0.0","id":"1","sn":"%s"},"body":{"username":"taoyao","password":"taoyao","ip":"127.0.0.1","mac":"00:00:00:00:00:00"}}
 						""", sn), true);
 						Listener.super.onOpen(webSocket);
 					}
@@ -41,7 +46,12 @@ public class WebSocketClient {
 						synchronized (lock) {
 							lock.notifyAll();
 						}
-						log.info("收到WebSocket消息：{}", data);
+						if(count == null) {
+							log.debug("收到WebSocket消息：{}", data);
+						} else {
+							count.countDown();
+							log.debug("收到WebSocket消息：{}-{}", count.getCount(), data);
+						}
 						return Listener.super.onText(webSocket, data, last);
 					}
 				})

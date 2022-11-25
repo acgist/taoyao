@@ -11,6 +11,8 @@ import com.acgist.taoyao.signal.client.websocket.WebSocketSignal;
 import com.acgist.taoyao.signal.listener.platform.ScriptListener;
 import com.acgist.taoyao.signal.protocol.platform.ScriptProtocol;
 import com.acgist.taoyao.signal.protocol.platform.ShutdownProtocol;
+import com.acgist.taoyao.signal.service.SecurityService;
+import com.acgist.taoyao.signal.service.impl.SecurityServiceImpl;
 
 /**
  * 信令配置
@@ -31,6 +33,12 @@ public class SignalAutoConfiguration {
 	@ConditionalOnMissingBean
 	public ServerEndpointExporter serverEndpointExporter() {
 		return new ServerEndpointExporter();
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	public SecurityService securityService() {
+		return new SecurityServiceImpl();
 	}
 	
 	@Bean

@@ -1,6 +1,7 @@
 /** 桃夭WebRTC终端核心功能 */
 /** 兼容 */
 const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+const RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
 /** 默认音频配置 */
 const defaultAudioConfig = {
 	// 音量：0~1
@@ -42,7 +43,7 @@ const defaultVideoConfig = {
 /** 默认RTCPeerConnection配置 */
 const defaultRPCConfig = {
 	// ICE代理的服务器
-	// iceServers: null,
+	iceServers: null,
 	// 传输通道绑定策略：balanced|max-compat|max-bundle
 	bundlePolicy: 'balanced',
 	// RTCP多路复用策略：require|negotiate
@@ -78,9 +79,15 @@ const signalProtocol = {
 		config: 2004,
 		/** 心跳 */
 		heartbeat: 2005,
+		/** 重启终端 */
+		reboot: 2997,
 	},
 	/** 会议信令 */
 	meeting: {
+		/** 创建会议信令 */
+		create: 4000,
+		/** 进入会议信令 */
+		enter: 4002,
 	},
 	/** 平台信令 */
 	platform: {
@@ -208,22 +215,31 @@ const signalChannel = {
 				}
 				reject(e);
 			};
+			/**
+			 * 回调策略：
+			 * 1. 如果注册请求回调，同时执行结果返回true不再执行后面所有回调。
+			 * 2. 如果注册全局回调，同时执行结果返回true不再执行后面所有回调。
+			 * 3. 如果前面所有回调没有返回true执行默认回调。
+			 */
 			self.channel.onmessage = function(e) {
 				console.debug('信令通道消息', e.data);
 				let done = false;
 				let data = JSON.parse(e.data);
-				// 注册回调
+				// 请求回调
+				if(self.callbackMapping.has(data.header.id)) {
+					try {
+						done = self.callbackMapping.get(data.header.id)(data);
+					} finally {
+						self.callbackMapping.delete(data.header.id);
+					}
+				}
+				// 全局回调
 				if(self.callback) {
 					done = self.callback(data);
 				}
 				// 默认回调
 				if(!done) {
 					self.defaultCallback(data);
-				}
-				// 请求回调
-				if(self.callbackMapping.has(data.header.id)) {
-					self.callbackMapping.get(data.header.id)();
-					self.callbackMapping.delete(data.header.id);
 				}
 			};
 		});
@@ -277,22 +293,42 @@ const signalChannel = {
 		console.debug('没有适配信令消息默认处理', data);
 		switch(data.header.pid) {
 		case signalProtocol.client.register:
-			console.debug('终端注册成功');
 		break;
 		case signalProtocol.client.config:
-			if(this.taoyao) {
-				this.taoyao
-				.configMedia(data.body.media)
-				.configWebrtc(data.body.webrtc);
-			}
+			this.defaultClientConfig(data);
 		break;
 		case signalProtocol.client.heartbeat:
-			console.debug('心跳');
+		break;
+		case signalProtocol.client.reboot:
+			this.defaultClientReboot(data);
+		break;
+		case signalProtocol.meeting.create:
+		break;
+		case signalProtocol.meeting.enter:
 		break;
 		case signalProtocol.platform.error:
 			console.error('信令发生错误', data);
 		break;
 		}
+	},
+	/** 终端默认回调 */
+	defaultClientConfig: function(data) {
+		this.taoyao
+			.configMedia(data.body.media)
+			.configWebrtc(data.body.webrtc);
+	},
+	defaultClientReboot: function(data) {
+		console.info('重启终端');
+		location.reload();
+	},
+	/** 默认媒体回调 */
+	defaultMediaSubscribe: function(data) {
+		
+	},
+	/** 会议默认回调 */
+	defaultMeetingEnter: function(data) {
+		this.taoyao
+			.mediaSubscribe(data.body.sn);
 	}
 };
 /** 终端 */
@@ -304,16 +340,13 @@ function TaoyaoClient(
 	/** 视频对象 */
 	this.video = null;
 	/** 媒体信息 */
+	this.stream = null;
 	this.audioTrack = null;
 	this.videoTrack = null;
 	/** 媒体状态 */
-	this.audioStatus = true;
-	this.videoStatus = true;
-	/** 录制状态 */
+	this.audioStatus = false;
+	this.videoStatus = false;
 	this.recordStatus = false;
-	/** 媒体信息 */
-	this.audioStreamId = null;
-	this.videoStreamId = null;
 	/** 播放视频 */
 	this.play = async function() {
 		await this.video.play();
@@ -345,35 +378,48 @@ function TaoyaoClient(
 	/** 设置媒体流 */
 	this.buildStream = async function(stream) {
 		if(stream) {
+			this.stream = stream;
 			this.video.srcObject = stream;
+			let audioTrack = stream.getAudioTracks();
+			let videoTrack = stream.getVideoTracks();
+			if(audioTrack && audioTrack.length) {
+				this.audioTrack = audioTrack;
+				this.audioStatus = true;
+			}
+			if(videoTrack && videoTrack.length) {
+				this.videoTrack = videoTrack;
+				this.videoStatus = true;
+			}
+			console.debug('设置媒体流', this.stream, this.audioTrack, this.videoTrack);
 			await this.play();
 		}
 		return this;
 	};
 	/** 设置音频流 */
-	this.buildAudioStream = function() {
+	this.buildAudioTrack = function() {
+		// 关闭旧的
+		// 创建新的
 	};
 	/** 设置视频流 */
-	this.buildVideoStream = function() {
+	this.buildVideoTrack = function() {
+		// 关闭旧的
+		// 创建新的
 	};
 }
 /** 桃夭 */
 function Taoyao(
-	webSocket,
-	iceServer,
-	audioConfig,
-	videoConfig
+	webSocket
 ) {
+	/** WebRTC配置 */
+	this.webrtc = null;
 	/** WebSocket地址 */
 	this.webSocket = webSocket;
-	/** IceServer地址 */
-	this.iceServer = iceServer;
 	/** 设备状态 */
 	this.audioEnabled = true;
 	this.videoEnabled = true;
 	/** 媒体配置 */
-	this.audioConfig = audioConfig || defaultAudioConfig;
-	this.videoConfig = videoConfig || defaultVideoConfig;
+	this.audioConfig = defaultAudioConfig;
+	this.videoConfig = defaultVideoConfig;
 	/** 发送信令 */
 	this.push = null;
 	/** 本地终端 */
@@ -438,26 +484,27 @@ function Taoyao(
 	};
 	/** WebRTC配置 */
 	this.configWebrtc = function(config = {}) {
-		this.webSocket = config.signalAddress;
-		this.iceServer = config.stun;
-		console.debug('WebRTC配置', this.webSocket, this.iceServer);
+		this.webrtc = config;
+		this.webSocket = this.webrtc.signalAddress;
+		defaultRPCConfig.iceServers = this.webrtc.stun.map(v => ({'urls': v}));
+		console.debug('WebRTC配置', this.webrtc, defaultRPCConfig);
 		return this;
 	};
 	/** 打开信令通道 */
 	this.buildChannel = function(callback) {
 		signalChannel.taoyao = this;
 		this.signalChannel = signalChannel;
-		this.signalChannel.connect(this.webSocket, callback);
 		// 不能直接this.push = this.signalChannel.push这样导致this对象错误
 		this.push = function(data, callback) {
 			this.signalChannel.push(data, callback)
 		};
-		return this;
+		return this.signalChannel.connect(this.webSocket, callback);
 	};
 	/** 打开本地媒体 */
 	this.buildLocalMedia = function() {
 		console.debug('打开终端媒体', this.audioConfig, this.videoConfig);
 		let self = this;
+		this.checkDevice();
 		return new Promise((resolve, reject) => {
 			navigator.mediaDevices.getUserMedia({
 				audio: self.audioConfig,
@@ -465,13 +512,21 @@ function Taoyao(
 			})
 			.then(resolve)
 			.catch(reject);
+			// 兼容旧版
+			// navigator.getUserMedia({
+			// 	audio: self.audioConfig,
+			// 	video: self.videoConfig
+			// }, resolve, reject);
 		});
 	};
-	/** 设置本地终端 */
-	this.buildLocalClient = async function(localVideoId, stream) {
-		this.localClient = new TaoyaoClient(signalConfig.sn);
-		await this.localClient.buildVideo(localVideoId, stream);
-	};
+	/** 远程终端过滤 */
+	this.remoteClientFilter = function(sn) {
+		let array = this.remoteClient.filter(v => v.sn === sn);
+		if(array.length <= 0) {
+			return null;
+		}
+		return this.remoteClient.filter(v => v.sn === sn)[0];
+	}
 	/** 关闭：关闭媒体 */
 	this.close = function() {
 		// TODO：释放资源
@@ -479,9 +534,96 @@ function Taoyao(
 	/** 关机：关闭媒体、关闭信令 */
 	this.shutdown = function() {
 		this.close();
+	};
+	/** 打开媒体通道 */
+	this.buildMediaChannel = async function(localVideoId, stream) {
+		// 本地视频
+		this.localClient = new TaoyaoClient(signalConfig.sn);
+		await this.localClient.buildVideo(localVideoId, stream);
+		// 本地通道
+		this.localMediaChannel = new RTCPeerConnection(defaultRPCConfig);
+		if(this.localClient.audioTrack) {
+			this.localClient.audioTrack.forEach(v => this.localMediaChannel.addTrack(v, this.localClient.stream));
+		}
+		if(this.localClient.videoTrack) {
+			this.localClient.videoTrack.forEach(v => this.localMediaChannel.addTrack(v, this.localClient.stream));
+		}
+		this.localMediaChannel.ontrack = this.localMediaChannelTrack;
+		this.localMediaChannel.ondatachannel = this.localMediaChannelDataChannel;
+		this.localMediaChannel.onicecandidate = this.localMediaChannelIceCandidate;
+		// 远程通道
+		this.remoteMediaChannel = new RTCPeerConnection(defaultRPCConfig);
+		this.remoteMediaChannel.ontrack = this.remoteMediaChannelTrack;
+		this.remoteMediaChannel.ondatachannel = this.remoteMediaChannelDataChannel;
+		this.remoteMediaChannel.onicecandidate = this.remoteMediaChannelIceCandidate;
+		return this;
+	};
+	/** 本地 */
+	this.localMediaChannelTrack = function() {
+	};
+	this.localMediaChannelDataChannel = function(channel) {
+		channel.onopen = function() {
+			console.debug('DataChannel Open');
+		}
+		channel.onmessage = function(data) {
+			console.debug('DataChannel Message', data);
+		}
+		channel.onclose = function() {
+			console.debug('DataChannel Close');
+		}
+		channel.onerror = function(e) {
+			console.debug('DataChannel Error', e);
+		}
+	};
+	this.localMediaChannelIceCandidate = function() {
+	};
+	/** 远程 */
+	this.localMediaChannelTrack = function() {
+	};
+	this.localMediaChannelDataChannel = function(channel) {
+		channel.onopen = function() {
+			console.debug('DataChannel Open');
+		}
+		channel.onmessage = function(data) {
+			console.debug('DataChannel Message', data);
+		}
+		channel.onclose = function() {
+			console.debug('DataChannel Close');
+		}
+		channel.onerror = function(e) {
+			console.debug('DataChannel Error', e);
+		}
+	};
+	this.localMediaChannelIceCandidate = function() {
+	};
+	/** 媒体信令 */
+	this.mediaSubscribe = function(sn, callback) {
+		let self = this;
+		if(self.webrtc.model === 'MESH') {
+			self.localMediaChannel.createOffer().then(description => {
+				console.debug('Local Create Offer', description);
+				self.localMediaChannel.setLocalDescription(description);
+			});
+		}
+	};
+	/** 会议信令 */
+	this.meetingCreate = function(callback) {
+		let self = this;
+		self.push(signalProtocol.buildProtocol(
+			signalConfig.sn,
+			signalProtocol.meeting.create,
+		), callback);
 	}
-	/** 媒体 */
-	/** 视频 */
+	this.meetingEnter = function(id, callback) {
+		let self = this;
+		self.push(signalProtocol.buildProtocol(
+			signalConfig.sn,
+			signalProtocol.meeting.enter,
+			{
+				id: id
+			}
+		), callback);
+	};
 };
 /*
 var peer;
