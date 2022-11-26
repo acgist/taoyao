@@ -57,7 +57,7 @@ const defaultRPCConfig = {
 /** 信令配置 */
 const signalConfig = {
 	/** 当前终端SN */
-	sn: 'taoyao',
+	sn: localStorage.getItem('taoyao.sn', 'taoyao'),
 	/** 当前版本 */
 	version: '1.0.0',
 	// 信令授权
@@ -484,7 +484,8 @@ function Taoyao(
 	/** WebRTC配置 */
 	this.webrtc = null;
 	/** WebSocket地址 */
-	this.webSocket = webSocket;
+	// "wss://192.168.1.100:8888/websocket.signal"
+	this.webSocket = webSocket || 'wss://' + location.host + '/websocket.signal';
 	/** 设备状态 */
 	this.audioEnabled = true;
 	this.videoEnabled = true;

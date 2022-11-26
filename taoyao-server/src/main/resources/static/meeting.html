@@ -50,16 +50,8 @@
 			meetingId: null
 		},
 		mounted() {
-			// 随机终端标识
-			if(signalConfig.sn === 'taoyao') {
-				let sn = localStorage.getItem('taoyao.sn');
-				if(sn) {
-					signalConfig.sn = sn;
-				}
-				console.debug('终端标识', sn);
-			}
 			let self = this;
-			this.taoyao = new Taoyao("wss://192.168.1.100:8888/websocket.signal");
+			this.taoyao = new Taoyao();
 			this.remoteClient = this.taoyao.remoteClient;
 			// 打开信令通道
 			this.taoyao

@@ -13,11 +13,14 @@ import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.event.client.ClientRegisterEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 终端注册信令
  * 
  * @author acgist
  */
+@Slf4j
 @Protocol
 public class ClientRegisterProtocol extends ProtocolMapAdapter {
 
@@ -40,6 +43,7 @@ public class ClientRegisterProtocol extends ProtocolMapAdapter {
 			StringUtils.equals(this.securityProperties.getUsername(), username) &&
 			StringUtils.equals(this.securityProperties.getPassword(), password)
 		) {
+			log.info("终端注册：{}", sn);
 			session.authorize(sn);
 			message.setCode(MessageCode.CODE_0000);
 		} else {
