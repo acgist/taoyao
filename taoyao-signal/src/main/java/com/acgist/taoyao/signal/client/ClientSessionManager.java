@@ -65,7 +65,7 @@ public class ClientSessionManager {
 	 * @param message 消息
 	 */
 	public void unicast(String to, Message message) {
-		this.sessions.stream().filter(v -> v.matchSn(to)).forEach(v -> {
+		this.sessions.stream().filter(v -> v.filterSn(to)).forEach(v -> {
 			message.getHeader().setSn(v.sn());
 			v.push(message);
 		});
@@ -90,7 +90,7 @@ public class ClientSessionManager {
 	 * @param message 消息
 	 */
 	public void broadcast(String from, Message message) {
-		this.sessions.stream().filter(v -> v.matchNoneSn(from)).forEach(v -> {
+		this.sessions.stream().filter(v -> v.filterNoneSn(from)).forEach(v -> {
 			message.getHeader().setSn(v.sn());
 			v.push(message);
 		});

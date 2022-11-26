@@ -64,12 +64,12 @@ public abstract class ClientSessionAdapter<T extends AutoCloseable> implements C
 	}
 	
 	@Override
-	public boolean matchSn(String sn) {
+	public boolean filterSn(String sn) {
 		return StringUtils.equals(sn, this.sn);
 	}
 	
 	@Override
-	public boolean matchNoneSn(String sn) {
+	public boolean filterNoneSn(String sn) {
 		return !StringUtils.equals(sn, this.sn);
 	}
 	

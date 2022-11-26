@@ -52,14 +52,14 @@ public interface ClientSession extends AutoCloseable {
 	 * 
 	 * @return 终端标识是否匹配
 	 */
-	boolean matchSn(String sn);
+	boolean filterSn(String sn);
 	
 	/**
 	 * @param sn 终端标识
 	 * 
 	 * @return 终端标识是否匹配失败
 	 */
-	boolean matchNoneSn(String sn);
+	boolean filterNoneSn(String sn);
 	
 	/**
 	 * @param instance 会话实例

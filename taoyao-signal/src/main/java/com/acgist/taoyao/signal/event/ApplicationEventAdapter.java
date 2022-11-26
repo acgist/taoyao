@@ -1,6 +1,8 @@
 package com.acgist.taoyao.signal.event;
 
+import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.context.ApplicationEvent;
 
@@ -84,6 +86,18 @@ public abstract class ApplicationEventAdapter extends ApplicationEvent {
 		}
 		final T t = (T) this.body.get(key);
 		return t == null ? defaultValue : t;
+	}
+
+	/**
+	 * @return 新的主体
+	 */
+	public Map<String, Object> mergeBody() {
+		final Map<String, Object> body = new HashMap<>();
+		if(this.body != null) {
+			this.body.forEach((k, v) -> body.put(Objects.toString(k), v));
+		}
+		this.message.setBody(body);
+		return body;
 	}
 
 }

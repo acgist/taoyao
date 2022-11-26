@@ -3,6 +3,7 @@ package com.acgist.taoyao.signal.client.websocket;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.signal.client.ClientSessionManager;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
 import com.acgist.taoyao.signal.protocol.platform.ErrorProtocol;
@@ -42,6 +43,9 @@ public class WebSocketSignal {
 		} catch (Exception e) {
 			log.error("处理会话消息异常", e);
 			final Message errorMessage = WebSocketSignal.errorProtocol.build();
+			if(e instanceof MessageCodeException code) {
+				errorMessage.setCode(code.getCode(), code.getMessage());
+			}
 			errorMessage.setBody(e.getMessage());
 			this.push(session, errorMessage);
 		}

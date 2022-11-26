@@ -5,26 +5,26 @@ import java.util.Map;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
-import com.acgist.taoyao.signal.event.media.MediaSubscribeEvent;
+import com.acgist.taoyao.signal.event.media.MediaCandidateEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 
 /**
- * 订阅指令
+ * 候选信令
  * 
  * @author acgist
  */
 @Protocol
-public class MediaSubscribeProtocol extends ProtocolMapAdapter {
+public class MediaCandidateProtocol extends ProtocolMapAdapter {
 
-	public static final Integer PID = 5002;
+	public static final Integer PID = 5004;
 	
-	public MediaSubscribeProtocol() {
-		super(PID, "订阅指令");
+	public MediaCandidateProtocol() {
+		super(PID, "候选信令");
 	}
 
 	@Override
 	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		this.publishEvent(new MediaSubscribeEvent(sn, body, message, session));
+		this.publishEvent(new MediaCandidateEvent(sn, body, message, session));
 	}
 
 }

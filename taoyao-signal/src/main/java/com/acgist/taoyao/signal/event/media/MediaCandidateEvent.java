@@ -1,5 +1,6 @@
 package com.acgist.taoyao.signal.event.media;
 
+import java.util.List;
 import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
@@ -10,25 +11,25 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 订阅事件
+ * 候选事件
  * 
  * @author acgist
  */
 @Getter
 @Setter
-public class MediaSubscribeEvent extends ApplicationEventAdapter {
+public class MediaCandidateEvent extends ApplicationEventAdapter {
 
 	private static final long serialVersionUID = 1L;
 	
-	public MediaSubscribeEvent(String sn, Map<?, ?> body, Message message, ClientSession session) {
+	public MediaCandidateEvent(String sn, Map<?, ?> body, Message message, ClientSession session) {
 		super(sn, body, message, session);
 	}
-	
-	/**
-	 * @return 终端标识（订阅的谁）
-	 */
-	public String getTo() {
-		return this.get("to");
-	}
 
+	/**
+	 * @return 终端列表
+	 */
+	public List<String> getSns() {
+		return this.get("sns");
+	}
+	
 }

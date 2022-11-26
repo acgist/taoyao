@@ -99,7 +99,7 @@ public class ProtocolManager {
 		final Protocol protocol = this.protocolMapping.get(pid);
 		if(protocol == null) {
 			log.warn("不支持的信令协议：{}", message);
-			session.push(this.errorProtocol.build("不支持的信令协议"));
+			session.push(this.errorProtocol.build("不支持的信令协议：" + pid));
 			return;
 		}
 		if(protocol instanceof ClientRegisterProtocol) {

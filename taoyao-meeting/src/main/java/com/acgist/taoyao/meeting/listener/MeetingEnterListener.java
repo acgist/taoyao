@@ -4,6 +4,8 @@ import java.util.Map;
 
 import com.acgist.taoyao.boot.annotation.EventListener;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.model.MessageCode;
+import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.meeting.Meeting;
 import com.acgist.taoyao.meeting.MeetingListenerAdapter;
 import com.acgist.taoyao.signal.event.meeting.MeetingEnterEvent;
@@ -21,13 +23,18 @@ public class MeetingEnterListener extends MeetingListenerAdapter<MeetingEnterEve
 		final String sn = event.getSn();
 		final String id = event.get("id");
 		final Meeting meeting = this.meetingManager.meeting(id);
+		if(meeting == null) {
+			throw MessageCodeException.of(MessageCode.CODE_3400, "无效会议");
+		}
 		meeting.addSn(sn);
 		final Message message = event.getMessage();
 		message.setBody(Map.of(
 			"id", meeting.getId(),
 			"sn", sn
 		));
-		this.clientSessionManager.broadcast(sn, message);
+		meeting.getSns().stream()
+		.filter(v -> !sn.equals(v))
+		.forEach(v -> this.clientSessionManager.unicast(v, message));
 	}
 
 }
