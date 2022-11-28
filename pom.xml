@@ -24,7 +24,6 @@
 		<!-- 版本 -->
 		<java.version>17</java.version>
 		<javacv.version>1.5.8</javacv.version>
-		<ffmpeg.version>5.1.2</ffmpeg.version>
 		<lombok.version>1.18.24</lombok.version>
 		<kurento.version>6.18.0</kurento.version>
 		<springdoc.version>2.0.0-RC1</springdoc.version>
@@ -188,49 +187,6 @@
 				<groupId>org.kurento</groupId>
 				<artifactId>kurento-client</artifactId>
 				<version>${kurento.version}</version>
-			</dependency>
-			<!--
-				媒体：FFmpeg
-				android-arm
-				android-arm64
-				android-x86
-				android-x86_64
-				linux-arm64
-				linux-armhf
-				linux-ppc64le
-				linux-x86
-				linux-x86_64
-				macosx-arm64
-				macosx-x86_64
-				windows-x86
-				windows-x86_64
-			-->
-			<dependency>
-				<groupId>org.bytedeco</groupId>
-				<artifactId>ffmpeg-platform</artifactId>
-				<version>${ffmpeg.version}-${javacv.version}</version>
-				<exclusions>
-					<exclusion>
-						<groupId>org.bytedeco</groupId>
-						<artifactId>ffmpeg</artifactId>
-					</exclusion>
-					<exclusion>
-						<groupId>org.bytedeco</groupId>
-						<artifactId>javacpp</artifactId>
-					</exclusion>
-				</exclusions>
-			</dependency>
-			<dependency>
-				<groupId>org.bytedeco</groupId>
-				<artifactId>ffmpeg</artifactId>
-				<version>${ffmpeg.version}-${javacv.version}</version>
-				<classifier>${javacv.os.version}</classifier>
-			</dependency>
-			<dependency>
-				<groupId>org.bytedeco</groupId>
-				<artifactId>javacpp</artifactId>
-				<version>${javacv.version}</version>
-				<classifier>${javacv.os.version}</classifier>
 			</dependency>
 			<!-- 集合工具 -->
 			<dependency>

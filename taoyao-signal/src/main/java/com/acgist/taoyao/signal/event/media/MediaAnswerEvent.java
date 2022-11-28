@@ -10,25 +10,25 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 订阅事件
+ * Answer事件
  * 
  * @author acgist
  */
 @Getter
 @Setter
-public class MediaSubscribeEvent extends ApplicationEventAdapter {
+public class MediaAnswerEvent extends ApplicationEventAdapter {
 
 	private static final long serialVersionUID = 1L;
 	
-	public MediaSubscribeEvent(String sn, Map<?, ?> body, Message message, ClientSession session) {
+	public MediaAnswerEvent(String sn, Map<?, ?> body, Message message, ClientSession session) {
 		super(sn, body, message, session);
 	}
-	
+
 	/**
 	 * @return 接收终端标识
 	 */
 	public String getTo() {
 		return this.get("to");
 	}
-
+	
 }

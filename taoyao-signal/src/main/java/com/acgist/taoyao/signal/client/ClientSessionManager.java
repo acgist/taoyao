@@ -36,7 +36,7 @@ public class ClientSessionManager {
 
 	@Scheduled(cron = "${taoyao.scheduled.session:0 * * * * ?}")
 	public void scheduled() {
-		this.closeTimeoutSession();
+		this.closeTimeout();
 	}
 	
 	/**
@@ -65,7 +65,9 @@ public class ClientSessionManager {
 	 * @param message 消息
 	 */
 	public void unicast(String to, Message message) {
-		this.sessions.stream().filter(v -> v.filterSn(to)).forEach(v -> {
+		this.sessions().stream()
+		.filter(v -> v.filterSn(to))
+		.forEach(v -> {
 			message.getHeader().setSn(v.sn());
 			v.push(message);
 		});
@@ -77,7 +79,7 @@ public class ClientSessionManager {
 	 * @param message 消息
 	 */
 	public void broadcast(Message message) {
-		this.sessions.forEach(v -> {
+		this.sessions().forEach(v -> {
 			message.getHeader().setSn(v.sn());
 			v.push(message);
 		});
@@ -90,7 +92,9 @@ public class ClientSessionManager {
 	 * @param message 消息
 	 */
 	public void broadcast(String from, Message message) {
-		this.sessions.stream().filter(v -> v.filterNoneSn(from)).forEach(v -> {
+		this.sessions().stream().
+		filter(v -> v.filterNoneSn(from))
+		.forEach(v -> {
 			message.getHeader().setSn(v.sn());
 			v.push(message);
 		});
@@ -102,7 +106,7 @@ public class ClientSessionManager {
 	 * @return 终端会话
 	 */
 	public ClientSession session(String sn) {
-		return this.sessions.stream()
+		return this.sessions().stream()
 			.filter(v -> StringUtils.equals(sn, v.sn()))
 			.findFirst()
 			.orElse(null);
@@ -122,14 +126,18 @@ public class ClientSessionManager {
 	 * @return 所有终端会话
 	 */
 	public List<ClientSession> sessions() {
-		return this.sessions;
+		return this.sessions.stream()
+			.filter(ClientSession::authorized)
+			.toList();
 	}
 
 	/**
 	 * @return 所有终端状态
 	 */
 	public List<ClientSessionStatus> status() {
-		return this.sessions().stream().map(ClientSession::status).toList();
+		return this.sessions().stream()
+			.map(ClientSession::status)
+			.toList();
 	}
 	
 	/**
@@ -160,9 +168,10 @@ public class ClientSessionManager {
 	/**
 	 * 定时关闭超时会话
 	 */
-	private void closeTimeoutSession() {
+	private void closeTimeout() {
 		log.debug("定时关闭超时会话");
 		this.sessions.stream()
+		.filter(v -> !v.authorized())
 		.filter(v -> v.timeout(this.taoyaoProperties.getTimeout()))
 		.forEach(v -> {
 			log.debug("关闭超时会话：{}", v);

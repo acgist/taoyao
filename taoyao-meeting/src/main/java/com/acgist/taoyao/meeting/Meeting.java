@@ -22,6 +22,16 @@ public class Meeting {
 	@Schema(title = "会议标识", description = "会议标识")
 	private String id;
 	/**
+	 * 会议名称
+	 */
+	@Schema(title = "会议名称", description = "会议名称")
+	private String name;
+	/**
+	 * 会议密码
+	 */
+	@Schema(title = "会议密码", description = "会议密码")
+	private String password;
+	/**
 	 * 终端会话标识列表
 	 */
 	@Schema(title = "终端会话标识列表", description = "终端会话标识列表")

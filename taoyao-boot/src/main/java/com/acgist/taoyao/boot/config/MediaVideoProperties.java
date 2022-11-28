@@ -54,7 +54,7 @@ public class MediaVideoProperties {
 	 * 帧率（流畅）
 	 */
 	@Schema(title = "帧率", description = "帧率影响流程", example = "20|24|30|60")
-	private Integer framerate;
+	private Integer frameRate;
 	/**
 	 * 分辨率（画面大小）
 	 */

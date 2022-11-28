@@ -32,6 +32,7 @@ public class MeetingEnterListener extends MeetingListenerAdapter<MeetingEnterEve
 			"id", meeting.getId(),
 			"sn", sn
 		));
+		// TODO：返回房间列表
 		meeting.getSns().stream()
 		.filter(v -> !sn.equals(v))
 		.forEach(v -> this.clientSessionManager.unicast(v, message));

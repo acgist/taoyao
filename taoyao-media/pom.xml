@@ -37,20 +37,6 @@
 			<groupId>com.acgist</groupId>
 			<artifactId>taoyao-webrtc-kurento</artifactId>
 		</dependency>
-		<dependency>
-		    <groupId>org.bytedeco</groupId>
-		    <artifactId>ffmpeg-platform</artifactId>
-		</dependency>
-		<dependency>
-		    <groupId>org.bytedeco</groupId>
-		    <artifactId>ffmpeg</artifactId>
-		    <classifier>${javacv.os.version}</classifier>
-		</dependency>
-		<dependency>
-		    <groupId>org.bytedeco</groupId>
-		    <artifactId>javacpp</artifactId>
-		    <classifier>${javacv.os.version}</classifier>
-		</dependency>
 	</dependencies>
 
 </project>

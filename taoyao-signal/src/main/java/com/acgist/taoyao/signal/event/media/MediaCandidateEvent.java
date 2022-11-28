@@ -1,6 +1,5 @@
 package com.acgist.taoyao.signal.event.media;
 
-import java.util.List;
 import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
@@ -26,10 +25,10 @@ public class MediaCandidateEvent extends ApplicationEventAdapter {
 	}
 
 	/**
-	 * @return 终端列表
+	 * @return 接收终端标识
 	 */
-	public List<String> getSns() {
-		return this.get("sns");
+	public String getTo() {
+		return this.get("to");
 	}
 	
 }

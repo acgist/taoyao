@@ -73,10 +73,11 @@
 		methods: {
 			// 信令回调：返回true表示已经处理
 			callback: function(data) {
+				let self = this;
 				switch(data.header.pid) {
-				case signalProtocol.client.heartbeat:
-					// 心跳
-					return true;
+				case signalProtocol.client.config:
+					// 如果需要下发配置生效需要在此打开媒体通道
+					return false;
 				}
 				return false;
 			},

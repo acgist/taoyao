@@ -22,10 +22,6 @@ public class MediaAudioProperties {
 	public enum Format {
 		
 		/**
-		 * ACC
-		 */
-		ACC,
-		/**
 		 * PCM
 		 */
 		PCM,
@@ -42,15 +38,15 @@ public class MediaAudioProperties {
 	@Schema(title = "格式", description = "格式")
 	private Format format;
 	/**
+	 * 采样数
+	 */
+	@Schema(title = "采样数", description = "采样数", example = "16")
+	private Integer sampleSize;
+	/**
 	 * 采样率
 	 * 8000|16000|32000|48000
 	 */
 	@Schema(title = "采样率", description = "采样率", example = "8000|16000|32000|48000")
-	private Integer samplerate;
-	/**
-	 * 采样数
-	 */
-	@Schema(title = "采样数", description = "采样数", example = "16")
-	private Integer samplesize;
+	private Integer sampleRate;
 	
 }

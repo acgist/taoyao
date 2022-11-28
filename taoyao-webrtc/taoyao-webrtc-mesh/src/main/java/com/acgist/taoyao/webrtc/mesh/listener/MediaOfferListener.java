@@ -3,25 +3,25 @@ package com.acgist.taoyao.webrtc.mesh.listener;
 import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.event.media.MediaCandidateEvent;
+import com.acgist.taoyao.signal.event.media.MediaOfferEvent;
 import com.acgist.taoyao.signal.listener.MediaListenerAdapter;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 候选监听
+ * Offer监听
  * 
  * @author acgist
  */
 @Slf4j
-public class MediaCandidateListener extends MediaListenerAdapter<MediaCandidateEvent> {
+public class MediaOfferListener extends MediaListenerAdapter<MediaOfferEvent> {
 
 	@Override
-	public void onApplicationEvent(MediaCandidateEvent event) {
+	public void onApplicationEvent(MediaOfferEvent event) {
 		final String sn = event.getSn();
 		final String to = event.getTo();
 		if(sn.equals(to)) {
-			log.debug("忽略候选消息（相同终端）：{}-{}", sn, to);
+			log.debug("忽略Offer消息（相同终端）：{}-{}", sn, to);
 			return;
 		}
 		final Message message = event.getMessage();

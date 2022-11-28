@@ -59,12 +59,12 @@ taoyao:
   media:
     audio:
       format: OPUS
-      samplesize: 16
-      samplerate: 32000
+      sample-size: 16
+      sample-rate: 32000
     video:
       format: H264
       bitrate: 1200
-      framerate: 24
+      frame-rate: 24
       resolution: 1280*760
     quality: high|standard|quick
   # WebRTC配置

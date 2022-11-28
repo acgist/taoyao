@@ -1,20 +1,25 @@
-/** 桃夭WebRTC终端核心功能 */
+/**
+ * 桃夭WebRTC终端核心功能
+ * 
+ * 代码注意：
+ * 1. undefined判断使用两个等号，其他情况使用三个。
+*/
 /** 兼容 */
 const RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
 const RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 const RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
 /** 默认音频配置 */
 const defaultAudioConfig = {
+	// 设备
+	// deviceId : '',
 	// 音量：0~1
 	volume: 0.5,
 	// 延迟大小（单位毫秒）：500毫秒以内较好
 	latency: 0.4,
-	// 设备
-	// deviceId : '',
-	// 采样率：8000|16000|32000|48000
-	sampleRate: 48000,
 	// 采样数：16
 	sampleSize: 16,
+	// 采样率：8000|16000|32000|48000
+	sampleRate: 32000,
 	// 声道数量：1|2
 	channelCount : 1,
 	// 是否开启自动增益：true|false
@@ -28,16 +33,14 @@ const defaultAudioConfig = {
 };
 /** 默认视频配置 */
 const defaultVideoConfig = {
+	// 设备
+	// deviceId: '', 
 	// 宽度
 	width: 1280,
 	// 高度
 	height: 720,
-	// 设备
-	// deviceId: '', 
 	// 帧率
 	frameRate: 24,
-	// 裁切
-	// resizeMode: '',
 	// 选摄像头：user|left|right|environment 
 	facingMode: 'environment'
 }
@@ -57,7 +60,7 @@ const defaultRPCConfig = {
 /** 信令配置 */
 const signalConfig = {
 	/** 当前终端SN */
-	sn: localStorage.getItem('taoyao.sn', 'taoyao'),
+	sn: localStorage.getItem('taoyao.sn') || 'taoyao',
 	/** 当前版本 */
 	version: '1.0.0',
 	// 信令授权
@@ -76,7 +79,11 @@ const signalProtocol = {
 		/** 订阅 */
 		subscribe: 5002,
 		/** 候选 */
-		candidate: 5004
+		offer: 5997,
+		/** Answer */
+		answer: 5998,
+		/** 候选 */
+		candidate: 5999
 	},
 	/** 终端信令 */
 	client: {
@@ -303,6 +310,12 @@ const signalChannel = {
 		case signalProtocol.media.subscribe:
 			this.defaultMediaSubscribe(data);
 		break;
+		case signalProtocol.media.offer:
+			this.defaultMediaOffer(data);
+		break;
+		case signalProtocol.media.answer:
+			this.defaultMediaAnswer(data);
+		break;
 		case signalProtocol.media.candidate:
 			this.defaultMediaCandidate(data);
 		break;
@@ -329,7 +342,7 @@ const signalChannel = {
 	/** 终端默认回调 */
 	defaultClientConfig: function(data) {
 		this.taoyao
-			.configMedia(data.body.media)
+			.configMedia(data.body.media.audio, data.body.media.video)
 			.configWebrtc(data.body.webrtc);
 	},
 	defaultClientReboot: function(data) {
@@ -338,52 +351,71 @@ const signalChannel = {
 	},
 	/** 默认媒体回调 */
 	defaultMediaPublish: function(data) {
-		this.taoyao.localMediaChannel.setRemoteDescription(new RTCSessionDescription(data.body));
 	},
 	defaultMediaSubscribe: function(data) {
 		let self = this;
 		const from = data.body.from;
-		let remote = this.taoyao.remoteClientFilter(from);
-		if(!remote) {
-			remote = new TaoyaoClient(from);
-			this.taoyao.remoteClient.push(remote);
-		}
-		self.taoyao.remoteMediaChannel.setRemoteDescription(new RTCSessionDescription(data.body));
-		self.taoyao.remoteMediaChannel.createAnswer().then(description => {
-			console.debug('Local Create Answer', description);
-			self.taoyao.remoteMediaChannel.setLocalDescription(description);
+		this.taoyao.remoteClientFilter(from, true);
+		self.taoyao.localMediaChannel.createOffer().then(description => {
+			console.debug('Local Create Offer', description);
+			self.taoyao.localMediaChannel.setLocalDescription(description);
 			self.push(signalProtocol.buildProtocol(
-				signalProtocol.media.publish,
+				signalProtocol.media.offer,
 				{
 					to: from,
-					sdp: description.sdp,
-					type: description.type
+					sdp: {
+						sdp: description.sdp,
+						type: description.type
+					}
 				}
 			));
 		});
 	},
+	defaultMediaOffer: function(data) {
+		let self = this;
+		const from = data.body.from;
+		this.taoyao.remoteClientFilter(from, true);
+		self.taoyao.remoteMediaChannel.setRemoteDescription(new RTCSessionDescription(data.body.sdp));
+		self.taoyao.remoteMediaChannel.createAnswer().then(description => {
+			console.debug('Remote Create Answer', description);
+			self.taoyao.remoteMediaChannel.setLocalDescription(description);
+			self.push(signalProtocol.buildProtocol(
+				signalProtocol.media.answer,
+				{
+					to: from,
+					sdp: {
+						sdp: description.sdp,
+						type: description.type
+					}
+				}
+			));
+		});
+	},
+	defaultMediaAnswer: function(data) {
+		this.taoyao.localMediaChannel.setRemoteDescription(new RTCSessionDescription(data.body.sdp));
+	},
 	defaultMediaCandidate: function(data) {
-		if(
-			!data.body.candidate ||
-			!data.body.candidate.candidate ||
-			!data.body.candidate.sdpMid ||
-			!data.body.candidate.sdpMLineIndex
-		) {
-			console.warn('候选缺失要素', data);
+		if(!this.taoyao.checkCandidate(data.body.candidate)) {
+			console.debug('候选缺失要素', data);
 			return;
 		}
-		let candidate = new RTCIceCandidate(data.body.candidate);
-		this.taoyao.remoteMediaChannel.addIceCandidate(candidate);
+		console.debug('Set ICE Candidate', this.taoyao.remoteMediaChannel);
+		if(data.body.type === 'local') {
+			this.taoyao.remoteMediaChannel.addIceCandidate(new RTCIceCandidate(data.body.candidate));
+		} else {
+			this.taoyao.localMediaChannel.addIceCandidate(new RTCIceCandidate(data.body.candidate));
+		}
 	},
 	/** 会议默认回调 */
 	defaultMeetingEnter: function(data) {
-		this.taoyao
-			.mediaSubscribe(data.body.sn);
+		this.taoyao.mediaSubscribe(data.body.sn);
 	}
 };
 /** 终端 */
 function TaoyaoClient(
-	sn
+	sn,
+	audioEnabled,
+	videoEnabled
 ) {
 	/** 终端标识 */
 	this.sn = sn;
@@ -391,12 +423,15 @@ function TaoyaoClient(
 	this.video = null;
 	/** 媒体信息 */
 	this.stream = null;
-	this.audioTrack = null;
-	this.videoTrack = null;
-	/** 媒体状态 */
+	this.audioTrack = [];
+	this.videoTrack = [];
+	/** 媒体状态：是否含有 */
 	this.audioStatus = false;
 	this.videoStatus = false;
 	this.recordStatus = false;
+	/** 媒体状态：是否播放 */
+	this.audioEnabled = audioEnabled == undefined ? true : audioEnabled;
+	this.videoEnabled = videoEnabled == undefined ? true : videoEnabled;
 	/** 重置 */
 	this.reset = function() {
 	}
@@ -406,80 +441,80 @@ function TaoyaoClient(
 		return this;
 	};
 	/** 重新加载 */
-	this.load = function() {
-		this.video.load();
+	this.load = async function() {
+		await this.video.load();
 		return this;
 	}
 	/** 暂停视频 */
-	this.pause = function() {
-		this.video.pause();
+	this.pause = async function() {
+		await this.video.pause();
 		return this;
 	};
 	/** 关闭视频 */
-	this.close = function() {
-		this.video.close();
+	this.close = async function() {
+		await this.video.close();
 		return this;
 	};
-	/** 设置视频对象 */
-	this.buildVideo = async function(videoId, stream, track) {
-		if(!this.video) {
+	/** 设置媒体 */
+	this.buildStream = async function(videoId, stream, track) {
+		if(!this.video && videoId) {
 			this.video = document.getElementById(videoId);
 		}
-		await this.buildStream(stream, track);
-		return this;
-	};
-	/** 设置媒体流 */
-	this.buildStream = async function(stream, track) {
-		if(stream) {
-			if(track) {
-				if(!this.stream) {
-					this.stream = stream;
-					this.video.srcObject = this.stream;
-				}
-				// TODO：删除旧的
-				this.stream.addTrack(track);
-				if(track.kind === 'audio') {
-					this.audioTrack = track;
-					this.audioStatus = true;
-				} else if(track.kind === 'video') {
-					this.videoTrack = track;
-					this.videoStatus = true;
-				}
-				await this.video.load();
-			} else {
-				this.stream = stream;
-				this.video.srcObject = stream;
-				let audioTrack = stream.getAudioTracks();
-				let videoTrack = stream.getVideoTracks();
-				if(audioTrack && audioTrack.length) {
-					this.audioTrack = audioTrack;
-					this.audioStatus = true;
-				}
-				if(videoTrack && videoTrack.length) {
-					this.videoTrack = videoTrack;
-					this.videoStatus = true;
-				}
-				await this.video.load();
-			}
-			console.debug('设置媒体流', this.video, this.stream, this.audioTrack, this.videoTrack);
-			await this.play();
+		if(!this.video) {
+			throw new Error('视频对象无效：' + videoId);
 		}
+		if(!this.stream) {
+			this.stream = new MediaStream();
+			this.video.srcObject = this.stream;
+		}
+		if(track) {
+			if(track.kind === 'audio') {
+				this.buildAudioTrack(track);
+			}
+			if(track.kind === 'video') {
+				this.buildVideoTrack(track);
+			}
+		} else {
+			let audioTrack = stream.getAudioTracks();
+			let videoTrack = stream.getVideoTracks();
+			if(audioTrack && audioTrack.length) {
+				audioTrack.forEach(v => this.buildAudioTrack(v));
+			}
+			if(videoTrack && videoTrack.length) {
+				videoTrack.forEach(v => this.buildVideoTrack(v));
+			}
+		}
+		console.debug('设置媒体', this.video, this.stream, this.audioTrack, this.videoTrack);
+		await this.load();
+		await this.play();
 		return this;
 	};
 	/** 设置音频流 */
-	this.buildAudioTrack = function() {
+	this.buildAudioTrack = function(track) {
 		// 关闭旧的
 		// 创建新的
+		this.audioStatus = true;
+		this.audioTrack.push(track);
+		if(this.audioEnabled) {
+			this.stream.addTrack(track);
+		}
 	};
 	/** 设置视频流 */
-	this.buildVideoTrack = function() {
+	this.buildVideoTrack = function(track) {
 		// 关闭旧的
 		// 创建新的
+		this.videoStatus = true;
+		this.videoTrack.push(track);
+		if(this.videoEnabled) {
+			this.stream.addTrack(track);
+		}
 	};
 }
 /** 桃夭 */
 function Taoyao(
-	webSocket
+	webSocket,
+	localClientAudioEnabled,
+	localClientVideoEnabled
 ) {
 	/** WebRTC配置 */
 	this.webrtc = null;
@@ -497,6 +532,9 @@ function Taoyao(
 	/** 本地终端 */
 	this.localClient = null;
 	this.localMediaChannel = null;
+	/** 本地媒体状态 */
+	this.localClientAudioEnabled = localClientAudioEnabled == undefined ? false : localClientAudioEnabled;
+	this.localClientVideoEnabled = localClientVideoEnabled == undefined ? true : localClientVideoEnabled;
 	/** 远程终端 */
 	this.remoteClient = [];
 	this.remoteMediaChannel = null;
@@ -505,7 +543,7 @@ function Taoyao(
 	/** 媒体配置 */
 	this.configMedia = function(audio = {}, video = {}) {
 		this.audioConfig = {...this.audioConfig, ...audio};
-		this.videoCofnig = {...this.videoCofnig, ...video};
+		this.videoConfig = {...this.videoConfig, ...video};
 		console.debug('终端媒体配置', this.audioConfig, this.videoConfig);
 		return this;
 	};
@@ -586,13 +624,17 @@ function Taoyao(
 		});
 	};
 	/** 远程终端过滤 */
-	this.remoteClientFilter = function(sn) {
+	this.remoteClientFilter = function(sn, autoBuild) {
 		let array = this.remoteClient.filter(v => v.sn === sn);
-		if(array.length <= 0) {
-			return null;
+		let remote = null;
+		if(array.length > 0) {
+			remote = array[0];
+		} else if(autoBuild) {
+			remote = new TaoyaoClient(sn);
+			this.remoteClient.push(remote);
 		}
-		return this.remoteClient.filter(v => v.sn === sn)[0];
-	}
+		return remote;
+	};
 	/** 关闭：关闭媒体 */
 	this.close = function() {
 		// TODO：释放资源
@@ -605,16 +647,12 @@ function Taoyao(
 	this.buildMediaChannel = async function(localVideoId, stream) {
 		let self = this;
 		// 本地视频
-		this.localClient = new TaoyaoClient(signalConfig.sn);
-		await this.localClient.buildVideo(localVideoId, stream);
+		this.localClient = new TaoyaoClient(signalConfig.sn, this.localClientAudioEnabled, this.localClientVideoEnabled);
+		await this.localClient.buildStream(localVideoId, stream);
 		// 本地通道
 		this.localMediaChannel = new RTCPeerConnection(defaultRPCConfig);
-		if(this.localClient.audioTrack) {
-			this.localClient.audioTrack.forEach(v => this.localMediaChannel.addTrack(v, this.localClient.stream));
-		}
-		if(this.localClient.videoTrack) {
-			this.localClient.videoTrack.forEach(v => this.localMediaChannel.addTrack(v, this.localClient.stream));
-		}
+		this.localClient.audioTrack.forEach(v => this.localMediaChannel.addTrack(v, this.localClient.stream));
+		this.localClient.videoTrack.forEach(v => this.localMediaChannel.addTrack(v, this.localClient.stream));
 		this.localMediaChannel.ontrack = function(e) {
 			console.debug('Local Media Track', e);
 		};
@@ -633,12 +671,18 @@ function Taoyao(
 			}
 		};
 		this.localMediaChannel.onicecandidate = function(e) {
-			let sns = self.remoteClient.filter(v => v.video === null).map(v => v.sn);
-			console.debug('Local ICE Candidate', sns, e);
+			// TODO：判断给谁
+			let to = self.remoteClient.map(v => v.sn)[0];
+			if(!self.checkCandidate(e.candidate)) {
+				console.debug('Send Local ICE Candidate Fail', e);
+				return;
+			}
+			console.debug('Send Local ICE Candidate', to, e);
 			self.push(signalProtocol.buildProtocol(
 				signalProtocol.media.candidate,
 				{
-					sns: sns,
+					to: to,
+					type: 'local',
 					candidate: e.candidate
 				}
 			));
@@ -649,7 +693,7 @@ function Taoyao(
 			console.debug('Remote Media Track', e);
 			// TODO：匹配
 			let remote = self.remoteClient[0];
-			remote.buildVideo(remote.sn, e.streams[0], e.track);
+			remote.buildStream(remote.sn, e.streams[0], e.track);
 		};
 		this.remoteMediaChannel.ondatachannel = function(channel) {
 			channel.onopen = function() {
@@ -666,12 +710,18 @@ function Taoyao(
 			}
 		};
 		this.remoteMediaChannel.onicecandidate = function(e) {
-			let sns = self.remoteClient.filter(v => v.video === null).map(v => v.sn);
-			console.debug('Remote ICE Candidate', sns, e);
+			// TODO：判断给谁
+			let to = self.remoteClient.map(v => v.sn)[0];
+			if(!self.checkCandidate(e.candidate)) {
+				console.debug('Send Remote ICE Candidate Fail', e);
+				return;
+			}
+			console.debug('Send Remote ICE Candidate', to, e);
 			self.push(signalProtocol.buildProtocol(
 				signalProtocol.media.candidate,
 				{
-					sns: sns,
+					to: to,
+					type: 'remote',
 					candidate: e.candidate
 				}
 			));
@@ -679,30 +729,30 @@ function Taoyao(
 		console.debug('打开媒体通道', this.localMediaChannel, this.remoteMediaChannel);
 		return this;
 	};
+	/** 校验candidate */
+	this.checkCandidate = function(candidate) {
+		if(
+			!candidate ||
+			!candidate.candidate ||
+			candidate.sdpMid === null ||
+			candidate.sdpMid === null ||
+			candidate.sdpMLineIndex === undefined ||
+			candidate.sdpMLineIndex === undefined
+		) {
+			return false;
+		}
+		return true;
+	};
 	/** 媒体信令 */
 	this.mediaSubscribe = function(sn, callback) {
 		let self = this;
-		let remote = self.remoteClientFilter(sn);
-		if(remote) {
-			remote.reset();
-		} else {
-			remote = new TaoyaoClient(sn);
-			this.remoteClient.push(remote);
-		}
-		if(self.webrtc.model === 'MESH') {
-			self.localMediaChannel.createOffer().then(description => {
-				console.debug('Local Create Offer', description);
-				self.localMediaChannel.setLocalDescription(description);
-				self.push(signalProtocol.buildProtocol(
-					signalProtocol.media.subscribe,
-					{
-						to: sn,
-						sdp: description.sdp,
-						type: description.type
-					}
-				), callback);
-			});
-		}
+		self.remoteClientFilter(sn, true);
+		self.push(signalProtocol.buildProtocol(
+			signalProtocol.media.subscribe,
+			{
+				to: sn
+			}
+		), callback);
 	};
 	/** 会议信令 */
 	this.meetingCreate = function(callback) {

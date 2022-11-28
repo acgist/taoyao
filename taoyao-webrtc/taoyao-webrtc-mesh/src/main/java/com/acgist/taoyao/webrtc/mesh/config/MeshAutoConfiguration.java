@@ -5,7 +5,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.acgist.taoyao.webrtc.mesh.listener.MediaAnswerListener;
 import com.acgist.taoyao.webrtc.mesh.listener.MediaCandidateListener;
+import com.acgist.taoyao.webrtc.mesh.listener.MediaOfferListener;
 import com.acgist.taoyao.webrtc.mesh.listener.MediaPublishListener;
 import com.acgist.taoyao.webrtc.mesh.listener.MediaSubscribeListener;
 
@@ -28,6 +30,18 @@ public class MeshAutoConfiguration {
 	@ConditionalOnMissingBean
 	public MediaSubscribeListener mediaSubscribeListener() {
 		return new MediaSubscribeListener();
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	public MediaOfferListener mediaOfferListener() {
+		return new MediaOfferListener();
+	}
+	
+	@Bean
+	@ConditionalOnMissingBean
+	public MediaAnswerListener mediaAnswerListener() {
+		return new MediaAnswerListener();
 	}
 	
 	@Bean

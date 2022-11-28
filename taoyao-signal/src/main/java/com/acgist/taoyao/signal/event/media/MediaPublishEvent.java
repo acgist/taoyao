@@ -25,7 +25,7 @@ public class MediaPublishEvent extends ApplicationEventAdapter {
 	}
 	
 	/**
-	 * @return 终端标识（发布给谁）
+	 * @return 接收终端标识
 	 */
 	public String getTo() {
 		return this.get("to");
