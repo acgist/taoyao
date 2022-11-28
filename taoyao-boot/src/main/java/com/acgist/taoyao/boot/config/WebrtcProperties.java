@@ -22,7 +22,7 @@ public class WebrtcProperties {
 	 * 
 	 * @author acgist
 	 */
-	public enum Model {
+	public enum Framework {
 		
 		/**
 		 * SFU架构
@@ -40,32 +40,9 @@ public class WebrtcProperties {
 	}
 
 	/**
-	 * 基础框架
-	 * 
-	 * @author acgist
-	 */
-	public enum Framework {
-		
-		/**
-		 * jitsi
-		 */
-		JITSI,
-		/**
-		 * kurento
-		 */
-		KURENTO;
-		
-	}
-
-	/**
 	 * 模型
 	 */
 	@Schema(title = "架构模型", description = "WebRTC架构模型")
-	private Model model;
-	/**
-	 * 框架
-	 */
-	@Schema(title = "基础框架", description = "WebRTC基础框架")
 	private Framework framework;
 	/**
 	 * stun服务器

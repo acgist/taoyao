@@ -19,7 +19,6 @@
 |taoyao-webrtc-sfu|WebRTC SFU架构|SFU架构|
 |taoyao-webrtc-mcu|WebRTC MCU架构|MCU架构|
 |taoyao-webrtc-mesh|WebRTC MESH架构|MESH架构|
-|taoyao-webrtc-jitsi|WebRTC协议簇jitsi实现|WebRTC协议簇jitsi实现|
 |taoyao-webrtc-kurento|WebRTC协议簇kurento实现|WebRTC协议簇kurento实现|
 
 > 终端负责推流，服务端负责处理媒体流，这些功能也可以在终端实现。主次码流没在终端实现，服务端实现可以有更多选择。
@@ -36,13 +35,15 @@
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |   taoyao-mcu   /   taoyao-sfu     |                           |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+      taoyao-mesh          +
-|  taoyao-jitsi  /  taoyao-kurento  |                           |
+|         taoyao-kurento            |                           |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                        taoyao-signal                          |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 |                         taoyao-boot                           |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
 ```
+
+> 综合比较jitsi|kurento两个框架最后选择kurento
 
 ## 架构比较
 

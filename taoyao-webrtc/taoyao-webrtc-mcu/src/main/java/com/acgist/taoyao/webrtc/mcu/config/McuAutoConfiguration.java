@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
  * @author acgist
  */
 @Configuration
-@ConditionalOnProperty(prefix = "taoyao.webrtc", name = "model", havingValue = "MCU", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "taoyao.webrtc", name = "framework", havingValue = "MCU", matchIfMissing = false)
 public class McuAutoConfiguration {
 
 }

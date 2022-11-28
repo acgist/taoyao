@@ -77,8 +77,8 @@ public class BootAutoConfiguration {
 
 	@Value("${spring.application.name:taoyao}")
 	private String name;
-	@Value("${taoyao.webrtc.model:SFU}")
-	private String model;
+	@Value("${taoyao.webrtc.framework:SFU}")
+	private String framework;
 	
 	@Autowired
 	private ApplicationContext context;
@@ -162,7 +162,7 @@ public class BootAutoConfiguration {
 		this.context.getBeansOfType(TaskScheduler.class).forEach((k, v) -> {
 			log.info("系统定时任务线程池：{}-{}", k, v);
 		});
-		log.info("WebRTC架构：{}", this.model);
+		log.info("WebRTC架构：{}", this.framework);
 		this.registerException();
 	}
 	

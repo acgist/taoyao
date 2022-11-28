@@ -29,8 +29,6 @@
 		<springdoc.version>2.0.0-RC1</springdoc.version>
 		<mapstruct.version>1.5.3.Final</mapstruct.version>
 		<collections4.version>4.4</collections4.version>
-		<jitsi.ice4j.version>3.0-59-g71e244d</jitsi.ice4j.version>
-		<jitsi.libjitsi.version>1.1-22-g5c9346c5</jitsi.libjitsi.version>
 		<!-- 配置 -->
 		<taoyao.maven.basedir>${project.basedir}</taoyao.maven.basedir>
 		<taoyao.maven.encoding>UTF-8</taoyao.maven.encoding>
@@ -163,24 +161,8 @@
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-webrtc-jitsi</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-webrtc-kurento</artifactId>
 				<version>${project.version}</version>
-			</dependency>
-			<!-- WebRTC：jitsi -->
-			<dependency>
-				<groupId>org.jitsi</groupId>
-				<artifactId>ice4j</artifactId>
-				<version>${jitsi.ice4j.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.jitsi</groupId>
-				<artifactId>libjitsi</artifactId>
-				<version>${jitsi.libjitsi.version}</version>
 			</dependency>
 			<!-- WebRTC：kurento -->
 			<dependency>

@@ -29,14 +29,6 @@
 			<groupId>com.acgist</groupId>
 			<artifactId>taoyao-webrtc-mesh</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-webrtc-jitsi</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-webrtc-kurento</artifactId>
-		</dependency>
 	</dependencies>
 
 </project>

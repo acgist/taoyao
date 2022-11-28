@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Configuration;
  * @author acgist
  */
 @Configuration
-@ConditionalOnProperty(prefix = "taoyao.webrtc", name = "model", havingValue = "SFU", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "taoyao.webrtc", name = "framework", havingValue = "SFU", matchIfMissing = true)
 public class SfuAutoConfiguration {
 
 }

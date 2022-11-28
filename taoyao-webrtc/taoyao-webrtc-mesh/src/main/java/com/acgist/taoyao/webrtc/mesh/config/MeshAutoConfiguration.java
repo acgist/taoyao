@@ -17,7 +17,7 @@ import com.acgist.taoyao.webrtc.mesh.listener.MediaSubscribeListener;
  * @author acgist
  */
 @Configuration
-@ConditionalOnProperty(prefix = "taoyao.webrtc", name = "model", havingValue = "MESH", matchIfMissing = false)
+@ConditionalOnProperty(prefix = "taoyao.webrtc", name = "framework", havingValue = "MESH", matchIfMissing = false)
 public class MeshAutoConfiguration {
 	
 	@Bean
