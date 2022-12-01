@@ -8,18 +8,18 @@
 |模块|名称|描述|
 |:--|:--|:--|
 |taoyao|桃夭|桃之夭夭灼灼其华|
-|taoyao-boot|基础模块|基础模块|
-|taoyao-live|直播|直播、连麦|
-|taoyao-test|测试|测试工具|
-|taoyao-media|媒体|录制、视频（水印、美颜、AI识别）、音频（降噪、混音、变声）|
+|taoyao-boot|基础|基础模块|
+|taoyao-live|直播|连麦|
+|taoyao-test|测试|测试模块|
+|taoyao-media|媒体|录制<br />音频（降噪、混音、变声）<br />视频（水印、美颜、AI识别）|
 |taoyao-signal|信令|信令服务|
-|taoyao-server|启动服务|启动服务|
+|taoyao-server|服务|启动服务|
 |taoyao-meeting|会议|会议模式、广播模式、单人对讲|
-|taoyao-webrtc|WebRTC模块|WebRTC模块|
-|taoyao-webrtc-sfu|WebRTC SFU架构|SFU架构|
-|taoyao-webrtc-mcu|WebRTC MCU架构|MCU架构|
-|taoyao-webrtc-mesh|WebRTC MESH架构|MESH架构|
-|taoyao-webrtc-kurento|WebRTC协议簇kurento实现|WebRTC协议簇kurento实现|
+|taoyao-webrtc|WebRTC|WebRTC模块|
+|taoyao-webrtc-sfu|SFU架构|SFU架构|
+|taoyao-webrtc-mcu|MCU架构|MCU架构|
+|taoyao-webrtc-mesh|MESH架构|MESH架构|
+|taoyao-webrtc-kurento|kurento框架|WebRTC协议簇kurento实现|
 
 > 终端负责推流，服务端负责处理媒体流，这些功能也可以在终端实现。主次码流没在终端实现，服务端实现可以有更多选择。
 

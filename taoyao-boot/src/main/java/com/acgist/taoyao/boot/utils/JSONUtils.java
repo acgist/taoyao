@@ -105,6 +105,27 @@ public final class JSONUtils {
 			throw MessageCodeException.of(e, "JSON转Java失败：" + json);
 		}
 	}
+	
+	/**
+	 * JSON转Java
+	 * 
+	 * @param <T> Java类型
+	 * 
+	 * @param json JSON
+	 * @param type Java类型
+	 * 
+	 * @return Java
+	 */
+	public static final <T> T toJava(String json, TypeReference<T> type) {
+		if (Objects.isNull(json) || Objects.isNull(type)) {
+			return null;
+		}
+		try {
+			return MAPPER.readValue(json, type);
+		} catch (IOException e) {
+			throw MessageCodeException.of(e, "JSON转Java失败：" + json);
+		}
+	}
 
 	/**
 	 * JSON转Map
