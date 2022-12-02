@@ -77,7 +77,7 @@ public class BootAutoConfiguration {
 
 	@Value("${spring.application.name:taoyao}")
 	private String name;
-	@Value("${taoyao.webrtc.framework:SFU}")
+	@Value("${taoyao.webrtc.framework:MOON}")
 	private String framework;
 	
 	@Autowired

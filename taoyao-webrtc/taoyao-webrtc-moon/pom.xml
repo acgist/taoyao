@@ -10,11 +10,11 @@
 		<version>1.0.0</version>
 	</parent>
 
-	<artifactId>taoyao-webrtc-sfu</artifactId>
+	<artifactId>taoyao-webrtc-moon</artifactId>
 	<packaging>jar</packaging>
 
-	<name>taoyao-webrtc-sfu</name>
-	<description>WebRTC SFU架构实现</description>
+	<name>taoyao-webrtc-moon</name>
+	<description>WebRTC Moon架构实现</description>
 
 	<dependencies>
 		<dependency>

@@ -14,7 +14,7 @@
 	<packaging>jar</packaging>
 
 	<name>taoyao-webrtc-mesh</name>
-	<description>WebRTC MESH架构实现</description>
+	<description>WebRTC Mesh架构实现</description>
 
 	<dependencies></dependencies>
 

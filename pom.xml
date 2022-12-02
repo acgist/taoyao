@@ -17,7 +17,7 @@
 
 	<url>https://gitee.com/acgist/taoyao</url>
 	<name>taoyao</name>
-	<description>桃夭：基于WebRTC实现信令服务，实现Mesh、MCU和SFU三种媒体通信架构，支持直播会议两种场景。</description>
+	<description>桃夭：桃夭是套WebRTC信令服务，综合Mesh、MCU和SFU三种媒体通信架构，支持直播会议两种场景。</description>
 	<inceptionYear>2022</inceptionYear>
 
 	<properties>
@@ -145,17 +145,12 @@
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-webrtc-sfu</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-webrtc-mcu</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-webrtc-mesh</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-webrtc-moon</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

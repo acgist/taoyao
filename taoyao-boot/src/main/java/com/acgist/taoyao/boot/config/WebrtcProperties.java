@@ -25,17 +25,13 @@ public class WebrtcProperties {
 	public enum Framework {
 		
 		/**
-		 * SFU架构
-		 */
-		SFU,
-		/**
-		 * MCU架构
-		 */
-		MCU,
-		/**
 		 * MESH架构
 		 */
-		MESH;
+		MESH,
+		/**
+		 * MOON架构
+		 */
+		MOON;
 		
 	}
 
