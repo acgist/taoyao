@@ -40,8 +40,8 @@
 		<module>taoyao-test</module>
 		<module>taoyao-media</module>
 		<module>taoyao-signal</module>
-		<module>taoyao-webrtc</module>
 		<module>taoyao-server</module>
+		<module>taoyao-webrtc</module>
 		<module>taoyao-meeting</module>
 	</modules>
 
@@ -105,17 +105,17 @@
 		<dependencies>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-test</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-boot</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-live</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-test</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -175,13 +175,6 @@
 				<artifactId>commons-collections4</artifactId>
 				<version>${collections4.version}</version>
 			</dependency>
-			<!-- lombok -->
-			<dependency>
-				<groupId>org.projectlombok</groupId>
-				<artifactId>lombok</artifactId>
-				<version>${lombok.version}</version>
-				<scope>provided</scope>
-			</dependency>
 			<!-- mapstruct -->
 			<dependency>
 				<groupId>org.mapstruct</groupId>
@@ -193,6 +186,13 @@
 				<groupId>org.mapstruct</groupId>
 				<artifactId>mapstruct-processor</artifactId>
 				<version>${mapstruct.version}</version>
+				<scope>provided</scope>
+			</dependency>
+			<!-- lombok -->
+			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${lombok.version}</version>
 				<scope>provided</scope>
 			</dependency>
 		</dependencies>
