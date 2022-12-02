@@ -59,11 +59,6 @@ sysctl -p
 yum install git
 ```
 
-# KMS
-
-```
-```
-
 ## Java
 
 安装之前需要卸载旧版，如果旧版已经是`17+`可以忽略安装。
@@ -140,6 +135,11 @@ WantedBy=multi-user.target
 systemctl daemon-reload
 systemctl start taoyao
 systemctl enable taoyao
+```
+
+# KMS（Kurento Media Server）
+
+```
 ```
 
 ## 防火墙
