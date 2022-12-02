@@ -21,8 +21,6 @@
 |taoyao-webrtc-mesh|MESH架构|MESH架构|
 |taoyao-webrtc-kurento|kurento框架|WebRTC协议簇kurento实现|
 
-> 终端负责推流，服务端负责处理媒体流，这些功能也可以在终端实现。主次码流没在终端实现，服务端实现可以有更多选择。
-
 ## 模块关系
 
 ```
