@@ -9,7 +9,7 @@
 |:--|:--|:--|
 |taoyao|桃夭|桃之夭夭灼灼其华|
 |taoyao-boot|基础|基础模块|
-|taoyao-live|直播|连麦|
+|taoyao-live|直播|直播、连麦、本地视频同看|
 |taoyao-test|测试|测试模块|
 |taoyao-media|媒体|录制<br />音频（降噪、混音、变声）<br />视频（水印、美颜、AI识别）|
 |taoyao-signal|信令|信令服务|
