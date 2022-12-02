@@ -45,6 +45,16 @@ public class WebrtcProperties {
 	@Schema(title = "架构模型", description = "WebRTC架构模型")
 	private Framework framework;
 	/**
+	 * 媒体最小端口
+	 */
+	@Schema(title = "媒体最小端口", description = "媒体最小端口")
+	private Integer minPort;
+	/**
+	 * 媒体最大端口
+	 */
+	@Schema(title = "媒体最大端口", description = "媒体最大端口")
+	private Integer maxPort;
+	/**
 	 * stun服务器
 	 */
 	@Schema(title = "stun服务器", description = "stun服务器")
@@ -55,42 +65,14 @@ public class WebrtcProperties {
 	@Schema(title = "turn服务器", description = "turn服务器")
 	private String[] turn;
 	/**
-	 * 信令主机
+	 * KMS配置
 	 */
-	@Schema(title = "信令主机", description = "信令主机")
-	private String host;
+	@Schema(title = "KMS配置", description = "KMS配置")
+	private KmsProperties kms;
 	/**
-	 * 信令端口
+	 * 信令配置
 	 */
-	@Schema(title = "信令端口", description = "信令端口")
-	private Integer port;
-	/**
-	 * 信令协议
-	 */
-	@Schema(title = "信令协议", description = "信令协议")
-	private String schema;
-	/**
-	 * 信令地址
-	 */
-	@Schema(title = "信令地址", description = "信令地址")
-	private String websocket;
-	/**
-	 * 媒体最小端口
-	 */
-	@Schema(title = "媒体最小端口", description = "媒体最小端口")
-	private Integer minPort;
-	/**
-	 * 媒体最大端口
-	 */
-	@Schema(title = "媒体最大端口", description = "媒体最大端口")
-	private Integer maxPort;
-	
-	/**
-	 * 完整信令地址
-	 */
-	@Schema(title = "完整信令地址", description = "完整信令地址")
-	public String getSignalAddress() {
-		return this.schema + "://" + this.host + ":" + this.port + this.websocket;
-	}
+	@Schema(title = "信令配置", description = "信令配置")
+	private SignalProperties signal;
 	
 }

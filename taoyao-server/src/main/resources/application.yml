@@ -69,7 +69,11 @@ taoyao:
     quality: high|standard|quick
   # WebRTC配置
   webrtc:
+    # 架构模式
     framework: MESH
+    # 媒体端口范围
+    min-port: 45535
+    max-port: 65535
     stun:
       - stun:stun1.l.google.com:19302
       - stun:stun2.l.google.com:19302
@@ -82,14 +86,20 @@ taoyao:
       - stun:stun3.l.google.com:19302
       - stun:stun4.l.google.com:19302
       - stun:stun.stunprotocol.org:3478
+    # KMS服务配置
+    kms:
+      host: 192.168.1.100
+      port: 18888
+      schema: wss
+      websocket: /websocket.signal
+      username: username
+      password: password
     # 信令服务配置
-    host: 192.168.1.100
-    port: ${server.port:8888}
-    schema: wss
-    websocket: /websocket.signal
-    # 媒体端口范围
-    min-port: 45535
-    max-port: 65535
+    signal:
+      host: 192.168.1.100
+      port: ${server.port:8888}
+      schema: wss
+      websocket: /websocket.signal
   record:
     storage: /data/record
   security:

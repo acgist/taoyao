@@ -550,7 +550,7 @@ function Taoyao(
 	/** WebRTC配置 */
 	this.configWebrtc = function(config = {}) {
 		this.webrtc = config;
-		this.webSocket = this.webrtc.signalAddress;
+		this.webSocket = this.webrtc.signal.address;
 		defaultRPCConfig.iceServers = this.webrtc.stun.map(v => ({'urls': v}));
 		console.debug('WebRTC配置', this.webrtc, defaultRPCConfig);
 		return this;
