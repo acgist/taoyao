@@ -65,8 +65,25 @@ taoyao:
       format: H264
       bitrate: 1200
       frame-rate: 24
-      resolution: 1280*760
-    quality: high|standard|quick
+      resolution: 1920*1080
+    # 高清视频
+    high-video:
+      format: H264
+      bitrate: 1000
+      frame-rate: 18
+      resolution: 1280*720
+    # 标清视频
+    norm-video:
+      format: H264
+      bitrate: 800
+      frame-rate: 16
+      resolution: 720*480
+    # 流畅视频
+    flow-video:
+      format: H264
+      bitrate: 600
+      frame-rate: 16
+      resolution: 640*480
   # WebRTC配置
   webrtc:
     # 架构模式
@@ -94,6 +111,9 @@ taoyao:
       websocket: /websocket.signal
       username: username
       password: password
+    # Moon架构配置
+    moon:
+      audio-mix: true
     # 信令服务配置
     signal:
       host: 192.168.1.100

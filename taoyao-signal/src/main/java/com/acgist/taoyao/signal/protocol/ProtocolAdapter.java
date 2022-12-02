@@ -4,10 +4,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
-import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
+import com.acgist.taoyao.boot.property.TaoyaoProperties;
 import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.signal.client.ClientSessionManager;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;

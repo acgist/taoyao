@@ -8,8 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 
-import com.acgist.taoyao.boot.config.SecurityProperties;
 import com.acgist.taoyao.boot.interceptor.InterceptorAdapter;
+import com.acgist.taoyao.boot.property.SecurityProperties;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

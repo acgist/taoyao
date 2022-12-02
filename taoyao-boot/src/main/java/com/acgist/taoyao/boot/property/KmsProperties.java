@@ -1,4 +1,4 @@
-package com.acgist.taoyao.boot.config;
+package com.acgist.taoyao.boot.property;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 

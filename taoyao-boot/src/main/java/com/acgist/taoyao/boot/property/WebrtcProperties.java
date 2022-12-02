@@ -1,4 +1,4 @@
-package com.acgist.taoyao.boot.config;
+package com.acgist.taoyao.boot.property;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -65,6 +65,11 @@ public class WebrtcProperties {
 	 */
 	@Schema(title = "KMS配置", description = "KMS配置")
 	private KmsProperties kms;
+	/**
+	 * Moon架构配置
+	 */
+	@Schema(title = "Moon架构配置", description = "Moon架构配置")
+	private MoonProperties moon;
 	/**
 	 * 信令配置
 	 */

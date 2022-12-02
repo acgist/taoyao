@@ -14,7 +14,7 @@
 	<packaging>jar</packaging>
 
 	<name>taoyao-media</name>
-	<description>媒体：录制、视频（水印、美颜、AI识别）、音频（降噪、混音、变声）</description>
+	<description>媒体：录制、音频（降噪、混音、变声）、视频（水印、美颜、AI识别）</description>
 
 	<dependencies>
 		<dependency>
