@@ -65,7 +65,7 @@ public class MeetingManager {
 	 */
 	public Meeting create(String sn) {
 		final Meeting meeting = new Meeting();
-		meeting.setId("1");
+		meeting.setId(this.idService.buildIdToString());
 		meeting.setSns(new CopyOnWriteArrayList<>());
 		meeting.setCreator(sn);
 		meeting.addSn(sn);

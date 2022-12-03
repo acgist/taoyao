@@ -50,6 +50,10 @@
 			meetingId: null
 		},
 		mounted() {
+			// 设置帐号
+			let sn = prompt('你的账号', signalConfig.sn);
+			signalConfig.sn = sn;
+			// 加载桃夭
 			let self = this;
 			this.taoyao = new Taoyao('local');
 			this.remoteClient = this.taoyao.remoteClient;
@@ -70,8 +74,6 @@
 			},
 			// 创建会议
 			create: function(event) {
-				let sn = prompt('你的账号', signalConfig.sn);
-				signalConfig.sn = sn;
 				let self = this;
 				this.taoyao.meetingCreate(data => {
 					self.taoyao.meetingEnter(data.body.id);
@@ -84,6 +86,7 @@
 			// 进入会议
 			enter: function(sn) {
 				let id = prompt('房间标识');
+				let password = prompt('房间密码');
 				if(id) {
 					this.taoyao.meetingEnter(id);
 				}

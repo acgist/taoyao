@@ -491,6 +491,7 @@ function TaoyaoClient(
 		return this;
 	};
 	/** 设置媒体 */
+	// TODO：stream判断
 	this.buildStream = async function(videoId, stream, track) {
 		if(!this.video && videoId) {
 			this.video = document.getElementById(videoId);
@@ -534,6 +535,7 @@ function TaoyaoClient(
 	this.buildAudioTrack = function(track) {
 		// 关闭旧的
 		// 创建新的
+		track.sn = this.sn;
 		this.audioStatus = true;
 		this.audioTrack.push(track);
 		if(this.audioEnabled) {
@@ -544,6 +546,7 @@ function TaoyaoClient(
 	this.buildVideoTrack = function(track) {
 		// 关闭旧的
 		// 创建新的
+		track.sn = this.sn;
 		this.videoStatus = true;
 		this.videoTrack.push(track);
 		if(this.videoEnabled) {
@@ -564,6 +567,7 @@ function TaoyaoClient(
 			mediaChannel.ontrack = function(e) {
 				console.debug('Mesh Media Track', self.sn, e);
 				let remote = self.taoyao.remoteClientFilter(self.sn);
+				// TODO：判断数量
 				remote.buildStream(remote.sn, e.streams[0], e.track);
 			};
 			mediaChannel.onicecandidate = function(e) {
@@ -761,9 +765,9 @@ function Taoyao(
 			// 远程通道
 			this.remoteMediaChannel = new RTCPeerConnection(defaultRPCConfig);
 			this.remoteMediaChannel.ontrack = function(e) {
-				console.debug('Remote Media Track', e);
-				// TODO：匹配
-				let remote = self.remoteClient[0];
+				console.debug('Remote Media Track', e.track.sn, e);
+				let remote = self.taoyao.remoteClientFilter(e.track.sn);
+				// TODO：判断数量
 				remote.buildStream(remote.sn, e.streams[0], e.track);
 			};
 			this.remoteMediaChannel.onicecandidate = function(e) {
