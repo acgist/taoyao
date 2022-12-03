@@ -5,9 +5,9 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.acgist.taoyao.annotation.TaoyaoTest;
 import com.acgist.taoyao.main.TaoyaoApplication;
 import com.acgist.taoyao.signal.protocol.platform.ShutdownProtocol;
-import com.acgist.taoyao.test.annotation.TaoyaoTest;
 
 @TaoyaoTest(classes = TaoyaoApplication.class)
 class ShutdownProtocolTest {

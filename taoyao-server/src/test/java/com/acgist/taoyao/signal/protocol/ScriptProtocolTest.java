@@ -7,9 +7,9 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.acgist.taoyao.annotation.TaoyaoTest;
 import com.acgist.taoyao.main.TaoyaoApplication;
 import com.acgist.taoyao.signal.protocol.platform.ScriptProtocol;
-import com.acgist.taoyao.test.annotation.TaoyaoTest;
 
 @TaoyaoTest(classes = TaoyaoApplication.class)
 class ScriptProtocolTest {

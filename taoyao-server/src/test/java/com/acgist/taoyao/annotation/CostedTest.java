@@ -1,4 +1,4 @@
-package com.acgist.taoyao.test.annotation;
+package com.acgist.taoyao.annotation;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;

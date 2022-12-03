@@ -7,8 +7,8 @@ import java.util.concurrent.CountDownLatch;
 
 import org.junit.jupiter.api.Test;
 
+import com.acgist.taoyao.annotation.TaoyaoTest;
 import com.acgist.taoyao.main.TaoyaoApplication;
-import com.acgist.taoyao.test.annotation.TaoyaoTest;
 
 import lombok.extern.slf4j.Slf4j;
 

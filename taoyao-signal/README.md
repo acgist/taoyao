@@ -395,15 +395,15 @@ Moon模式有效
 
 ### Offer信令（5997）
 
-Offer
+WebRTC信令：`Offer`
 
 ### Answer信令（5998）
 
-Answer
+WebRTC信令：`Answer`
 
 ### 候选信令（5999）
 
-IceCandidate
+WebRTC信令：`IceCandidate`主要用来解决`NAT`问题
 
 ## 测试
 

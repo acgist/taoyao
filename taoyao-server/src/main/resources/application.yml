@@ -91,19 +91,19 @@ taoyao:
     # 媒体端口范围
     min-port: 45535
     max-port: 65535
+    # 公共服务
     stun:
       - stun:stun1.l.google.com:19302
       - stun:stun2.l.google.com:19302
       - stun:stun3.l.google.com:19302
       - stun:stun4.l.google.com:19302
-      - stun:stun.stunprotocol.org:3478
+    # 自己搭建：coturn
     turn:
-      - stun:stun1.l.google.com:19302
-      - stun:stun2.l.google.com:19302
-      - stun:stun3.l.google.com:19302
-      - stun:stun4.l.google.com:19302
-      - stun:stun.stunprotocol.org:3478
-    # KMS服务配置
+      - turn:127.0.0.1:8888
+      - turn:127.0.0.1:8888
+      - turn:127.0.0.1:8888
+      - turn:127.0.0.1:8888
+    # KMS服务配置：可以部署多个简单实现负载均衡
     kms:
       host: 192.168.1.100
       port: 18888

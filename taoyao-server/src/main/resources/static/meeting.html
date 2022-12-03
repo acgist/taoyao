@@ -51,38 +51,27 @@
 		},
 		mounted() {
 			let self = this;
-			this.taoyao = new Taoyao();
+			this.taoyao = new Taoyao('local');
 			this.remoteClient = this.taoyao.remoteClient;
 			// 打开信令通道
 			this.taoyao
 				.buildChannel(self.callback)
 				.then(e => console.debug('信令通道连接成功'));
-			// 打开媒体通道
-			this.taoyao.buildLocalMedia()
-				.then(stream => {
-					self.taoyao.buildMediaChannel('local', stream);
-				})
-				.catch(e => {
-					console.error('打开终端媒体失败', e);
-					// 方便相同电脑测试
-					self.taoyao.buildMediaChannel('local', null);
-				});
 		},
 		beforeDestroy() {
 		},
 		methods: {
-			// 信令回调：返回true表示已经处理
+			// 信令回调：true表示已经处理；false表示没有处理；
 			callback: function(data) {
 				let self = this;
 				switch(data.header.pid) {
-				case signalProtocol.client.config:
-					// 如果需要下发配置生效需要在此打开媒体通道
-					return false;
 				}
 				return false;
 			},
 			// 创建会议
 			create: function(event) {
+				let sn = prompt('你的账号', signalConfig.sn);
+				signalConfig.sn = sn;
 				let self = this;
 				this.taoyao.meetingCreate(data => {
 					self.taoyao.meetingEnter(data.body.id);
