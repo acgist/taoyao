@@ -147,6 +147,7 @@ public class ClientSessionManager {
 	 */
 	public void close(AutoCloseable instance) {
 		final ClientSession session = this.session(instance);
+		// TODO：如果出现异常可以提前移除
 		try {
 			if(session != null) {
 				session.close();

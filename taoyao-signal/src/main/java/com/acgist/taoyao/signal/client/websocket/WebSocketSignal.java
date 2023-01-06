@@ -70,14 +70,16 @@ public class WebSocketSignal {
 	 * @param message 消息
 	 */
 	private void push(Session session, Message message) {
-		try {
-			if(session.isOpen()) {
-				session.getBasicRemote().sendText(message.toString());
-			} else {
-				log.error("会话已经关闭：{}", session);
+		synchronized (session) {
+			try {
+				if(session.isOpen()) {
+					session.getBasicRemote().sendText(message.toString());
+				} else {
+					log.error("会话已经关闭：{}", session);
+				}
+			} catch (Exception e) {
+				log.error("推送消息异常：{}", message, e);
 			}
-		} catch (Exception e) {
-			log.error("推送消息异常：{}", message, e);
 		}
 	}
 

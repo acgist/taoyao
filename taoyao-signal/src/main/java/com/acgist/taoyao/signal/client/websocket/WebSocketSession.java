@@ -24,14 +24,16 @@ public class WebSocketSession extends ClientSessionAdapter<Session> {
 
 	@Override
 	public void push(Message message) {
-		try {
-			if(this.instance.isOpen()) {
-				this.instance.getBasicRemote().sendText(message.toString());
-			} else {
-				log.error("会话已经关闭：{}", this.instance);
+		synchronized (this.instance) {
+			try {
+				if(this.instance.isOpen()) {
+					this.instance.getBasicRemote().sendText(message.toString());
+				} else {
+					log.error("会话已经关闭：{}", this.instance);
+				}
+			} catch (Exception e) {
+				log.error("WebSocket发送消息异常：{}", message, e);
 			}
-		} catch (Exception e) {
-			log.error("WebSocket发送消息异常：{}", message, e);
 		}
 	}
 
