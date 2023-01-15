@@ -36,6 +36,7 @@
 
 	<modules>
 		<module>taoyao-boot</module>
+		<module>taoyao-node</module>
 		<module>taoyao-live</module>
 		<module>taoyao-media</module>
 		<module>taoyao-signal</module>

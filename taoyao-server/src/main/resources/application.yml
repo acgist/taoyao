@@ -52,6 +52,7 @@ taoyao:
   timeout: 5000
   version: 1.0.0
   description: WebRTC信令服务
+  server-id: 1
   id:
     sn: 0
     max-index: 999999
@@ -109,8 +110,8 @@ taoyao:
       port: 18888
       schema: wss
       websocket: /websocket.signal
-      username: username
-      password: password
+      username: taoyao
+      password: taoyao
     # Moon架构配置
     moon:
       audio-mix: true
@@ -130,3 +131,9 @@ taoyao:
     password: taoyao
   scheduled:
     session: 0 * * * * ?
+  node-list:
+    - host: localhost
+      port: 8888
+      username: ${taoyao.security.username:taoyao}
+      password: ${taoyao.security.username:taoyao}
+      
