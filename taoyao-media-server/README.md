@@ -5,10 +5,13 @@
 ## Mediasoup
 
 ```
+# 模块
+# git submodule add git@github.com:acgist/mediasoup.git taoyao-media-server/mediasoup
+# git config -f .gitmodules submodule.mediasoup.branch taoyao
+
 # 更新
 git submodule init  
 git submodule update --remote
-# git config -f .gitmodules submodule.mediasoup.branch taoyao
 
 # 编译
 
