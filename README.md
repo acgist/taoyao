@@ -6,9 +6,9 @@
 
 |模块|名称|描述|
 |:--|:--|:--|
-|taoyao-media|媒体|媒体服务|
-|taoyao-signal|信令|信令服务|
 |taoyao-client|终端|终端示例|
+|taoyao-media-server|媒体|媒体服务|
+|taoyao-signal-server|信令|信令服务|
 
 ### 流程
 
