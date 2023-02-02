@@ -4,5 +4,6 @@
 *.classpath
 *.factorypath
 
-logs/
-target/
+logs
+target
+node_modules

@@ -5,52 +5,48 @@ const os = require('os');
 
 module.exports =
 {
-	// Listening hostname (just for `gulp live` task).
 	domain : process.env.DOMAIN || 'localhost',
-	// Signaling settings (protoo WebSocket server and HTTP API server).
-	https  :
+	// Signal
+	https :
 	{
 		listenIp   : '0.0.0.0',
-		// NOTE: Don't change listenPort (client app assumes 4443).
 		listenPort : process.env.PROTOO_LISTEN_PORT || 4443,
-		// NOTE: Set your own valid certificate files.
 		tls        :
 		{
 			cert : process.env.HTTPS_CERT_FULLCHAIN || `${__dirname}/certs/fullchain.pem`,
-			key  : process.env.HTTPS_CERT_PRIVKEY || `${__dirname}/certs/privkey.pem`
+			key  : process.env.HTTPS_CERT_PRIVKEY   || `${__dirname}/certs/privkey.pem`
 		}
 	},
-	// mediasoup settings.
+	// Mediasoup
 	mediasoup :
 	{
-		// Number of mediasoup workers to launch.
+		// 按照CPU数量配置进程数量
 		numWorkers     : Object.keys(os.cpus()).length,
-		// mediasoup WorkerSettings.
-		// See https://mediasoup.org/documentation/v3/mediasoup/api/#WorkerSettings
+		// Worker：https://mediasoup.org/documentation/v3/mediasoup/api/#WorkerSettings
 		workerSettings :
 		{
 			logLevel : 'warn',
 			logTags  :
 			[
-				'info',
+				'bwe',
 				'ice',
-				'dtls',
 				'rtp',
+				'rtx',
+				'svc',
+				'dtls',
+				'info',
+				'sctp',
 				'srtp',
 				'rtcp',
-				'rtx',
-				'bwe',
 				'score',
-				'simulcast',
-				'svc',
-				'sctp'
+				'message',
+				'simulcast'
 			],
 			rtcMinPort : process.env.MEDIASOUP_MIN_PORT || 40000,
 			rtcMaxPort : process.env.MEDIASOUP_MAX_PORT || 49999
 		},
-		// mediasoup Router options.
-		// See https://mediasoup.org/documentation/v3/mediasoup/api/#RouterOptions
-		routerOptions :
+		// Router：https://mediasoup.org/documentation/v3/mediasoup/api/#RouterOptions
+		routerOptions   :
 		{
 			mediaCodecs :
 			[
@@ -105,11 +101,7 @@ module.exports =
 				}
 			]
 		},
-		// mediasoup WebRtcServer options for WebRTC endpoints (mediasoup-client,
-		// libmediasoupclient).
-		// See https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcServerOptions
-		// NOTE: mediasoup-demo/server/lib/Room.js will increase this port for
-		// each mediasoup Worker since each Worker is a separate process.
+		// WebRtcServer：https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcServerOptions
 		webRtcServerOptions :
 		{
 			listenInfos :
@@ -128,13 +120,9 @@ module.exports =
 				}
 			],
 		},
-		// mediasoup WebRtcTransport options for WebRTC endpoints (mediasoup-client,
-		// libmediasoupclient).
-		// See https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcTransportOptions
+		// WebRtcTransport：https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcTransportOptions
 		webRtcTransportOptions :
 		{
-			// listenIps is not needed since webRtcServer is used.
-			// However passing MEDIASOUP_USE_WEBRTC_SERVER=false will change it.
 			listenIps :
 			[
 				{
@@ -145,12 +133,9 @@ module.exports =
 			initialAvailableOutgoingBitrate : 1000000,
 			minimumAvailableOutgoingBitrate : 600000,
 			maxSctpMessageSize              : 262144,
-			// Additional options that are not part of WebRtcTransportOptions.
 			maxIncomingBitrate              : 1500000
 		},
-		// mediasoup PlainTransport options for legacy RTP endpoints (FFmpeg,
-		// GStreamer).
-		// See https://mediasoup.org/documentation/v3/mediasoup/api/#PlainTransportOptions
+		// PlainTransport：https://mediasoup.org/documentation/v3/mediasoup/api/#PlainTransportOptions
 		plainTransportOptions :
 		{
 			listenIp :

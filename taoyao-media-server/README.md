@@ -8,6 +8,7 @@
 # 更新
 git submodule init  
 git submodule update --remote
+# git config -f .gitmodules submodule.mediasoup.branch taoyao
 
 # 编译
 

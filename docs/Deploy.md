@@ -143,6 +143,10 @@ systemctl enable taoyao
 
 ## 防火墙
 
+### taoyao-media-server
+
+RTC port for ICE, DTLS, RTP, etc.：40000-49999
+
 ```
 firewall-cmd --zone=public --add-port=8888/tcp --permanent
 firewall-cmd --zone=public --add-port=45535-65535/udp --permanent
