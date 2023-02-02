@@ -59,6 +59,8 @@ sysctl -p
 yum install git
 ```
 
+## 媒体
+
 ## Java
 
 安装之前需要卸载旧版，如果旧版已经是`17+`可以忽略安装。
@@ -94,7 +96,7 @@ PATH=$PATH:/data/maven/apache-maven-3.8.6/bin
 mvn -version
 ```
 
-## Taoyao
+## 信令
 
 ```
 # 下载源码
@@ -137,10 +139,7 @@ systemctl start taoyao
 systemctl enable taoyao
 ```
 
-## KMS（Kurento Media Server）
-
-```
-```
+## 终端
 
 ## 防火墙
 
@@ -163,6 +162,8 @@ firewall-cmd --zone=public --remove-port=45535-65535/udp --permanent
 ```
 keytool -genkeypair -keyalg RSA -dname "CN=localhost, OU=acgist, O=taoyao, L=GZ, ST=GD, C=CN" -alias taoyao -validity 3650 -ext ku:c=dig,keyE -ext eku=serverAuth -ext SAN=dns:localhost,ip:127.0.0.1 -keystore taoyao.jks -keypass 123456 -storepass 123456
 ```
+
+## 资料
 
 https://www.jianshu.com/p/fa047d7054eb
 https://www.jianshu.com/p/59da3d350488

@@ -1,34 +1,314 @@
 <?xml version="1.0" encoding="UTF-8"?>
-
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>com.acgist</groupId>
-		<artifactId>taoyao</artifactId>
-		<version>1.0.0</version>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>3.0.0</version>
+		<relativePath />
 	</parent>
 
-	<artifactId>taoyao-signal</artifactId>
-	<packaging>jar</packaging>
+	<groupId>com.acgist</groupId>
+	<artifactId>taoyao</artifactId>
+	<version>1.0.0</version>
+	<packaging>pom</packaging>
 
-	<name>taoyao-signal</name>
-	<description>信令：信令服务</description>
+	<url>https://gitee.com/acgist/taoyao</url>
+	<name>taoyao</name>
+	<description>桃夭：桃夭是套`WebRTC`信令服务，使用`Mediasoup`提供媒体服务，支持直播会议两种场景。</description>
+	<inceptionYear>2022</inceptionYear>
+
+	<properties>
+		<!-- 版本 -->
+		<java.version>17</java.version>
+		<lombok.version>1.18.24</lombok.version>
+		<kurento.version>6.18.0</kurento.version>
+		<springdoc.version>2.0.0</springdoc.version>
+		<mapstruct.version>1.5.3.Final</mapstruct.version>
+		<collections4.version>4.4</collections4.version>
+		<!-- 配置 -->
+		<taoyao.maven.basedir>${project.basedir}</taoyao.maven.basedir>
+		<taoyao.maven.encoding>UTF-8</taoyao.maven.encoding>
+		<taoyao.maven.skip.assembly>true</taoyao.maven.skip.assembly>
+	</properties>
+
+	<modules>
+		<module>taoyao-boot</module>
+		<module>taoyao-node</module>
+		<module>taoyao-live</module>
+		<module>taoyao-media</module>
+		<module>taoyao-signal</module>
+		<module>taoyao-server</module>
+		<module>taoyao-meeting</module>
+	</modules>
 
 	<dependencies>
+		<!-- 快速开发 -->
 		<dependency>
-			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-boot</artifactId>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<groupId>org.mapstruct</groupId>
+			<artifactId>mapstruct-processor</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+		</dependency>
+		<!-- 开发工具 -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-collections4</artifactId>
+		</dependency>
+		<!-- Jackson -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+		</dependency>
+		<!-- 接口文档 -->
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+		</dependency>
+		<!-- AOP -->
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-websocket</artifactId>
+			<artifactId>spring-boot-starter-aop</artifactId>
+		</dependency>
+		<!-- 自动配置 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-autoconfigure</artifactId>
+		</dependency>
+		<!-- 日志框架 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-logging</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-boot</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-live</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-media</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-server</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-signal</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>com.acgist</groupId>
+				<artifactId>taoyao-meeting</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+			<!-- 集合工具 -->
+			<dependency>
+				<groupId>org.apache.commons</groupId>
+				<artifactId>commons-collections4</artifactId>
+				<version>${collections4.version}</version>
+			</dependency>
+			<!-- mapstruct -->
+			<dependency>
+				<groupId>org.mapstruct</groupId>
+				<artifactId>mapstruct</artifactId>
+				<version>${mapstruct.version}</version>
+				<scope>provided</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mapstruct</groupId>
+				<artifactId>mapstruct-processor</artifactId>
+				<version>${mapstruct.version}</version>
+				<scope>provided</scope>
+			</dependency>
+			<!-- lombok -->
+			<dependency>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${lombok.version}</version>
+				<scope>provided</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>**/*.yml</include>
+					<include>**/*.properties</include>
+				</includes>
+				<filtering>true</filtering>
+			</resource>
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<!-- 匹配所有文件：**/* -->
+					<!-- 匹配所有带有后缀文件：**/*.* -->
+					<include>**/*.*</include>
+				</includes>
+				<excludes>
+					<exclude>**/*.yml</exclude>
+					<exclude>**/*.properties</exclude>
+				</excludes>
+				<filtering>false</filtering>
+			</resource>
+		</resources>
+
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+			</plugin>
+		</plugins>
+
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<configuration>
+						<source>${java.version}</source>
+						<target>${java.version}</target>
+						<encoding>${taoyao.maven.encoding}</encoding>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<configuration>
+						<!-- Jar配置独立config目录 -->
+						<excludes>
+							<exclude>*.jks</exclude>
+							<exclude>*.yml</exclude>
+							<exclude>*.properties</exclude>
+						</excludes>
+						<archive>
+							<manifestEntries>
+								<!-- 配置文件 -->
+								<Class-Path>../config/</Class-Path>
+							</manifestEntries>
+						</archive>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>assembly</id>
+							<phase>package</phase>
+							<goals>
+								<goal>single</goal>
+							</goals>
+							<configuration>
+								<attach>false</attach>
+								<skipAssembly>${taoyao.maven.skip.assembly}</skipAssembly>
+								<appendAssemblyId>false</appendAssemblyId>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>dev</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+				<profile>dev</profile>
+				<taoyao.maven.jvm.arg></taoyao.maven.jvm.arg>
+				<taoyao.maven.jvm.mem>-Xms512M -Xmx1024M -XX:NewRatio=1 -XX:SurvivorRatio=2</taoyao.maven.jvm.mem>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<configuration>
+							<descriptors>
+								<descriptor>${taoyao.maven.basedir}/docs/assembly/dev.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+			<dependencyManagement>
+				<dependencies>
+					<dependency>
+						<groupId>org.springdoc</groupId>
+						<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+						<version>${springdoc.version}</version>
+					</dependency>
+				</dependencies>
+			</dependencyManagement>
+		</profile>
+		<profile>
+			<id>release</id>
+			<properties>
+				<profile>release</profile>
+				<taoyao.maven.jvm.arg></taoyao.maven.jvm.arg>
+				<taoyao.maven.jvm.mem>-Xms2048M -Xmx4096M -XX:NewRatio=1 -XX:SurvivorRatio=2</taoyao.maven.jvm.mem>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-assembly-plugin</artifactId>
+						<configuration>
+							<descriptors>
+								<descriptor>${taoyao.maven.basedir}/docs/assembly/release.xml</descriptor>
+							</descriptors>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+			<dependencyManagement>
+				<dependencies>
+					<dependency>
+						<groupId>org.springdoc</groupId>
+						<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+						<version>${springdoc.version}</version>
+						<scope>provided</scope>
+					</dependency>
+				</dependencies>
+			</dependencyManagement>
+		</profile>
+	</profiles>
 
 </project>

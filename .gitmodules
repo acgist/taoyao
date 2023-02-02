@@ -1,0 +1,3 @@
+[submodule "taoyao-media/mediasoup"]
+	path = taoyao-media/mediasoup
+	url = git@github.com:acgist/mediasoup.git
