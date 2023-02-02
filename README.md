@@ -23,15 +23,6 @@
 * [mediasoup文档](https://mediasoup.org/documentation/v3/mediasoup)
 * [mediasoup接口](https://mediasoup.org/documentation/v3/mediasoup/api)
 
-### 常见WebRTC媒体服务
-
-* Janus
-* Jitsi
-* Licode
-* Kurento
-* Medooze
-* Mediasoup
-
 ## 终端
 
 * [mediasoup-client源码](https://github.com/versatica/mediasoup-client)
