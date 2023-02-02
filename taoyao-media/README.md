@@ -16,5 +16,5 @@ git submodule update --remote
 ## 使用
 
 ```
-
+sudo npm install
 ```

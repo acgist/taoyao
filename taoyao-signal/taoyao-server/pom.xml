@@ -24,11 +24,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-live</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-meeting</artifactId>
+			<artifactId>taoyao-media</artifactId>
 		</dependency>
 	</dependencies>
 

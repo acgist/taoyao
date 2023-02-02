@@ -1,4 +1,4 @@
-package com.acgist.taoyao.meeting;
+package com.acgist.taoyao.media.meeting;
 
 import java.util.List;
 

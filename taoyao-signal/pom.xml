@@ -37,11 +37,9 @@
 	<modules>
 		<module>taoyao-boot</module>
 		<module>taoyao-node</module>
-		<module>taoyao-live</module>
 		<module>taoyao-media</module>
 		<module>taoyao-signal</module>
 		<module>taoyao-server</module>
-		<module>taoyao-meeting</module>
 	</modules>
 
 	<dependencies>
@@ -109,7 +107,7 @@
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-live</artifactId>
+				<artifactId>taoyao-node</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
@@ -119,17 +117,12 @@
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-server</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-signal</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>
 				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-meeting</artifactId>
+				<artifactId>taoyao-server</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<!-- 集合工具 -->

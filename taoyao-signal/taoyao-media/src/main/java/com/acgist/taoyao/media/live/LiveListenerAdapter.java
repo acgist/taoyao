@@ -1,4 +1,4 @@
-package com.acgist.taoyao.live;
+package com.acgist.taoyao.media.live;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
