@@ -1,7 +1,9 @@
 {
-  "name": "client",
-  "version": "0.0.0",
+  "name": "taoyao-client",
+  "author": "acgist",
+  "version": "1.0.0",
   "private": true,
+  "description": "taoyao client",
   "scripts": {
     "dev": "vite",
     "build": "vite build",

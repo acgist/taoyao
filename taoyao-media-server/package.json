@@ -3,10 +3,9 @@
   "author": "acgist",
   "version": "1.0.0",
   "private": true,
-  "license": "All Rights Reserved",
   "description": "taoyao media server",
   "scripts": {
-    "start": "DEBUG=${DEBUG:='*mediasoup* *INFO* *WARN* *ERROR*'} INTERACTIVE=${INTERACTIVE:='true'} node server.js"
+    "start": "DEBUG=${DEBUG:='*mediasoup* *INFO* *WARN* *ERROR*'} INTERACTIVE=${INTERACTIVE:='true'} node src/server.js"
   },
   "dependencies": {
     "mediasoup": "file:./mediasoup"
