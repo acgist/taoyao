@@ -3,6 +3,7 @@
 *.settings
 *.classpath
 *.factorypath
+package-lock.json
 
 logs
 target
