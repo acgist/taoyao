@@ -6,13 +6,14 @@
 
 ```
 # 模块
-# git submodule add git@github.com:acgist/mediasoup.git
-# git config -f .gitmodules submodule.mediasoup.branch taoyao
-
-# 更新
 git submodule init
 git submodule update
-# git submodule update --remote
+git submodule foreach
+git submodule update --remote
+git submodule update --init --recursive
+git submodule add https://github.com/acgist/mediasoup.git taoyao-media-server/mediasoup
+git submodule set-url taoyao-media-server/mediasoup https://github.com/acgist/mediasoup.git
+git submodule set-branch --branch taoyao taoyao-media-server/mediasoup
 
 # 编译
 
