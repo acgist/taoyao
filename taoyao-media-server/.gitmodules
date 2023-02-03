@@ -1,4 +1,0 @@
-[submodule "mediasoup"]
-	path = mediasoup
-	url = git@github.com:acgist/mediasoup.git
-	branch = taoyao
