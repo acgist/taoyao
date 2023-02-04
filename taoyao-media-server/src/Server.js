@@ -5,7 +5,7 @@
 const fs = require("fs");
 const ws = require("ws");
 const https = require("https");
-const mediasoup = require("mediasoup");
+// const mediasoup = require("mediasoup");
 const config = require("./Config");
 const Logger = require("./Logger");
 const Signal = require("./Signal");
@@ -174,21 +174,23 @@ async function onmessage(message, session) {
     // 授权验证
     if (!session.authorize) {
       if (
-        data.username === config.https.username &&
-        data.password === config.https.password
+        data.body.username === config.https.username &&
+        data.body.password === config.https.password
       ) {
         logger.debug("授权成功：%s", session._socket.remoteAddress);
         session.authorize = true;
+        data.code = "0000";
+        data.message = "授权成功";
+        data.body.username = null;
+        data.body.password = null;
+        session.send(JSON.stringify(data));
       } else {
         logger.warn("授权失败：%s", session._socket.remoteAddress);
-        session.close();
+        data.code = "3401";
+        data.message = "授权失败";
+        session.send(JSON.stringify(data));
       }
-      for (let i = 0; i < client.length; i++) {
-        if (client[i] === session) {
-          client.splice(i, 1);
-          break;
-        }
-      }
+      // 不要传递授权信息
       return;
     }
     // 处理信令
@@ -211,12 +213,12 @@ async function onmessage(message, session) {
 async function main() {
   logger.debug("DEBUG").info("INFO").warn("WARN").error("ERROR");
   logger.info("开始启动：%s", config.name);
-  await buildMediasoupWorker();
+  // await buildMediasoupWorker();
   await buildSignalServer();
   await buildCommandConsole();
   await buildClientInterval();
   logger.info("启动完成：%s", config.name);
 }
 
-// 启动
+// 启动服务
 main();

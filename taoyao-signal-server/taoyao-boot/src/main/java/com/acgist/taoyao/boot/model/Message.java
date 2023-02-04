@@ -50,6 +50,15 @@ public class Message implements Cloneable, Serializable {
 	private Object body;
 	
 	/**
+	 * 覆盖
+	 * 
+	 * @param code 状态编码
+	 */
+	public void setCode(String code) {
+		this.code = code;
+	}
+	
+	/**
 	 * @param code 状态编码
 	 * 
 	 * @return this

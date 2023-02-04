@@ -13,6 +13,7 @@ import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
  * 3000~3999：会议信令
  * 4000~4999：直播信令
  * 5000~5999：媒体信令
+ * 6000~6999：媒体信令（Mediasoup）
  * 
  * @author acgist
  */

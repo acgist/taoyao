@@ -14,19 +14,27 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
+import com.acgist.taoyao.boot.model.Header;
+import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.property.MediasoupProperties;
 import com.acgist.taoyao.boot.property.TaoyaoProperties;
 import com.acgist.taoyao.boot.property.WebrtcProperties;
 import com.acgist.taoyao.boot.utils.JSONUtils;
+import com.acgist.taoyao.mediasoup.protocol.ProtocolMediasoupAdapter;
+import com.acgist.taoyao.mediasoup.protocol.client.AuthorizeProtocol;
+import com.acgist.taoyao.signal.protocol.Protocol;
+import com.acgist.taoyao.signal.protocol.ProtocolManager;
 
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +47,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class MediasoupClient {
-
+	
+	@Autowired
+	private TaskScheduler taskSchedulerl;
+	@Autowired
+	private ProtocolManager protocolManager;
+	@Autowired
+	private TaoyaoProperties taoyaoProperties;
+	@Autowired
+	private WebrtcProperties webrtcProperties;
+	@Autowired
+	private AuthorizeProtocol authorizeProtocol;
+	
 	/**
 	 * Mediasoup WebSocket通道
 	 */
@@ -48,13 +67,10 @@ public class MediasoupClient {
 	 * Mediasoup配置
 	 */
 	private MediasoupProperties mediasoupProperties;
-	
-	@Autowired
-	private TaskScheduler taskSchedulerl;
-	@Autowired
-	private TaoyaoProperties taoyaoProperties;
-	@Autowired
-	private WebrtcProperties webrtcProperties;
+	/**
+	 * 同步消息
+	 */
+	private Map<String, Message> syncMessage = new ConcurrentHashMap<>();
 
 	@PostConstruct
 	public void init() {
@@ -88,11 +104,66 @@ public class MediasoupClient {
 	 * 
 	 * @param message 消息
 	 */
-	public void send(Object message) {
+	public void send(Message message) {
 		while(this.webSocket == null) {
 			Thread.yield();
 		}
 		this.webSocket.sendText(JSONUtils.toJSON(message), true);
+	}
+	
+	/**
+	 * 同步发送消息
+	 * 
+	 * @param message 消息
+	 * 
+	 * @return 响应
+	 */
+	public Message sendSync(Message message) {
+		final String id = message.getHeader().getId();
+		this.syncMessage.put(id, message);
+		synchronized (message) {
+			try {
+				message.wait(this.taoyaoProperties.getTimeout());
+			} catch (InterruptedException e) {
+				log.error("等待同步消息异常：{}", message, e);
+			}
+		}
+		final Message response = this.syncMessage.remove(id);
+		if(response == null || message.equals(response)) {
+			log.warn("消息没有响应：{}", message);
+		}
+		return response;
+	}
+	
+	/**
+	 * 处理消息
+	 * 
+	 * @param data 消息
+	 */
+	private void execute(String data) {
+		if(StringUtils.isNotEmpty(data)) {
+			final Message message = JSONUtils.toJava(data, Message.class);
+			final Header header = message.getHeader();
+			final String id = header.getId();
+			final Integer pid = header.getPid();
+			final Message request = this.syncMessage.get(id);
+			// 存在同步响应
+			if(request != null) {
+				// 重新设置消息
+				this.syncMessage.put(id, message);
+				// 唤醒等待现场
+				synchronized (request) {
+					request.notifyAll();
+				}
+			} else {
+				final Protocol protocol = this.protocolManager.protocol(pid);
+				if(protocol instanceof ProtocolMediasoupAdapter mediasoupProtocol) {
+					mediasoupProtocol.execute(message, this.webSocket);
+				} else {
+					log.warn("未知Mediasoup信令：{}", data);
+				}
+			}
+		}
 	}
 	
 	/**
@@ -113,10 +184,7 @@ public class MediasoupClient {
     		// 设置新的通道
     		MediasoupClient.this.webSocket = webSocket;
     		// 发送授权消息
-    		MediasoupClient.this.send(Map.of(
-    			"username", MediasoupClient.this.mediasoupProperties.getUsername(),
-    			"password", MediasoupClient.this.mediasoupProperties.getPassword()
-    		));
+    		MediasoupClient.this.send(MediasoupClient.this.authorizeProtocol.build());
     	}
 		
     	@Override
@@ -128,6 +196,7 @@ public class MediasoupClient {
     	@Override
     	public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
     		log.debug("Mediasoup收到消息（text）：{}-{}", webSocket, data);
+    		MediasoupClient.this.execute(data.toString());
     		return Listener.super.onText(webSocket, data, last);
     	}
     	

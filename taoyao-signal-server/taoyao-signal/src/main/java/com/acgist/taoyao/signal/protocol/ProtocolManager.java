@@ -1,5 +1,6 @@
 package com.acgist.taoyao.signal.protocol;
 
+import java.net.http.WebSocket;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -63,6 +64,15 @@ public class ProtocolManager {
 	}
 	
 	/**
+	 * @param pid 信令标识
+	 * 
+	 * @return 信令
+	 */
+	public Protocol protocol(Integer pid) {
+		return this.protocolMapping.get(pid);
+	}
+	
+	/**
 	 * 执行信令消息
 	 * 
 	 * @param message 信令消息
@@ -111,5 +121,5 @@ public class ProtocolManager {
 			session.push(this.errorProtocol.build(MessageCode.CODE_3401, "终端会话没有授权"));
 		}
 	}
-
+	
 }
