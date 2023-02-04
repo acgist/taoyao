@@ -10,6 +10,10 @@
 |taoyao-media-server|媒体服务|Mediasoup媒体服务|
 |taoyao-signal-server|信令服务|直播会议业务逻辑|
 
+## 部署
+
+[部署文档](./docs/Deploy.md)
+
 ### 流程
 
 终端首先连接信令得到媒体服务配置，然后推送媒体流到媒体服务，最后通过信令操作各个终端媒体如何转发。

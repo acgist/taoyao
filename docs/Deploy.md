@@ -110,6 +110,20 @@ npm -v
 node -v
 ```
 
+## 安装PM2
+
+```
+# 安装
+npm install -g pm2
+
+# 连接
+ln -sf /data/nodejs/node-v16.19.0-linux-x64/bin/pm2 /usr/local/bin/
+
+# 自启
+pm2 startup
+pm2 save
+```
+
 ## 安装Java
 
 ```
@@ -218,8 +232,12 @@ git checkout taoyao
 cd ..
 npm install
 
-# 启动媒体
-npm run dev | release
+# 配置服务
+pm2 start npm --name "taoyao-media-server" -- run dev | release
+pm2 save
+
+# 管理服务
+pm2 start | stop | restart taoyao-media-server
 ```
 
 ### Mediasoup单独编译
@@ -227,12 +245,12 @@ npm run dev | release
 编译媒体服务时会自动编译`mediasoup`所以可以不用单独编译
 
 ```
-# 编译
+# 编译代码
 # make -C worker
 cd /data/taoyao/taoyao-media-server/mediasoup/worker
 make
 
-# 清理
+# 清理结果
 make clean
 ```
 
@@ -266,7 +284,7 @@ Wants=network.target
 User=root
 Type=forking
 KillMode=process
-ExecStart=/data/deploy/taoyao-signal-server/bin/startup.sh
+ExecStart=/data/taoyao/taoyao-signal-server/deploy/bin/startup.sh
 ExecReload=/bin/kill -HUP $MAINPID
 ExecStop=/bin/kill -QUIT $MAINPID
 Restart=always
@@ -284,12 +302,16 @@ systemctl enable taoyao
 ## 安装终端
 
 ```
-# 编译
+# 编译代码
 cd /data/taoyao/taoyao-client
 npm install
 
-# 启动
-npm run dev
+# 配置服务
+pm2 start npm --name "taoyao-client" -- run dev
+pm2 save
+
+# 管理服务
+pm2 start | stop | restart taoyao-client
 ```
 
 ## 配置防火墙
