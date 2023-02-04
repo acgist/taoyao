@@ -6,15 +6,17 @@
 
 ```
 sudo npm install
+
+# 跳过mediasoup
+npm install --skip=mediasoup
 ```
 
 ## Mediasoup
 
-默认不用自己手工编译
-
 ```
-# 编译
-
+# 编译：默认不用手动编译
+make
+make -C worker
 ```
 
 ## 安全
