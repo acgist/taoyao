@@ -18,11 +18,8 @@ module.exports = {
     username: "taoyao",
     password: "taoyao",
     tls: {
-      cert:
-        process.env.HTTPS_CERT_PUBLIC_KEY || `${__dirname}/certs/publicKey.pem`,
-      key:
-        process.env.HTTPS_CERT_PRIVATE_KEY ||
-        `${__dirname}/certs/privateKey.pem`,
+      cert: process.env.HTTPS_CERT_PUBLIC_KEY || `${__dirname}/certs/publicKey.pem`,
+      key: process.env.HTTPS_CERT_PRIVATE_KEY || `${__dirname}/certs/privateKey.pem`,
     },
   },
   // Mediasoup
