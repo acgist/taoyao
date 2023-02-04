@@ -6,12 +6,12 @@
 class Signal {
 
   // Mediasoup Worker列表
-  mediasoupWorkers = [];
-  // Mediasoup Worker下个索引
+  mediasoupWorker = [];
+  // Mediasoup Worker索引
   nextMediasoupWorkerIndex = 0;
 
-  constructor(mediasoupWorkers) {
-    this.mediasoupWorkers = mediasoupWorkers;
+  constructor(mediasoupWorker) {
+    this.mediasoupWorker = mediasoupWorker;
   }
 
   /**

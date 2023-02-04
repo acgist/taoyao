@@ -4,7 +4,7 @@
 const os = require("os");
 
 module.exports = {
-  // 系统名称
+  // 服务名称
   name: "taoyao-media-server",
   // 交互式命令行
   command: true,
@@ -28,7 +28,7 @@ module.exports = {
     numWorkers: Object.keys(os.cpus()).length,
     // Worker：https://mediasoup.org/documentation/v3/mediasoup/api/#WorkerSettings
     workerSettings: {
-      logLevel: "warn",
+      logLevel: "info",
       logTags: [
         "bwe",
         "ice",

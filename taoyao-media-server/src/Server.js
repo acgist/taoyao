@@ -5,11 +5,10 @@
 const fs = require("fs");
 const ws = require("ws");
 const https = require("https");
-// const mediasoup = require("mediasoup");
+const mediasoup = require("mediasoup");
 const config = require("./Config");
 const Logger = require("./Logger");
 const Signal = require("./Signal");
-const command = require("./Command");
 
 // HTTPS server
 let httpsServer;
@@ -19,9 +18,9 @@ let webSocketServer;
 const logger = new Logger();
 // 信令
 const signal = new Signal();
-// 信令终端
+// 无效信令终端列表
 const client = [];
-// Mediasoup Worker
+// Mediasoup Worker列表
 const mediasoupWorker = [];
 
 process.title = config.name;
@@ -31,7 +30,7 @@ process.title = config.name;
  */
 async function buildMediasoupWorker() {
   const { numWorkers } = config.mediasoup;
-  logger.info("启动Mediasoup服务（%d Worker）...", numWorkers);
+  logger.info("启动Mediasoup Worker（%d）...", numWorkers);
   for (let i = 0; i < numWorkers; i++) {
     // 新建Worker
     const worker = await mediasoup.createWorker({
@@ -40,7 +39,7 @@ async function buildMediasoupWorker() {
       rtcMinPort: Number(config.mediasoup.workerSettings.rtcMinPort),
       rtcMaxPort: Number(config.mediasoup.workerSettings.rtcMaxPort),
     });
-    // 监听停止服务事件
+    // 监听Worker事件
     worker.on("died", () => {
       logger.error(
         "Mediasoup Worker停止服务（两秒之后自动退出）... [PID：%d]",
@@ -48,18 +47,17 @@ async function buildMediasoupWorker() {
       );
       setTimeout(() => process.exit(1), 2000);
     });
-    // 加入队列
+    // 加入Worker队列
     mediasoupWorker.push(worker);
     // 配置WebRTC服务
     if (process.env.MEDIASOUP_USE_WEBRTC_SERVER !== "false") {
-      // 每个Worker端口不能相同
+      // 配置Worker端口
       const portIncrement = mediasoupWorker.length - 1;
-      const webRtcServerOptions = JSON.parse(
-        JSON.stringify(config.mediasoup.webRtcServerOptions)
-      );
+      const webRtcServerOptions = JSON.parse(JSON.stringify(config.mediasoup.webRtcServerOptions));
       for (const listenInfo of webRtcServerOptions.listenInfos) {
         listenInfo.port += portIncrement;
       }
+      // 配置WebRTC服务
       const webRtcServer = await worker.createWebRtcServer(webRtcServerOptions);
       worker.appData.webRtcServer = webRtcServer;
     }
@@ -87,21 +85,17 @@ async function buildSignalServer() {
   logger.info("配置WebSocket服务...");
   webSocketServer = new ws.Server({ server: httpsServer });
   webSocketServer.on("connection", (session) => {
+    logger.info("打开信令通道: %s", session._socket.remoteAddress);
     session.datetime = new Date().getTime();
     session.authorize = false;
     client.push(session);
-    logger.info("信令通道连接: %s", session._socket.remoteAddress);
-    session.on("open", (message) => {
-      logger.info("打开信令通道: %s", message);
-    });
     session.on("close", (code) => {
       logger.info("关闭信令通道: %o", code);
     });
-    session.on("error", (e) => {
-      logger.error("信令通道异常: %o", e);
+    session.on("error", (error) => {
+      logger.error("信令通道异常: %o", error);
     });
     session.on("message", (message) => {
-      logger.debug("收到信令消息: %s", message);
       onmessage(message, session);
     });
   });
@@ -116,13 +110,45 @@ async function buildSignalServer() {
 }
 
 /**
+ * 交互式控制台
+ */
+ async function buildCommandConsole() {
+  if(!config.command) {
+    return;
+  }
+  process.stdin.setEncoding("UTF-8");
+  process.stdin.resume();
+  process.stdin.on("data", (data) => {
+    process.stdin.pause();
+    const command = data.replace(/^\s*/, "").replace(/\s*$/, "");
+    logger.info("");
+    switch (command) {
+      case "h":
+      case "help": {
+        logger.info("- h,  help                    ： 帮助信息");
+        logger.info("- os                          ： 系统信息");
+        break;
+      }
+      case "":
+      default: {
+        logger.warn(`未知命令：'${command}'`);
+        logger.info("查询命令：`h` | `help`");
+        break;
+      }
+    }
+    logger.info("");
+    process.stdin.resume();
+  });
+}
+
+/**
  * 定时清理无效信令终端
  */
-async function cleanClientInterval() {
+async function buildClientInterval() {
   setInterval(() => {
     const datetime = new Date().getTime();
     const oldLength = client.length;
-    for (var i = 0; i < client.length; i++) {
+    for (let i = 0; i < client.length; i++) {
       const session = client[i];
       // 超过五秒自动关闭
       if (datetime - session.datetime >= 5000) {
@@ -145,6 +171,7 @@ async function cleanClientInterval() {
 async function onmessage(message, session) {
   try {
     const data = JSON.parse(message);
+    // 授权验证
     if (!session.authorize) {
       if (
         data.username === config.https.username &&
@@ -156,7 +183,7 @@ async function onmessage(message, session) {
         logger.warn("授权失败：%s", session._socket.remoteAddress);
         session.close();
       }
-      for (var i = 0; i < client.length; i++) {
+      for (let i = 0; i < client.length; i++) {
         if (client[i] === session) {
           client.splice(i, 1);
           break;
@@ -164,6 +191,8 @@ async function onmessage(message, session) {
       }
       return;
     }
+    // 处理信令
+    logger.debug("处理信令消息: %s", message);
     signal.on(data, session);
   } catch (error) {
     logger.error(
@@ -176,20 +205,18 @@ async function onmessage(message, session) {
   }
 }
 
+/**
+ * 启动方法
+ */
 async function main() {
   logger.debug("DEBUG").info("INFO").warn("WARN").error("ERROR");
   logger.info("开始启动：%s", config.name);
-  // 启动Mediasoup服务
-  // await buildMediasoupWorker();
-  // 启动服务
+  await buildMediasoupWorker();
   await buildSignalServer();
+  await buildCommandConsole();
+  await buildClientInterval();
   logger.info("启动完成：%s", config.name);
-  // 交互式命令行
-  if (config.command) {
-    await command();
-  }
-  // 定时清理无效信令终端
-  cleanClientInterval();
 }
 
+// 启动
 main();
