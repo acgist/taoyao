@@ -20,7 +20,7 @@ if [ ! -z "$processId" ]; then
   done
   echo ""
 fi
-if [ $processPortNumber -lt 1 ]; then
+if [ "$processPortNumber" -lt 1 ]; then
   echo -e "\033[31m启动失败：${project.artifactId}-${project.version}\033[0m"
   sh bin/stop.sh
   exit 0

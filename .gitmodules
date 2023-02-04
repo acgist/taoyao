@@ -1,3 +1,5 @@
 [submodule "taoyao-media-server/mediasoup"]
 	path = taoyao-media-server/mediasoup
-	url = https://github.com/acgist/mediasoup.git
+	url = https://gitee.com/acgist/mediasoup.git
+#	url = https://github.com/acgist/mediasoup.git
+	branch = taoyao

@@ -271,8 +271,8 @@ mvn clean package -D skipTests
 # 拷贝脚本
 cp taoyao-server/target/taoyao-server-1.0.0/bin/deploy.sh ./
 
-# 配置启动服务
-vim /usr/lib/systemd/system/taoyao-signal.service
+# 配置服务
+vim /usr/lib/systemd/system/taoyao-signal-server.service
 
 ----
 [Unit]
@@ -294,9 +294,15 @@ RestartSec=5s
 WantedBy=multi-user.target
 ----
 
+# 配置自启
 systemctl daemon-reload
-systemctl start taoyao
-systemctl enable taoyao
+systemctl enable taoyao-signal-server
+
+# 执行脚本
+./deploy.sh
+
+# 管理服务
+systemctl start | stop | restart taoyao-signal-server
 ```
 
 ## 安装终端
