@@ -8,6 +8,8 @@ module.exports = {
   name: "taoyao-media-server",
   // 交互式命令行
   command: true,
+  // 日志级别
+  logLevel: 'DEBUG',
   // 信令服务
   https: {
     listenIp: "0.0.0.0",

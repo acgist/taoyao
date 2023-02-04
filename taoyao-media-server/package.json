@@ -10,8 +10,7 @@
   },
   "dependencies": {
     "ws": "^8.12.0",
+    "moment": "^2.29.4",
     "mediasoup": "file:./mediasoup"
-  },
-  "devDependencies": {
   }
 }

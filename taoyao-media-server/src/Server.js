@@ -23,7 +23,6 @@ let webSocketServer;
 const mediasoupWorkers = [];
 
 process.title = config.name;
-process.env.DEBUG = process.env.DEBUG || "*mediasoup* *INFO* *WARN* *ERROR*";
 
 /**
  * 启动Mediasoup Worker
@@ -123,6 +122,7 @@ async function buildSignalServer() {
 }
 
 async function main() {
+  logger.debug("DEBUG").info("INFO").warn("WARN").error("ERROR");
   logger.info("开始启动：%s", config.name);
   // 启动Mediasoup服务
   // await buildMediasoupWorkers();
