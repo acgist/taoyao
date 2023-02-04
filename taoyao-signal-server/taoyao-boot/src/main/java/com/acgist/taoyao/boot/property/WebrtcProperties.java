@@ -61,19 +61,14 @@ public class WebrtcProperties {
 	@Schema(title = "turn服务器", description = "turn服务器")
 	private String[] turn;
 	/**
-	 * KMS配置
-	 */
-	@Schema(title = "KMS配置", description = "KMS配置")
-	private KmsProperties kms;
-	/**
-	 * Moon架构配置
-	 */
-	@Schema(title = "Moon架构配置", description = "Moon架构配置")
-	private MoonProperties moon;
-	/**
 	 * 信令配置
 	 */
 	@Schema(title = "信令配置", description = "信令配置")
 	private SignalProperties signal;
+	/**
+	 * Mediasoup配置
+	 */
+	@Schema(title = "Mediasoup配置", description = "Mediasoup配置")
+	private MediasoupProperties mediasoup;
 	
 }

@@ -90,8 +90,8 @@ taoyao:
     # 架构模式
     framework: MESH
     # 媒体端口范围
-    min-port: 45535
-    max-port: 65535
+    min-port: 40000
+    max-port: 49999
     # 公共服务
     stun:
       - stun:stun1.l.google.com:19302
@@ -104,23 +104,21 @@ taoyao:
       - turn:127.0.0.1:8888
       - turn:127.0.0.1:8888
       - turn:127.0.0.1:8888
-    # KMS服务配置：可以部署多个简单实现负载均衡
-    kms:
-      host: 192.168.1.100
-      port: 18888
-      schema: wss
-      websocket: /websocket.signal
-      username: taoyao
-      password: taoyao
-    # Moon架构配置
-    moon:
-      audio-mix: true
     # 信令服务配置
     signal:
       host: 192.168.1.100
       port: ${server.port:8888}
       schema: wss
       websocket: /websocket.signal
+    # Mediasoup服务配置：可以部署多个简单实现负载均衡
+    mediasoup:
+      host: 127.0.0.1
+      #host: 192.168.8.110
+      port: 4443
+      schema: wss
+      websocket: /websocket.signal
+      username: taoyao
+      password: taoyao
   record:
     storage: /data/record
   security:
