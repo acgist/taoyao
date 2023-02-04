@@ -20,7 +20,10 @@ class Signal {
    * @param {*} message 消息
    * @param {*} session websocket
    */
-  on(message, session) {}
+  on(message, session) {
+
+  }
+  
 }
 
 module.exports = Signal;

@@ -1,44 +1,46 @@
 /**
  * 日志
  */
-const debug = require("debug");
 const config = require("./Config");
 
 class Logger {
 
+  // 
+  name = config.name;
+
   constructor(prefix) {
-    const appName = config.name;
     if (prefix) {
-      this._debug = debug(`${appName}:DEBUG:${prefix}`);
-      this._info = debug(`${appName}:INFO:${prefix}`);
-      this._warn = debug(`${appName}:WARN:${prefix}`);
-      this._error = debug(`${appName}:ERROR:${prefix}`);
-    } else {
-      this._debug = debug(`${appName}:DEBUG`);
-      this._info = debug(`${appName}:INFO`);
-      this._warn = debug(`${appName}:WARN`);
-      this._error = debug(`${appName}:ERROR`);
+      this.name = this.name + ':' + prefix;
     }
-    this._debug.log = console.debug.bind(console);
-    this._info.log = console.info.bind(console);
-    this._warn.log = console.warn.bind(console);
-    this._error.log = console.error.bind(console);
   }
 
-  get debug() {
-    return this._debug.log;
+  debug(...args) {
+    this.log(console.debug, 'DEBUG', args);
   }
   
-  get info() {
-    return this._info.log;
+  info(...args) {
+    this.log(console.info, 'INFO', args);
   }
 
-  get warn() {
-    return this._warn.log;
+  warn(...args) {
+    this.log(console.warn, 'WARN', args);
   }
 
-  get error() {
-    return this._error.log;
+  error(...args) {
+    this.log(console.error, 'ERROR', args);
+  }
+
+  log(out, level, args) {
+    if(!args) {
+      return;
+    }
+    if(args.length > 1 && args[0].length > 0) {
+      out(`${this.name}:${level}:${args[0]}`, ...args.slice(1));
+    } else if(args.length === 1 && args[0].length > 0) {
+      out(`${this.name}:${level}:${args[0]}`);
+    } else {
+      out("");
+    }
   }
 
 }

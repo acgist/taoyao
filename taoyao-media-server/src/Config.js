@@ -13,12 +13,15 @@ module.exports = {
     listenIp: "0.0.0.0",
     listenPort: process.env.HTTPS_LISTEN_PORT || 4443,
     // WebSocket连接密码
-    username: 'taoyao',
-    password: 'taoyao',
+    username: "taoyao",
+    password: "taoyao",
     tls: {
-      cert: process.env.HTTPS_CERT_PUBLIC_KEY || `${__dirname}/certs/publicKey.pem`,
-      key: process.env.HTTPS_CERT_PRIVATE_KEY || `${__dirname}/certs/privateKey.pem`,
-    }
+      cert:
+        process.env.HTTPS_CERT_PUBLIC_KEY || `${__dirname}/certs/publicKey.pem`,
+      key:
+        process.env.HTTPS_CERT_PRIVATE_KEY ||
+        `${__dirname}/certs/privateKey.pem`,
+    },
   },
   // Mediasoup
   mediasoup: {
@@ -133,5 +136,20 @@ module.exports = {
       },
       maxSctpMessageSize: 262144,
     },
-  }
+  },
+  wellcome: `<!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="UTF-8">
+    <title>桃夭媒体服务</title>
+    <style type="text/css">
+      p{text-align:center;}
+      a{text-decoration:none;}
+    </style>
+  </head>
+  <body>
+    <p><a href="https://gitee.com/acgist/taoyao">taoyao-media-server</a></p>
+    <p><a href="https://www.acgist.com">acgist</a></p>
+  </body>
+  </html>`,
 };

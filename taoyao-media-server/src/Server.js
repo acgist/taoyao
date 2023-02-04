@@ -5,7 +5,7 @@
 const fs = require("fs");
 const ws = require("ws");
 const https = require("https");
-const mediasoup = require("mediasoup");
+// const mediasoup = require("mediasoup");
 const config = require("./Config");
 const Logger = require("./Logger");
 const Signal = require("./Signal");
@@ -83,7 +83,7 @@ async function buildSignalServer() {
   logger.info("配置HTTPS服务...");
   httpsServer = https.createServer(tls, (request, response) => {
     response.writeHead(200);
-    response.end("taoyao media server");
+    response.end(config.wellcome);
   });
   logger.info("配置WebSocket服务...");
   webSocketServer = new ws.Server({ server: httpsServer });
@@ -125,7 +125,7 @@ async function buildSignalServer() {
 async function main() {
   logger.info("开始启动：%s", config.name);
   // 启动Mediasoup服务
-  await buildMediasoupWorkers();
+  // await buildMediasoupWorkers();
   // 启动服务
   await buildSignalServer();
   logger.info("启动完成：%s", config.name);

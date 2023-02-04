@@ -330,7 +330,9 @@ pm2 start | stop | restart taoyao-client
 firewall-cmd --zone=public --add-port=5173/tcp --permanent
 # 信令服务
 firewall-cmd --zone=public --add-port=8888/tcp --permanent
-# 媒体服务（数据）：40000-49999
+# 媒体服务（控制）：建议关闭
+firewall-cmd --zone=public --add-port=4443/tcp --permanent
+# 媒体服务（数据）
 firewall-cmd --zone=public --add-port=40000-49999/udp --permanent
 
 firewall-cmd --reload
@@ -339,6 +341,7 @@ firewall-cmd --list-ports
 # 删除端口
 #firewall-cmd --zone=public --remove-port=5173/udp --permanent
 #firewall-cmd --zone=public --remove-port=8888/udp --permanent
+#firewall-cmd --zone=public --remove-port=4443/tcp --permanent
 #firewall-cmd --zone=public --remove-port=40000-49999/udp --permanent
 ```
 
