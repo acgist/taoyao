@@ -5,11 +5,15 @@
   "private": true,
   "description": "taoyao media server",
   "scripts": {
-    "start": "DEBUG=${DEBUG:='*mediasoup* *INFO* *WARN* *ERROR*'} INTERACTIVE=${INTERACTIVE:='true'} node src/server.js"
+    "dev": "node src/Server.js",
+    "release": "node src/Server.js"
   },
   "dependencies": {
-    "mediasoup": "file:./mediasoup"
+    "ws": "^8.12.0",
+    "debug": "^4.3.1"
   },
-  "devDependencies": {
+  "releaseDependencies": {
+    "mediasoup-local": "file:./mediasoup",
+    "mediasoup-online": "github:versatica/mediasoup#v3"
   }
 }

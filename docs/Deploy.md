@@ -349,24 +349,3 @@ firewall-cmd --list-ports
 ```
 keytool -genkeypair -keyalg RSA -dname "CN=localhost, OU=acgist, O=taoyao, L=GZ, ST=GD, C=CN" -alias taoyao -validity 3650 -ext ku:c=dig,keyE -ext eku=serverAuth -ext SAN=dns:localhost,ip:127.0.0.1 -keystore taoyao.jks -keypass 123456 -storepass 123456
 ```
-
-## 资料
-
-https://www.jianshu.com/p/fa047d7054eb
-https://www.jianshu.com/p/59da3d350488
-https://www.jianshu.com/p/fa047d7054eb
-http://koca.szkingdom.com/forum/t/topic/218
-https://segmentfault.com/a/1190000039782685
-https://www.cnblogs.com/bolingcavalry/p/15473808.html
-http://www.manoner.com/post/音视频基础/WebRTC核心组件和协议栈/
-https://blog.csdn.net/eguid_1/article/details/117277841
-https://blog.csdn.net/xiang_6119/article/details/108779678
-https://blog.csdn.net/qq_40321119/article/details/108336324
-https://blog.csdn.net/ababab12345/article/details/115585378
-https://blog.csdn.net/m0_64867003/article/details/121901782
-https://blog.csdn.net/jisuanji111111/article/details/121634199
-https://blog.csdn.net/weixin_48638578/article/details/120191152
-https://blog.csdn.net/weixin_45565568/article/details/108929438
-https://blog.csdn.net/weixin_40425640/article/details/125444018
-http://t.zoukankan.com/yjmyzz-p-webrtc-groupcall-using-kurento.html
-https://lequ7.com/guan-yu-webrtc-yi-wen-xiang-jie-webrtc-ji-chu.html
