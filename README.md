@@ -6,9 +6,9 @@
 
 |模块|名称|描述|
 |:--|:--|:--|
-|taoyao-client|终端|终端示例|
-|taoyao-media-server|媒体|媒体服务|
-|taoyao-signal-server|信令|信令服务|
+|taoyao-client|终端示例|Web端终端示例|
+|taoyao-media-server|媒体服务|Mediasoup媒体服务|
+|taoyao-signal-server|信令服务|直播会议业务逻辑|
 
 ### 流程
 
@@ -23,11 +23,17 @@
 * [mediasoup文档](https://mediasoup.org/documentation/v3/mediasoup)
 * [mediasoup接口](https://mediasoup.org/documentation/v3/mediasoup/api)
 
-## 终端
+## Web终端
 
 * [mediasoup-client源码](https://github.com/versatica/mediasoup-client)
 * [mediasoup-client文档](https://mediasoup.org/documentation/v3/mediasoup-client)
 * [mediasoup-client接口](https://mediasoup.org/documentation/v3/mediasoup-client/api)
+
+## C++终端
+
+* [libmediasoupclient源码](https://github.com/versatica/libmediasoupclient)
+* [libmediasoupclient文档](https://mediasoup.org/documentation/v3/libmediasoupclient)
+* [libmediasoupclient接口](https://mediasoup.org/documentation/v3/libmediasoupclient/api)
 
 ## TODO
 

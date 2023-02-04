@@ -147,6 +147,46 @@ PATH=$PATH:/data/maven/apache-maven-3.8.6/bin
 mvn -version
 ```
 
+## 安装Python
+
+```
+# 依赖
+yum install zlib-devel
+yum install libffi-devel
+yum install openssl-devel
+
+# 下载
+mkdir -p /data/python
+cd /data/python
+#wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tar.xz
+wget https://mirrors.huaweicloud.com/python/3.8.16/Python-3.8.16.tar.xz
+xz -d Python-3.8.16.tar.xz
+tar -xf Python-3.8.16.tar
+
+# 安装
+cd Python-3.8.16
+./configure --prefix=/usr/local/python3 --with-ssl
+make && make install
+
+# 配置
+ln -sf /usr/local/python3/bin/pip3.8 /usr/bin/pip
+ln -sf /usr/local/python3/bin/python3.8 /usr/bin/python
+ln -sf /usr/local/python3/bin/python3.8 /usr/bin/python3
+
+# 配置YUM
+
+vim /usr/bin/yum
+vim /usr/libexec/urlgrabber-ext-down
+
+---
+/usr/bin/python => /usr/bin/python2.7
+---
+
+## 验证
+pip --version
+python --version
+```
+
 ## 下载源码
 
 ```
@@ -157,12 +197,50 @@ git clone https://gitee.com/acgist/taoyao.git --recursive
 ## 安装媒体
 
 ```
+# 设置镜像
+vim ~/.pip/pip.conf
+
+---
+[global]
+index-url = http://mirrors.aliyun.com/pypi/simple/
+[install]
+trusted-host = mirrors.aliyun.com
+---
+
+# 验证镜像
+pip config list
+
 # 编译代码
 cd /data/taoyao/taoyao-media-server
+git submodule update --remote
+cd modulesup
+git checkout taoyao
+cd ..
 npm install
 
 # 启动媒体
+npm run dev | release
 ```
+
+### Mediasoup单独编译
+
+编译媒体服务时会自动编译`mediasoup`所以可以不用单独编译
+
+```
+# 编译
+# make -C worker
+cd /data/taoyao/taoyao-media-server/mediasoup/worker
+make
+
+# 清理
+make clean
+```
+
+### 问题
+
+#### Subproject exists but has no meson.build file
+
+编译过程需要第三方的依赖，进入目录`mediasoup/worker/subprojects`，查看`*.wrap`依次下载然后修改名称放到`packagecache`，重新编译即可。
 
 ## 安装信令
 
@@ -205,12 +283,24 @@ systemctl enable taoyao
 
 ## 安装终端
 
+```
+# 编译
+cd /data/taoyao/taoyao-client
+npm install
+
+# 启动
+npm run dev
+```
+
 ## 配置防火墙
 
 ### taoyao-media-server
 
 
 ```
+# 终端
+firewall-cmd --zone=public --add-port=5173/tcp --permanent
+# 信令服务
 firewall-cmd --zone=public --add-port=8888/tcp --permanent
 # 媒体服务（数据）：40000-49999
 firewall-cmd --zone=public --add-port=40000-49999/udp --permanent
@@ -219,6 +309,7 @@ firewall-cmd --reload
 firewall-cmd --list-ports
 
 # 删除端口
+#firewall-cmd --zone=public --remove-port=5173/udp --permanent
 #firewall-cmd --zone=public --remove-port=8888/udp --permanent
 #firewall-cmd --zone=public --remove-port=40000-49999/udp --permanent
 ```
