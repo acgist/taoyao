@@ -13,44 +13,33 @@ const command = require("./Command");
 
 // 日志
 const logger = new Logger();
+// 信令
 const signal = new Signal();
 // HTTPS server
 let httpsServer;
 // WebSocket server
 let webSocketServer;
-// Mediasoup Worker列表
+// Mediasoup Worker
 const mediasoupWorkers = [];
-// Mediasoup Worker下个索引
-let nextMediasoupWorkerIndex = 0;
 
 process.title = config.name;
 process.env.DEBUG = process.env.DEBUG || "*mediasoup* *INFO* *WARN* *ERROR*";
-logger.info("开始启动：%s", config.name);
 
-run();
-
-async function run() {
-  // 启动Mediasoup服务
-  await runMediasoupWorkers();
-  // 启动服务
-  await runSignalServer();
-  logger.info("启动完成：%s", config.name);
-  // 交互式命令行
-  if (config.command) {
-    await command();
-  }
-}
-
-async function runMediasoupWorkers() {
+/**
+ * 启动Mediasoup Worker
+ */
+async function buildMediasoupWorkers() {
   const { numWorkers } = config.mediasoup;
   logger.info("启动Mediasoup服务（%d Worker）...", numWorkers);
   for (let i = 0; i < numWorkers; i++) {
+    // 新建Worker
     const worker = await mediasoup.createWorker({
       logLevel: config.mediasoup.workerSettings.logLevel,
       logTags: config.mediasoup.workerSettings.logTags,
       rtcMinPort: Number(config.mediasoup.workerSettings.rtcMinPort),
       rtcMaxPort: Number(config.mediasoup.workerSettings.rtcMaxPort),
     });
+    // 监听停止服务事件
     worker.on("died", () => {
       logger.error(
         "Mediasoup Worker停止服务（两秒之后自动退出）... [PID：%d]",
@@ -58,6 +47,7 @@ async function runMediasoupWorkers() {
       );
       setTimeout(() => process.exit(1), 2000);
     });
+    // 加入队列
     mediasoupWorkers.push(worker);
     // 配置WebRTC服务
     if (process.env.MEDIASOUP_USE_WEBRTC_SERVER !== "false") {
@@ -70,7 +60,7 @@ async function runMediasoupWorkers() {
       const webRtcServer = await worker.createWebRtcServer(webRtcServerOptions);
       worker.appData.webRtcServer = webRtcServer;
     }
-    // 记录日志
+    // 定时记录使用日志
     setInterval(async () => {
       const usage = await worker.getResourceUsage();
       logger.info(
@@ -82,7 +72,10 @@ async function runMediasoupWorkers() {
   }
 }
 
-async function runSignalServer() {
+/**
+ * 启动信令服务
+ */
+async function buildSignalServer() {
   const tls = {
     cert: fs.readFileSync(config.https.tls.cert),
     key: fs.readFileSync(config.https.tls.key),
@@ -119,12 +112,27 @@ async function runSignalServer() {
       }
     });
   });
-  logger.info("开启服务监听...");
-  await new Promise((resolve) => {
-    httpsServer.listen(
-      Number(config.https.listenPort),
-      config.https.listenIp,
-      resolve
-    );
-  });
+  // 打开监听
+  httpsServer.listen(
+    Number(config.https.listenPort),
+    config.https.listenIp,
+    () => {
+      logger.info("信令服务启动完成");
+    }
+  );
 }
+
+async function main() {
+  logger.info("开始启动：%s", config.name);
+  // 启动Mediasoup服务
+  await buildMediasoupWorkers();
+  // 启动服务
+  await buildSignalServer();
+  logger.info("启动完成：%s", config.name);
+  // 交互式命令行
+  if (config.command) {
+    await command();
+  }
+}
+
+main();

@@ -10,10 +10,9 @@
   },
   "dependencies": {
     "ws": "^8.12.0",
-    "debug": "^4.3.1"
+    "debug": "^4.3.1",
+    "mediasoup": "file:./mediasoup"
   },
-  "releaseDependencies": {
-    "mediasoup-local": "file:./mediasoup",
-    "mediasoup-online": "github:versatica/mediasoup#v3"
+  "devDependencies": {
   }
 }

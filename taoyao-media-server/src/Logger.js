@@ -4,21 +4,20 @@
 const debug = require("debug");
 const config = require("./Config");
 
-const APP_NAME = config.name;
-
 class Logger {
 
   constructor(prefix) {
+    const appName = config.name;
     if (prefix) {
-      this._debug = debug(`${APP_NAME}:${prefix}`);
-      this._info = debug(`${APP_NAME}:INFO:${prefix}`);
-      this._warn = debug(`${APP_NAME}:WARN:${prefix}`);
-      this._error = debug(`${APP_NAME}:ERROR:${prefix}`);
+      this._debug = debug(`${appName}:DEBUG:${prefix}`);
+      this._info = debug(`${appName}:INFO:${prefix}`);
+      this._warn = debug(`${appName}:WARN:${prefix}`);
+      this._error = debug(`${appName}:ERROR:${prefix}`);
     } else {
-      this._debug = debug(APP_NAME);
-      this._info = debug(`${APP_NAME}:INFO`);
-      this._warn = debug(`${APP_NAME}:WARN`);
-      this._error = debug(`${APP_NAME}:ERROR`);
+      this._debug = debug(`${appName}:DEBUG`);
+      this._info = debug(`${appName}:INFO`);
+      this._warn = debug(`${appName}:WARN`);
+      this._error = debug(`${appName}:ERROR`);
     }
     this._debug.log = console.debug.bind(console);
     this._info.log = console.info.bind(console);

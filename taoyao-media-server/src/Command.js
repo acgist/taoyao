@@ -2,6 +2,9 @@ const Logger = require("./Logger");
 
 const logger = new Logger();
 
+/**
+ * 交互式控制台
+ */
 function openCommandConsole() {
   logger.info("打开交互式控制台...");
   process.stdin.resume();

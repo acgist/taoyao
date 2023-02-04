@@ -133,5 +133,5 @@ module.exports = {
       },
       maxSctpMessageSize: 262144,
     },
-  },
+  }
 };
