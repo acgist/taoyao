@@ -17,6 +17,10 @@
 	<description>集群服务：集群服务</description>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.acgist</groupId>
+			<artifactId>taoyao-signal</artifactId>
+		</dependency>
 	</dependencies>
 
 </project>

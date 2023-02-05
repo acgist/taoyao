@@ -33,6 +33,11 @@ public abstract class ProtocolAdapter implements Protocol {
 	 */
 	protected final Integer pid;
 	/**
+	 * 信令标识
+	 * TODO：
+	 */
+	protected final String signal = "";
+	/**
 	 * 信令名称
 	 */
 	protected final String name;

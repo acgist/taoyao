@@ -1,10 +1,13 @@
 package com.acgist.taoyao.signal.protocol.platform;
 
+import java.util.Map;
+
 import org.springframework.context.ConfigurableApplicationContext;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientSession;
-import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
+import com.acgist.taoyao.signal.event.platform.ShutdownEvent;
+import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -14,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-public class ShutdownProtocol extends ProtocolAdapter {
+public class ShutdownProtocol extends ProtocolMapAdapter {
 
 	public static final Integer PID = 1000;
 	
@@ -23,7 +26,9 @@ public class ShutdownProtocol extends ProtocolAdapter {
 	}
 
 	@Override
-	public void execute(String sn, Message message, ClientSession session) {
+	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
+		// 推送事件
+		this.publishEvent(new ShutdownEvent(sn, body, message, session));
 		// 全员广播
 		this.clientSessionManager.broadcast(message);
 		// 关闭信令服务

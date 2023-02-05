@@ -1,6 +1,5 @@
 package com.acgist.taoyao.signal.protocol;
 
-import java.net.http.WebSocket;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -58,7 +57,7 @@ public class ProtocolManager {
 			if(this.protocolMapping.containsKey(pid)) {
 				throw MessageCodeException.of("存在重复信令协议：" + pid);
 			}
-			log.info("注册信令协议：{}-{}-{}", pid, name, k);
+			log.info("注册信令协议：{}-{}-{}", pid, String.format("%32s", k), name);
 			this.protocolMapping.put(pid, v);
 		});
 	}
