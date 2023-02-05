@@ -190,7 +190,6 @@ async function onmessage(message, session) {
         data.message = "授权失败";
         session.send(JSON.stringify(data));
       }
-      // 不要传递授权信息
       return;
     }
     // 处理信令

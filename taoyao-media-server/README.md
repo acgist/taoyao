@@ -6,9 +6,6 @@
 
 ```
 sudo npm install
-
-# 跳过mediasoup
-npm install --skip=mediasoup
 ```
 
 ## Mediasoup

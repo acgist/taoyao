@@ -60,6 +60,15 @@ public class MediasoupClient {
 	private AuthorizeProtocol authorizeProtocol;
 	
 	/**
+	 * 最大重试次数
+	 */
+	private static final int MAX_RETRY = 12;
+
+	/**
+	 * 重试次数
+	 */
+	private int retry = 1;
+	/**
 	 * Mediasoup WebSocket通道
 	 */
 	private WebSocket webSocket;
@@ -95,7 +104,10 @@ public class MediasoupClient {
 				.get();
 		} catch (InterruptedException | ExecutionException e) {
 			log.error("连接Mediasoup异常：{}", uri, e);
-			this.taskSchedulerl.schedule(this::buildClient, Instant.now().plusSeconds(5));
+			this.taskSchedulerl.schedule(
+				this::buildClient,
+				Instant.now().plusSeconds(Math.min(this.retry++, MAX_RETRY) * 5)
+			);
 		}
 	}
 	
@@ -181,6 +193,8 @@ public class MediasoupClient {
     		if(MediasoupClient.this.webSocket != null && !(MediasoupClient.this.webSocket.isInputClosed() && MediasoupClient.this.webSocket.isOutputClosed())) {
     			MediasoupClient.this.webSocket.abort();
     		}
+    		// 重置重试次数
+    		MediasoupClient.this.retry = 1;
     		// 设置新的通道
     		MediasoupClient.this.webSocket = webSocket;
     		// 发送授权消息
@@ -206,7 +220,10 @@ public class MediasoupClient {
     		try {
     			return Listener.super.onClose(webSocket, statusCode, reason);
 			} finally {
-				MediasoupClient.this.taskSchedulerl.schedule(MediasoupClient.this::buildClient, Instant.now().plusSeconds(5));
+				MediasoupClient.this.taskSchedulerl.schedule(
+					MediasoupClient.this::buildClient,
+					Instant.now().plusSeconds(Math.min(MediasoupClient.this.retry++, MAX_RETRY) * 5)
+				);
 			}
     	}
     	
@@ -216,7 +233,10 @@ public class MediasoupClient {
     		try {
     			Listener.super.onError(webSocket, error);
 			} finally {
-				MediasoupClient.this.taskSchedulerl.schedule(MediasoupClient.this::buildClient, Instant.now().plusSeconds(5));
+				MediasoupClient.this.taskSchedulerl.schedule(
+					MediasoupClient.this::buildClient,
+					Instant.now().plusSeconds(Math.min(MediasoupClient.this.retry++, MAX_RETRY) * 5)
+				);
 			}
     	}
     	
