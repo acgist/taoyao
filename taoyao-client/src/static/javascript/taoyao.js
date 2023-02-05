@@ -69,9 +69,6 @@ const signalConfig = {
 };
 /** 信令协议 */
 const signalProtocol = {
-	/** 直播信令 */
-	live: {
-	},
 	/** 媒体信令 */
 	media: {
 		/** 发布 */

@@ -1,6 +1,6 @@
 # 桃夭
 
-桃夭是套`WebRTC`信令服务，使用`Mediasoup`提供媒体服务，支持直播会议两种场景。
+桃夭是套基于`Mediasoup`开发的`WebRTC`音视频信令服务
 
 ## 模块
 
@@ -8,7 +8,7 @@
 |:--|:--|:--|
 |taoyao-client|终端示例|Web端终端示例|
 |taoyao-media-server|媒体服务|Mediasoup媒体服务|
-|taoyao-signal-server|信令服务|直播会议业务逻辑|
+|taoyao-signal-server|信令服务|信令业务逻辑|
 
 ## 部署
 
@@ -44,7 +44,7 @@
 * 录制（Recorder）
 * 音频：降噪、混音、变声
 * 视频：水印、美颜、AI识别
-* 一个信令服务多个媒体服务
-* 信令服务集群
 * 信令直传
+* 信令服务集群
 * 媒体交互式启动
+* 一个信令服务多个媒体服务

@@ -36,16 +36,7 @@ public class SpringDocAutoConfiguration {
 	private Integer port;
 	@Autowired
 	private TaoyaoProperties taoyaoProperties;
-
-	@Bean
-	public GroupedOpenApi liveApi() {
-		return GroupedOpenApi.builder()
-			.group("live")
-			.displayName("直播")
-			.packagesToScan("com.acgist.taoyao.live")
-			.build();
-	}
-
+	
 	@Bean
 	public GroupedOpenApi meetingApi() {
 		return GroupedOpenApi.builder()

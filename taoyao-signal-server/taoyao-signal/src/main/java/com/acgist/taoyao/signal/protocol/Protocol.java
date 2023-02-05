@@ -8,10 +8,11 @@ import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
 /**
  * 信令
  * 
+ * TODO：改为字符
+ * 
  * 1000~1999：平台信令
  * 2000~2999：终端信令
  * 3000~3999：会议信令
- * 4000~4999：直播信令
  * 5000~5999：媒体信令
  * 6000~6999：媒体信令（Mediasoup）
  * 

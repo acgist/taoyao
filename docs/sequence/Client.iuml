@@ -30,7 +30,7 @@ Signal -> ClientA: 关闭ClientA通道
 deactivate ClientA
 Signal -> ClientB: ClientA下线
 Signal -> ClientC: ClientA下线
-Signal -> Signal: 释放ClientA资源（直播、会议、媒体）
+Signal -> Signal: 释放ClientA资源（会议、媒体）
 deactivate Signal
 
 @enduml
