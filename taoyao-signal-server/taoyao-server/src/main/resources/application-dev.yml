@@ -1,0 +1,4 @@
+taoyao:
+  security:
+    permit: /v3/api-docs/**,/swagger-ui/**,/swagger-ui.html,/,/error,/index.html,/favicon.ico
+    

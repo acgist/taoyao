@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.0.0</version>
+		<version>3.0.2</version>
 		<relativePath />
 	</parent>
 
@@ -24,7 +24,6 @@
 		<!-- 版本 -->
 		<java.version>17</java.version>
 		<lombok.version>1.18.24</lombok.version>
-		<kurento.version>6.18.0</kurento.version>
 		<springdoc.version>2.0.0</springdoc.version>
 		<mapstruct.version>1.5.3.Final</mapstruct.version>
 		<collections4.version>4.4</collections4.version>

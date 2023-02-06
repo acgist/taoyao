@@ -38,11 +38,11 @@ public class SpringDocAutoConfiguration {
 	private TaoyaoProperties taoyaoProperties;
 	
 	@Bean
-	public GroupedOpenApi meetingApi() {
+	public GroupedOpenApi roomApi() {
 		return GroupedOpenApi.builder()
-			.group("meeting")
-			.displayName("会议")
-			.packagesToScan("com.acgist.taoyao.meeting")
+			.group("signal")
+			.displayName("信令")
+			.packagesToScan("com.acgist.taoyao.signal")
 			.build();
 	}
 	

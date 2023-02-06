@@ -14,7 +14,7 @@ import com.acgist.taoyao.signal.protocol.client.ClientOnlineProtocol;
 /**
  * 终端注册监听
  * 
- * TODO：如果已经在会议中，自动推流。
+ * TODO：如果已经在房间中，自动推流。
  * 
  * @author acgist
  */

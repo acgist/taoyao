@@ -1,0 +1,30 @@
+package com.acgist.taoyao.signal.protocol.room;
+
+import java.util.Map;
+
+import com.acgist.taoyao.boot.annotation.Protocol;
+import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.event.room.RoomCreateEvent;
+import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
+
+/**
+ * 创建房间信令
+ * 
+ * @author acgist
+ */
+@Protocol
+public class RoomCreateProtocol extends ProtocolMapAdapter {
+
+	public static final Integer PID = 4000;
+	
+	public RoomCreateProtocol() {
+		super(PID, "创建房间信令");
+	}
+
+	@Override
+	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
+		this.publishEvent(new RoomCreateEvent(sn, body, message, session));
+	}
+
+}

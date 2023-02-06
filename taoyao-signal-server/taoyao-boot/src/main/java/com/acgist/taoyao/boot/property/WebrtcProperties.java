@@ -1,5 +1,7 @@
 package com.acgist.taoyao.boot.property;
 
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -69,6 +71,6 @@ public class WebrtcProperties {
 	 * Mediasoup配置
 	 */
 	@Schema(title = "Mediasoup配置", description = "Mediasoup配置")
-	private MediasoupProperties mediasoup;
+	private List<MediasoupProperties> mediasoupList;
 	
 }

@@ -7,9 +7,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.util.AntPathMatcher;
 
 import com.acgist.taoyao.boot.interceptor.InterceptorAdapter;
 import com.acgist.taoyao.boot.property.SecurityProperties;
+import com.acgist.taoyao.signal.service.SecurityService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -23,6 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SecurityInterceptor extends InterceptorAdapter {
 
+	private AntPathMatcher matcher = new AntPathMatcher();
+	
+	@Autowired
+	private SecurityService securityService;
 	@Autowired
 	private SecurityProperties securityProperties;
 	
@@ -46,6 +52,9 @@ public class SecurityInterceptor extends InterceptorAdapter {
 		if(this.permit(request) || this.authorization(request)) {
 			return true;
 		}
+		if(log.isInfoEnabled()) {
+			log.info("授权失败：{}", request.getRequestURL());
+		}
 		response.setStatus(HttpStatus.UNAUTHORIZED.value());
 		response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic Realm=\"" + this.securityProperties.getRealm() + "\"");
 		return false;
@@ -58,12 +67,12 @@ public class SecurityInterceptor extends InterceptorAdapter {
 	 */
 	private boolean permit(HttpServletRequest request) {
 		final String uri = request.getRequestURI();
-		if(ArrayUtils.isEmpty(this.securityProperties.getPermit())) {
+		final String[] permit = this.securityProperties.getPermit();
+		if(ArrayUtils.isEmpty(permit)) {
 			return false;
 		}
-		for (String permit : this.securityProperties.getPermit()) {
-			if(StringUtils.startsWith(uri, permit)) {
-				log.debug("授权成功（许可请求）：{}-{}", uri, permit);
+		for (String pattern : permit) {
+			if(this.matcher.match(pattern, uri)) {
 				return true;
 			}
 		}
@@ -76,7 +85,6 @@ public class SecurityInterceptor extends InterceptorAdapter {
 	 * @return 是否授权成功
 	 */
 	private boolean authorization(HttpServletRequest request) {
-		final String uri = request.getRequestURI();
 		String authorization = request.getHeader(HttpHeaders.AUTHORIZATION);
 		if(StringUtils.isEmpty(authorization)) {
 			return false;
@@ -86,11 +94,13 @@ public class SecurityInterceptor extends InterceptorAdapter {
 		}
 		authorization = authorization.substring(SecurityProperties.BASIC.length()).strip();
 		authorization = new String(Base64.getDecoder().decode(authorization));
-		if(!authorization.equals(this.securityProperties.getAuthorization())) {
+		final int index = authorization.indexOf(':');
+		if(index < 0) {
 			return false;
 		}
-		log.debug("授权成功（Basic）：{}-{}", uri, authorization);
-		return true;
+		final String username = authorization.substring(0, index);
+		final String password = authorization.substring(index + 1);
+		return this.securityService.authenticate(username, password);
 	}
 	
 }

@@ -5,7 +5,7 @@
 const fs = require("fs");
 const ws = require("ws");
 const https = require("https");
-// const mediasoup = require("mediasoup");
+const mediasoup = require("mediasoup");
 const config = require("./Config");
 const Logger = require("./Logger");
 const Signal = require("./Signal");
@@ -212,7 +212,7 @@ async function onmessage(message, session) {
 async function main() {
   logger.debug("DEBUG").info("INFO").warn("WARN").error("ERROR");
   logger.info("开始启动：%s", config.name);
-  // await buildMediasoupWorker();
+  await buildMediasoupWorker();
   await buildSignalServer();
   await buildCommandConsole();
   await buildClientInterval();

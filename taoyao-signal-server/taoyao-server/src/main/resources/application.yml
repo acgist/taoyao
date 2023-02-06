@@ -67,6 +67,12 @@ taoyao:
       bitrate: 1200
       frame-rate: 24
       resolution: 1920*1080
+    # 超清视频
+    most-video:
+      format: H264
+      bitrate: 1200
+      frame-rate: 24
+      resolution: 1920*1080
     # 高清视频
     high-video:
       format: H264
@@ -87,18 +93,13 @@ taoyao:
       resolution: 640*480
   # WebRTC配置
   webrtc:
-    # 架构模式
-    framework: MESH
-    # 媒体端口范围
-    min-port: 40000
-    max-port: 49999
-    # 公共服务
+    # STUN服务
     stun:
       - stun:stun1.l.google.com:19302
       - stun:stun2.l.google.com:19302
       - stun:stun3.l.google.com:19302
       - stun:stun4.l.google.com:19302
-    # 自己搭建：coturn
+    # TURN服务：coturn
     turn:
       - turn:127.0.0.1:8888
       - turn:127.0.0.1:8888
@@ -111,24 +112,35 @@ taoyao:
       schema: wss
       websocket: /websocket.signal
     # Mediasoup服务配置：可以部署多个简单实现负载均衡
-    mediasoup:
-      host: 127.0.0.1
-      #host: 192.168.8.110
-      port: 4443
-      schema: wss
-      websocket: /websocket.signal
-      username: taoyao
-      password: taoyao
+    mediasoup-list:
+      - host: 127.0.0.1
+        #host: 192.168.8.110
+        port: 4443
+        schema: wss
+        websocket: /websocket.signal
+        username: taoyao
+        password: taoyao
+      - host: 127.0.0.1
+        #host: 192.168.8.110
+        port: 4443
+        schema: wss
+        websocket: /websocket.signal
+        username: taoyao
+        password: taoyao
+  # 录像配置
   record:
     storage: /data/record
+  # 安全配置
   security:
     enabled: true
     realm: taoyao
-    permit: /v3/api-docs/,/swagger-ui/,/swagger-ui.html,/favicon.ico,/error
+    permit: /,/error,/index.html,/favicon.ico
     username: taoyao
     password: taoyao
+  # 定时任务
   scheduled:
     session: 0 * * * * ?
+  # 集群节点
   node-list:
     - host: localhost
       port: 8888

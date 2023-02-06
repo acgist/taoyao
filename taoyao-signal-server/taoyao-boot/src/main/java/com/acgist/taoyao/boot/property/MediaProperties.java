@@ -28,6 +28,11 @@ public class MediaProperties {
 	@Schema(title = "视频配置", description = "视频配置")
 	private MediaVideoProperties video;
 	/**
+	 * 超清视频
+	 */
+	@Schema(title = "超清视频", description = "超清视频")
+	private MediaVideoProperties mostVideo;
+	/**
 	 * 高清视频
 	 */
 	@Schema(title = "高清视频", description = "高清视频")

@@ -1,5 +1,5 @@
 /**
- * 配置
+ * 服务配置
  */
 const os = require("os");
 
@@ -12,7 +12,7 @@ module.exports = {
   logLevel: 'DEBUG',
   // 信令服务
   https: {
-    listenIp: "0.0.0.0",
+    listenIp: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
     listenPort: process.env.HTTPS_LISTEN_PORT || 4443,
     // WebSocket连接密码
     username: "taoyao",
@@ -20,7 +20,7 @@ module.exports = {
     tls: {
       cert: process.env.HTTPS_CERT_PUBLIC_KEY || `${__dirname}/certs/publicKey.pem`,
       key: process.env.HTTPS_CERT_PRIVATE_KEY || `${__dirname}/certs/privateKey.pem`,
-    },
+    }
   },
   // Mediasoup
   mediasoup: {
@@ -37,15 +37,15 @@ module.exports = {
         "svc",
         "dtls",
         "info",
+        "rtcp",
         "sctp",
         "srtp",
-        "rtcp",
         "score",
         "message",
-        "simulcast",
+        "simulcast"
       ],
       rtcMinPort: process.env.MEDIASOUP_MIN_PORT || 40000,
-      rtcMaxPort: process.env.MEDIASOUP_MAX_PORT || 49999,
+      rtcMaxPort: process.env.MEDIASOUP_MAX_PORT || 49999
     },
     // Router：https://mediasoup.org/documentation/v3/mediasoup/api/#RouterOptions
     routerOptions: {
@@ -54,7 +54,7 @@ module.exports = {
           kind: "audio",
           mimeType: "audio/opus",
           clockRate: 48000,
-          channels: 2,
+          channels: 2
         },
         {
           kind: "video",
@@ -62,7 +62,7 @@ module.exports = {
           clockRate: 90000,
           parameters: {
             "x-google-start-bitrate": 1000,
-          },
+          }
         },
         {
           kind: "video",
@@ -70,8 +70,8 @@ module.exports = {
           clockRate: 90000,
           parameters: {
             "profile-id": 2,
-            "x-google-start-bitrate": 1000,
-          },
+            "x-google-start-bitrate": 1000
+          }
         },
         {
           kind: "video",
@@ -81,8 +81,8 @@ module.exports = {
             "packetization-mode": 1,
             "profile-level-id": "4d0032",
             "level-asymmetry-allowed": 1,
-            "x-google-start-bitrate": 1000,
-          },
+            "x-google-start-bitrate": 1000
+          }
         },
         {
           kind: "video",
@@ -92,10 +92,10 @@ module.exports = {
             "packetization-mode": 1,
             "profile-level-id": "42e01f",
             "level-asymmetry-allowed": 1,
-            "x-google-start-bitrate": 1000,
-          },
-        },
-      ],
+            "x-google-start-bitrate": 1000
+          }
+        }
+      ]
     },
     // WebRtcServer：https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcServerOptions
     webRtcServerOptions: {
@@ -103,38 +103,42 @@ module.exports = {
         {
           protocol: "udp",
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP,
           port: 44444,
+          // 公网地址
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP
         },
         {
           protocol: "tcp",
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP,
           port: 44444,
-        },
-      ],
+          // 公网地址
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP
+        }
+      ]
     },
     // WebRtcTransport：https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcTransportOptions
     webRtcTransportOptions: {
       listenIps: [
         {
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP,
-        },
+          // 公网地址
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP
+        }
       ],
       initialAvailableOutgoingBitrate: 1000000,
       minimumAvailableOutgoingBitrate: 600000,
       maxSctpMessageSize: 262144,
-      maxIncomingBitrate: 1500000,
+      maxIncomingBitrate: 1500000
     },
     // PlainTransport：https://mediasoup.org/documentation/v3/mediasoup/api/#PlainTransportOptions
     plainTransportOptions: {
       listenIp: {
         ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
+        // 公网地址
         announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP,
       },
-      maxSctpMessageSize: 262144,
-    },
+      maxSctpMessageSize: 262144
+    }
   },
   wellcome: `<!DOCTYPE html>
   <html>
@@ -150,5 +154,5 @@ module.exports = {
     <p><a href="https://gitee.com/acgist/taoyao">taoyao-media-server</a></p>
     <p><a href="https://www.acgist.com">acgist</a></p>
   </body>
-  </html>`,
+  </html>`
 };

@@ -40,7 +40,7 @@ public class ClientCloseListener extends ApplicationListenerAdapter<ClientCloseE
 		);
 		this.clientSessionManager.broadcast(sn, message);
 		// TODO：释放连接
-		// TODO：释放会议
+		// TODO：释放房间
 		// TODO：退出帐号
 		// TODO：注意释放：是否考虑没有message（非正常的关闭）不要立即释放
 	}

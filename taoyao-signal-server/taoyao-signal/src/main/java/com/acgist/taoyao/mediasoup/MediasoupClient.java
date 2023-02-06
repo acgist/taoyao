@@ -22,6 +22,8 @@ import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.stereotype.Service;
 
@@ -29,14 +31,12 @@ import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.property.MediasoupProperties;
 import com.acgist.taoyao.boot.property.TaoyaoProperties;
-import com.acgist.taoyao.boot.property.WebrtcProperties;
 import com.acgist.taoyao.boot.utils.JSONUtils;
-import com.acgist.taoyao.mediasoup.protocol.ProtocolMediasoupAdapter;
-import com.acgist.taoyao.mediasoup.protocol.client.AuthorizeProtocol;
+import com.acgist.taoyao.mediasoup.protocol.AuthorizeProtocol;
 import com.acgist.taoyao.signal.protocol.Protocol;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
+import com.acgist.taoyao.signal.protocol.ProtocolMediasoupAdapter;
 
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -45,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @Service
 public class MediasoupClient {
 	
@@ -54,8 +55,6 @@ public class MediasoupClient {
 	private ProtocolManager protocolManager;
 	@Autowired
 	private TaoyaoProperties taoyaoProperties;
-	@Autowired
-	private WebrtcProperties webrtcProperties;
 	@Autowired
 	private AuthorizeProtocol authorizeProtocol;
 	
@@ -81,9 +80,13 @@ public class MediasoupClient {
 	 */
 	private Map<String, Message> syncMessage = new ConcurrentHashMap<>();
 
-	@PostConstruct
-	public void init() {
-		this.mediasoupProperties = this.webrtcProperties.getMediasoup();
+	/**
+	 * 初始化客户端
+	 * 
+	 * @param mediasoupProperties Mediasoup配置
+	 */
+	public void init(MediasoupProperties mediasoupProperties) {
+		this.mediasoupProperties = mediasoupProperties;
 		this.buildClient();
 	}
 	
@@ -148,6 +151,22 @@ public class MediasoupClient {
 	}
 	
 	/**
+	 * 打开通道
+	 */
+	private void open(WebSocket webSocket) {
+		// 关闭旧的通道
+		if(this.webSocket != null && !(this.webSocket.isInputClosed() && this.webSocket.isOutputClosed())) {
+			this.webSocket.abort();
+		}
+		// 重置重试次数
+		this.retry = 1;
+		// 设置新的通道
+		this.webSocket = webSocket;
+		// 发送授权消息
+		this.send(this.authorizeProtocol.build(this.mediasoupProperties));
+	}
+	
+	/**
 	 * 处理消息
 	 * 
 	 * @param data 消息
@@ -189,16 +208,7 @@ public class MediasoupClient {
     	public void onOpen(WebSocket webSocket) {
     		log.info("Mediasoup通道打开：{}", webSocket);
     		Listener.super.onOpen(webSocket);
-    		// 关闭旧的通道
-    		if(MediasoupClient.this.webSocket != null && !(MediasoupClient.this.webSocket.isInputClosed() && MediasoupClient.this.webSocket.isOutputClosed())) {
-    			MediasoupClient.this.webSocket.abort();
-    		}
-    		// 重置重试次数
-    		MediasoupClient.this.retry = 1;
-    		// 设置新的通道
-    		MediasoupClient.this.webSocket = webSocket;
-    		// 发送授权消息
-    		MediasoupClient.this.send(MediasoupClient.this.authorizeProtocol.build());
+    		MediasoupClient.this.open(webSocket);
     	}
 		
     	@Override

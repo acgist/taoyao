@@ -41,11 +41,4 @@ public class SecurityProperties {
 	 */
 	private String password;
 	
-	/**
-	 * @return 授权信息
-	 */
-	public String getAuthorization() {
-		return this.username + ":" + this.password;
-	}
-	
 }
