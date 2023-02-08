@@ -13,8 +13,8 @@ import com.acgist.taoyao.signal.client.ClientSession;
  */
 public abstract class ProtocolMapAdapter extends ProtocolAdapter {
 
-	protected ProtocolMapAdapter(Integer pid, String name) {
-		super(pid, name);
+	protected ProtocolMapAdapter(String name, String signal) {
+		super(name, signal);
 	}
 	
 	@Override

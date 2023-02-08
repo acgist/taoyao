@@ -29,32 +29,27 @@ public abstract class ProtocolAdapter implements Protocol {
 	protected ClientSessionManager clientSessionManager;
 	
 	/**
-	 * 信令标识
-	 */
-	protected final Integer pid;
-	/**
-	 * 信令标识
-	 * TODO：
-	 */
-	protected final String signal = "";
-	/**
 	 * 信令名称
 	 */
 	protected final String name;
+	/**
+	 * 信令标识
+	 */
+	protected final String signal;
 
-	protected ProtocolAdapter(Integer pid, String name) {
-		this.pid = pid;
+	protected ProtocolAdapter(String name, String signal) {
 		this.name = name;
-	}
-	
-	@Override
-	public Integer pid() {
-		return this.pid;
+		this.signal = signal;
 	}
 	
 	@Override
 	public String name() {
 		return this.name;
+	}
+	
+	@Override
+	public String signal() {
+		return this.signal;
 	}
 	
 	@Override
@@ -90,7 +85,7 @@ public abstract class ProtocolAdapter implements Protocol {
 		final Header header = Header.builder()
 			.v(this.taoyaoProperties.getVersion())
 			.id(id)
-			.pid(this.pid)
+			.signal(this.signal)
 			.build();
 		final Message build = Message.builder()
 			.header(header)

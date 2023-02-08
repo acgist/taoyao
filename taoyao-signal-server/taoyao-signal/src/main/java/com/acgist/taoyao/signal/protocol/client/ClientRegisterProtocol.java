@@ -23,13 +23,13 @@ import lombok.extern.slf4j.Slf4j;
 @Protocol
 public class ClientRegisterProtocol extends ProtocolMapAdapter {
 
-	public static final Integer PID = 2000;
+	public static final String SIGNAL = "client::register";
 	
 	@Autowired
 	private SecurityService securityService;
 	
 	public ClientRegisterProtocol() {
-		super(PID, "终端注册信令");
+		super("终端注册信令", SIGNAL);
 	}
 
 	@Override
@@ -47,7 +47,7 @@ public class ClientRegisterProtocol extends ProtocolMapAdapter {
 		// 推送消息
 		session.push(message.cloneWidthoutBody());
 		// 发送事件
-		this.publishEvent(new ClientRegisterEvent(sn, body, message, session));
+		this.publishEvent(new ClientRegisterEvent(body, message, session));
 	}
 
 }

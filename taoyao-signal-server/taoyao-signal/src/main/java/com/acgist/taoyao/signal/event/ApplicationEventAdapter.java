@@ -41,16 +41,12 @@ public abstract class ApplicationEventAdapter extends ApplicationEvent {
 	private final ClientSession session;
 	
 	public ApplicationEventAdapter(Message message, ClientSession session) {
-		this(session.sn(), null, message, session);
+		this(null, message, session);
 	}
 	
 	public ApplicationEventAdapter(Map<?, ?> body, Message message, ClientSession session) {
-		this(session.sn(), body, message, session);
-	}
-	
-	public ApplicationEventAdapter(String sn, Map<?, ?> body, Message message, ClientSession session) {
 		super(session);
-		this.sn = sn;
+		this.sn = session.sn();
 		this.body = body;
 		this.message = message;
 		this.session = session;

@@ -19,19 +19,19 @@ import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 @Protocol
 public class ClientStatusProtocol extends ProtocolMapAdapter {
 
-	public static final Integer PID = 2998;
+	public static final String SIGNAL = "client::status";
 	
 	@Autowired
 	private ClientSessionManager clientSessionManager;
 	
 	public ClientStatusProtocol() {
-		super(PID, "终端状态信令");
+		super("终端状态信令", SIGNAL);
 	}
 
 	@Override
 	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		String querySn = (String) body.get("sn");
 		// 如果没有指定终端标识默认查询自己
+		String querySn = (String) body.get("sn");
 		if(StringUtils.isEmpty(querySn)) {
 			querySn = sn;
 		}

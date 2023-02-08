@@ -8,9 +8,13 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
 import com.acgist.taoyao.signal.client.websocket.WebSocketSignal;
-import com.acgist.taoyao.signal.listener.platform.ScriptListener;
-import com.acgist.taoyao.signal.protocol.platform.ScriptProtocol;
-import com.acgist.taoyao.signal.protocol.platform.ShutdownProtocol;
+import com.acgist.taoyao.signal.protocol.media.MediaRebootProtocol;
+import com.acgist.taoyao.signal.protocol.media.MediaShutdownProtocol;
+import com.acgist.taoyao.signal.protocol.platform.PlatformRebootProtocol;
+import com.acgist.taoyao.signal.protocol.platform.PlatformScriptProtocol;
+import com.acgist.taoyao.signal.protocol.platform.PlatformShutdownProtocol;
+import com.acgist.taoyao.signal.protocol.system.SystemRebootProtocol;
+import com.acgist.taoyao.signal.protocol.system.SystemShutdownProtocol;
 import com.acgist.taoyao.signal.service.SecurityService;
 import com.acgist.taoyao.signal.service.impl.SecurityServiceImpl;
 
@@ -42,24 +46,52 @@ public class SignalAutoConfiguration {
 	}
 	
 	@Bean
-	@ConditionalOnProperty(prefix = "taoyao.signal.platform.script", name = "enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnProperty(prefix = "taoyao.script", name = "enabled", havingValue = "true", matchIfMissing = true)
 	@ConditionalOnMissingBean
-	public ScriptProtocol scriptProtocol() {
-		return new ScriptProtocol();
+	public MediaRebootProtocol mediaRebootProtocol() {
+		return new MediaRebootProtocol();
 	}
 	
 	@Bean
-	@ConditionalOnProperty(prefix = "taoyao.signal.platform.script", name = "enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnProperty(prefix = "taoyao.script", name = "enabled", havingValue = "true", matchIfMissing = true)
 	@ConditionalOnMissingBean
-	public ScriptListener scriptListener() {
-		return new ScriptListener();
+	public MediaShutdownProtocol mediaShutdownProtocol() {
+		return new MediaShutdownProtocol();
 	}
 	
 	@Bean
-	@ConditionalOnProperty(prefix = "taoyao.signal.platform.shutdown", name = "enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnProperty(prefix = "taoyao.script", name = "enabled", havingValue = "true", matchIfMissing = true)
 	@ConditionalOnMissingBean
-	public ShutdownProtocol shutdownProtocol() {
-		return new ShutdownProtocol();
+	public SystemRebootProtocol systemRebootProtocol() {
+		return new SystemRebootProtocol();
+	}
+	
+	@Bean
+	@ConditionalOnProperty(prefix = "taoyao.script", name = "enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnMissingBean
+	public SystemShutdownProtocol systemShutdownProtocol() {
+		return new SystemShutdownProtocol();
+	}
+	
+	@Bean
+	@ConditionalOnProperty(prefix = "taoyao.script", name = "enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnMissingBean
+	public PlatformRebootProtocol platformRebootProtocol() {
+		return new PlatformRebootProtocol();
+	}
+	
+	@Bean
+	@ConditionalOnProperty(prefix = "taoyao.script", name = "enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnMissingBean
+	public PlatformScriptProtocol platformScriptProtocol() {
+		return new PlatformScriptProtocol();
+	}
+	
+	@Bean
+	@ConditionalOnProperty(prefix = "taoyao.script", name = "enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnMissingBean
+	public PlatformShutdownProtocol platformShutdownProtocol() {
+		return new PlatformShutdownProtocol();
 	}
 	
 }

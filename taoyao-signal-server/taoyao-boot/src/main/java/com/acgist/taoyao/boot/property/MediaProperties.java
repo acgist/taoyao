@@ -47,5 +47,10 @@ public class MediaProperties {
 	 */
 	@Schema(title = "流畅视频", description = "流畅视频")
 	private MediaVideoProperties flowVideo;
+	/**
+	 * 录像存放路径
+	 */
+	@Schema(title = "录像存放路径", description = "录像存放路径")
+	private String recordStoragePath;
 
 }

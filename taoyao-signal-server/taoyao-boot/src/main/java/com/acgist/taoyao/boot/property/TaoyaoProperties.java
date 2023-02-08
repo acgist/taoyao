@@ -27,10 +27,21 @@ public class TaoyaoProperties {
 	@Schema(title = "项目名称", description = "项目名称")
 	private String name;
 	/**
+	 * 服务节点ID
+	 * 集群使用
+	 */
+	@Schema(title = "服务节点ID", description = "服务节点ID")
+	private String nodeId;
+	/**
 	 * 超时时间
 	 */
 	@Schema(title = "超时时间", description = "超时时间")
 	private Long timeout;
+	/**
+	 * 最大超时时间
+	 */
+	@Schema(title = "最大超时时间", description = "最大超时时间")
+	private Long maxTimeout;
 	/**
 	 * 项目版本
 	 */
@@ -41,11 +52,5 @@ public class TaoyaoProperties {
 	 */
 	@Schema(title = "项目描述", description = "项目描述")
 	private String description;
-	/**
-	 * 服务节点ID
-	 * 集群使用
-	 */
-	@Schema(title = "服务节点ID", description = "服务节点ID")
-	private String serverId;
 
 }

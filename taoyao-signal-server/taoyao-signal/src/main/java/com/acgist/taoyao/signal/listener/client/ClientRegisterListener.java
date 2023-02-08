@@ -8,8 +8,12 @@ import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.client.ClientSessionStatus;
 import com.acgist.taoyao.signal.event.client.ClientRegisterEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
+import com.acgist.taoyao.signal.mediasoup.MediasoupClient;
+import com.acgist.taoyao.signal.mediasoup.MediasoupClientManager;
 import com.acgist.taoyao.signal.protocol.client.ClientConfigProtocol;
 import com.acgist.taoyao.signal.protocol.client.ClientOnlineProtocol;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 终端注册监听
@@ -18,6 +22,7 @@ import com.acgist.taoyao.signal.protocol.client.ClientOnlineProtocol;
  * 
  * @author acgist
  */
+@Slf4j
 @EventListener
 public class ClientRegisterListener extends ApplicationListenerAdapter<ClientRegisterEvent> {
 
@@ -25,7 +30,9 @@ public class ClientRegisterListener extends ApplicationListenerAdapter<ClientReg
 	private ClientConfigProtocol configProtocol;
 	@Autowired
 	private ClientOnlineProtocol onlineProtocol;
-
+	@Autowired
+	private MediasoupClientManager mediasoupClientManager;
+	
 	@Async
 	@Override
 	public void onApplicationEvent(ClientRegisterEvent event) {
@@ -43,6 +50,15 @@ public class ClientRegisterListener extends ApplicationListenerAdapter<ClientReg
 		status.setMac(event.getMac());
 		status.setSignal(event.getSignal());
 		status.setBattery(event.getBattery());
+		status.setCharging(event.getCharging());
+		status.setMediasoup(event.getMediasoup());
+		// 设置终端媒体
+		final MediasoupClient mediasoupClient = this.mediasoupClientManager.mediasoupClient(event.getMediasoup());
+		if(mediasoupClient == null) {
+			log.warn("Mediasoup服务无效：{}", event.getMediasoup());
+		} else {
+			session.mediasoupClient(mediasoupClient);
+		}
 		// 广播上线事件
 		this.clientSessionManager.broadcast(
 			sn,

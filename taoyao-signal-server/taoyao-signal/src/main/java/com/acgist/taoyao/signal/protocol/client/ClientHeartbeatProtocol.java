@@ -17,10 +17,10 @@ import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 @Protocol
 public class ClientHeartbeatProtocol extends ProtocolMapAdapter {
 
-	public static final Integer PID = 2005;
+	public static final String SIGNAL = "client::heartbeat";
 	
 	public ClientHeartbeatProtocol() {
-		super(PID, "心跳信令");
+		super("心跳信令", SIGNAL);
 	}
 	
 	@Override
@@ -31,6 +31,7 @@ public class ClientHeartbeatProtocol extends ProtocolMapAdapter {
 		final ClientSessionStatus status = session.status();
 		status.setSignal((Integer) body.get(ClientSessionStatus.SIGNAL));
 		status.setBattery((Integer) body.get(ClientSessionStatus.BATTERY));
+		status.setCharging((Boolean) body.get(ClientSessionStatus.CHARGING));
 		status.setLastHeartbeat(LocalDateTime.now());
 	}
 

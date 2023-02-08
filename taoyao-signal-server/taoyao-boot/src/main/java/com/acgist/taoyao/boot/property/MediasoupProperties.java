@@ -7,7 +7,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Mediasoup配置
+ * 媒体终端配置
  * 
  * @author acgist
  */
@@ -16,6 +16,11 @@ import lombok.Setter;
 @Schema(title = "Mediasoup配置", description = "Mediasoup配置")
 public class MediasoupProperties {
 
+	/**
+	 * Mediasoup名称
+	 */
+	@Schema(title = "Mediasoup名称", description = "Mediasoup名称")
+	private String name;
 	/**
 	 * Mediasoup主机
 	 */

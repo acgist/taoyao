@@ -1,6 +1,9 @@
 @font-face {
   font-family: taoyao;
-  src: url(./taoyao.ttf?oc7k8r) format("truetype"), url(./taoyao.woff?oc7k8r) format("woff"), url(./taoyao.svg?oc7k8r#taoyao) format("svg");
+  src:
+    url(./taoyao.ttf?oc7k8r) format("truetype"),
+    url(./taoyao.woff?oc7k8r) format("woff"),
+    url(./taoyao.svg?oc7k8r#taoyao) format("svg");
   font-weight: 400;
   font-style: normal;
   font-display: block;

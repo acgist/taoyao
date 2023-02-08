@@ -21,7 +21,7 @@ public class WebSocketSession extends ClientSessionAdapter<Session> {
 	public WebSocketSession(Session instance) {
 		super(instance);
 	}
-
+	
 	@Override
 	public void push(Message message) {
 		synchronized (this.instance) {

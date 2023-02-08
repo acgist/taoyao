@@ -20,8 +20,8 @@ public class RoomCreateEvent extends ApplicationEventAdapter {
 	
 	private static final long serialVersionUID = 1L;
 
-	public RoomCreateEvent(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		super(sn, body, message, session);
+	public RoomCreateEvent(Map<?, ?> body, Message message, ClientSession session) {
+		super(body, message, session);
 	}
 
 }

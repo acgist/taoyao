@@ -2,6 +2,8 @@ package com.acgist.taoyao.signal.client;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.acgist.taoyao.signal.mediasoup.MediasoupClient;
+
 /**
  * 会话适配器
  * 
@@ -29,6 +31,10 @@ public abstract class ClientSessionAdapter<T extends AutoCloseable> implements C
 	 * 终端状态
 	 */
 	protected ClientSessionStatus status;
+	/**
+	 * Mediasoup终端
+	 */
+	protected MediasoupClient mediasoupClient;
 	
 	protected ClientSessionAdapter(T instance) {
 		this.time = System.currentTimeMillis();
@@ -79,6 +85,16 @@ public abstract class ClientSessionAdapter<T extends AutoCloseable> implements C
 	}
 	
 	@Override
+	public MediasoupClient mediasoupClient() {
+		return this.mediasoupClient;
+	}
+	
+	@Override
+	public void mediasoupClient(MediasoupClient mediasoupClient) {
+		this.mediasoupClient = mediasoupClient;
+	}
+	
+	@Override
 	public void close() throws Exception {
 		this.instance.close();
 	}
@@ -88,6 +104,11 @@ public abstract class ClientSessionAdapter<T extends AutoCloseable> implements C
 	 */
 	public T instance() {
 		return this.instance;
+	}
+	
+	@Override
+	public String toString() {
+		return this.getClass().getSimpleName() + " - " + this.sn;
 	}
 	
 }

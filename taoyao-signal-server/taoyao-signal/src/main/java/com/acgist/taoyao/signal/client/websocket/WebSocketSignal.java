@@ -6,7 +6,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.signal.client.ClientSessionManager;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
-import com.acgist.taoyao.signal.protocol.platform.ErrorProtocol;
+import com.acgist.taoyao.signal.protocol.platform.PlatformErrorProtocol;
 
 import jakarta.websocket.OnClose;
 import jakarta.websocket.OnError;
@@ -25,9 +25,9 @@ import lombok.extern.slf4j.Slf4j;
 @ServerEndpoint(value = "/websocket.signal")
 public class WebSocketSignal {
 	
-	private static ErrorProtocol errorProtocol;
 	private static ProtocolManager protocolManager;
 	private static ClientSessionManager clientSessionManager;
+	private static PlatformErrorProtocol platformErrorProtocol;
 	
 	@OnOpen
 	public void open(Session session) {
@@ -42,7 +42,7 @@ public class WebSocketSignal {
 			WebSocketSignal.protocolManager.execute(message.strip(), session);
 		} catch (Exception e) {
 			log.error("处理会话消息异常", e);
-			final Message errorMessage = WebSocketSignal.errorProtocol.build();
+			final Message errorMessage = WebSocketSignal.platformErrorProtocol.build();
 			if(e instanceof MessageCodeException code) {
 				errorMessage.setCode(code.getCode(), code.getMessage());
 			}
@@ -84,11 +84,6 @@ public class WebSocketSignal {
 	}
 
 	@Autowired
-	public void setErrorProtocol(ErrorProtocol errorProtocol) {
-		WebSocketSignal.errorProtocol = errorProtocol;
-	}
-
-	@Autowired
 	public void setProtocolManager(ProtocolManager protocolManager) {
 		WebSocketSignal.protocolManager = protocolManager;
 	}
@@ -96,6 +91,11 @@ public class WebSocketSignal {
 	@Autowired
 	public void setClientSessionManager(ClientSessionManager clientSessionManager) {
 		WebSocketSignal.clientSessionManager = clientSessionManager;
+	}
+	
+	@Autowired
+	public void setPlatformErrorProtocol(PlatformErrorProtocol platformErrorProtocol) {
+		WebSocketSignal.platformErrorProtocol = platformErrorProtocol;
 	}
 	
 }

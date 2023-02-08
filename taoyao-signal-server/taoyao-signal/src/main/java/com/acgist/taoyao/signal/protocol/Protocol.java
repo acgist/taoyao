@@ -6,29 +6,27 @@ import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
 
 /**
- * 信令
+ * 信令协议
  * 
- * TODO：改为字符
- * 
- * 1000~1999：平台信令
- * 2000~2999：终端信令
- * 3000~3999：房间信令
- * 5000~5999：媒体信令
- * 6000~6999：媒体信令（Mediasoup）
+ * room::     房间信令
+ * media::    媒体信令
+ * client::   终端信令
+ * system::   系统信令
+ * platform:: 平台信令
  * 
  * @author acgist
  */
 public interface Protocol {
 	
 	/**
-	 * @return 信令协议标识
-	 */
-	Integer pid();
-	
-	/**
-	 * @return 信令名称
+	 * @return 信令协议名称
 	 */
 	String name();
+	
+	/**
+	 * @return 信令协议标识
+	 */
+	String signal();
 	
 	/**
 	 * 鉴权

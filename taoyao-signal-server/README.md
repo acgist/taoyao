@@ -7,8 +7,8 @@
 |taoyao|桃夭|桃之夭夭灼灼其华|
 |taoyao-boot|基础|基础模块|
 |taoyao-node|集群|集群模块（可选）|
-|taoyao-signal|信令|信令服务|
-|taoyao-server|服务|启动服务|
+|taoyao-signal|信令|信令模块|
+|taoyao-server|服务|启动模块|
 
 ## 模式
 

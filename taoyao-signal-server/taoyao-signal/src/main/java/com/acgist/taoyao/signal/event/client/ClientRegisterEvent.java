@@ -21,36 +21,50 @@ public class ClientRegisterEvent extends ApplicationEventAdapter {
 	
 	private static final long serialVersionUID = 1L;
 
-	public ClientRegisterEvent(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		super(sn, body, message, session);
+	public ClientRegisterEvent(Map<?, ?> body, Message message, ClientSession session) {
+		super(body, message, session);
 	}
 	
 	/**
-	 * @return IP
+	 * @return {@link ClientSessionStatus#IP}
 	 */
 	public String getIp() {
 		return this.get(ClientSessionStatus.IP);
 	}
 	
 	/**
-	 * @return Mac
+	 * @return {@link ClientSessionStatus#MAC}
 	 */
 	public String getMac() {
 		return this.get(ClientSessionStatus.MAC);
 	}
 	
 	/**
-	 * @return Signal
+	 * @return {@link ClientSessionStatus#SIGNAL}
 	 */
 	public Integer getSignal() {
 		return this.get(ClientSessionStatus.SIGNAL);
 	}
 	
 	/**
-	 * @return Battery
+	 * @return {@link ClientSessionStatus#BATTERY}
 	 */
 	public Integer getBattery() {
 		return this.get(ClientSessionStatus.BATTERY);
+	}
+	
+	/**
+	 * @return {@link ClientSessionStatus#CHARGING}
+	 */
+	public Boolean getCharging() {
+		return this.get(ClientSessionStatus.CHARGING);
+	}
+	
+	/**
+	 * @return {@link ClientSessionStatus#MEDIASOUP}
+	 */
+	public String getMediasoup() {
+		return this.get(ClientSessionStatus.MEDIASOUP);
 	}
 
 }

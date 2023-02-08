@@ -1,6 +1,7 @@
 package com.acgist.taoyao.signal.client;
 
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.signal.mediasoup.MediasoupClient;
 
 /**
  * 终端会话
@@ -67,5 +68,15 @@ public interface ClientSession extends AutoCloseable {
 	 * @return 会话实例是否匹配
 	 */
 	<M extends AutoCloseable> boolean matchInstance(M instance);
+	
+	/**
+	 * @return Mediasoup终端
+	 */
+	MediasoupClient mediasoupClient();
+	
+	/**
+	 * @param mediasoupClient Mediasoup终端
+	 */
+	void mediasoupClient(MediasoupClient mediasoupClient);
 	
 }

@@ -22,13 +22,13 @@ import lombok.extern.slf4j.Slf4j;
 @Protocol
 public class ClientUnicastProtocol extends ProtocolMapAdapter {
 
-	public static final Integer PID = 2006;
+	public static final String SIGNAL = "client::unicast";
 	
 	@Autowired
 	private ClientSessionManager clientSessionManager;
 	
 	public ClientUnicastProtocol() {
-		super(PID, "单播信令");
+		super("单播信令", SIGNAL);
 	}
 
 	@Override

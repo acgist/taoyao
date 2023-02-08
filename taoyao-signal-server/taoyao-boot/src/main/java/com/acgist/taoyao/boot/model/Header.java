@@ -43,6 +43,6 @@ public class Header implements Serializable {
 	 * 协议标识
 	 */
 	@Schema(title = "协议标识", description = "协议标识")
-	private Integer pid;
+	private String signal;
 	
 }

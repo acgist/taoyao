@@ -16,13 +16,13 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 @Protocol
 public class ClientListProtocol extends ProtocolAdapter {
 
-	public static final Integer PID = 2999;
+	public static final String SIGNAL = "client::list";
 	
 	@Autowired
 	private ClientSessionManager clientSessionManager;
 	
 	public ClientListProtocol() {
-		super(PID, "终端列表信令");
+		super("终端列表信令", SIGNAL);
 	}
 
 	@Override

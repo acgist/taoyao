@@ -20,8 +20,8 @@ public class RoomEnterEvent extends ApplicationEventAdapter {
 	
 	private static final long serialVersionUID = 1L;
 
-	public RoomEnterEvent(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		super(sn, body, message, session);
+	public RoomEnterEvent(Map<?, ?> body, Message message, ClientSession session) {
+		super(body, message, session);
 	}
 
 }

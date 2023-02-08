@@ -16,10 +16,10 @@ import lombok.extern.slf4j.Slf4j;
 @Protocol
 public class ClientCloseProtocol extends ProtocolAdapter {
 
-	public static final Integer PID = 2001;
+	public static final String SIGNAL = "client::close";
 	
 	public ClientCloseProtocol() {
-		super(PID, "终端关闭信令");
+		super("终端关闭信令", SIGNAL);
 	}
 
 	@Override

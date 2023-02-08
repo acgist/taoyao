@@ -16,15 +16,15 @@ import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 @Protocol
 public class RoomEnterProtocol extends ProtocolMapAdapter {
 
-	public static final Integer PID = 4002;
+	public static final String SIGNAL = "room::enter";
 	
 	public RoomEnterProtocol() {
-		super(PID, "进入房间信令");
+		super("进入房间信令", SIGNAL);
 	}
 
 	@Override
 	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		this.publishEvent(new RoomEnterEvent(sn, body, message, session));
+		this.publishEvent(new RoomEnterEvent(body, message, session));
 	}
 
 }

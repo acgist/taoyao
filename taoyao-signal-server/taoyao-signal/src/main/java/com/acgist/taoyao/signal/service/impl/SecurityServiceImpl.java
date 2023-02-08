@@ -18,11 +18,9 @@ public class SecurityServiceImpl implements SecurityService {
 	@Override
 	public boolean authenticate(String username, String password) {
 		if(
-			Boolean.FALSE.equals(this.securityProperties.getEnabled()) ||
-			(
-				StringUtils.equals(this.securityProperties.getUsername(), username) &&
-				StringUtils.equals(this.securityProperties.getPassword(), password)
-			)
+			Boolean.TRUE.equals(this.securityProperties.getEnabled()) &&
+			StringUtils.equals(this.securityProperties.getUsername(), username) &&
+			StringUtils.equals(this.securityProperties.getPassword(), password)
 		) {
 			return true;
 		}

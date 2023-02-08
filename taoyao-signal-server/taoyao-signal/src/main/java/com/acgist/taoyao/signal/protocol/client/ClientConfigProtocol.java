@@ -22,7 +22,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 @Protocol
 public class ClientConfigProtocol extends ProtocolAdapter {
 
-	public static final Integer PID = 2004;
+	public static final String SIGNAL = "client::config";
 	
 	@Autowired
 	private MediaProperties mediaProperties;
@@ -30,7 +30,7 @@ public class ClientConfigProtocol extends ProtocolAdapter {
 	private WebrtcProperties webrtcProperties;
 	
 	public ClientConfigProtocol() {
-		super(PID, "信令协议标识");
+		super("下发配置信令", SIGNAL);
 	}
 
 	@Override

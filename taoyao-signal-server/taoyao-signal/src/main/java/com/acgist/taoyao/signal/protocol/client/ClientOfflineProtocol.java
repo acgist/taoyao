@@ -13,10 +13,10 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 @Protocol
 public class ClientOfflineProtocol extends ProtocolAdapter {
 	
-	public static final Integer PID = 2003;
+	public static final String SIGNAL = "client::offline";
 
 	public ClientOfflineProtocol() {
-		super(PID, "终端下线信令");
+		super("终端下线信令", SIGNAL);
 	}
 
 	@Override

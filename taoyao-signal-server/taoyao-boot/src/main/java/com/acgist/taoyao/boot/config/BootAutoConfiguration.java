@@ -50,6 +50,7 @@ import com.acgist.taoyao.boot.controller.TaoyaoErrorController;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.property.IdProperties;
 import com.acgist.taoyao.boot.property.MediaProperties;
+import com.acgist.taoyao.boot.property.ScriptProperties;
 import com.acgist.taoyao.boot.property.SecurityProperties;
 import com.acgist.taoyao.boot.property.TaoyaoProperties;
 import com.acgist.taoyao.boot.property.WebrtcProperties;
@@ -77,7 +78,14 @@ import lombok.extern.slf4j.Slf4j;
 @Configuration
 @EnableScheduling
 @EnableAspectJAutoProxy(exposeProxy = false)
-@EnableConfigurationProperties({ IdProperties.class, MediaProperties.class, TaoyaoProperties.class, WebrtcProperties.class, SecurityProperties.class })
+@EnableConfigurationProperties({
+	IdProperties.class,
+	MediaProperties.class,
+	ScriptProperties.class,
+	TaoyaoProperties.class,
+	WebrtcProperties.class,
+	SecurityProperties.class
+})
 public class BootAutoConfiguration {
 
 	@Value("${spring.application.name:taoyao}")
@@ -195,6 +203,7 @@ public class BootAutoConfiguration {
 	@PreDestroy
 	public void destroy() {
 		log.info("系统关闭：{}", this.name);
+		// TODO：通知关闭
 		// 刷出日志缓存
 		final ILoggerFactory factory = LoggerFactory.getILoggerFactory();
 		if (factory instanceof LoggerContext context) {

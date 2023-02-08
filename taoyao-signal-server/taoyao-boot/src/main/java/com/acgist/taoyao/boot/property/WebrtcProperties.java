@@ -20,29 +20,6 @@ import lombok.Setter;
 public class WebrtcProperties {
 
 	/**
-	 * 架构模型
-	 * 
-	 * @author acgist
-	 */
-	public enum Framework {
-		
-		/**
-		 * MESH架构
-		 */
-		MESH,
-		/**
-		 * MOON架构
-		 */
-		MOON;
-		
-	}
-
-	/**
-	 * 模型
-	 */
-	@Schema(title = "架构模型", description = "WebRTC架构模型")
-	private Framework framework;
-	/**
 	 * 媒体最小端口
 	 */
 	@Schema(title = "媒体最小端口", description = "媒体最小端口")
@@ -62,11 +39,6 @@ public class WebrtcProperties {
 	 */
 	@Schema(title = "turn服务器", description = "turn服务器")
 	private String[] turn;
-	/**
-	 * 信令配置
-	 */
-	@Schema(title = "信令配置", description = "信令配置")
-	private SignalProperties signal;
 	/**
 	 * Mediasoup配置
 	 */

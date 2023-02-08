@@ -15,7 +15,7 @@ import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.signal.client.ClientSession;
 import com.acgist.taoyao.signal.client.ClientSessionManager;
 import com.acgist.taoyao.signal.protocol.client.ClientRegisterProtocol;
-import com.acgist.taoyao.signal.protocol.platform.ErrorProtocol;
+import com.acgist.taoyao.signal.protocol.platform.PlatformErrorProtocol;
 import com.acgist.taoyao.signal.service.SecurityService;
 
 import jakarta.annotation.PostConstruct;
@@ -33,42 +33,42 @@ public class ProtocolManager {
 	/**
 	 * 协议映射
 	 */
-	private Map<Integer, Protocol> protocolMapping = new ConcurrentHashMap<>();
+	private Map<String, Protocol> protocolMapping = new ConcurrentHashMap<>();
 	
 	@Autowired
 	private ApplicationContext context;
 	@Autowired
-	private ErrorProtocol errorProtocol;
-	@Autowired
 	private SecurityService securityService;
 	@Autowired
 	private ClientSessionManager clientSessionManager;
+	@Autowired
+	private PlatformErrorProtocol platformErrorProtocol;
 	
 	@PostConstruct
 	public void init() {
 		final Map<String, Protocol> map = this.context.getBeansOfType(Protocol.class);
 		map.entrySet().stream()
-		.sorted((a, z) -> Integer.compare(a.getValue().pid(), z.getValue().pid()))
+		.sorted((a, z) -> a.getValue().signal().compareTo(z.getValue().signal()))
 		.forEach(e -> {
 			final String k = e.getKey();
 			final Protocol v = e.getValue();
-			final Integer pid = v.pid();
 			final String name = v.name();
-			if(this.protocolMapping.containsKey(pid)) {
-				throw MessageCodeException.of("存在重复信令协议：" + pid);
+			final String signal = v.signal();
+			if(this.protocolMapping.containsKey(signal)) {
+				throw MessageCodeException.of("存在重复信令协议：" + signal);
 			}
-			log.info("注册信令协议：{}-{}-{}", pid, String.format("%32s", k), name);
-			this.protocolMapping.put(pid, v);
+			log.info("注册信令协议：{} - {} - {}", String.format("%-32s", signal), String.format("%-32s", k), name);
+			this.protocolMapping.put(signal, v);
 		});
 	}
 	
 	/**
-	 * @param pid 信令标识
+	 * @param signal 信令标识
 	 * 
 	 * @return 信令
 	 */
-	public Protocol protocol(Integer pid) {
-		return this.protocolMapping.get(pid);
+	public Protocol protocol(String signal) {
+		return this.protocolMapping.get(signal);
 	}
 	
 	/**
@@ -84,31 +84,31 @@ public class ProtocolManager {
 		final Message value = JSONUtils.toJava(message, Message.class);
 		if(value == null) {
 			log.warn("消息格式错误（解析失败）：{}", message);
-			session.push(this.errorProtocol.build("消息格式错误（解析失败）"));
+			session.push(this.platformErrorProtocol.build("消息格式错误（解析失败）"));
 			return;
 		}
 		final Header header = value.getHeader();
 		if(header == null) {
 			log.warn("消息格式错误（没有头部）：{}", message);
-			session.push(this.errorProtocol.build("消息格式错误（没有头部）"));
+			session.push(this.platformErrorProtocol.build("消息格式错误（没有头部）"));
 			return;
 		}
 		final String v = header.getV();
 		final String id = header.getId();
 		final String sn = header.getSn();
-		final Integer pid = header.getPid();
-		if(v == null || id == null || sn == null || pid == null) {
+		final String signal = header.getSignal();
+		if(v == null || id == null || sn == null || signal == null) {
 			log.warn("消息格式错误（缺失头部关键参数）：{}", message);
-			session.push(this.errorProtocol.build("消息格式错误（缺失头部关键参数）"));
+			session.push(this.platformErrorProtocol.build("消息格式错误（缺失头部关键参数）"));
 			return;
 		}
 		// 设置缓存ID
-		this.errorProtocol.set(id);
+		this.platformErrorProtocol.set(id);
 		// 开始处理协议
-		final Protocol protocol = this.protocolMapping.get(pid);
+		final Protocol protocol = this.protocolMapping.get(signal);
 		if(protocol == null) {
 			log.warn("不支持的信令协议：{}", message);
-			session.push(this.errorProtocol.build("不支持的信令协议：" + pid));
+			session.push(this.platformErrorProtocol.build("不支持的信令协议：" + signal));
 			return;
 		}
 		if(protocol instanceof ClientRegisterProtocol) {
@@ -117,7 +117,7 @@ public class ProtocolManager {
 			protocol.execute(sn, value, session);
 		} else {
 			log.warn("终端会话没有授权：{}", message);
-			session.push(this.errorProtocol.build(MessageCode.CODE_3401, "终端会话没有授权"));
+			session.push(this.platformErrorProtocol.build(MessageCode.CODE_3401, "终端会话没有授权"));
 		}
 	}
 	

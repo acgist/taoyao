@@ -22,7 +22,7 @@ spring:
   profiles:
     active: dev
   application:
-    name: taoyao-server
+    name: taoyao-signal-server
   servlet:
     multipart:
       max-file-size: 256MB
@@ -48,11 +48,12 @@ spring:
       thread-name-prefix: ${spring.application.name}-scheduling-
 taoyao:
   url: https://gitee.com/acgist/taoyao
-  name: 桃夭
+  name: 桃夭信令服务
+  node-id: 1
   timeout: 5000
+  max-timeout: 120000
   version: 1.0.0
-  description: WebRTC信令服务
-  server-id: 1
+  description: 桃夭WebRTC信令服务
   id:
     sn: 0
     max-index: 999999
@@ -91,6 +92,8 @@ taoyao:
       bitrate: 600
       frame-rate: 16
       resolution: 640*480
+    # 录像配置
+    record-storage-path: /data/record
   # WebRTC配置
   webrtc:
     # STUN服务
@@ -99,37 +102,30 @@ taoyao:
       - stun:stun2.l.google.com:19302
       - stun:stun3.l.google.com:19302
       - stun:stun4.l.google.com:19302
-    # TURN服务：coturn
+    # TURN服务
     turn:
       - turn:127.0.0.1:8888
       - turn:127.0.0.1:8888
       - turn:127.0.0.1:8888
       - turn:127.0.0.1:8888
-    # 信令服务配置
-    signal:
-      host: 192.168.1.100
-      port: ${server.port:8888}
-      schema: wss
-      websocket: /websocket.signal
-    # Mediasoup服务配置：可以部署多个简单实现负载均衡
+    # 媒体配置
     mediasoup-list:
-      - host: 127.0.0.1
+      - name: mediasoup-local-a
+        host: localhost
         #host: 192.168.8.110
         port: 4443
         schema: wss
         websocket: /websocket.signal
         username: taoyao
         password: taoyao
-      - host: 127.0.0.1
+      - name: mediasoup-local-z
+        host: localhost
         #host: 192.168.8.110
         port: 4443
         schema: wss
         websocket: /websocket.signal
         username: taoyao
         password: taoyao
-  # 录像配置
-  record:
-    storage: /data/record
   # 安全配置
   security:
     enabled: true
@@ -140,10 +136,30 @@ taoyao:
   # 定时任务
   scheduled:
     session: 0 * * * * ?
-  # 集群节点
-  node-list:
-    - host: localhost
-      port: 8888
-      username: ${taoyao.security.username:taoyao}
-      password: ${taoyao.security.username:taoyao}
-      
+  # 集群配置
+  node:
+    enabled: false
+    # 节点列表
+    node-list:
+      - host: localhost
+        port: 8888
+        username: ${taoyao.security.username:taoyao}
+        password: ${taoyao.security.username:taoyao}
+  # 脚本配置
+  script:
+    # Linux
+    linux:
+      media-reboot: pm2 restart taoyao-media-server
+      media-shutdown: pm2 stop taoyao-media-server
+      system-reboot: reboot
+      system-shutdown: shutdown now
+      platform-reboot: systemctl restart taoyao-signal-server
+      platform-shutdown: systemctl stop taoyao-signal-server
+    # Windows
+    windows:
+      media-reboot: pm2 restart taoyao-media-server
+      media-shutdown: pm2 stop taoyao-media-server
+      system-reboot: shutdown -s -t 0
+      system-shutdown: shutdown -r -t 0
+      platform-reboot: net restart taoyao-signal-server
+      platform-shutdown: net stop taoyao-signal-server

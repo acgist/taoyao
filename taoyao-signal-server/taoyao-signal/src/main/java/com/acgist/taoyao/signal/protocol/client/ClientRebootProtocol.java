@@ -13,10 +13,10 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 @Protocol
 public class ClientRebootProtocol extends ProtocolAdapter {
 
-	public static final Integer PID = 2997;
+	public static final String SIGNAL = "client::reboot";
 	
 	public ClientRebootProtocol() {
-		super(PID, "重启终端信令");
+		super("重启终端信令", SIGNAL);
 	}
 
 	@Override
