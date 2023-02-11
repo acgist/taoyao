@@ -3,9 +3,9 @@ package com.acgist.taoyao.signal.event.client;
 import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.client.ClientSession;
-import com.acgist.taoyao.signal.client.ClientSessionStatus;
+import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
+import com.acgist.taoyao.signal.protocol.Constant;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,50 +21,36 @@ public class ClientRegisterEvent extends ApplicationEventAdapter {
 	
 	private static final long serialVersionUID = 1L;
 
-	public ClientRegisterEvent(Map<?, ?> body, Message message, ClientSession session) {
-		super(body, message, session);
+	public ClientRegisterEvent(Map<?, ?> body, Client client, Message message) {
+		super(body, client, message);
 	}
 	
 	/**
-	 * @return {@link ClientSessionStatus#IP}
+	 * @return {@link Constant#IP}
 	 */
 	public String getIp() {
-		return this.get(ClientSessionStatus.IP);
+		return this.get(Constant.IP);
 	}
 	
 	/**
-	 * @return {@link ClientSessionStatus#MAC}
-	 */
-	public String getMac() {
-		return this.get(ClientSessionStatus.MAC);
-	}
-	
-	/**
-	 * @return {@link ClientSessionStatus#SIGNAL}
+	 * @return {@link Constant#SIGNAL}
 	 */
 	public Integer getSignal() {
-		return this.get(ClientSessionStatus.SIGNAL);
+		return this.get(Constant.SIGNAL);
 	}
 	
 	/**
-	 * @return {@link ClientSessionStatus#BATTERY}
+	 * @return {@link Constant#BATTERY}
 	 */
 	public Integer getBattery() {
-		return this.get(ClientSessionStatus.BATTERY);
+		return this.get(Constant.BATTERY);
 	}
 	
 	/**
-	 * @return {@link ClientSessionStatus#CHARGING}
+	 * @return {@link Constant#CHARGING}
 	 */
 	public Boolean getCharging() {
-		return this.get(ClientSessionStatus.CHARGING);
-	}
-	
-	/**
-	 * @return {@link ClientSessionStatus#MEDIASOUP}
-	 */
-	public String getMediasoup() {
-		return this.get(ClientSessionStatus.MEDIASOUP);
+		return this.get(Constant.CHARGING);
 	}
 
 }

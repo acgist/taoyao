@@ -1,5 +1,7 @@
 package com.acgist.taoyao.signal.controller;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -33,19 +35,20 @@ public class RoomController {
 	@GetMapping("/list")
 	@ApiResponse(content = @Content(schema = @Schema(implementation = Room.class)))
 	public Message list() {
-		return Message.success(this.roomManager.roomList());
+		return Message.success(this.roomManager.status());
 	}
 
 	@Operation(summary = "房间状态", description = "房间状态")
 	@GetMapping("/status/{id}")
-	public Message status(@PathVariable String id) {
-		return Message.success(this.roomManager.room(id));
+	public Message status(@PathVariable Long id) {
+		return Message.success(this.roomManager.status(id));
 	}
 	
 	@Operation(summary = "房间终端列表", description = "房间终端列表")
 	@GetMapping("/list/client/{id}")
-	public Message listClient(@PathVariable String id) {
-		return Message.success(this.roomManager.snList(id));
+	public Message listClient(@PathVariable Long id) {
+		final Room room = this.roomManager.room(id);
+		return Message.success(room == null ? List.of() : room.clientStatus());
 	}
 	
 }

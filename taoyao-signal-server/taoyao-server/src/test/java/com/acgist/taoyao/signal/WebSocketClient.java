@@ -37,7 +37,7 @@ public class WebSocketClient {
 					@Override
 					public void onOpen(WebSocket webSocket) {
 						webSocket.sendText(String.format("""
-							{"header":{"pid":2000,"v":"1.0.0","id":"1","sn":"%s"},"body":{"username":"taoyao","password":"taoyao","ip":"127.0.0.1","mac":"00:00:00:00:00:00"}}
+							{"header":{"pid":2000,"v":"1.0.0","id":"1","sn":"%s"},"body":{"username":"taoyao","password":"taoyao","ip":"127.0.0.1"}}
 						""", sn), true);
 						Listener.super.onOpen(webSocket);
 					}

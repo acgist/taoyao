@@ -25,6 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SecurityInterceptor extends InterceptorAdapter {
 
+	/**
+	 * Basic认证
+	 */
+	private static final String BASIC = "Basic";
+	
 	private AntPathMatcher matcher = new AntPathMatcher();
 	
 	@Autowired
@@ -89,10 +94,10 @@ public class SecurityInterceptor extends InterceptorAdapter {
 		if(StringUtils.isEmpty(authorization)) {
 			return false;
 		}
-		if(!StringUtils.startsWithIgnoreCase(authorization, SecurityProperties.BASIC)) {
+		if(!StringUtils.startsWithIgnoreCase(authorization, BASIC)) {
 			return false;
 		}
-		authorization = authorization.substring(SecurityProperties.BASIC.length()).strip();
+		authorization = authorization.substring(BASIC.length()).strip();
 		authorization = new String(Base64.getDecoder().decode(authorization));
 		final int index = authorization.indexOf(':');
 		if(index < 0) {

@@ -2,6 +2,11 @@ package com.acgist.taoyao.signal.room;
 
 import java.util.List;
 
+import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.client.ClientStatus;
+import com.acgist.taoyao.signal.mediasoup.MediasoupClient;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,43 +22,83 @@ import lombok.Setter;
 public class Room {
 	
 	/**
-	 * 房间标识
+	 * ID
 	 */
-	@Schema(title = "房间标识", description = "房间标识")
-	private String id;
+	private Long id;
 	/**
-	 * 房间名称
+	 * 密码
 	 */
-	@Schema(title = "房间名称", description = "房间名称")
-	private String name;
-	/**
-	 * 房间密码
-	 */
-	@Schema(title = "房间密码", description = "房间密码")
 	private String password;
 	/**
-	 * 终端会话标识列表
+	 * 状态
 	 */
-	@Schema(title = "终端会话标识列表", description = "终端会话标识列表")
-	private List<String> snList;
+	private RoomStatus status;
 	/**
-	 * 创建终端标识
+	 * 媒体服务
 	 */
-	@Schema(title = "创建终端标识", description = "创建终端标识")
-	private String creator;
+	private MediasoupClient mediasoupClient;
+	/**
+	 * 终端列表
+	 */
+	private List<Client> clients;
 	
 	/**
-	 * 新增终端会话标识
-	 * 
-	 * @param sn 终端会话标识
+	 * @return 终端状态列表
 	 */
-	public void addSn(String sn) {
-		synchronized (this.snList) {
-			if(this.snList.contains(sn)) {
+	public List<ClientStatus> clientStatus() {
+		return this.clients.stream()
+			.map(Client::status)
+			.toList();
+	}
+	
+	/**
+	 * 终端进入
+	 * 
+	 * @param client 终端
+	 */
+	public void enter(Client client) {
+		synchronized (this.clients) {
+			if(this.clients.contains(client)) {
 				return;
 			}
-			this.snList.add(sn);
+			if(this.clients.add(client)) {
+				this.status.setSnSize(this.status.getSnSize() + 1);
+			}
 		}
 	}
-
+	
+	/**
+	 * 终端离开
+	 * 
+	 * @param sn 终端
+	 */
+	public void leave(Client client) {
+		synchronized (this.clients) {
+			if(this.clients.remove(client)) {
+				this.status.setSnSize(this.status.getSnSize() - 1);
+			}
+		}
+	}
+	
+	/**
+	 * 广播消息
+	 * 
+	 * @param message 消息
+	 */
+	public void broadcast(Message message) {
+		this.clients.forEach(v -> v.push(v.sn(), message));
+	}
+	
+	/**
+	 * 广播消息
+	 * 
+	 * @param from 发送终端
+	 * @param message 消息
+	 */
+	public void broadcast(Client from, Message message) {
+		this.clients.stream()
+		.filter(v -> v != from)
+		.forEach(v -> v.push(v.sn(), message));
+	}
+	
 }

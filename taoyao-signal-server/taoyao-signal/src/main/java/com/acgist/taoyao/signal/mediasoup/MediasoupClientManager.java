@@ -9,11 +9,10 @@ import org.springframework.context.ApplicationContext;
 import com.acgist.taoyao.boot.annotation.Manager;
 import com.acgist.taoyao.boot.property.WebrtcProperties;
 
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 媒体终端管理
+ * 媒体服务终端管理
  * 
  * @author acgist
  */
@@ -27,24 +26,28 @@ public class MediasoupClientManager {
 	private ApplicationContext applicationContext;
 	
 	/**
-	 * 媒体终端列表
+	 * 媒体服务终端列表
 	 */
 	private Map<String, MediasoupClient> clientMap = new ConcurrentHashMap<>();
 	
-	@PostConstruct
+	/**
+	 * 加载媒体服务终端
+	 */
 	public void init() {
-		this.webrtcProperties.getMediasoupList().forEach(v -> {
+		this.webrtcProperties.getMediasoupList().stream()
+		.filter(v -> Boolean.TRUE.equals(v.getEnabled()))
+		.forEach(v -> {
 			final MediasoupClient client = this.applicationContext.getBean(MediasoupClient.class);
 			client.init(v);
 			this.clientMap.put(client.name(), client);
-			log.info("新建媒体终端（MediasoupClient）：{}-{}", v.getAddress(), client);
+			log.info("注册媒体服务终端：{}-{}", v.getAddress(), client);
 		});
 	}
 	
 	/**
-	 * @param name 媒体终端名称
+	 * @param name 媒体服务终端名称
 	 * 
-	 * @return 媒体终端
+	 * @return 媒体服务终端
 	 */
 	public MediasoupClient mediasoupClient(String name) {
 		return this.clientMap.get(name);

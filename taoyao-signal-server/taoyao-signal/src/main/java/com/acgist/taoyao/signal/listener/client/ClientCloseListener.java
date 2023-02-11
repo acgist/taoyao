@@ -3,12 +3,14 @@ package com.acgist.taoyao.signal.listener.client;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.EventListener;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
+import com.acgist.taoyao.signal.protocol.Constant;
 import com.acgist.taoyao.signal.protocol.client.ClientOfflineProtocol;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,20 +27,23 @@ public class ClientCloseListener extends ApplicationListenerAdapter<ClientCloseE
 	@Autowired
 	private ClientOfflineProtocol offlineProtocol;
 	
+	@Async
 	@Override
 	public void onApplicationEvent(ClientCloseEvent event) {
-		final ClientSession session = event.getSession();
-		if(!session.authorized()) {
+		final Client client = event.getClient();
+		if(!client.authorized()) {
 			// 没有授权终端
 			return;
 		}
 		final String sn = event.getSn();
 		log.info("关闭终端：{}", sn);
+		// 房间释放
+		this.roomManager.leave(client);
 		// 广播下线事件
 		final Message message = this.offlineProtocol.build(
-			Map.of("sn", sn)
+			Map.of(Constant.SN, sn)
 		);
-		this.clientSessionManager.broadcast(sn, message);
+		this.clientManager.broadcast(sn, message);
 		// TODO：释放连接
 		// TODO：释放房间
 		// TODO：退出帐号

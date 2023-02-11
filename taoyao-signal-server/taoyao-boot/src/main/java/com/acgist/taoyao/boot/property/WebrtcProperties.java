@@ -30,19 +30,19 @@ public class WebrtcProperties {
 	@Schema(title = "媒体最大端口", description = "媒体最大端口")
 	private Integer maxPort;
 	/**
-	 * stun服务器
+	 * STUN服务器
 	 */
-	@Schema(title = "stun服务器", description = "stun服务器")
+	@Schema(title = "STUN服务器", description = "STUN服务器")
 	private String[] stun;
 	/**
-	 * turn服务器
+	 * TURN服务器
 	 */
-	@Schema(title = "turn服务器", description = "turn服务器")
+	@Schema(title = "TURN服务器", description = "TURN服务器")
 	private String[] turn;
 	/**
-	 * Mediasoup配置
+	 * 媒体服务配置
 	 */
-	@Schema(title = "Mediasoup配置", description = "Mediasoup配置")
+	@Schema(title = "媒体服务配置", description = "媒体服务配置")
 	private List<MediasoupProperties> mediasoupList;
 	
 }

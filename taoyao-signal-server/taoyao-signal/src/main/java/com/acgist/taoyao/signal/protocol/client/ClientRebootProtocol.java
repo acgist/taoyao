@@ -2,7 +2,7 @@ package com.acgist.taoyao.signal.protocol.client;
 
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 
 /**
@@ -20,7 +20,8 @@ public class ClientRebootProtocol extends ProtocolAdapter {
 	}
 
 	@Override
-	public void execute(String sn, Message message, ClientSession session) {
+	public void execute(String sn, Client client, Message message) {
+		// 忽略
 	}
 	
 }

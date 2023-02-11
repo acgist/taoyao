@@ -3,7 +3,7 @@ package com.acgist.taoyao.signal.protocol.platform;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 
 /**
@@ -33,7 +33,7 @@ public class PlatformErrorProtocol extends ProtocolAdapter {
 	}
 	
 	@Override
-	public void execute(String sn, Message message, ClientSession session) {
+	public void execute(String sn, Client client, Message message) {
 	}
 
 	@Override
@@ -45,7 +45,8 @@ public class PlatformErrorProtocol extends ProtocolAdapter {
 			id = oldId;
 			this.idLocal.remove();
 		}
-		return super.build(id, code, message, body);
+		// 默认设置失败状态
+		return super.build(id, code == null ? MessageCode.CODE_9999 : code, message, body);
 	}
 	
 }

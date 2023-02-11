@@ -1,7 +1,7 @@
 package com.acgist.taoyao.signal.service;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.protocol.Protocol;
 
 /**
@@ -30,6 +30,6 @@ public interface SecurityService {
 	 * 
 	 * @return 是否成功
 	 */
-	boolean authenticate(Message message, ClientSession session, Protocol protocol);
+	boolean authenticate(Message message, Client session, Protocol protocol);
 	
 }

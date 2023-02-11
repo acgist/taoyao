@@ -9,8 +9,10 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.property.TaoyaoProperties;
 import com.acgist.taoyao.boot.service.IdService;
-import com.acgist.taoyao.signal.client.ClientSessionManager;
+import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
+import com.acgist.taoyao.signal.mediasoup.MediasoupClientManager;
+import com.acgist.taoyao.signal.room.RoomManager;
 
 /**
  * 信令适配器
@@ -22,11 +24,15 @@ public abstract class ProtocolAdapter implements Protocol {
 	@Autowired
 	protected IdService idService;
 	@Autowired
-	protected ApplicationContext context;
+	protected RoomManager roomManager;
+	@Autowired
+	protected ClientManager clientManager;
 	@Autowired
 	protected TaoyaoProperties taoyaoProperties;
 	@Autowired
-	protected ClientSessionManager clientSessionManager;
+	protected ApplicationContext applicationContext;
+	@Autowired
+	protected MediasoupClientManager mediasoupClientManager;
 	
 	/**
 	 * 信令名称
@@ -54,7 +60,7 @@ public abstract class ProtocolAdapter implements Protocol {
 	
 	@Override
 	public <E extends ApplicationEventAdapter> void publishEvent(E event) {
-		this.context.publishEvent(event);
+		this.applicationContext.publishEvent(event);
 	}
 	
 	@Override
@@ -73,6 +79,11 @@ public abstract class ProtocolAdapter implements Protocol {
 	}
 	
 	@Override
+	public Message build(String message, Object body) {
+		return this.build(null, null, message, body);
+	}
+	
+	@Override
 	public Message build(MessageCode code, String message, Object body) {
 		return this.build(null, code, message, body);
 	}
@@ -87,18 +98,15 @@ public abstract class ProtocolAdapter implements Protocol {
 			.id(id)
 			.signal(this.signal)
 			.build();
-		final Message build = Message.builder()
-			.header(header)
-			.build();
-		if(code != null) {
-			build.setCode(code);
-		}
-		if(StringUtils.isNotEmpty(message)) {
-			build.setMessage(message);
-		}
-		if(body != null) {
-			build.setBody(body);
-		}
+		final Message build = Message.builder().build();
+		// 设置状态编码
+		// 设置状态描述
+		// 默认状态设置成功
+		build.setCode(code == null ? MessageCode.CODE_0000 : code, message);
+		// 设置消息头部
+		build.setHeader(header);
+		// 设置消息主体
+		build.setBody(body);
 		return build;
 	}
 	

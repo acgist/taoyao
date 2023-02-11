@@ -5,10 +5,10 @@ import lombok.Getter;
 /**
  * 状态编码
  * 
- * 1xxx=前置错误：数据校验
- * 2xxx=内部错误
- * 3xxx=请求错误：HTTP错误
- * 9999=未知错误
+ * 1xxx = 前置错误
+ * 2xxx = 内部错误
+ * 3xxx = 请求错误
+ * 9999 = 未知错误
  * 
  * @author acgist
  */
@@ -43,8 +43,8 @@ public enum MessageCode {
 	/**
 	 * HTTP状态编码前缀
 	 */
-	public static final String HTTP_STATUS = "3";
-
+	private static final String HTTP_STATUS = "3";
+	
 	/**
 	 * 状态编码
 	 */
@@ -80,7 +80,7 @@ public enum MessageCode {
 	}
 
 	/**
-	 * @param status HTTPStatus
+	 * @param status HTTP Status
 	 * 
 	 * @return 状态编码
 	 */

@@ -2,7 +2,7 @@ package com.acgist.taoyao.signal.protocol;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
 
 /**
@@ -43,10 +43,10 @@ public interface Protocol {
 	 * 处理信令消息
 	 * 
 	 * @param sn 终端标识
+	 * @param client 终端
 	 * @param message 信令消息
-	 * @param session 会话
 	 */
-	void execute(String sn, Message message, ClientSession session);
+	void execute(String sn, Client client, Message message);
 
 	/**
 	 * 发布事件
@@ -67,7 +67,7 @@ public interface Protocol {
 	/**
 	 * 创建信令消息
 	 * 
-	 * @param body 请求响应主体
+	 * @param body 消息主体
 	 * 
 	 * @return 信令消息
 	 */
@@ -76,8 +76,8 @@ public interface Protocol {
 	/**
 	 * 创建信令消息
 	 * 
-	 * @param code 响应编码
-	 * @param body 请求响应主体
+	 * @param code 状态编码
+	 * @param body 消息主体
 	 * 
 	 * @return 信令消息
 	 */
@@ -86,9 +86,20 @@ public interface Protocol {
 	/**
 	 * 创建信令消息
 	 * 
-	 * @param code 响应编码
-	 * @param message 响应描述
-	 * @param body 请求响应主体
+	 * @param code 状态编码
+	 * @param message 状态描述
+	 * @param body 消息主体
+	 * 
+	 * @return 信令消息
+	 */
+	Message build(String message, Object body);
+	
+	/**
+	 * 创建信令消息
+	 * 
+	 * @param code 状态编码
+	 * @param message 状态描述
+	 * @param body 消息主体
 	 * 
 	 * @return 信令消息
 	 */
@@ -97,10 +108,10 @@ public interface Protocol {
 	/**
 	 * 创建信令消息
 	 * 
-	 * @param id 请求响应标识
-	 * @param code 响应编码
-	 * @param message 响应描述
-	 * @param body 请求响应主体
+	 * @param id 消息标识
+	 * @param code 状态编码
+	 * @param message 状态描述
+	 * @param body 消息主体
 	 * 
 	 * @return 信令消息
 	 */

@@ -7,7 +7,7 @@ import java.util.Objects;
 import org.springframework.context.ApplicationEvent;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -32,24 +32,24 @@ public abstract class ApplicationEventAdapter extends ApplicationEvent {
 	 */
 	private final Map<?, ?> body;
 	/**
+	 * 终端
+	 */
+	private final Client client;
+	/**
 	 * 消息
 	 */
 	private final Message message;
-	/**
-	 * 会话
-	 */
-	private final ClientSession session;
 	
-	public ApplicationEventAdapter(Message message, ClientSession session) {
-		this(null, message, session);
+	public ApplicationEventAdapter(Client client, Message message) {
+		this(null, client, message);
 	}
 	
-	public ApplicationEventAdapter(Map<?, ?> body, Message message, ClientSession session) {
-		super(session);
-		this.sn = session.sn();
+	public ApplicationEventAdapter(Map<?, ?> body, Client client, Message message) {
+		super(client);
+		this.sn = client.sn();
 		this.body = body;
+		this.client = client;
 		this.message = message;
-		this.session = session;
 	}
 	
 	/**
@@ -82,6 +82,24 @@ public abstract class ApplicationEventAdapter extends ApplicationEvent {
 		}
 		final T t = (T) this.body.get(key);
 		return t == null ? defaultValue : t;
+	}
+	
+	/**
+	 * @param key 参数名称
+	 * 
+	 * @return 值
+	 */
+	public Long getLong(String key) {
+		if(this.body == null) {
+			return null;
+		}
+		final Object object = this.body.get(key);
+		if(object == null) {
+			return null;
+		} else if(object instanceof Long value) {
+			return value;
+		}
+		return Long.valueOf(object.toString());
 	}
 
 	/**

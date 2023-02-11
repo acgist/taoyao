@@ -5,12 +5,13 @@ import java.util.Map;
 
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.client.ClientSession;
-import com.acgist.taoyao.signal.client.ClientSessionStatus;
+import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.client.ClientStatus;
+import com.acgist.taoyao.signal.protocol.Constant;
 import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 
 /**
- * 心跳信令
+ * 终端心跳信令
  * 
  * @author acgist
  */
@@ -20,19 +21,19 @@ public class ClientHeartbeatProtocol extends ProtocolMapAdapter {
 	public static final String SIGNAL = "client::heartbeat";
 	
 	public ClientHeartbeatProtocol() {
-		super("心跳信令", SIGNAL);
+		super("终端心跳信令", SIGNAL);
 	}
 	
 	@Override
-	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
+	public void execute(String sn, Map<?, ?> body, Client client, Message message) {
 		// 响应心跳
-		session.push(message.cloneWidthoutBody());
+		client.push(message.cloneWidthoutBody());
 		// 设置状态
-		final ClientSessionStatus status = session.status();
-		status.setSignal((Integer) body.get(ClientSessionStatus.SIGNAL));
-		status.setBattery((Integer) body.get(ClientSessionStatus.BATTERY));
-		status.setCharging((Boolean) body.get(ClientSessionStatus.CHARGING));
+		final ClientStatus status = client.status();
+		status.setSignal((Integer) body.get(Constant.SIGNAL));
+		status.setBattery((Integer) body.get(Constant.BATTERY));
+		status.setCharging((Boolean) body.get(Constant.CHARGING));
 		status.setLastHeartbeat(LocalDateTime.now());
 	}
-
+	
 }

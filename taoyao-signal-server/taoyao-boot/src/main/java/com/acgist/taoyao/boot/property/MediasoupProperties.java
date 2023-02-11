@@ -7,59 +7,59 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 媒体终端配置
+ * 媒体服务配置
  * 
  * @author acgist
  */
 @Getter
 @Setter
-@Schema(title = "Mediasoup配置", description = "Mediasoup配置")
+@Schema(title = "媒体服务配置", description = "媒体服务配置")
 public class MediasoupProperties {
 
 	/**
-	 * Mediasoup名称
+	 * 名称
 	 */
-	@Schema(title = "Mediasoup名称", description = "Mediasoup名称")
+	@Schema(title = "名称", description = "名称")
 	private String name;
 	/**
-	 * Mediasoup主机
+	 * 是否启用
 	 */
-	@Schema(title = "Mediasoup主机", description = "Mediasoup主机")
+	@Schema(title = "是否启用", description = "是否启用")
+	private Boolean enabled;
+	/**
+	 * 主机
+	 */
+	@Schema(title = "主机", description = "主机")
 	private String host;
 	/**
-	 * Mediasoup端口
+	 * 端口
 	 */
-	@Schema(title = "Mediasoup端口", description = "Mediasoup端口")
+	@Schema(title = "端口", description = "端口")
 	private Integer port;
 	/**
-	 * Mediasoup协议
+	 * 协议
 	 */
-	@Schema(title = "Mediasoup协议", description = "Mediasoup协议")
+	@Schema(title = "协议", description = "协议")
 	private String schema;
 	/**
-	 * Mediasoup地址
+	 * 用户
 	 */
-	@Schema(title = "Mediasoup地址", description = "Mediasoup地址")
-	private String websocket;
-	/**
-	 * Mediasoup用户
-	 */
-	@Schema(title = "Mediasoup用户", description = "Mediasoup用户")
+	@Schema(title = "用户", description = "用户")
 	@JsonIgnore
 	private String username;
 	/**
-	 * Mediasoup密码
+	 * 密码
 	 */
-	@Schema(title = "Mediasoup密码", description = "Mediasoup密码")
+	@Schema(title = "密码", description = "密码")
 	@JsonIgnore
 	private String password;
 	
 	/**
-	 * @return 完整Mediasoup地址
+	 * @return 完整地址
 	 */
-	@Schema(title = "完整Mediasoup地址", description = "完整Mediasoup地址")
+	@Schema(title = "完整地址", description = "完整地址")
 	public String getAddress() {
-		return this.schema + "://" + this.host + ":" + this.port + this.websocket;
+		return this.schema + "://" + this.host + ":" + this.port;
 	}
 	
 }

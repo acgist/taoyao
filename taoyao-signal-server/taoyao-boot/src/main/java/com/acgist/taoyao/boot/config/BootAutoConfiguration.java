@@ -90,11 +90,9 @@ public class BootAutoConfiguration {
 
 	@Value("${spring.application.name:taoyao}")
 	private String name;
-	@Value("${taoyao.webrtc.framework:MOON}")
-	private String framework;
 	
 	@Autowired
-	private ApplicationContext context;
+	private ApplicationContext applicationContext;
 	
 	@Bean
 	@ConditionalOnMissingBean
@@ -169,13 +167,12 @@ public class BootAutoConfiguration {
 		log.info("用户目录：{}", System.getProperty("user.home"));
 		log.info("临时目录：{}", System.getProperty("java.io.tmpdir"));
 		log.info("文件编码：{}", System.getProperty("file.encoding"));
-		this.context.getBeansOfType(TaskExecutor.class).forEach((k, v) -> {
+		this.applicationContext.getBeansOfType(TaskExecutor.class).forEach((k, v) -> {
 			log.info("系统任务线程池：{}-{}", k, v);
 		});
-		this.context.getBeansOfType(TaskScheduler.class).forEach((k, v) -> {
+		this.applicationContext.getBeansOfType(TaskScheduler.class).forEach((k, v) -> {
 			log.info("系统定时任务线程池：{}-{}", k, v);
 		});
-		log.info("WebRTC架构：{}", this.framework);
 		this.registerException();
 	}
 	
@@ -203,7 +200,6 @@ public class BootAutoConfiguration {
 	@PreDestroy
 	public void destroy() {
 		log.info("系统关闭：{}", this.name);
-		// TODO：通知关闭
 		// 刷出日志缓存
 		final ILoggerFactory factory = LoggerFactory.getILoggerFactory();
 		if (factory instanceof LoggerContext context) {

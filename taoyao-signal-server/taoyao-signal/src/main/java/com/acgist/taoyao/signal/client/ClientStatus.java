@@ -16,48 +16,18 @@ import lombok.Setter;
 @Getter
 @Setter
 @Schema(title = "终端状态", description = "终端状态")
-public class ClientSessionStatus {
+public class ClientStatus {
 
-	/**
-	 * IP
-	 */
-	public static final String IP = "ip";
-	/**
-	 * MAC
-	 */
-	public static final String MAC = "mac";
-	/**
-	 * 信号强度（0~100）
-	 */
-	public static final String SIGNAL = "signal";
-	/**
-	 * 电池电量（0~100）
-	 */
-	public static final String BATTERY = "battery";
-	/**
-	 * 是否充电
-	 */
-	public static final String CHARGING = "charging";
-	/**
-	 * 媒体服务名称
-	 */
-	public static final String MEDIASOUP = "mediasoup";
-	
 	/**
 	 * 终端标识
 	 */
 	@Schema(title = "终端标识", description = "终端标识")
 	private String sn;
 	/**
-	 * IP
+	 * 终端IP
 	 */
-	@Schema(title = "IP", description = "IP")
+	@Schema(title = "终端IP", description = "终端IP")
 	private String ip;
-	/**
-	 * MAC
-	 */
-	@Schema(title = "MAC", description = "MAC")
-	private String mac;
 	/**
 	 * 信号强度（0~100）
 	 */

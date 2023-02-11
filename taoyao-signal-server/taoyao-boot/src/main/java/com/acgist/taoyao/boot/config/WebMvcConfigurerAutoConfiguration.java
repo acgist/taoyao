@@ -20,15 +20,15 @@ import lombok.extern.slf4j.Slf4j;
 public class WebMvcConfigurerAutoConfiguration implements WebMvcConfigurer {
 	
 	@Autowired
-	private ApplicationContext context;
+	private ApplicationContext applicationContext;
 	
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-		this.context.getBeansOfType(InterceptorAdapter.class).entrySet().stream()
+		this.applicationContext.getBeansOfType(InterceptorAdapter.class).entrySet().stream()
 		.sorted((a, z) -> a.getValue().compareTo(z.getValue()))
 		.forEach(entry -> {
 			final InterceptorAdapter value = entry.getValue();
-			log.info("加载拦截器：{}-{}", entry.getKey(), value.name());
+			log.info("加载拦截器：{} - {}", String.format("%-32s", entry.getKey()), value.name());
 			registry.addInterceptor(value).addPathPatterns(value.pathPattern());
 		});
 	}

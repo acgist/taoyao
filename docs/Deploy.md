@@ -119,6 +119,11 @@ npm install -g pm2
 # 连接
 ln -sf /data/nodejs/node-v16.19.0-linux-x64/bin/pm2 /usr/local/bin/
 
+# 日志
+pm2 install pm2-logrotate
+pm2 set pm2-logrotate-ext:retain 14
+pm2 set pm2-logrotate-ext:max_size 256M
+
 # 自启
 pm2 startup
 pm2 save

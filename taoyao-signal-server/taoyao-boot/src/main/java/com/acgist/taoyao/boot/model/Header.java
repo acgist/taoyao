@@ -10,29 +10,29 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * 请求响应头部
+ * 消息头部
  * 
  * @author acgist
  */
 @Getter
 @Setter
-@Schema( title = "请求响应头部", description = "请求响应头部")
+@Schema( title = "消息头部", description = "消息头部")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Header implements Serializable {
 
 	private static final long serialVersionUID = 1L;
-
+	
 	/**
-	 * 请求响应版本
+	 * 消息版本
 	 */
-	@Schema(title = "请求响应版本", description = "请求响应版本")
+	@Schema(title = "消息版本", description = "消息版本")
 	private String v;
 	/**
-	 * 请求响应标识
+	 * 消息标识
 	 */
-	@Schema(title = "请求响应标识", description = "请求响应标识")
+	@Schema(title = "消息标识", description = "消息标识")
 	private String id;
 	/**
 	 * 终端标识
@@ -44,5 +44,10 @@ public class Header implements Serializable {
 	 */
 	@Schema(title = "协议标识", description = "协议标识")
 	private String signal;
+	
+	@Override
+	public Header clone() {
+		return new Header(this.v, this.id, this.sn, this.signal);
+	}
 	
 }

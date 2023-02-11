@@ -16,11 +16,6 @@ import lombok.Setter;
 public class SecurityProperties {
 	
 	/**
-	 * Basic认证
-	 */
-	public static final String BASIC = "Basic";
-
-	/**
 	 * 是否启用
 	 */
 	private Boolean enabled;

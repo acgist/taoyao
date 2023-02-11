@@ -3,14 +3,19 @@
  */
 import { Logger } from "./Logger.js";
 import { TaoyaoClient } from "./TaoyaoClient.js";
-import { config, protocol, defaultAudioConfig, defaultVideoConfig } from "./Config.js";
+import * as mediasoupClient from 'mediasoup-client';
+import {
+  config,
+  protocol,
+  defaultAudioConfig,
+  defaultVideoConfig,
+} from "./Config.js";
 
 // 日志
 const logger = new Logger();
 
 /**
  * 信令通道
- * TODO：获取IP/MAC/信号强度
  */
 const signalChannel = {
   // 桃夭
@@ -27,6 +32,8 @@ const signalChannel = {
   heartbeatTime: 30 * 1000,
   // 心跳定时器
   heartbeatTimer: null,
+  // 是否重连
+  reconnection: true,
   // 重连定时器
   reconnectTimer: null,
   // 防止重复重连
@@ -72,10 +79,11 @@ const signalChannel = {
    *
    * @returns Promise
    */
-  connect: function (address, callback, reconnection = true) {
+  connect: async function (address, callback, reconnection = true) {
     let self = this;
     self.address = address;
     self.callback = callback;
+    self.reconnection = reconnection;
     return new Promise((resolve, reject) => {
       logger.debug("连接信令通道", address);
       self.channel = new WebSocket(address);
@@ -85,8 +93,7 @@ const signalChannel = {
         const battery = await navigator.getBattery();
         self.push(
           protocol.buildMessage("client::register", {
-            ip: null,
-            mac: null,
+            ip: 'localhost',
             signal: 100,
             battery: battery.level * 100,
             charging: battery.charging,
@@ -103,14 +110,14 @@ const signalChannel = {
       };
       self.channel.onclose = function (e) {
         logger.error("信令通道关闭", self.channel, e);
-        if (reconnection) {
+        if (self.reconnection) {
           self.reconnect();
         }
         reject(e);
       };
       self.channel.onerror = function (e) {
         logger.error("信令通道异常", self.channel, e);
-        if (reconnection) {
+        if (self.reconnection) {
           self.reconnect();
         }
         reject(e);
@@ -122,7 +129,7 @@ const signalChannel = {
        * 3. 如果前面所有回调没有返回true执行默认回调。
        */
       self.channel.onmessage = function (e) {
-        console.debug("信令通道消息", e.data);
+        logger.debug("信令通道消息", e.data);
         let done = false;
         let data = JSON.parse(e.data);
         // 请求回调
@@ -134,7 +141,7 @@ const signalChannel = {
           }
         }
         // 全局回调
-        if (self.callback) {
+        if (!done && self.callback) {
           done = self.callback(data);
         }
         // 默认回调
@@ -163,39 +170,67 @@ const signalChannel = {
     }
     // 打开定时重连
     self.reconnectTimer = setTimeout(function () {
-      console.info("信令通道重连", self.address);
+      logger.info("信令通道重连", self.address);
       self.connect(self.address, self.callback, true);
       self.lockReconnect = false;
     }, self.connectionTimeout);
     if (self.connectionTimeout >= self.maxReconnectionDelay) {
       self.connectionTimeout = self.maxReconnectionDelay;
     } else {
-      self.connectionTimeout = self.connectionTimeout * self.reconnectionDelayGrowFactor;
+      self.connectionTimeout =
+        self.connectionTimeout * self.reconnectionDelayGrowFactor;
     }
   },
   /**
-   * 发送消息
-   *
+   * 异步请求
+   * 
    * @param {*} data 消息内容
    * @param {*} callback 注册回调
    */
   push: function (data, callback) {
     // 注册回调
-    if (data && callback) {
-      this.callbackMapping.set(data.header.id, callback);
+    let self = this;
+    if (callback) {
+      self.callbackMapping.set(data.header.id, callback);
     }
     // 发送消息
-    if (data && data.header) {
-      this.channel.send(JSON.stringify(data));
-    } else {
-      this.channel.send(data);
-    }
+    self.channel.send(JSON.stringify(data));
+  },
+  /**
+   * 同步请求
+   * 
+   * @param {*} data 消息内容
+   * 
+   * @returns Promise
+   */
+  request: async function(data) {
+    let self = this;
+    return new Promise((resolve, reject) => {
+      let callback = false;
+      // 设置回调
+      self.callbackMapping.set(data.header.id, (response) => {
+        callback = true;
+        resolve(response);
+        return true;
+      });
+      // 发送请求
+      self.channel.send(JSON.stringify(data));
+      // 设置超时
+      setTimeout(() => {
+        if(!callback) {
+          reject("请求超时", data);
+        }
+      }, 5000);
+    });
   },
   /**
    * 关闭通道
    */
   close: function () {
-    clearTimeout(this.heartbeatTimer);
+    let self = this;
+    self.reconnection = false;
+    self.channel.close();
+    clearTimeout(self.heartbeatTimer);
   },
   /**
    * 默认回调
@@ -203,10 +238,17 @@ const signalChannel = {
    * @param {*} data 消息内容
    */
   defaultCallback: function (data) {
-    console.debug("没有适配信令消息默认处理", data);
+    let self = this;
+    logger.debug("没有适配信令消息默认处理", data);
     switch (data.header.signal) {
+      case "client::config":
+        self.defaultClientConfig(data);
+        break;
+      case "client::register":
+        logger.info("桃夭终端注册成功");
+        break;
       case "platform::error":
-        console.error("信令发生错误", data);
+        logger.error("信令发生错误", data);
         break;
     }
   },
@@ -216,24 +258,10 @@ const signalChannel = {
    * @param {*} data 消息内容
    */
   defaultClientConfig: function (data) {
-    let self = this;
-    // 配置终端
-    self.taoyao
-      .configMedia(data.body.media.audio, data.body.media.video)
-      .configWebrtc(data.body.webrtc);
-    // 打开媒体通道
-    let videoId = self.taoyao.videoId;
-    if (videoId) {
-      self.taoyao
-        .buildLocalMedia()
-        .then((stream) => {
-          self.taoyao.buildMediaChannel(videoId, stream);
-        })
-        .catch((e) => console.error("打开终端媒体失败", e));
-      console.debug("自动打开媒体通道", videoId);
-    } else {
-      console.debug("没有配置本地媒体信息跳过自动打开媒体通道");
-    }
+    config.webrtc = data.body.webrtc;
+    config.audio = { ...config.defaultAudioConfig, ...data.body.media.audio };
+    config.video = { ...config.defaultVideoConfig, ...data.body.media.video };
+    logger.info("终端配置", config.audio, config.video, config.webrtc);
   },
   /**
    * 默认终端重启回调
@@ -241,7 +269,7 @@ const signalChannel = {
    * @param {*} data 消息内容
    */
   defaultClientReboot: function (data) {
-    console.info("重启终端");
+    logger.info("重启终端");
     location.reload();
   },
 };
@@ -250,63 +278,89 @@ const signalChannel = {
  * 桃夭
  */
 class Taoyao {
+  // 发送信令
+  push = null;
+  // 请求信令
+  request = null;
+  // 本地视频
+  localVideo = null;
   // 本地终端
   localClient;
   // 远程终端
   remoteClientList;
-	// 设备状态
-	audioEnabled = true;
-	videoEnabled = true;
-	// 媒体配置
-	audioConfig = defaultAudioConfig;
-	videoConfig = defaultVideoConfig;
   // 媒体通道
-  transSend;
-  transRecv;
-	// 发送信令
-	push = null;
-	// 信令通道
-	signalChannel = null;
+  sendTransport = null;
+  recvTransport = null;
+  // 信令通道
+  signalChannel = null;
+  // 媒体设备
+  mediasoupDevice = null;
+  // 是否消费
+  consume = true;
+  // 是否生产
+  produce = true;
+  // 是否生产音频
+  audioProduce = true && this.produce;
+  // 是否生成视频
+  videoProduce = true && this.produce;
+  // 音频生产者
+  audioProducer = null;
+  // 视频生产者
+  videoProducer = null;
+  // 消费者
+	consumers = new Map();
+  // 数据消费者
+	dataConsumers = new Map();
+
   /**
-   * 媒体配置
-   * 
-   * @param {*} audio 
-   * @param {*} video 
-   * 
-   * @returns 
-   */
-	configMedia = function(audio = {}, video = {}) {
-		this.audioConfig = {...this.audioConfig, ...audio};
-		this.videoConfig = {...this.videoConfig, ...video};
-		console.debug('终端媒体配置', this.audioConfig, this.videoConfig);
-		return this;
-	};
-	/**
-   * WebRTC配置
-   * 
-   * @param {*} config 
-   * 
-   * @returns 
-   */
-	configWebrtc = function(config = {}) {
-		return this;
-	};
-	/**
    * 打开信令通道
-   * 
-   * @param {*} callback 
-   * 
-   * @returns 
+   *
+   * @param {*} callback
+   *
+   * @returns
    */
-	buildChannel = function(callback) {
-		signalChannel.taoyao = this;
-		this.signalChannel = signalChannel;
-		// 不能直接this.push = this.signalChannel.push这样导致this对象错误
-		this.push = function(data, pushCallback) {
-			this.signalChannel.push(data, pushCallback);
-		};
-		return this.signalChannel.connect(config.signal(), callback);
-	};
+  buildChannel = async function (callback) {
+    signalChannel.taoyao = this;
+    this.signalChannel = signalChannel;
+    // 不能直接this.push = this.signalChannel.push这样导致this对象错误
+    this.push = function (data, pushCallback) {
+      this.signalChannel.push(data, pushCallback);
+    };
+    this.request = async function(data) {
+      return await this.signalChannel.request(data);
+    }
+    return this.signalChannel.connect(config.signal(), callback);
+  };
+  /**
+   * 设置本地媒体
+   */
+  buildLocal = function() {
+    new mediasoupClient.Device();
+  };
+  /**
+   * 打开媒体通道
+   */
+  buildMediaTransport = function() {
+    let self = this;
+    // 释放资源
+    self.close();
+
+  }
+  /**
+   * 关闭
+   */
+  close = function() {
+    let self = this;
+    if(self.sendTransport) {
+      self.sendTransport.close();
+    }
+    if(self.recvTransport) {
+      self.recvTransport.close();
+    }
+    if(self.signalChannel) {
+      self.signalChannel.close();
+    }
+  };
 }
 
 export { Taoyao };

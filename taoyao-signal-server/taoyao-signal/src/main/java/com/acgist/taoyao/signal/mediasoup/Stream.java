@@ -17,7 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 public class Stream implements Closeable {
 
 	/**
-	 * 类型
+	 * 媒体类型
 	 * 
 	 * @author acgist
 	 */
@@ -35,7 +35,37 @@ public class Stream implements Closeable {
 	}
 	
 	/**
+	 * 收发类型
+	 * 
+	 * @author acgist
+	 */
+	public enum Type {
+		
+		/**
+		 * 发送
+		 */
+		SEND,
+		/**
+		 * 接收
+		 */
+		RECV;
+		
+	}
+	
+	/**
+	 * 媒体终端标识
+	 */
+	private String sn;
+	/**
 	 * 媒体流ID
+	 * 
+	 * 媒体类型.发送终端标识.发送.房间ID：
+	 * 音频：audio.sn.sn.1000
+	 * 视频：video.sn.sn.1000
+	 * 
+	 * 媒体类型.接收终端标识.接收.发送终端标识.房间ID：
+	 * 音频：audio.sn.recv.sn.1000
+	 * 视频：video.sn.recv.sn.1000
 	 */
 	private String streamId;
 	/**

@@ -19,7 +19,7 @@ class PlatformShutdownProtocolTest {
 	@Test
 	void testShutdown() {
 		assertDoesNotThrow(() -> {
-			this.platformShutdownProtocol.execute("taoyao", Message.success(), null);
+			this.platformShutdownProtocol.execute("taoyao", null, Message.success());
 			Thread.sleep(1000);
 		});
 	}

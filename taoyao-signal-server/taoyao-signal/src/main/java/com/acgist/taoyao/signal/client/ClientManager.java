@@ -22,40 +22,28 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Manager
-public class ClientSessionManager {
+public class ClientManager {
 	
 	@Autowired
-	private ApplicationContext context;
-	@Autowired
 	private TaoyaoProperties taoyaoProperties;
+	@Autowired
+	private ApplicationContext applicationContext;
 	
 	/**
 	 * 会话列表
 	 */
-	private List<ClientSession> sessions = new CopyOnWriteArrayList<>();
+	private List<Client> clients = new CopyOnWriteArrayList<>();
 
-	@Scheduled(cron = "${taoyao.scheduled.session:0 * * * * ?}")
+	@Scheduled(cron = "${taoyao.scheduled.client:0 * * * * ?}")
 	public void scheduled() {
 		this.closeTimeout();
 	}
 	
 	/**
-	 * @param session 会话
+	 * @param client 终端
 	 */
-	public void open(ClientSession session) {
-		this.sessions.add(session);
-	}
-	
-	/**
-	 * @param instance 会话实例
-	 * 
-	 * @return 会话
-	 */
-	public ClientSession session(AutoCloseable instance) {
-		return this.sessions.stream()
-			.filter(v -> v.matchInstance(instance))
-			.findFirst()
-			.orElse(null);
+	public void open(Client client) {
+		this.clients.add(client);
 	}
 	
 	/**
@@ -65,12 +53,9 @@ public class ClientSessionManager {
 	 * @param message 消息
 	 */
 	public void unicast(String to, Message message) {
-		this.sessions().stream()
-		.filter(v -> v.filterSn(to))
-		.forEach(v -> {
-			message.getHeader().setSn(v.sn());
-			v.push(message);
-		});
+		this.clients().stream()
+		.filter(v -> StringUtils.equals(to, v.sn()))
+		.forEach(v -> v.push(v.sn(), message));
 	}
 	
 	/**
@@ -79,10 +64,7 @@ public class ClientSessionManager {
 	 * @param message 消息
 	 */
 	public void broadcast(Message message) {
-		this.sessions().forEach(v -> {
-			message.getHeader().setSn(v.sn());
-			v.push(message);
-		});
+		this.clients().forEach(v -> v.push(v.sn(), message));
 	}
 	
 	/**
@@ -92,12 +74,9 @@ public class ClientSessionManager {
 	 * @param message 消息
 	 */
 	public void broadcast(String from, Message message) {
-		this.sessions().stream().
-		filter(v -> v.filterNoneSn(from))
-		.forEach(v -> {
-			message.getHeader().setSn(v.sn());
-			v.push(message);
-		});
+		this.clients().stream()
+		.filter(v -> !StringUtils.equals(from, v.sn()))
+		.forEach(v -> v.push(v.sn(), message));
 	}
 	
 	/**
@@ -105,9 +84,21 @@ public class ClientSessionManager {
 	 * 
 	 * @return 终端会话
 	 */
-	public ClientSession session(String sn) {
-		return this.sessions().stream()
+	public Client client(String sn) {
+		return this.clients().stream()
 			.filter(v -> StringUtils.equals(sn, v.sn()))
+			.findFirst()
+			.orElse(null);
+	}
+	
+	/**
+	 * @param instance 终端示例
+	 * 
+	 * @return 终端
+	 */
+	public Client client(AutoCloseable instance) {
+		return this.clients.stream()
+			.filter(v -> v.instance() == instance)
 			.findFirst()
 			.orElse(null);
 	}
@@ -117,26 +108,26 @@ public class ClientSessionManager {
 	 * 
 	 * @return 终端状态
 	 */
-	public ClientSessionStatus status(String sn) {
-		final ClientSession session = this.session(sn);
-		return session == null ? null : session.status();
+	public ClientStatus status(String sn) {
+		final Client client = this.client(sn);
+		return client == null ? null : client.status();
 	}
 	
 	/**
 	 * @return 所有终端会话
 	 */
-	public List<ClientSession> sessions() {
-		return this.sessions.stream()
-			.filter(ClientSession::authorized)
+	public List<Client> clients() {
+		return this.clients.stream()
+			.filter(Client::authorized)
 			.toList();
 	}
 
 	/**
 	 * @return 所有终端状态
 	 */
-	public List<ClientSessionStatus> status() {
-		return this.sessions().stream()
-			.map(ClientSession::status)
+	public List<ClientStatus> status() {
+		return this.clients().stream()
+			.map(Client::status)
 			.toList();
 	}
 	
@@ -146,22 +137,22 @@ public class ClientSessionManager {
 	 * @param instance 会话实例
 	 */
 	public void close(AutoCloseable instance) {
-		final ClientSession session = this.session(instance);
+		final Client client = this.client(instance);
 		// TODO：如果出现异常可以提前移除
 		try {
-			if(session != null) {
-				session.close();
+			if(client != null) {
+				client.close();
 			} else {
 				instance.close();
 			}
 		} catch (Exception e) {
 			log.error("关闭会话异常", e);
 		} finally {
-			if(session != null) {
+			if(client != null) {
 				// 移除管理
-				this.sessions.remove(session);
+				this.clients.remove(client);
 				// 关闭事件
-				this.context.publishEvent(new ClientCloseEvent(null, session));
+				this.applicationContext.publishEvent(new ClientCloseEvent(client, null));
 			}
 		}
 	}
@@ -171,7 +162,7 @@ public class ClientSessionManager {
 	 */
 	private void closeTimeout() {
 		log.debug("定时关闭超时会话");
-		this.sessions.stream()
+		this.clients.stream()
 		.filter(v -> !v.authorized())
 		.filter(v -> v.timeout(this.taoyaoProperties.getTimeout()))
 		.forEach(v -> {

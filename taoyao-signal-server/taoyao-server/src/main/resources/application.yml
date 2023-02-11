@@ -111,19 +111,17 @@ taoyao:
     # 媒体配置
     mediasoup-list:
       - name: mediasoup-local-a
+        enabled: true
         host: localhost
-        #host: 192.168.8.110
         port: 4443
         schema: wss
-        websocket: /websocket.signal
         username: taoyao
         password: taoyao
       - name: mediasoup-local-z
+        enabled: true
         host: localhost
-        #host: 192.168.8.110
         port: 4443
         schema: wss
-        websocket: /websocket.signal
         username: taoyao
         password: taoyao
   # 安全配置
@@ -135,7 +133,7 @@ taoyao:
     password: taoyao
   # 定时任务
   scheduled:
-    session: 0 * * * * ?
+    client: 0 * * * * ?
   # 集群配置
   node:
     enabled: false

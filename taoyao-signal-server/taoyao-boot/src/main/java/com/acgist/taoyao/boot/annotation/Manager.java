@@ -14,8 +14,8 @@ import org.springframework.stereotype.Component;
  * @author acgist
  */
 @Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
 @Component
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Manager {
 

@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.property.ScriptProperties;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.platform.PlatformScriptEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 
@@ -28,12 +28,12 @@ public class PlatformRebootProtocol extends ProtocolAdapter {
 	}
 
 	@Override
-	public void execute(String sn, Message message, ClientSession session) {
+	public void execute(String sn, Client client, Message message) {
 		log.info("重启平台：{}", sn);
 		// 全员广播
-		this.clientSessionManager.broadcast(message);
+		this.clientManager.broadcast(message);
 		// 推送事件
-		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getPlatformReboot(), message, session));
+		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getPlatformReboot(), client, message));
 	}
 
 }

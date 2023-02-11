@@ -1,26 +1,36 @@
-<template></template>
+<!-- 桃夭 -->
+<template>
+  <SettingRoom :roomVisible="roomVisible" :taoyao="taoyao"></SettingRoom>
+  <SettingSignal :signalVisible="signalVisible" @connectSignal="connectSignal"></SettingSignal>
+</template>
 
 <script>
 import { Logger } from "./components/Logger.js";
 import { Taoyao } from "./components/Taoyao.js";
+import SettingRoom from "./components/SettingRoom.vue";
+import SettingSignal from "./components/SettingSignal.vue";
 
 export default {
-  name: "taoyao",
+  name: "Taoyao",
   data() {
     return {
-      logger: null,
-      taoyao: null,
+      logger: {},
+      taoyao: {},
+      roomVisible: false,
+      signalVisible: true,
     };
   },
   mounted() {
-    // 填写、密码、帐号
     this.logger = new Logger();
     this.taoyao = new Taoyao();
-    this.logger.info("桃夭终端启动");
-    this.taoyao.buildChannel(this.callback);
+    this.logger.info("桃夭终端开始启动");
   },
-  beforeDestroy() {},
   methods: {
+    connectSignal: function() {
+      let self = this;
+      self.signalVisible = false;
+      self.taoyao.buildChannel(self.callback);
+    },
     /**
      * 信令回调
      *
@@ -30,10 +40,22 @@ export default {
      */
     callback: function (data) {
       let self = this;
-      switch (data.header.snail) {
+      switch (data.header.signal) {
+        case "client::config":
+          self.roomVisible = true;
+          break;
+        case "client::register":
+          if(data.code === '3401') {
+            self.signalVisible = true;
+          }
+          return true;
       }
       return false;
     },
+  },
+  components: {
+    SettingRoom,
+    SettingSignal,
   },
 };
 </script>

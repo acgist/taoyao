@@ -35,7 +35,6 @@
 
 	<modules>
 		<module>taoyao-boot</module>
-		<module>taoyao-node</module>
 		<module>taoyao-signal</module>
 		<module>taoyao-server</module>
 	</modules>
@@ -102,11 +101,6 @@
 			<dependency>
 				<groupId>com.acgist</groupId>
 				<artifactId>taoyao-boot</artifactId>
-				<version>${project.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>com.acgist</groupId>
-				<artifactId>taoyao-node</artifactId>
 				<version>${project.version}</version>
 			</dependency>
 			<dependency>

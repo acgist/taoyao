@@ -1,4 +1,12 @@
 taoyao:
+  webrtc:
+    mediasoup-list:
+      - name: mediasoup-local-a
+        enabled: true
+        host: 192.168.8.110
+        port: 4443
+        schema: wss
+        username: taoyao
+        password: taoyao
   security:
     permit: /v3/api-docs/**,/swagger-ui/**,/swagger-ui.html,/,/error,/index.html,/favicon.ico
-    

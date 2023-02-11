@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.client.ClientSessionManager;
+import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.protocol.client.ClientRebootProtocol;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -24,26 +24,26 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class ClientController {
 
 	@Autowired
-	private ClientSessionManager clientSessionManager;
+	private ClientManager clientManager;
 	@Autowired
 	private ClientRebootProtocol clientRebootProtocol;
 	
 	@Operation(summary = "终端列表", description = "终端列表")
 	@GetMapping("/list")
 	public Message list() {
-		return Message.success(this.clientSessionManager.status());
+		return Message.success(this.clientManager.status());
 	}
 	
 	@Operation(summary = "终端状态", description = "终端状态")
 	@GetMapping("/status/{sn}")
 	public Message status(@PathVariable String sn) {
-		return Message.success(this.clientSessionManager.status(sn));
+		return Message.success(this.clientManager.status(sn));
 	}
 	
 	@Operation(summary = "重启终端", description = "重启终端")
 	@GetMapping("/reboot/{sn}")
 	public Message reboot(@PathVariable String sn) {
-		this.clientSessionManager.unicast(sn, this.clientRebootProtocol.build());
+		this.clientManager.unicast(sn, this.clientRebootProtocol.build());
 		return Message.success();
 	}
 	

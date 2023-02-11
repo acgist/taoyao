@@ -7,19 +7,27 @@
  */
 const config = {
   // 终端标识
-  sn: null,
+  sn: "taoyao",
+  // 信令服务地址
+  host: "localhost",
+  port: "8888",
   // 终端名称
   name: "taoyao-client-web",
   // 终端版本
   version: "1.0.0",
   // 日志级别
   logLevel: "DEBUG",
-  // 信令服务地址
-  host: "localhost",
-  port: "8888",
+  // 帐号密码
+  username: "taoyao",
+  password: "taoyao",
   signal: function () {
     return `wss://${this.host}:${this.port}/websocket.signal`;
   },
+  // 媒体配置
+  audio: {},
+  video: {},
+  // WebRTC配置
+  webrtc: {},
 };
 
 /**
@@ -44,13 +52,13 @@ const protocol = {
   /**
    * 生成信令消息
    *
-   * @param {*} id ID
-   * @param {*} body 信令消息
    * @param {*} signal 信令标识
+   * @param {*} body 信令消息
+   * @param {*} id ID
    *
    * @returns 信令消息
    */
-  buildMessage: function (id, body, signal) {
+  buildMessage: function (signal, body = {}, id) {
     let message = {
       header: {
         v: config.version,

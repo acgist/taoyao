@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
-import com.acgist.taoyao.signal.client.ClientSessionManager;
+import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
 import com.acgist.taoyao.signal.protocol.platform.PlatformErrorProtocol;
 
@@ -25,14 +25,14 @@ import lombok.extern.slf4j.Slf4j;
 @ServerEndpoint(value = "/websocket.signal")
 public class WebSocketSignal {
 	
+	private static ClientManager clientManager;
 	private static ProtocolManager protocolManager;
-	private static ClientSessionManager clientSessionManager;
 	private static PlatformErrorProtocol platformErrorProtocol;
 	
 	@OnOpen
 	public void open(Session session) {
 		log.debug("会话连接：{}", session);
-		WebSocketSignal.clientSessionManager.open(new WebSocketSession(session));
+		WebSocketSignal.clientManager.open(new WebSocketClient(session));
 	}
 	
 	@OnMessage
@@ -54,7 +54,7 @@ public class WebSocketSignal {
 	@OnClose
 	public void close(Session session) {
 		log.debug("会话关闭：{}", session);
-		WebSocketSignal.clientSessionManager.close(session);
+		WebSocketSignal.clientManager.close(session);
 	}
 	
 	@OnError
@@ -82,15 +82,15 @@ public class WebSocketSignal {
 			}
 		}
 	}
+	
+	@Autowired
+	public void setClientManager(ClientManager clientManager) {
+		WebSocketSignal.clientManager = clientManager;
+	}
 
 	@Autowired
 	public void setProtocolManager(ProtocolManager protocolManager) {
 		WebSocketSignal.protocolManager = protocolManager;
-	}
-	
-	@Autowired
-	public void setClientSessionManager(ClientSessionManager clientSessionManager) {
-		WebSocketSignal.clientSessionManager = clientSessionManager;
 	}
 	
 	@Autowired

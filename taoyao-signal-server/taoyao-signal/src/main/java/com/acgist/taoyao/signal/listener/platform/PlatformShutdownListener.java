@@ -19,13 +19,13 @@ import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
 public class PlatformShutdownListener extends ApplicationListenerAdapter<PlatformShutdownEvent> {
 
 	@Autowired
-	private ApplicationContext context;
-	@Autowired
 	private ScriptProperties scriptProperties;
+	@Autowired
+	private ApplicationContext applicationContext;
 	
 	@Override
 	public void onApplicationEvent(PlatformShutdownEvent event) {
-		if(this.context instanceof ConfigurableApplicationContext context) {
+		if(this.applicationContext instanceof ConfigurableApplicationContext context) {
 			// API关闭
 			if(context.isActive()) {
 				// 如果需要完整广播可以设置延时
@@ -34,10 +34,10 @@ public class PlatformShutdownListener extends ApplicationListenerAdapter<Platfor
 			}
 		} else {
 			// 命令关闭
-			this.context.publishEvent(new PlatformScriptEvent(
+			this.applicationContext.publishEvent(new PlatformScriptEvent(
 				this.scriptProperties.getPlatformShutdown(),
-				event.getMessage(),
-				event.getSession()
+				event.getClient(),
+				event.getMessage()
 			));
 		}
 	}

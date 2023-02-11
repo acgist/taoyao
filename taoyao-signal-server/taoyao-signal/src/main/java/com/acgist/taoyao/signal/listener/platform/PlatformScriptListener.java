@@ -8,9 +8,10 @@ import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.EventListener;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.platform.PlatformScriptEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
+import com.acgist.taoyao.signal.protocol.Constant;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,13 +28,13 @@ public class PlatformScriptListener extends ApplicationListenerAdapter<PlatformS
 	@Override
 	public void onApplicationEvent(PlatformScriptEvent event) {
 		final String sn = event.getSn();
-		final Message message = event.getMessage();
-		final ClientSession session = event.getSession();
+		final Client client = event.getClient();
 		final String script = event.getScript();
+		final Message message = event.getMessage();
 		log.debug("执行命令：{}-{}", sn, script);
 		final String result = this.execute(script);
-		message.setBody(Map.of(PlatformScriptEvent.RESULT, result));
-		session.push(message);
+		message.setBody(Map.of(Constant.RESULT, result));
+		client.push(message);
 	}
 
 	/**

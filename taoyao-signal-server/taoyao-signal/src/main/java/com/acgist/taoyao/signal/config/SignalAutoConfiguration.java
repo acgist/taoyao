@@ -1,5 +1,7 @@
 package com.acgist.taoyao.signal.config;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -8,6 +10,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
 import com.acgist.taoyao.signal.client.websocket.WebSocketSignal;
+import com.acgist.taoyao.signal.mediasoup.MediasoupClientManager;
 import com.acgist.taoyao.signal.protocol.media.MediaRebootProtocol;
 import com.acgist.taoyao.signal.protocol.media.MediaShutdownProtocol;
 import com.acgist.taoyao.signal.protocol.platform.PlatformRebootProtocol;
@@ -27,6 +30,9 @@ import com.acgist.taoyao.signal.service.impl.SecurityServiceImpl;
 @EnableWebSocket
 public class SignalAutoConfiguration {
 
+	@Autowired
+	private MediasoupClientManager mediasoupClientManager;
+	
 	@Bean
 	@ConditionalOnMissingBean
 	public WebSocketSignal webSocketSignal() {
@@ -43,6 +49,16 @@ public class SignalAutoConfiguration {
 	@ConditionalOnMissingBean
 	public SecurityService securityService() {
 		return new SecurityServiceImpl();
+	}
+	
+	@Bean
+	public CommandLineRunner mediasoupCommandLineRunner() {
+		return new CommandLineRunner() {
+			@Override
+			public void run(String ... args) throws Exception {
+				SignalAutoConfiguration.this.mediasoupClientManager.init();
+			}
+		};
 	}
 	
 	@Bean

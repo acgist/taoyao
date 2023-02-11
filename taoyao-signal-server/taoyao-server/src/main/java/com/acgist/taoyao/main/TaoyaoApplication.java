@@ -9,6 +9,7 @@ import org.springframework.context.annotation.ComponentScan;
 public class TaoyaoApplication {
 
 	public static void main(String[] args) {
+		System.getProperties().setProperty("jdk.internal.httpclient.disableHostnameVerification", Boolean.TRUE.toString());
 		SpringApplication.run(TaoyaoApplication.class, args);
 	}
 

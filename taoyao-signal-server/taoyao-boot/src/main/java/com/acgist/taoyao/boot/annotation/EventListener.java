@@ -9,13 +9,13 @@ import java.lang.annotation.Target;
 import org.springframework.stereotype.Component;
 
 /**
- * 监听
+ * 事件监听
  * 
  * @author acgist
  */
 @Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
 @Component
+@Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface EventListener {
 

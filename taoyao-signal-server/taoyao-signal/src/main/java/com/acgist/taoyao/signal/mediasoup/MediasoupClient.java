@@ -29,6 +29,7 @@ import org.springframework.scheduling.TaskScheduler;
 import com.acgist.taoyao.boot.annotation.Client;
 import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.property.MediasoupProperties;
 import com.acgist.taoyao.boot.property.TaoyaoProperties;
 import com.acgist.taoyao.boot.utils.JSONUtils;
@@ -36,11 +37,12 @@ import com.acgist.taoyao.signal.protocol.Protocol;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
 import com.acgist.taoyao.signal.protocol.ProtocolMediaAdapter;
 import com.acgist.taoyao.signal.protocol.media.MediaRegisterProtocol;
+import com.acgist.taoyao.signal.protocol.platform.PlatformErrorProtocol;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 媒体终端
+ * 媒体服务终端
  * 
  * @author acgist
  */
@@ -50,37 +52,39 @@ import lombok.extern.slf4j.Slf4j;
 public class MediasoupClient {
 	
 	@Autowired
-	private TaskScheduler taskSchedulerl;
+	private TaskScheduler taskScheduler;
 	@Autowired
 	private ProtocolManager protocolManager;
 	@Autowired
 	private TaoyaoProperties taoyaoProperties;
 	@Autowired
-	private MediaRegisterProtocol authorizeProtocol;
+	private MediaRegisterProtocol mediaRegisterProtocol;
+	@Autowired
+	private PlatformErrorProtocol platformErrorProtocol;
 	
 	/**
-	 * 媒体终端名称
+	 * 名称
 	 */
 	private String name;
 	/**
-	 * 当前重试周期
+	 * 重试周期
 	 */
 	private long duration;
 	/**
-	 * 媒体终端WebSocket通道
+	 * 通道
 	 */
 	private WebSocket webSocket;
 	/**
-	 * 媒体终端配置
+	 * 配置
 	 */
 	private MediasoupProperties mediasoupProperties;
 	/**
 	 * 同步消息
 	 */
-	private Map<String, Message> syncMessage = new ConcurrentHashMap<>();
+	private final Map<String, Message> syncMessage = new ConcurrentHashMap<>();
 
 	/**
-	 * 初始化客户端
+	 * 加载终端
 	 * 
 	 * @param mediasoupProperties 媒体终端配置
 	 */
@@ -92,18 +96,18 @@ public class MediasoupClient {
 	}
 	
 	/**
-	 * @return Mediasoup名称
+	 * @return 名称
 	 */
 	public String name() {
 		return this.name;
 	}
 	
 	/**
-	 * 连接Mediasoup WebSocket通道
+	 * 连接WebSocket通道
 	 */
 	public void buildClient() {
 		final URI uri = URI.create(this.mediasoupProperties.getAddress());
-		log.info("开始连接Mediasoup：{}", uri);
+		log.info("连接媒体服务：{}", uri);
 		try {
 			HttpClient
 				.newBuilder()
@@ -114,10 +118,10 @@ public class MediasoupClient {
 				.buildAsync(uri, new MessageListener())
 				.get();
 		} catch (InterruptedException | ExecutionException e) {
-			log.error("连接Mediasoup异常：{}", uri, e);
-			this.taskSchedulerl.schedule(
+			log.error("连接媒体服务异常：{}", uri, e);
+			this.taskScheduler.schedule(
 				this::buildClient,
-				Instant.now().plusSeconds(this.retryDuration())
+				Instant.now().plusMillis(this.retryDuration())
 			);
 		}
 	}
@@ -135,7 +139,7 @@ public class MediasoupClient {
 	}
 	
 	/**
-	 * 同步发送消息
+	 * 请求消息
 	 * 
 	 * @param message 消息
 	 * 
@@ -145,21 +149,25 @@ public class MediasoupClient {
 		final String id = message.getHeader().getId();
 		this.syncMessage.put(id, message);
 		synchronized (message) {
+			this.send(message);
 			try {
 				message.wait(this.taoyaoProperties.getTimeout());
 			} catch (InterruptedException e) {
-				log.error("等待同步消息异常：{}", message, e);
+				log.error("等待媒体服务响应异常：{}", message, e);
 			}
 		}
 		final Message response = this.syncMessage.remove(id);
 		if(response == null || message.equals(response)) {
-			log.warn("消息没有响应：{}", message);
+			log.warn("媒体服务没有响应：{}", message);
+			return this.platformErrorProtocol.build(id, MessageCode.CODE_2001, "媒体服务没有响应", response);
 		}
 		return response;
 	}
 	
 	/**
 	 * 打开通道
+	 * 
+	 * @param webSocket 通道
 	 */
 	private void open(WebSocket webSocket) {
 		// 关闭旧的通道
@@ -171,7 +179,7 @@ public class MediasoupClient {
 		// 设置新的通道
 		this.webSocket = webSocket;
 		// 发送授权消息
-		this.send(this.authorizeProtocol.build(this.mediasoupProperties));
+		this.send(this.mediaRegisterProtocol.build(this.mediasoupProperties));
 	}
 	
 	/**
@@ -190,8 +198,18 @@ public class MediasoupClient {
 		if(StringUtils.isNotEmpty(data)) {
 			final Message message = JSONUtils.toJava(data, Message.class);
 			final Header header = message.getHeader();
+			if(header == null) {
+				log.warn("消息格式错误（没有头部）：{}", message);
+				return;
+			}
+			final String v = header.getV();
 			final String id = header.getId();
+			final String sn = header.getSn();
 			final String signal = header.getSignal();
+			if(v == null || id == null || sn == null || signal == null) {
+				log.warn("消息格式错误（缺失头部关键参数）：{}", message);
+				return;
+			}
 			final Message request = this.syncMessage.get(id);
 			// 存在同步响应
 			if(request != null) {
@@ -206,7 +224,7 @@ public class MediasoupClient {
 				if(protocol instanceof ProtocolMediaAdapter mediasoupProtocol) {
 					mediasoupProtocol.execute(message, this.webSocket);
 				} else {
-					log.warn("未知Mediasoup信令：{}", data);
+					log.warn("未知媒体服务信令：{}", data);
 				}
 			}
 		}
@@ -221,59 +239,63 @@ public class MediasoupClient {
 		
 		@Override
     	public void onOpen(WebSocket webSocket) {
-    		log.info("Mediasoup通道打开：{}", webSocket);
+    		log.info("媒体服务通道打开：{}", webSocket);
     		Listener.super.onOpen(webSocket);
     		MediasoupClient.this.open(webSocket);
     	}
 		
     	@Override
     	public CompletionStage<?> onBinary(WebSocket webSocket, ByteBuffer data, boolean last) {
-    		log.debug("Mediasoup收到消息（binary）：{}", webSocket);
+    		log.debug("媒体服务收到消息（binary）：{}", webSocket);
     		return Listener.super.onBinary(webSocket, data, last);
     	}
     	
     	@Override
     	public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
-    		log.debug("Mediasoup收到消息（text）：{}-{}", webSocket, data);
-    		MediasoupClient.this.execute(data.toString());
+    		log.debug("媒体服务收到消息（text）：{}-{}", webSocket, data);
+    		try {
+    			MediasoupClient.this.execute(data.toString());
+			} catch (Exception e) {
+				log.error("媒体服务处理异常：{}", data, e);
+			}
     		return Listener.super.onText(webSocket, data, last);
     	}
     	
     	@Override
     	public CompletionStage<?> onClose(WebSocket webSocket, int statusCode, String reason) {
-    		log.warn("Mediasoup通道关闭：{}-{}-{}", webSocket, statusCode, reason);
+    		log.warn("媒体服务通道关闭：{}-{}-{}", webSocket, statusCode, reason);
     		try {
     			return Listener.super.onClose(webSocket, statusCode, reason);
 			} finally {
-				MediasoupClient.this.taskSchedulerl.schedule(
+				MediasoupClient.this.taskScheduler.schedule(
 					MediasoupClient.this::buildClient,
-					Instant.now().plusSeconds(MediasoupClient.this.retryDuration())
+					Instant.now().plusMillis(MediasoupClient.this.retryDuration())
 				);
 			}
     	}
     	
     	@Override
     	public void onError(WebSocket webSocket, Throwable error) {
-    		log.error("Mediasoup通道异常：{}", webSocket, error);
+    		log.error("媒体服务通道异常：{}", webSocket, error);
     		try {
     			Listener.super.onError(webSocket, error);
 			} finally {
-				MediasoupClient.this.taskSchedulerl.schedule(
+				MediasoupClient.this.taskScheduler.schedule(
 					MediasoupClient.this::buildClient,
-					Instant.now().plusSeconds(MediasoupClient.this.retryDuration())
+					Instant.now().plusMillis(MediasoupClient.this.retryDuration())
 				);
 			}
     	}
     	
     	@Override
     	public CompletionStage<?> onPing(WebSocket webSocket, ByteBuffer message) {
-    		log.debug("Mediasoup收到消息（ping）：{}", webSocket);
+    		log.debug("媒体服务收到消息（ping）：{}", webSocket);
     		return Listener.super.onPing(webSocket, message);
     	}
     	
     	@Override
     	public CompletionStage<?> onPong(WebSocket webSocket, ByteBuffer message) {
-    		log.debug("Mediasoup收到消息（pong）：{}", webSocket);
+    		log.debug("媒体服务收到消息（pong）：{}", webSocket);
     		return Listener.super.onPong(webSocket, message);
     	}
     	

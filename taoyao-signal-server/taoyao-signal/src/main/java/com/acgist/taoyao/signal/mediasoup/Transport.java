@@ -3,7 +3,7 @@ package com.acgist.taoyao.signal.mediasoup;
 import java.io.Closeable;
 import java.util.List;
 
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 
 /**
  * 传输通道
@@ -15,20 +15,20 @@ public class Transport implements Closeable {
 	/**
 	 * 终端
 	 */
-	private ClientSession clientSession;
+	private Client client;
 	/**
 	 * 生产者列表
 	 */
-	private List<Stream> producerList;
+	private List<Stream> producers;
 	/**
 	 * 消费者列表
 	 */
-	private List<Stream> consumerList;
+	private List<Stream> consumers;
 	
 	@Override
 	public void close() {
-		this.producerList.forEach(Stream::close);
-		this.consumerList.forEach(Stream::close);
+		this.producers.forEach(Stream::close);
+		this.consumers.forEach(Stream::close);
 	}
 	
 }

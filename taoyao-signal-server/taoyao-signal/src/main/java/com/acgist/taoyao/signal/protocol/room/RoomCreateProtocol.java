@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.room.RoomCreateEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 
@@ -23,8 +23,8 @@ public class RoomCreateProtocol extends ProtocolMapAdapter {
 	}
 
 	@Override
-	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		this.publishEvent(new RoomCreateEvent(body, message, session));
+	public void execute(String sn, Map<?, ?> body, Client client, Message message) {
+		this.publishEvent(new RoomCreateEvent(body, client, message));
 	}
 
 }

@@ -7,8 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.client.ClientRegisterEvent;
+import com.acgist.taoyao.signal.protocol.Constant;
 import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 import com.acgist.taoyao.signal.service.SecurityService;
 
@@ -33,21 +34,21 @@ public class ClientRegisterProtocol extends ProtocolMapAdapter {
 	}
 
 	@Override
-	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		final String username = (String) body.get("username");
-		final String password = (String) body.get("password");
+	public void execute(String sn, Map<?, ?> body, Client client, Message message) {
+		final String username = (String) body.get(Constant.USERNAME);
+		final String password = (String) body.get(Constant.PASSWORD);
 		// 如果需要终端鉴权在此实现
 		if(this.securityService.authenticate(username, password)) {
 			log.info("终端注册：{}", sn);
-			session.authorize(sn);
+			client.authorize(sn);
 			message.setCode(MessageCode.CODE_0000);
 		} else {
 			message.setCode(MessageCode.CODE_3401);
 		}
 		// 推送消息
-		session.push(message.cloneWidthoutBody());
+		client.push(message.cloneWidthoutBody());
 		// 发送事件
-		this.publishEvent(new ClientRegisterEvent(body, message, session));
+		this.publishEvent(new ClientRegisterEvent(body, client, message));
 	}
-
+	
 }

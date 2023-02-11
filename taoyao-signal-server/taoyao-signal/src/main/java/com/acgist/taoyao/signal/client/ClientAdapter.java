@@ -1,7 +1,7 @@
 package com.acgist.taoyao.signal.client;
 
-import org.apache.commons.lang3.StringUtils;
-
+import com.acgist.taoyao.boot.model.Header;
+import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.mediasoup.MediasoupClient;
 
 /**
@@ -9,12 +9,16 @@ import com.acgist.taoyao.signal.mediasoup.MediasoupClient;
  * 
  * @author acgist
  */
-public abstract class ClientSessionAdapter<T extends AutoCloseable> implements ClientSession {
+public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 
 	/**
 	 * 终端标识
 	 */
 	protected String sn;
+	/**
+	 * IP
+	 */
+	protected String ip;
 	/**
 	 * 进入时间
 	 */
@@ -30,17 +34,17 @@ public abstract class ClientSessionAdapter<T extends AutoCloseable> implements C
 	/**
 	 * 终端状态
 	 */
-	protected ClientSessionStatus status;
+	protected ClientStatus status;
 	/**
-	 * Mediasoup终端
+	 * 媒体服务终端
 	 */
 	protected MediasoupClient mediasoupClient;
 	
-	protected ClientSessionAdapter(T instance) {
+	protected ClientAdapter(T instance) {
 		this.time = System.currentTimeMillis();
 		this.instance = instance;
 		this.authorized = false;
-		this.status = new ClientSessionStatus();
+		this.status = new ClientStatus();
 	}
 
 	@Override
@@ -49,13 +53,32 @@ public abstract class ClientSessionAdapter<T extends AutoCloseable> implements C
 	}
 	
 	@Override
-	public ClientSessionStatus status() {
+	public String ip() {
+		return this.ip;
+	}
+	
+	@Override
+	public ClientStatus status() {
 		return this.status;
+	}
+	
+	@Override
+	public void push(String sn, Message message) {
+		final Header header = message.getHeader();
+		if(header != null) {
+			header.setSn(sn);
+		}
+		this.push(message);
 	}
 	
 	@Override
 	public boolean timeout(long timeout) {
 		return System.currentTimeMillis() - this.time > timeout;
+	}
+	
+	@Override
+	public T instance() {
+		return this.instance;
 	}
 	
 	@Override
@@ -70,21 +93,6 @@ public abstract class ClientSessionAdapter<T extends AutoCloseable> implements C
 	}
 	
 	@Override
-	public boolean filterSn(String sn) {
-		return StringUtils.equals(sn, this.sn);
-	}
-	
-	@Override
-	public boolean filterNoneSn(String sn) {
-		return !StringUtils.equals(sn, this.sn);
-	}
-	
-	@Override
-	public <I extends AutoCloseable> boolean matchInstance(I instance) {
-		return instance == this.instance;
-	}
-	
-	@Override
 	public MediasoupClient mediasoupClient() {
 		return this.mediasoupClient;
 	}
@@ -92,18 +100,12 @@ public abstract class ClientSessionAdapter<T extends AutoCloseable> implements C
 	@Override
 	public void mediasoupClient(MediasoupClient mediasoupClient) {
 		this.mediasoupClient = mediasoupClient;
+		this.status.setMediasoup(mediasoupClient.name());
 	}
 	
 	@Override
 	public void close() throws Exception {
 		this.instance.close();
-	}
-	
-	/**
-	 * @return 会话实例
-	 */
-	public T instance() {
-		return this.instance;
 	}
 	
 	@Override

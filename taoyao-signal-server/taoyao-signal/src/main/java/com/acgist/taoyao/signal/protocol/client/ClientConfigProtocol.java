@@ -9,13 +9,13 @@ import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.property.MediaProperties;
 import com.acgist.taoyao.boot.property.WebrtcProperties;
-import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.boot.utils.DateUtils.DateTimeStyle;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.protocol.Constant;
 import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 
 /**
- * 下发配置信令
+ * 终端配置信令
  * 
  * @author acgist
  */
@@ -30,11 +30,11 @@ public class ClientConfigProtocol extends ProtocolAdapter {
 	private WebrtcProperties webrtcProperties;
 	
 	public ClientConfigProtocol() {
-		super("下发配置信令", SIGNAL);
+		super("终端配置信令", SIGNAL);
 	}
 
 	@Override
-	public void execute(String sn, Message message, ClientSession session) {
+	public void execute(String sn, Client client, Message message) {
 		// 忽略
 	}
 	
@@ -42,9 +42,10 @@ public class ClientConfigProtocol extends ProtocolAdapter {
 	public Message build() {
 		final Message message = super.build();
 		message.setBody(Map.of(
-			"time", DateUtils.format(LocalDateTime.now(), DateTimeStyle.YYYYMMDDHH24MMSS),
-			"media", this.mediaProperties,
-			"webrtc", this.webrtcProperties
+			// 系统时间
+			Constant.TIME, DateTimeStyle.YYYYMMDDHH24MMSS.getDateTimeFormatter().format(LocalDateTime.now()),
+			Constant.MEDIA, this.mediaProperties,
+			Constant.WEBRTC, this.webrtcProperties
 		));
 		return message;
 	}

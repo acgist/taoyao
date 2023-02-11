@@ -11,7 +11,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-import com.acgist.taoyao.boot.property.SecurityProperties;
 import com.acgist.taoyao.boot.property.TaoyaoProperties;
 
 import io.swagger.v3.oas.models.Components;
@@ -31,9 +30,15 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
 @Configuration
 @ConditionalOnClass(OpenAPI.class)
 public class SpringDocAutoConfiguration {
+	
+	/**
+	 * Basic认证
+	 */
+	private static final String BASIC = "Basic";
 
 	@Value("${server.port:8888}")
 	private Integer port;
+	
 	@Autowired
 	private TaoyaoProperties taoyaoProperties;
 	
@@ -101,7 +106,7 @@ public class SpringDocAutoConfiguration {
 	private List<SecurityRequirement> buildSecurity() {
 		return List.of(
 			new SecurityRequirement()
-			.addList(SecurityProperties.BASIC)
+			.addList(BASIC)
 		);
 	}
 	
@@ -110,7 +115,7 @@ public class SpringDocAutoConfiguration {
 	 */
 	private Components buildComponents() {
 		return new Components()
-			.addSecuritySchemes(SecurityProperties.BASIC, this.buildSecurityScheme());
+			.addSecuritySchemes(BASIC, this.buildSecurityScheme());
 	}
 	
 	/**
@@ -118,8 +123,8 @@ public class SpringDocAutoConfiguration {
 	 */
 	private SecurityScheme buildSecurityScheme() {
 		return new SecurityScheme()
-			.name(SecurityProperties.BASIC)
-			.scheme(SecurityProperties.BASIC)
+			.name(BASIC)
+			.scheme(BASIC)
 			.in(SecurityScheme.In.HEADER)
 			.type(SecurityScheme.Type.HTTP);
 	}

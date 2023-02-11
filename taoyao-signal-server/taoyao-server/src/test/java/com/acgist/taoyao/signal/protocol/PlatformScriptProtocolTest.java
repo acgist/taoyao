@@ -21,7 +21,7 @@ class PlatformScriptProtocolTest {
 	@Test
 	void testScript() {
 		assertDoesNotThrow(() -> {
-			this.platformScriptProtocol.execute("taoyao", Map.of("script", "netstat -ano"), Message.success(), null);
+			this.platformScriptProtocol.execute("taoyao", Map.of("script", "netstat -ano"), null, Message.success());
 			Thread.sleep(1000);
 		});
 	}

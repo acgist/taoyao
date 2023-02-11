@@ -12,8 +12,8 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.JSONUtils;
-import com.acgist.taoyao.signal.client.ClientSession;
-import com.acgist.taoyao.signal.client.ClientSessionManager;
+import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.protocol.client.ClientRegisterProtocol;
 import com.acgist.taoyao.signal.protocol.platform.PlatformErrorProtocol;
 import com.acgist.taoyao.signal.service.SecurityService;
@@ -36,17 +36,17 @@ public class ProtocolManager {
 	private Map<String, Protocol> protocolMapping = new ConcurrentHashMap<>();
 	
 	@Autowired
-	private ApplicationContext context;
+	private ClientManager clientManager;
 	@Autowired
 	private SecurityService securityService;
 	@Autowired
-	private ClientSessionManager clientSessionManager;
+	private ApplicationContext applicationContext;
 	@Autowired
 	private PlatformErrorProtocol platformErrorProtocol;
 	
 	@PostConstruct
 	public void init() {
-		final Map<String, Protocol> map = this.context.getBeansOfType(Protocol.class);
+		final Map<String, Protocol> map = this.applicationContext.getBeansOfType(Protocol.class);
 		map.entrySet().stream()
 		.sorted((a, z) -> a.getValue().signal().compareTo(z.getValue().signal()))
 		.forEach(e -> {
@@ -74,50 +74,50 @@ public class ProtocolManager {
 	/**
 	 * 执行信令消息
 	 * 
-	 * @param message 信令消息
+	 * @param content 信令消息
 	 * @param instance 会话实例
 	 */
-	public void execute(String message, AutoCloseable instance) {
-		log.debug("执行信令消息：{}", message);
-		final ClientSession session = this.clientSessionManager.session(instance);
+	public void execute(String content, AutoCloseable instance) {
+		log.debug("执行信令消息：{}", content);
+		final Client client = this.clientManager.client(instance);
 		// 验证请求
-		final Message value = JSONUtils.toJava(message, Message.class);
-		if(value == null) {
-			log.warn("消息格式错误（解析失败）：{}", message);
-			session.push(this.platformErrorProtocol.build("消息格式错误（解析失败）"));
+		final Message message = JSONUtils.toJava(content, Message.class);
+		if(message == null) {
+			log.warn("消息格式错误（解析失败）：{}", content);
+			client.push(this.platformErrorProtocol.build("消息格式错误（解析失败）"));
 			return;
 		}
-		final Header header = value.getHeader();
+		final Header header = message.getHeader();
 		if(header == null) {
-			log.warn("消息格式错误（没有头部）：{}", message);
-			session.push(this.platformErrorProtocol.build("消息格式错误（没有头部）"));
+			log.warn("消息格式错误（没有头部）：{}", content);
+			client.push(this.platformErrorProtocol.build("消息格式错误（没有头部）"));
 			return;
 		}
 		final String v = header.getV();
 		final String id = header.getId();
 		final String sn = header.getSn();
 		final String signal = header.getSignal();
-		if(v == null || id == null || sn == null || signal == null) {
-			log.warn("消息格式错误（缺失头部关键参数）：{}", message);
-			session.push(this.platformErrorProtocol.build("消息格式错误（缺失头部关键参数）"));
-			return;
-		}
 		// 设置缓存ID
 		this.platformErrorProtocol.set(id);
+		if(v == null || id == null || sn == null || signal == null) {
+			log.warn("消息格式错误（缺失头部关键参数）：{}", content);
+			client.push(this.platformErrorProtocol.build("消息格式错误（缺失头部关键参数）"));
+			return;
+		}
 		// 开始处理协议
 		final Protocol protocol = this.protocolMapping.get(signal);
 		if(protocol == null) {
-			log.warn("不支持的信令协议：{}", message);
-			session.push(this.platformErrorProtocol.build("不支持的信令协议：" + signal));
+			log.warn("不支持的信令协议：{}", content);
+			client.push(this.platformErrorProtocol.build("不支持的信令协议：" + signal));
 			return;
 		}
 		if(protocol instanceof ClientRegisterProtocol) {
-			protocol.execute(sn, value, session);
-		} else if(this.securityService.authenticate(value, session, protocol)) {
-			protocol.execute(sn, value, session);
+			protocol.execute(sn, client, message);
+		} else if(this.securityService.authenticate(message, client, protocol)) {
+			protocol.execute(sn, client, message);
 		} else {
-			log.warn("终端会话没有授权：{}", message);
-			session.push(this.platformErrorProtocol.build(MessageCode.CODE_3401, "终端会话没有授权"));
+			log.warn("终端会话没有授权：{}", content);
+			client.push(this.platformErrorProtocol.build(MessageCode.CODE_3401, "终端会话没有授权"));
 		}
 	}
 	

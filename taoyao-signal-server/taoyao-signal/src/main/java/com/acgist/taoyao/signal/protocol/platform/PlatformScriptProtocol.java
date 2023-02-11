@@ -3,7 +3,7 @@ package com.acgist.taoyao.signal.protocol.platform;
 import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.platform.PlatformScriptEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
 
@@ -21,8 +21,8 @@ public class PlatformScriptProtocol extends ProtocolMapAdapter {
 	}
 
 	@Override
-	public void execute(String sn, Map<?, ?> body, Message message, ClientSession session) {
-		this.publishEvent(new PlatformScriptEvent(body, message, session));
+	public void execute(String sn, Map<?, ?> body, Client client, Message message) {
+		this.publishEvent(new PlatformScriptEvent(body, client, message));
 	}
 	
 }

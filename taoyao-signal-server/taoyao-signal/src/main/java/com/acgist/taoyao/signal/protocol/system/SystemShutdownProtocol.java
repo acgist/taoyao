@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.property.ScriptProperties;
-import com.acgist.taoyao.signal.client.ClientSession;
+import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.platform.PlatformScriptEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 
@@ -28,10 +28,10 @@ public class SystemShutdownProtocol extends ProtocolAdapter {
 	}
 
 	@Override
-	public void execute(String sn, Message message, ClientSession session) {
+	public void execute(String sn, Client client, Message message) {
 		log.info("关闭系统：{}", sn);
-		this.clientSessionManager.broadcast(message);
-		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getSystemShutdown(), message, session));
+		this.clientManager.broadcast(message);
+		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getSystemShutdown(), client, message));
 	}
 
 }

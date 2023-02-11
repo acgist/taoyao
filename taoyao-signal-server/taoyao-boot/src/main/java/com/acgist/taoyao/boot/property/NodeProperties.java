@@ -17,25 +17,25 @@ import lombok.Setter;
 public class NodeProperties {
 
 	/**
-	 * 节点主机
+	 * 主机
 	 */
-	@Schema(title = "节点主机", description = "节点主机")
+	@Schema(title = "主机", description = "主机")
 	private String host;
 	/**
-	 * 节点端口
+	 * 端口
 	 */
-	@Schema(title = "节点端口", description = "节点端口")
+	@Schema(title = "端口", description = "端口")
 	private Integer port;
 	/**
 	 * 用户
 	 */
-	@Schema(title = "节点用户", description = "节点用户")
+	@Schema(title = "用户", description = "用户")
 	@JsonIgnore
 	private String username;
 	/**
 	 * 密码
 	 */
-	@Schema(title = "节点密码", description = "节点密码")
+	@Schema(title = "密码", description = "密码")
 	@JsonIgnore
 	private String password;
 	/**

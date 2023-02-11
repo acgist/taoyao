@@ -22,12 +22,12 @@ public class Router implements Closeable {
 	/**
 	 * 传输通道列表
 	 */
-	private List<Transport> transportList;
+	private List<Transport> transports;
 	
 	@Override
 	public void close() {
 		log.info("关闭路由：{}", this.room.getId());
-		this.transportList.forEach(Transport::close);
+		this.transports.forEach(Transport::close);
 	}
 
 }
