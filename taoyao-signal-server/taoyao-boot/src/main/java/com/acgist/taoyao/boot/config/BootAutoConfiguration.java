@@ -52,6 +52,7 @@ import com.acgist.taoyao.boot.property.IdProperties;
 import com.acgist.taoyao.boot.property.MediaProperties;
 import com.acgist.taoyao.boot.property.ScriptProperties;
 import com.acgist.taoyao.boot.property.SecurityProperties;
+import com.acgist.taoyao.boot.property.SocketProperties;
 import com.acgist.taoyao.boot.property.TaoyaoProperties;
 import com.acgist.taoyao.boot.property.WebrtcProperties;
 import com.acgist.taoyao.boot.service.IdService;
@@ -82,6 +83,7 @@ import lombok.extern.slf4j.Slf4j;
 	IdProperties.class,
 	MediaProperties.class,
 	ScriptProperties.class,
+	SocketProperties.class,
 	TaoyaoProperties.class,
 	WebrtcProperties.class,
 	SecurityProperties.class

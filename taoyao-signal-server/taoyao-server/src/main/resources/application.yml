@@ -111,6 +111,16 @@ taoyao:
         password: taoyao
     # 录像配置
     record-storage-path: /data/record
+  # Socket信令
+  socket:
+    enabled: true
+    host: 0.0.0.0
+    port: 9999
+    queue-size: 100000
+    thread-min: 4
+    thread-max: 128
+    thread-name-prefix: ${spring.application.name}-signal-
+    keep-alive-time: 60
   # WebRTC配置
   webrtc:
     # STUN服务
@@ -121,10 +131,10 @@ taoyao:
       - stun:stun4.l.google.com:19302
     # TURN服务
     turn:
-      - turn:127.0.0.1:8888
-      - turn:127.0.0.1:8888
-      - turn:127.0.0.1:8888
-      - turn:127.0.0.1:8888
+      - turn:192.168.8.110:3478
+      - turn:192.168.8.111:3478
+      - turn:192.168.8.112:3478
+      - turn:192.168.8.113:3478
   # 安全配置
   security:
     enabled: true

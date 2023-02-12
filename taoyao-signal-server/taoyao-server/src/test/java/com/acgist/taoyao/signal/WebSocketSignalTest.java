@@ -18,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @TaoyaoTest(classes = TaoyaoApplication.class)
-class SignalTest {
+class WebSocketSignalTest {
 
 	/**
 	 * 防止GC

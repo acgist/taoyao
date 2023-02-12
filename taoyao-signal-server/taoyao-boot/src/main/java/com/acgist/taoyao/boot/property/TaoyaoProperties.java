@@ -27,16 +27,6 @@ public class TaoyaoProperties {
 	@Schema(title = "项目名称", description = "项目名称")
 	private String name;
 	/**
-	 * 超时时间
-	 */
-	@Schema(title = "超时时间", description = "超时时间")
-	private Long timeout;
-	/**
-	 * 最大超时时间
-	 */
-	@Schema(title = "最大超时时间", description = "最大超时时间")
-	private Long maxTimeout;
-	/**
 	 * 项目版本
 	 */
 	@Schema(title = "项目版本", description = "项目版本")
@@ -46,5 +36,15 @@ public class TaoyaoProperties {
 	 */
 	@Schema(title = "项目描述", description = "项目描述")
 	private String description;
+	/**
+	 * 超时时间
+	 */
+	@Schema(title = "超时时间", description = "超时时间")
+	private Long timeout;
+	/**
+	 * 最大超时时间
+	 */
+	@Schema(title = "最大超时时间", description = "最大超时时间")
+	private Long maxTimeout;
 
 }

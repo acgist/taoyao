@@ -1,8 +1,9 @@
 package com.acgist.taoyao.signal.client.socket;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.net.Socket;
+import java.nio.ByteBuffer;
+import java.nio.channels.AsynchronousSocketChannel;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientAdapter;
@@ -19,31 +20,25 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @Setter
-public class SocketClient extends ClientAdapter<Socket> {
+public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
 
-	/**
-	 * 输出
-	 */
-	private OutputStream outputStream;
-	
-	public SocketClient(Socket instance) {
+	public SocketClient(AsynchronousSocketChannel instance) {
 		super(instance);
-		try {
-			this.outputStream = instance.getOutputStream();
-		} catch (IOException e) {
-			log.error("Socket终端输出异常：{}", instance, e);
-		}
 	}
 
 	@Override
 	public void push(Message message) {
 		try {
-			if(this.instance.isClosed()) {
-				log.error("会话已经关闭：{}", this.instance);
-			} else {
-				this.outputStream.write(message.toString().getBytes());
+			synchronized (this.instance) {
 			}
-		} catch (IOException e) {
+			if(this.instance.isOpen()) {
+				final Future<Integer> future = this.instance.write(ByteBuffer.wrap(message.toString().getBytes()));
+				future.get();
+				// TODO：超时
+			} else {
+				log.error("会话已经关闭：{}", this.instance);
+			}
+		} catch (InterruptedException | ExecutionException e) {
 			log.error("Socket发送消息异常：{}", message, e);
 		}
 	}

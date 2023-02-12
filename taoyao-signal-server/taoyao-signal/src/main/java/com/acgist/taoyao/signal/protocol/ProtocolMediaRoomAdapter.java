@@ -12,6 +12,8 @@ import com.acgist.taoyao.signal.media.Room;
 /**
  * 房间媒体服务信令适配器
  * 
+ * TODO：校验是否是房间内的用户权限
+ * 
  * @author acgist
  */
 public abstract class ProtocolMediaRoomAdapter extends ProtocolMediaAdapter implements MapBodyGetter {

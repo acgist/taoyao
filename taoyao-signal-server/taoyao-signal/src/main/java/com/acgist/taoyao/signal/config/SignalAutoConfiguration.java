@@ -9,8 +9,12 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
+import com.acgist.taoyao.boot.property.SocketProperties;
+import com.acgist.taoyao.signal.client.ClientManager;
+import com.acgist.taoyao.signal.client.socket.SocketSignal;
 import com.acgist.taoyao.signal.client.websocket.WebSocketSignal;
 import com.acgist.taoyao.signal.media.MediaClientManager;
+import com.acgist.taoyao.signal.protocol.ProtocolManager;
 import com.acgist.taoyao.signal.protocol.media.MediaRebootProtocol;
 import com.acgist.taoyao.signal.protocol.media.MediaShutdownProtocol;
 import com.acgist.taoyao.signal.protocol.platform.PlatformRebootProtocol;
@@ -57,6 +61,32 @@ public class SignalAutoConfiguration {
 			@Override
 			public void run(String ... args) throws Exception {
 				SignalAutoConfiguration.this.mediaClientManager.init();
+			}
+		};
+	}
+	
+	@Bean
+	@Autowired
+	@ConditionalOnProperty(prefix = "taoyao.socket", name = "enabled", havingValue = "true", matchIfMissing = true)
+	@ConditionalOnMissingBean
+	public SocketSignal socketSignal(
+		ClientManager clientManager,
+		ProtocolManager protocolManager,
+		SocketProperties socketProperties
+	) {
+		return new SocketSignal(clientManager, protocolManager, socketProperties);
+	}
+	
+	@Bean
+	@Autowired
+	@ConditionalOnProperty(prefix = "taoyao.socket", name = "enabled", havingValue = "true", matchIfMissing = true)
+	public CommandLineRunner socketSignalCommandLineRunner(
+		SocketSignal socketSignal
+	) {
+		return new CommandLineRunner() {
+			@Override
+			public void run(String ... args) throws Exception {
+				socketSignal.listen();
 			}
 		};
 	}
