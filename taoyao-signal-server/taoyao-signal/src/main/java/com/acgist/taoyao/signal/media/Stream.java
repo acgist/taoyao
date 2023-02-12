@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.mediasoup;
+package com.acgist.taoyao.signal.media;
 
 import java.io.Closeable;
 
@@ -60,8 +60,8 @@ public class Stream implements Closeable {
 	 * 媒体流ID
 	 * 
 	 * 媒体类型.发送终端标识.发送.房间ID：
-	 * 音频：audio.sn.sn.1000
-	 * 视频：video.sn.sn.1000
+	 * 音频：audio.sn.send.1000
+	 * 视频：video.sn.send.1000
 	 * 
 	 * 媒体类型.接收终端标识.接收.发送终端标识.房间ID：
 	 * 音频：audio.sn.recv.sn.1000

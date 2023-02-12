@@ -11,7 +11,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 重启媒体服务信令
+ * 媒体服务重启信令
  * 
  * @author acgist
  */

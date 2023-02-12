@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.mediasoup;
+package com.acgist.taoyao.signal.media;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -7,7 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import com.acgist.taoyao.boot.annotation.Manager;
-import com.acgist.taoyao.boot.property.WebrtcProperties;
+import com.acgist.taoyao.boot.property.MediaProperties;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,26 +18,26 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Manager
-public class MediasoupClientManager {
+public class MediaClientManager {
 
 	@Autowired
-	private WebrtcProperties webrtcProperties;
+	private MediaProperties mediaProperties;
 	@Autowired
 	private ApplicationContext applicationContext;
 	
 	/**
 	 * 媒体服务终端列表
 	 */
-	private Map<String, MediasoupClient> clientMap = new ConcurrentHashMap<>();
+	private Map<String, MediaClient> clientMap = new ConcurrentHashMap<>();
 	
 	/**
 	 * 加载媒体服务终端
 	 */
 	public void init() {
-		this.webrtcProperties.getMediasoupList().stream()
+		this.mediaProperties.getMediaServerList().stream()
 		.filter(v -> Boolean.TRUE.equals(v.getEnabled()))
 		.forEach(v -> {
-			final MediasoupClient client = this.applicationContext.getBean(MediasoupClient.class);
+			final MediaClient client = this.applicationContext.getBean(MediaClient.class);
 			client.init(v);
 			this.clientMap.put(client.name(), client);
 			log.info("注册媒体服务终端：{}-{}", v.getAddress(), client);
@@ -49,7 +49,7 @@ public class MediasoupClientManager {
 	 * 
 	 * @return 媒体服务终端
 	 */
-	public MediasoupClient mediasoupClient(String name) {
+	public MediaClient mediaClient(String name) {
 		return this.clientMap.get(name);
 	}
 	

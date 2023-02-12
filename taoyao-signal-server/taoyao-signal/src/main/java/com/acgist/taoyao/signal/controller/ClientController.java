@@ -8,9 +8,13 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientManager;
+import com.acgist.taoyao.signal.client.ClientStatus;
 import com.acgist.taoyao.signal.protocol.client.ClientRebootProtocol;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 /**
@@ -30,12 +34,14 @@ public class ClientController {
 	
 	@Operation(summary = "终端列表", description = "终端列表")
 	@GetMapping("/list")
+	@ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
 	public Message list() {
 		return Message.success(this.clientManager.status());
 	}
 	
 	@Operation(summary = "终端状态", description = "终端状态")
 	@GetMapping("/status/{sn}")
+	@ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
 	public Message status(@PathVariable String sn) {
 		return Message.success(this.clientManager.status(sn));
 	}

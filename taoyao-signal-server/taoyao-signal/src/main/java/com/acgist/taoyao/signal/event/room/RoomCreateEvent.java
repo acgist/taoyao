@@ -47,10 +47,10 @@ public class RoomCreateEvent extends ApplicationEventAdapter {
 	}
 	
 	/**
-	 * @return {@link Constant#MEDIASOUP}
+	 * @return {@link Constant#MEDIA_NAME}
 	 */
-	public String getMediasoup() {
-		return this.get(Constant.MEDIASOUP);
+	public String getMediaName() {
+		return this.get(Constant.MEDIA_NAME);
 	}
 
 }

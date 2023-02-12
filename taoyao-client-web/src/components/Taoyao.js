@@ -3,7 +3,7 @@
  */
 import { Logger } from "./Logger.js";
 import { TaoyaoClient } from "./TaoyaoClient.js";
-import * as mediasoupClient from 'mediasoup-client';
+import * as mediasoupClient from "mediasoup-client";
 import {
   config,
   protocol,
@@ -93,7 +93,8 @@ const signalChannel = {
         const battery = await navigator.getBattery();
         self.push(
           protocol.buildMessage("client::register", {
-            ip: 'localhost',
+            ip: "localhost",
+            sn: config.sn,
             signal: 100,
             battery: battery.level * 100,
             charging: battery.charging,
@@ -183,7 +184,7 @@ const signalChannel = {
   },
   /**
    * 异步请求
-   * 
+   *
    * @param {*} data 消息内容
    * @param {*} callback 注册回调
    */
@@ -198,12 +199,12 @@ const signalChannel = {
   },
   /**
    * 同步请求
-   * 
+   *
    * @param {*} data 消息内容
-   * 
+   *
    * @returns Promise
    */
-  request: async function(data) {
+  request: async function (data) {
     let self = this;
     return new Promise((resolve, reject) => {
       let callback = false;
@@ -217,7 +218,7 @@ const signalChannel = {
       self.channel.send(JSON.stringify(data));
       // 设置超时
       setTimeout(() => {
-        if(!callback) {
+        if (!callback) {
           reject("请求超时", data);
         }
       }, 5000);
@@ -244,6 +245,9 @@ const signalChannel = {
       case "client::config":
         self.defaultClientConfig(data);
         break;
+      case "client::reboot":
+        self.defaultClientReboot(data);
+        break;
       case "client::register":
         logger.info("桃夭终端注册成功");
         break;
@@ -258,10 +262,11 @@ const signalChannel = {
    * @param {*} data 消息内容
    */
   defaultClientConfig: function (data) {
-    config.webrtc = data.body.webrtc;
     config.audio = { ...config.defaultAudioConfig, ...data.body.media.audio };
     config.video = { ...config.defaultVideoConfig, ...data.body.media.video };
-    logger.info("终端配置", config.audio, config.video, config.webrtc);
+    config.webrtc = data.body.webrtc;
+    config.mediaServerList = data.body.media.mediaServerList;
+    logger.info("终端配置", config.audio, config.video, config.webrtc, config.mediaServerList);
   },
   /**
    * 默认终端重启回调
@@ -308,9 +313,9 @@ class Taoyao {
   // 视频生产者
   videoProducer = null;
   // 消费者
-	consumers = new Map();
+  consumers = new Map();
   // 数据消费者
-	dataConsumers = new Map();
+  dataConsumers = new Map();
 
   /**
    * 打开信令通道
@@ -319,45 +324,54 @@ class Taoyao {
    *
    * @returns
    */
-  buildChannel = async function (callback) {
+   buildSignal = async function (callback) {
     signalChannel.taoyao = this;
     this.signalChannel = signalChannel;
     // 不能直接this.push = this.signalChannel.push这样导致this对象错误
     this.push = function (data, pushCallback) {
       this.signalChannel.push(data, pushCallback);
     };
-    this.request = async function(data) {
+    this.request = async function (data) {
       return await this.signalChannel.request(data);
-    }
+    };
     return this.signalChannel.connect(config.signal(), callback);
   };
   /**
-   * 设置本地媒体
-   */
-  buildLocal = function() {
-    new mediasoupClient.Device();
-  };
-  /**
    * 打开媒体通道
+   * navigator.mediaDevices.getDisplayMedia();
    */
-  buildMediaTransport = function() {
+  buildMedia = async function (roomId) {
     let self = this;
     // 释放资源
-    self.close();
-
+    self.closeMedia();
+    self.mediasoupDevice = new mediasoupClient.Device();
+    const response = await this.request(protocol.buildMessage(
+      "router::rtp::capabilities",
+      { roomId }
+    ));
+    const routerRtpCapabilities = response.body;
+    console.log(self.mediasoupDevice);
+    console.log(routerRtpCapabilities);
+  };
+  /**
+   * 关闭媒体
+   */
+  closeMedia = function() {
+    let self = this;
+    if (self.sendTransport) {
+      self.sendTransport.close();
+    }
+    if (self.recvTransport) {
+      self.recvTransport.close();
+    }    
   }
   /**
    * 关闭
    */
-  close = function() {
+  close = function () {
     let self = this;
-    if(self.sendTransport) {
-      self.sendTransport.close();
-    }
-    if(self.recvTransport) {
-      self.recvTransport.close();
-    }
-    if(self.signalChannel) {
+    self.closeMedia();
+    if (self.signalChannel) {
       self.signalChannel.close();
     }
   };

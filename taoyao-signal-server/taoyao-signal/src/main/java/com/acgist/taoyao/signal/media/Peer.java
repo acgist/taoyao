@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.mediasoup;
+package com.acgist.taoyao.signal.media;
 
 import java.util.Map;
 

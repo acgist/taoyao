@@ -9,7 +9,7 @@ import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.room.RoomEnterEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
-import com.acgist.taoyao.signal.mediasoup.MediasoupClient;
+import com.acgist.taoyao.signal.media.MediaClient;
 import com.acgist.taoyao.signal.protocol.Constant;
 import com.acgist.taoyao.signal.room.Room;
 
@@ -35,12 +35,12 @@ public class RoomEnterListener extends ApplicationListenerAdapter<RoomEnterEvent
 			throw MessageCodeException.of(MessageCode.CODE_3401, "密码错误");
 		}
 		final Client client = event.getClient();
-		final MediasoupClient mediasoupClient = room.getMediasoupClient();
-		if(client.mediasoupClient() == null) {
-			client.mediasoupClient(mediasoupClient);
-		} else if(client.mediasoupClient() == mediasoupClient) {
+		final MediaClient mediaClient = room.getMediaClient();
+		if(client.mediaClient() == null) {
+			client.mediaClient(mediaClient);
+		} else if(client.mediaClient() == mediaClient) {
 		} else {
-			throw MessageCodeException.of("不在相同媒体服务：" + mediasoupClient.name());
+			throw MessageCodeException.of("不在相同媒体服务：" + mediaClient.name());
 		}
 		// 进入房间
 		room.enter(client);
@@ -50,8 +50,7 @@ public class RoomEnterListener extends ApplicationListenerAdapter<RoomEnterEvent
 			Constant.ID, room.getId(),
 			Constant.SN, sn
 		));
-		room.broadcast(client, message);
-		// TODO：推送流媒体列表
+		room.broadcast(message);
 	}
 
 }

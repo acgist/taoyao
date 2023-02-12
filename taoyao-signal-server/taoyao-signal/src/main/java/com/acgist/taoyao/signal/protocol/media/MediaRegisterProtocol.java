@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.boot.property.MediasoupProperties;
+import com.acgist.taoyao.boot.property.MediaServerProperties;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.protocol.Constant;
 import com.acgist.taoyao.signal.protocol.ProtocolMediaAdapter;
@@ -30,14 +30,14 @@ public class MediaRegisterProtocol extends ProtocolMediaAdapter {
 	/**
 	 * 创建信令消息
 	 * 
-	 * @param mediasoup 媒体配置
+	 * @param mediaServerProperties 媒体服务配置
 	 * 
 	 * @return 信令消息
 	 */
-	public Message build(MediasoupProperties mediasoup) {
+	public Message build(MediaServerProperties mediaServerProperties) {
 		return super.build(Map.of(
-			Constant.USERNAME, mediasoup.getUsername(),
-			Constant.PASSWORD, mediasoup.getPassword()
+			Constant.USERNAME, mediaServerProperties.getUsername(),
+			Constant.PASSWORD, mediaServerProperties.getPassword()
 		));
 	}
 	

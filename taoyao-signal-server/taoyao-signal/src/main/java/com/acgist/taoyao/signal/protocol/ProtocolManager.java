@@ -95,11 +95,10 @@ public class ProtocolManager {
 		}
 		final String v = header.getV();
 		final String id = header.getId();
-		final String sn = header.getSn();
 		final String signal = header.getSignal();
 		// 设置缓存ID
 		this.platformErrorProtocol.set(id);
-		if(v == null || id == null || sn == null || signal == null) {
+		if(v == null || id == null || signal == null) {
 			log.warn("消息格式错误（缺失头部关键参数）：{}", content);
 			client.push(this.platformErrorProtocol.build("消息格式错误（缺失头部关键参数）"));
 			return;
@@ -112,9 +111,9 @@ public class ProtocolManager {
 			return;
 		}
 		if(protocol instanceof ClientRegisterProtocol) {
-			protocol.execute(sn, client, message);
+			protocol.execute(null, client, message);
 		} else if(this.securityService.authenticate(message, client, protocol)) {
-			protocol.execute(sn, client, message);
+			protocol.execute(client.sn(), client, message);
 		} else {
 			log.warn("终端会话没有授权：{}", content);
 			client.push(this.platformErrorProtocol.build(MessageCode.CODE_3401, "终端会话没有授权"));

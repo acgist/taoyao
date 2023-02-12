@@ -1,7 +1,7 @@
 <!-- 桃夭 -->
 <template>
-  <SettingRoom :roomVisible="roomVisible" :taoyao="taoyao"></SettingRoom>
-  <SettingSignal :signalVisible="signalVisible" @connectSignal="connectSignal"></SettingSignal>
+  <SettingRoom :roomVisible="roomVisible" :taoyao="taoyao" @buildMedia="buildMedia"></SettingRoom>
+  <SettingSignal :signalVisible="signalVisible" @buildSignal="buildSignal"></SettingSignal>
 </template>
 
 <script>
@@ -26,10 +26,14 @@ export default {
     this.logger.info("桃夭终端开始启动");
   },
   methods: {
-    connectSignal: function() {
+    buildSignal: function() {
       let self = this;
       self.signalVisible = false;
-      self.taoyao.buildChannel(self.callback);
+      self.taoyao.buildSignal(self.callback);
+    },
+    buildMedia: function(roomId) {
+      let self = this;
+      self.taoyao.buildMedia(roomId);
     },
     /**
      * 信令回调

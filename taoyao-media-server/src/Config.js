@@ -6,6 +6,7 @@ const os = require("os");
 module.exports = {
   // 服务名称
   name: "taoyao-media-server",
+  version: "1.0.0",
   // 交互式命令行
   command: true,
   // 日志级别
@@ -30,7 +31,8 @@ module.exports = {
     workerSize: Object.keys(os.cpus()).length,
     // Worker：https://mediasoup.org/documentation/v3/mediasoup/api/#WorkerSettings
     workerSettings: {
-      logLevel: "info",
+      // 级别：debug | warn | error | none
+      logLevel: "warn",
       logTags: [
         "bwe",
         "ice",

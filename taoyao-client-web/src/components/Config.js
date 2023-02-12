@@ -28,6 +28,8 @@ const config = {
   video: {},
   // WebRTC配置
   webrtc: {},
+  // 媒体服务配置
+  mediaServerList: [],
 };
 
 /**
@@ -63,7 +65,6 @@ const protocol = {
       header: {
         v: config.version,
         id: id || this.buildId(),
-        sn: config.sn,
         signal: signal,
       },
       body: body,

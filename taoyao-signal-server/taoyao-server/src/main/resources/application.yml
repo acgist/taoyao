@@ -20,7 +20,7 @@ server:
 #   context-path: /taoyao
 spring:
   profiles:
-    active: dev
+    active: local
   application:
     name: taoyao-signal-server
   servlet:
@@ -49,20 +49,21 @@ spring:
 taoyao:
   url: https://gitee.com/acgist/taoyao
   name: 桃夭信令服务
-  node-id: 1
-  timeout: 5000
-  max-timeout: 120000
   version: 1.0.0
   description: 桃夭WebRTC信令服务
+  timeout: 5000
+  max-timeout: 120000
   id:
     sn: 0
     max-index: 999999
   # 媒体配置
   media:
+    # 默认音频
     audio:
       format: OPUS
       sample-size: 16
       sample-rate: 32000
+    # 默认视频
     video:
       format: H264
       bitrate: 1200
@@ -92,6 +93,22 @@ taoyao:
       bitrate: 600
       frame-rate: 16
       resolution: 640*480
+    # 媒体服务配置
+    media-server-list:
+      - name: media-local-a
+        enabled: true
+        host: localhost
+        port: 4443
+        schema: wss
+        username: taoyao
+        password: taoyao
+      - name: media-local-z
+        enabled: true
+        host: localhost
+        port: 4443
+        schema: wss
+        username: taoyao
+        password: taoyao
     # 录像配置
     record-storage-path: /data/record
   # WebRTC配置
@@ -108,22 +125,6 @@ taoyao:
       - turn:127.0.0.1:8888
       - turn:127.0.0.1:8888
       - turn:127.0.0.1:8888
-    # 媒体配置
-    mediasoup-list:
-      - name: mediasoup-local-a
-        enabled: true
-        host: localhost
-        port: 4443
-        schema: wss
-        username: taoyao
-        password: taoyao
-      - name: mediasoup-local-z
-        enabled: true
-        host: localhost
-        port: 4443
-        schema: wss
-        username: taoyao
-        password: taoyao
   # 安全配置
   security:
     enabled: true
@@ -134,15 +135,6 @@ taoyao:
   # 定时任务
   scheduled:
     client: 0 * * * * ?
-  # 集群配置
-  node:
-    enabled: false
-    # 节点列表
-    node-list:
-      - host: localhost
-        port: 8888
-        username: ${taoyao.security.username:taoyao}
-        password: ${taoyao.security.username:taoyao}
   # 脚本配置
   script:
     # Linux
@@ -159,5 +151,5 @@ taoyao:
       media-shutdown: pm2 stop taoyao-media-server
       system-reboot: shutdown -s -t 0
       system-shutdown: shutdown -r -t 0
-      platform-reboot: net restart taoyao-signal-server
+      platform-reboot: net stop taoyao-signal-server & net start taoyao-signal-server
       platform-shutdown: net stop taoyao-signal-server

@@ -35,11 +35,6 @@ public class Header implements Serializable {
 	@Schema(title = "消息标识", description = "消息标识")
 	private String id;
 	/**
-	 * 终端标识
-	 */
-	@Schema(title = "终端标识", description = "终端标识")
-	private String sn;
-	/**
 	 * 协议标识
 	 */
 	@Schema(title = "协议标识", description = "协议标识")
@@ -47,7 +42,7 @@ public class Header implements Serializable {
 	
 	@Override
 	public Header clone() {
-		return new Header(this.v, this.id, this.sn, this.signal);
+		return new Header(this.v, this.id, this.signal);
 	}
 	
 }

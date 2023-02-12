@@ -1,7 +1,7 @@
 package com.acgist.taoyao.signal.client;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.mediasoup.MediasoupClient;
+import com.acgist.taoyao.signal.media.MediaClient;
 
 /**
  * 终端会话
@@ -35,14 +35,6 @@ public interface Client extends AutoCloseable {
 	void push(Message message);
 	
 	/**
-	 * 推送消息
-	 * 
-	 * @param sn 终端标识
-	 * @param message 消息
-	 */
-	void push(String sn, Message message);
-
-	/**
 	 * @param timeout 超时时间
 	 * 
 	 * @return 是否超时会话
@@ -67,13 +59,13 @@ public interface Client extends AutoCloseable {
 	boolean authorized();
 	
 	/**
-	 * @return Mediasoup终端
+	 * @return 媒体服务终端
 	 */
-	MediasoupClient mediasoupClient();
+	MediaClient mediaClient();
 	
 	/**
-	 * @param mediasoupClient Mediasoup终端
+	 * @param mediaClient 媒体服务终端
 	 */
-	void mediasoupClient(MediasoupClient mediasoupClient);
+	void mediaClient(MediaClient mediaClient);
 	
 }

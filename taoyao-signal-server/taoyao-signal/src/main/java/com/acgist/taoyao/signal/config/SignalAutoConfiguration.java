@@ -10,7 +10,7 @@ import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.server.standard.ServerEndpointExporter;
 
 import com.acgist.taoyao.signal.client.websocket.WebSocketSignal;
-import com.acgist.taoyao.signal.mediasoup.MediasoupClientManager;
+import com.acgist.taoyao.signal.media.MediaClientManager;
 import com.acgist.taoyao.signal.protocol.media.MediaRebootProtocol;
 import com.acgist.taoyao.signal.protocol.media.MediaShutdownProtocol;
 import com.acgist.taoyao.signal.protocol.platform.PlatformRebootProtocol;
@@ -31,7 +31,7 @@ import com.acgist.taoyao.signal.service.impl.SecurityServiceImpl;
 public class SignalAutoConfiguration {
 
 	@Autowired
-	private MediasoupClientManager mediasoupClientManager;
+	private MediaClientManager mediaClientManager;
 	
 	@Bean
 	@ConditionalOnMissingBean
@@ -52,11 +52,11 @@ public class SignalAutoConfiguration {
 	}
 	
 	@Bean
-	public CommandLineRunner mediasoupCommandLineRunner() {
+	public CommandLineRunner mediaCommandLineRunner() {
 		return new CommandLineRunner() {
 			@Override
 			public void run(String ... args) throws Exception {
-				SignalAutoConfiguration.this.mediasoupClientManager.init();
+				SignalAutoConfiguration.this.mediaClientManager.init();
 			}
 		};
 	}

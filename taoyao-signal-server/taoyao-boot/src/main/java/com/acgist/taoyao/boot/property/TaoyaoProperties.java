@@ -27,12 +27,6 @@ public class TaoyaoProperties {
 	@Schema(title = "项目名称", description = "项目名称")
 	private String name;
 	/**
-	 * 服务节点ID
-	 * 集群使用
-	 */
-	@Schema(title = "服务节点ID", description = "服务节点ID")
-	private String nodeId;
-	/**
 	 * 超时时间
 	 */
 	@Schema(title = "超时时间", description = "超时时间")

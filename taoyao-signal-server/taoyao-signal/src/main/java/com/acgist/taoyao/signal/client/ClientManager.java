@@ -1,9 +1,9 @@
 package com.acgist.taoyao.signal.client;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -54,8 +54,20 @@ public class ClientManager {
 	 */
 	public void unicast(String to, Message message) {
 		this.clients().stream()
-		.filter(v -> StringUtils.equals(to, v.sn()))
-		.forEach(v -> v.push(v.sn(), message));
+		.filter(v -> Objects.equals(to, v.sn()))
+		.forEach(v -> v.push(message));
+	}
+	
+	/**
+	 * 单播消息
+	 * 
+	 * @param to 接收终端
+	 * @param message 消息
+	 */
+	public void unicast(Client to, Message message) {
+		this.clients().stream()
+		.filter(v -> v.instance() == to)
+		.forEach(v -> v.push(message));
 	}
 	
 	/**
@@ -64,7 +76,7 @@ public class ClientManager {
 	 * @param message 消息
 	 */
 	public void broadcast(Message message) {
-		this.clients().forEach(v -> v.push(v.sn(), message));
+		this.clients().forEach(v -> v.push(message));
 	}
 	
 	/**
@@ -75,8 +87,20 @@ public class ClientManager {
 	 */
 	public void broadcast(String from, Message message) {
 		this.clients().stream()
-		.filter(v -> !StringUtils.equals(from, v.sn()))
-		.forEach(v -> v.push(v.sn(), message));
+		.filter(v -> !Objects.equals(from, v.sn()))
+		.forEach(v -> v.push(message));
+	}
+	
+	/**
+	 * 广播消息
+	 * 
+	 * @param from 发送终端
+	 * @param message 消息
+	 */
+	public void broadcast(Client from, Message message) {
+		this.clients().stream()
+		.filter(v -> v.instance() != from)
+		.forEach(v -> v.push(message));
 	}
 	
 	/**
@@ -86,7 +110,7 @@ public class ClientManager {
 	 */
 	public Client client(String sn) {
 		return this.clients().stream()
-			.filter(v -> StringUtils.equals(sn, v.sn()))
+			.filter(v -> Objects.equals(sn, v.sn()))
 			.findFirst()
 			.orElse(null);
 	}
@@ -102,16 +126,6 @@ public class ClientManager {
 			.findFirst()
 			.orElse(null);
 	}
-
-	/**
-	 * @param sn 终端标识
-	 * 
-	 * @return 终端状态
-	 */
-	public ClientStatus status(String sn) {
-		final Client client = this.client(sn);
-		return client == null ? null : client.status();
-	}
 	
 	/**
 	 * @return 所有终端会话
@@ -120,6 +134,16 @@ public class ClientManager {
 		return this.clients.stream()
 			.filter(Client::authorized)
 			.toList();
+	}
+	
+	/**
+	 * @param sn 终端标识
+	 * 
+	 * @return 终端状态
+	 */
+	public ClientStatus status(String sn) {
+		final Client client = this.client(sn);
+		return client == null ? null : client.status();
 	}
 
 	/**

@@ -1,25 +1,28 @@
 package com.acgist.taoyao.signal.room;
 
+import java.io.Closeable;
 import java.util.List;
+import java.util.Objects;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientStatus;
-import com.acgist.taoyao.signal.mediasoup.MediasoupClient;
+import com.acgist.taoyao.signal.media.MediaClient;
+import com.acgist.taoyao.signal.media.Transport;
 
-import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 房间
  * 
  * @author acgist
  */
+@Slf4j
 @Getter
 @Setter
-@Schema(title = "房间", description = "房间")
-public class Room {
+public class Room implements Closeable {
 	
 	/**
 	 * ID
@@ -36,11 +39,15 @@ public class Room {
 	/**
 	 * 媒体服务
 	 */
-	private MediasoupClient mediasoupClient;
+	private MediaClient mediaClient;
 	/**
 	 * 终端列表
 	 */
 	private List<Client> clients;
+	/**
+	 * 传输通道列表
+	 */
+	private List<Transport> transports;
 	
 	/**
 	 * @return 终端状态列表
@@ -70,7 +77,7 @@ public class Room {
 	/**
 	 * 终端离开
 	 * 
-	 * @param sn 终端
+	 * @param client 终端
 	 */
 	public void leave(Client client) {
 		synchronized (this.clients) {
@@ -86,7 +93,19 @@ public class Room {
 	 * @param message 消息
 	 */
 	public void broadcast(Message message) {
-		this.clients.forEach(v -> v.push(v.sn(), message));
+		this.clients.forEach(v -> v.push(message));
+	}
+	
+	/**
+	 * 广播消息
+	 * 
+	 * @param from 发送终端
+	 * @param message 消息
+	 */
+	public void broadcast(String from, Message message) {
+		this.clients.stream()
+		.filter(v -> !Objects.equals(from, v.sn()))
+		.forEach(v -> v.push(message));
 	}
 	
 	/**
@@ -98,7 +117,27 @@ public class Room {
 	public void broadcast(Client from, Message message) {
 		this.clients.stream()
 		.filter(v -> v != from)
-		.forEach(v -> v.push(v.sn(), message));
+		.forEach(v -> v.push(message));
+	}
+	
+	/**
+	 * @see MediaClient#send(Message)
+	 */
+	public void send(Message message) {
+		this.mediaClient.send(message);
+	}
+	
+	/**
+	 * @see MediaClient#sendSync(Message)
+	 */
+	public Message sendSync(Message message) {
+		return this.mediaClient.sendSync(message);
+	}
+	
+	@Override
+	public void close() {
+		log.info("关闭房间：{}", this.id);
+		this.transports.forEach(Transport::close);
 	}
 	
 }

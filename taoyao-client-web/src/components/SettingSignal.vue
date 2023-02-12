@@ -46,7 +46,7 @@ export default {
   methods: {
     setting: function () {
       this.localVisible = false;
-      this.$emit("connectSignal");
+      this.$emit("buildSignal");
     },
   },
 };

@@ -1,6 +1,10 @@
 package com.acgist.taoyao.boot.property;
 
+import java.util.List;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -48,9 +52,15 @@ public class MediaProperties {
 	@Schema(title = "流畅视频", description = "流畅视频")
 	private MediaVideoProperties flowVideo;
 	/**
+	 * 媒体服务配置
+	 */
+	@Schema(title = "媒体服务配置", description = "媒体服务配置")
+	private List<MediaServerProperties> mediaServerList;
+	/**
 	 * 录像存放路径
 	 */
 	@Schema(title = "录像存放路径", description = "录像存放路径")
+	@JsonIgnore
 	private String recordStoragePath;
 
 }

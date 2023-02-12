@@ -6,7 +6,7 @@ import org.springframework.context.ApplicationListener;
 
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
-import com.acgist.taoyao.signal.mediasoup.MediasoupClientManager;
+import com.acgist.taoyao.signal.media.MediaClientManager;
 import com.acgist.taoyao.signal.room.RoomManager;
 
 /**
@@ -25,6 +25,6 @@ public abstract class ApplicationListenerAdapter<E extends ApplicationEventAdapt
 	@Autowired
 	protected ApplicationContext applicationContext;
 	@Autowired
-	protected MediasoupClientManager mediasoupClientManager;
+	protected MediaClientManager mediaClientManager;
 	
 }

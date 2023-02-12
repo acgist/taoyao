@@ -31,10 +31,6 @@ public class SecurityServiceImpl implements SecurityService {
 		if(!session.authorized()) {
 			return false;
 		}
-		// 信令终端鉴定
-		if(!session.sn().equals(message.getHeader().getSn())) {
-			return false;
-		}
 		// 信令权限鉴定
 		if(!protocol.authenticate(message)) {
 			return false;

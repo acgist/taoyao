@@ -42,7 +42,7 @@ public interface Constant {
 	/**
 	 * 媒体服务名称
 	 */
-	String MEDIASOUP = "mediasoup";
+	String MEDIA_NAME = "mediaName";
 	/**
 	 * 名称
 	 */
@@ -75,5 +75,21 @@ public interface Constant {
 	 * WebRTC
 	 */
 	String WEBRTC = "webrtc";
+	/**
+	 * 房间ID
+	 */
+	String ROOM_ID = "roomId";
+	/**
+	 * 终端ID
+	 */
+	String CLIENT_ID = "clientId";
+	/**
+	 * 路由ID
+	 */
+	String ROUTER_ID = "routerId";
+	/**
+	 * 终端ID
+	 */
+	String STREAM_ID = "streamId";
 
 }

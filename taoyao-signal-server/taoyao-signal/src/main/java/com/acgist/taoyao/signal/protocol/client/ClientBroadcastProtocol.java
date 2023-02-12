@@ -16,12 +16,12 @@ public class ClientBroadcastProtocol extends ProtocolAdapter {
 	public static final String SIGNAL = "client::broadcast";
 	
 	public ClientBroadcastProtocol() {
-		super("广播信令", SIGNAL);
+		super("终端广播信令", SIGNAL);
 	}
 
 	@Override
 	public void execute(String sn, Client client, Message message) {
-		this.clientManager.broadcast(sn, message);
+		this.clientManager.broadcast(client, message);
 	}
 
 }

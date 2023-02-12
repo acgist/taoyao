@@ -23,12 +23,12 @@
         </el-tab-pane>
         <el-tab-pane label="创建房间" name="create">
           <el-form-item label="媒体服务">
-            <el-select v-model="room.mediasoup" placeholder="媒体服务">
+            <el-select v-model="room.mediaName" placeholder="媒体服务">
               <el-option
-                v-for="mediasoup in config.webrtc.mediasoupList"
-                :key="mediasoup.name"
-                :label="mediasoup.name"
-                :value="mediasoup.name"
+                v-for="value in config.mediaServerList"
+                :key="value.name"
+                :label="value.name"
+                :value="value.name"
               />
             </el-select>
           </el-form-item>
@@ -78,22 +78,24 @@ export default {
       this.rooms = response.body;
     },
     async setting() {
+      let roomId;
       this.localVisible = false;
       if (this.activeName === "enter") {
+        roomId = this.room.id;
         await this.taoyao.request(
           protocol.buildMessage("room::enter", {
-            sn: config.sn,
             ...this.room,
           })
         );
       } else {
-        await this.taoyao.request(
+        let response = await this.taoyao.request(
           protocol.buildMessage("room::create", {
-            sn: config.sn,
             ...this.room,
           })
         );
+        roomId = response.body.id;
       }
+      this.$emit("buildMedia", roomId);
     },
   },
 };

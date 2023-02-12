@@ -47,7 +47,7 @@ public class ClientStatus {
 	 * 媒体服务名称
 	 */
 	@Schema(title = "媒体服务名称", description = "媒体服务名称")
-	private String mediasoup;
+	private String mediaName;
 	/**
 	 * 最后心跳时间
 	 */

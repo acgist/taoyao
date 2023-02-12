@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.mediasoup;
+package com.acgist.taoyao.signal.media;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -30,7 +30,8 @@ import com.acgist.taoyao.boot.annotation.Client;
 import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
-import com.acgist.taoyao.boot.property.MediasoupProperties;
+import com.acgist.taoyao.boot.model.MessageCodeException;
+import com.acgist.taoyao.boot.property.MediaServerProperties;
 import com.acgist.taoyao.boot.property.TaoyaoProperties;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.signal.protocol.Protocol;
@@ -49,7 +50,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 @Client
-public class MediasoupClient {
+public class MediaClient {
 	
 	@Autowired
 	private TaskScheduler taskScheduler;
@@ -77,7 +78,7 @@ public class MediasoupClient {
 	/**
 	 * 配置
 	 */
-	private MediasoupProperties mediasoupProperties;
+	private MediaServerProperties mediaServerProperties;
 	/**
 	 * 同步消息
 	 */
@@ -86,11 +87,11 @@ public class MediasoupClient {
 	/**
 	 * 加载终端
 	 * 
-	 * @param mediasoupProperties 媒体终端配置
+	 * @param mediaServerProperties 媒体服务配置
 	 */
-	public void init(MediasoupProperties mediasoupProperties) {
-		this.mediasoupProperties = mediasoupProperties;
-		this.name = mediasoupProperties.getName();
+	public void init(MediaServerProperties mediaServerProperties) {
+		this.mediaServerProperties = mediaServerProperties;
+		this.name = mediaServerProperties.getName();
 		this.duration = this.taoyaoProperties.getTimeout();
 		this.buildClient();
 	}
@@ -106,7 +107,7 @@ public class MediasoupClient {
 	 * 连接WebSocket通道
 	 */
 	public void buildClient() {
-		final URI uri = URI.create(this.mediasoupProperties.getAddress());
+		final URI uri = URI.create(this.mediaServerProperties.getAddress());
 		log.info("连接媒体服务：{}", uri);
 		try {
 			HttpClient
@@ -159,7 +160,7 @@ public class MediasoupClient {
 		final Message response = this.syncMessage.remove(id);
 		if(response == null || message.equals(response)) {
 			log.warn("媒体服务没有响应：{}", message);
-			return this.platformErrorProtocol.build(id, MessageCode.CODE_2001, "媒体服务没有响应", response);
+			throw MessageCodeException.of(MessageCode.CODE_2001, "媒体服务没有响应");
 		}
 		return response;
 	}
@@ -179,7 +180,7 @@ public class MediasoupClient {
 		// 设置新的通道
 		this.webSocket = webSocket;
 		// 发送授权消息
-		this.send(this.mediaRegisterProtocol.build(this.mediasoupProperties));
+		this.send(this.mediaRegisterProtocol.build(this.mediaServerProperties));
 	}
 	
 	/**
@@ -204,25 +205,25 @@ public class MediasoupClient {
 			}
 			final String v = header.getV();
 			final String id = header.getId();
-			final String sn = header.getSn();
 			final String signal = header.getSignal();
-			if(v == null || id == null || sn == null || signal == null) {
+			if(v == null || id == null || signal == null) {
 				log.warn("消息格式错误（缺失头部关键参数）：{}", message);
 				return;
 			}
 			final Message request = this.syncMessage.get(id);
-			// 存在同步响应
 			if(request != null) {
+				// 同步处理
 				// 重新设置消息
 				this.syncMessage.put(id, message);
 				// 唤醒等待现场
 				synchronized (request) {
 					request.notifyAll();
 				}
+				// 同步处理不要执行回调
 			} else {
 				final Protocol protocol = this.protocolManager.protocol(signal);
-				if(protocol instanceof ProtocolMediaAdapter mediasoupProtocol) {
-					mediasoupProtocol.execute(message, this.webSocket);
+				if(protocol instanceof ProtocolMediaAdapter protocolMediaAdapter) {
+					protocolMediaAdapter.execute(message, this.webSocket);
 				} else {
 					log.warn("未知媒体服务信令：{}", data);
 				}
@@ -241,7 +242,7 @@ public class MediasoupClient {
     	public void onOpen(WebSocket webSocket) {
     		log.info("媒体服务通道打开：{}", webSocket);
     		Listener.super.onOpen(webSocket);
-    		MediasoupClient.this.open(webSocket);
+    		MediaClient.this.open(webSocket);
     	}
 		
     	@Override
@@ -254,7 +255,7 @@ public class MediasoupClient {
     	public CompletionStage<?> onText(WebSocket webSocket, CharSequence data, boolean last) {
     		log.debug("媒体服务收到消息（text）：{}-{}", webSocket, data);
     		try {
-    			MediasoupClient.this.execute(data.toString());
+    			MediaClient.this.execute(data.toString());
 			} catch (Exception e) {
 				log.error("媒体服务处理异常：{}", data, e);
 			}
@@ -267,9 +268,9 @@ public class MediasoupClient {
     		try {
     			return Listener.super.onClose(webSocket, statusCode, reason);
 			} finally {
-				MediasoupClient.this.taskScheduler.schedule(
-					MediasoupClient.this::buildClient,
-					Instant.now().plusMillis(MediasoupClient.this.retryDuration())
+				MediaClient.this.taskScheduler.schedule(
+					MediaClient.this::buildClient,
+					Instant.now().plusMillis(MediaClient.this.retryDuration())
 				);
 			}
     	}
@@ -280,9 +281,9 @@ public class MediasoupClient {
     		try {
     			Listener.super.onError(webSocket, error);
 			} finally {
-				MediasoupClient.this.taskScheduler.schedule(
-					MediasoupClient.this::buildClient,
-					Instant.now().plusMillis(MediasoupClient.this.retryDuration())
+				MediaClient.this.taskScheduler.schedule(
+					MediaClient.this::buildClient,
+					Instant.now().plusMillis(MediaClient.this.retryDuration())
 				);
 			}
     	}

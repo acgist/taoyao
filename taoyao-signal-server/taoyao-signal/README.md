@@ -77,13 +77,17 @@
 # 消息流程：终端-[终端注册]>信令服务->终端
 ```
 
-### 心跳信令（client::heartbeat）
+### 终端心跳信令（client::heartbeat）
 
 ```
 # 请求主体
 {
-	"signal": "信号强度",
-	"battery": "电池电量"
+	"signal": 信号强度（0~100）,
+	"battery": 电池电量（0~100）,
+	"charging": 是否充电（true|false）
+}
+# 响应主体
+{
 }
 # 消息流程：终端->信令服务->终端
 ```
@@ -102,7 +106,7 @@
 		"signal": 信号强度（0~100）,
 		"battery": 电池电量（0~100）,
 		"charging": 是否充电（true|false）,
-		"mediasoup": "媒体服务名称",
+		"mediaName": "媒体服务名称",
 		"lastHeartbeat": "最后心跳时间"
 	},
 	...
@@ -130,7 +134,7 @@
 	"signal": 信号强度（0~100）,
 	"battery": 电池电量（0~100）,
 	"charging": 是否充电（true|false）,
-	"mediasoup": "媒体服务名称",
+	"mediaName": "媒体服务名称",
 	"lastHeartbeat": "最后心跳时间"
 }
 # 消息流程：终端-[终端注册]>信令服务-)终端
@@ -179,13 +183,13 @@
 	"signal": 信号强度（0~100）,
 	"battery": 电池电量（0~100）,
 	"charging": 是否充电（true|false）,
-	"mediasoup": "媒体服务名称",
+	"mediaName": "媒体服务名称",
 	"lastHeartbeat": "最后心跳时间"
 }
 # 消息流程：终端->信令服务->终端
 ```
 
-### 单播信令（client::unicast）
+### 终端单播信令（client::unicast）
 
 ```
 # 请求主体

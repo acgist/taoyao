@@ -1,8 +1,6 @@
 package com.acgist.taoyao.signal.client;
 
-import com.acgist.taoyao.boot.model.Header;
-import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.mediasoup.MediasoupClient;
+import com.acgist.taoyao.signal.media.MediaClient;
 
 /**
  * 会话适配器
@@ -38,7 +36,7 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	/**
 	 * 媒体服务终端
 	 */
-	protected MediasoupClient mediasoupClient;
+	protected MediaClient mediaClient;
 	
 	protected ClientAdapter(T instance) {
 		this.time = System.currentTimeMillis();
@@ -63,15 +61,6 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	}
 	
 	@Override
-	public void push(String sn, Message message) {
-		final Header header = message.getHeader();
-		if(header != null) {
-			header.setSn(sn);
-		}
-		this.push(message);
-	}
-	
-	@Override
 	public boolean timeout(long timeout) {
 		return System.currentTimeMillis() - this.time > timeout;
 	}
@@ -93,14 +82,14 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	}
 	
 	@Override
-	public MediasoupClient mediasoupClient() {
-		return this.mediasoupClient;
+	public MediaClient mediaClient() {
+		return this.mediaClient;
 	}
 	
 	@Override
-	public void mediasoupClient(MediasoupClient mediasoupClient) {
-		this.mediasoupClient = mediasoupClient;
-		this.status.setMediasoup(mediasoupClient.name());
+	public void mediaClient(MediaClient mediaClient) {
+		this.mediaClient = mediaClient;
+		this.status.setMediaName(mediaClient.name());
 	}
 	
 	@Override
