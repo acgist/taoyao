@@ -6,8 +6,8 @@ import java.util.Map;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolMediaRoomAdapter;
-import com.acgist.taoyao.signal.room.Room;
 
 /**
  * 路由RTP能力信令

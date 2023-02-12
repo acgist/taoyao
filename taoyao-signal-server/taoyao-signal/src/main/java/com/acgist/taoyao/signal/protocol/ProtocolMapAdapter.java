@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
+import com.acgist.taoyao.signal.MapBodyGetter;
 import com.acgist.taoyao.signal.client.Client;
 
 /**
@@ -11,7 +12,7 @@ import com.acgist.taoyao.signal.client.Client;
  * 
  * @author acgist
  */
-public abstract class ProtocolMapAdapter extends ProtocolAdapter {
+public abstract class ProtocolMapAdapter extends ProtocolAdapter implements MapBodyGetter {
 
 	protected ProtocolMapAdapter(String name, String signal) {
 		super(name, signal);

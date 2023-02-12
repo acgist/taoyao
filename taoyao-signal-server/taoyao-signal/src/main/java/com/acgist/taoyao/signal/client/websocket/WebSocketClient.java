@@ -36,7 +36,7 @@ public class WebSocketClient extends ClientAdapter<Session> {
 		synchronized (this.instance) {
 			try {
 				if(this.instance.isOpen()) {
-					this.basic.sendText(message.toString());
+					this.basic.sendText(message.toString(), true);
 				} else {
 					log.error("会话已经关闭：{}", this.instance);
 				}

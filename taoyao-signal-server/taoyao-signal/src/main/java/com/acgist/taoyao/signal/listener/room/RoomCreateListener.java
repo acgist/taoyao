@@ -5,7 +5,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.signal.event.room.RoomCreateEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
-import com.acgist.taoyao.signal.room.Room;
+import com.acgist.taoyao.signal.media.Room;
 
 /**
  * 创建房间监听

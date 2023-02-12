@@ -38,7 +38,6 @@ import com.acgist.taoyao.signal.protocol.Protocol;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
 import com.acgist.taoyao.signal.protocol.ProtocolMediaAdapter;
 import com.acgist.taoyao.signal.protocol.media.MediaRegisterProtocol;
-import com.acgist.taoyao.signal.protocol.platform.PlatformErrorProtocol;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -60,8 +59,6 @@ public class MediaClient {
 	private TaoyaoProperties taoyaoProperties;
 	@Autowired
 	private MediaRegisterProtocol mediaRegisterProtocol;
-	@Autowired
-	private PlatformErrorProtocol platformErrorProtocol;
 	
 	/**
 	 * 名称

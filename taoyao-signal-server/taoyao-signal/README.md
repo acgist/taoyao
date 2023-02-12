@@ -393,6 +393,6 @@
 
 ```
 let socket = new WebSocket("wss://localhost:8888/websocket.signal");
-socket.send('{"header":{"pid":2000,"v":"1.0.0","id":"1","sn":"taoyao"},"body":{"username":"taoyao","password":"taoyao"}}');
-socket.send('{"header":{"pid":1000,"v":"1.0.0","id":"1","sn":"taoyao"},"body":{}}');
+socket.send('{"header":{"signal":"client::register","v":"1.0.0","id":"1"},"body":{"username":"taoyao","password":"taoyao","sn":"taoyao"}}');
+socket.send('{"header":{"signal":"client::heartbeat","v":"1.0.0","id":"1"},"body":{}}');
 ```

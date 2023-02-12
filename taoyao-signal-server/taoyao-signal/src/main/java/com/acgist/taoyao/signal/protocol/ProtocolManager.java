@@ -80,6 +80,10 @@ public class ProtocolManager {
 	public void execute(String content, AutoCloseable instance) {
 		log.debug("执行信令消息：{}", content);
 		final Client client = this.clientManager.client(instance);
+		if(client == null) {
+			log.warn("信令终端无效：{}-{}", instance, content);
+			return;
+		}
 		// 验证请求
 		final Message message = JSONUtils.toJava(content, Message.class);
 		if(message == null) {

@@ -49,10 +49,15 @@ public class CostedTestTestExecutionListener implements TestExecutionListener {
 				});
 			}
 			countDownLatch.await(timeout, timeUnit);
+			executor.shutdown();
 		}
 		final long zTime = System.currentTimeMillis();
 		final long costed = zTime - aTime;
 		log.info("多线程测试消耗时间：{}", costed);
+		final long waitRelease = costedTest.waitRelease();
+		if(waitRelease > 0) {
+			Thread.sleep(waitRelease);
+		}
 	}
 	
 }

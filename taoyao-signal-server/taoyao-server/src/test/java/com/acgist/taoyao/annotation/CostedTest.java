@@ -32,7 +32,12 @@ public @interface CostedTest {
 	/**
 	 * @return 超时时间
 	 */
-	long timeout() default 1000;
+	long timeout() default 1000L;
+	
+	/**
+	 * @return 等待资源释放时间
+	 */
+	long waitRelease() default 0L;
 	
 	/**
 	 * @return 超时时间单位

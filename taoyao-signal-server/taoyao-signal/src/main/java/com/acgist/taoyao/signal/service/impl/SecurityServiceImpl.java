@@ -27,8 +27,8 @@ public class SecurityServiceImpl implements SecurityService {
 	}
 	
 	@Override
-	public boolean authenticate(Message message, Client session, Protocol protocol) {
-		if(!session.authorized()) {
+	public boolean authenticate(Message message, Client client, Protocol protocol) {
+		if(!client.authorized()) {
 			return false;
 		}
 		// 信令权限鉴定

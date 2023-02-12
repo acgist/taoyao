@@ -104,19 +104,7 @@ public class ClientManager {
 	}
 	
 	/**
-	 * @param sn 终端标识
-	 * 
-	 * @return 终端会话
-	 */
-	public Client client(String sn) {
-		return this.clients().stream()
-			.filter(v -> Objects.equals(sn, v.sn()))
-			.findFirst()
-			.orElse(null);
-	}
-	
-	/**
-	 * @param instance 终端示例
+	 * @param instance 终端实例
 	 * 
 	 * @return 终端
 	 */
@@ -125,6 +113,17 @@ public class ClientManager {
 			.filter(v -> v.instance() == instance)
 			.findFirst()
 			.orElse(null);
+	}
+	
+	/**
+	 * @param sn 终端标识
+	 * 
+	 * @return 终端会话
+	 */
+	public List<Client> clients(String sn) {
+		return this.clients().stream()
+			.filter(v -> Objects.equals(sn, v.sn()))
+			.toList();
 	}
 	
 	/**
@@ -137,13 +136,24 @@ public class ClientManager {
 	}
 	
 	/**
+	 * @param instance 终端实例
+	 * 
+	 * @return 终端状态
+	 */
+	public ClientStatus status(AutoCloseable instance) {
+		final Client client = this.client(instance);
+		return client == null ? null : client.status();
+	}
+	
+	/**
 	 * @param sn 终端标识
 	 * 
 	 * @return 终端状态
 	 */
-	public ClientStatus status(String sn) {
-		final Client client = this.client(sn);
-		return client == null ? null : client.status();
+	public List<ClientStatus> status(String sn) {
+		return this.clients(sn).stream()
+			.map(Client::status)
+			.toList();
 	}
 
 	/**

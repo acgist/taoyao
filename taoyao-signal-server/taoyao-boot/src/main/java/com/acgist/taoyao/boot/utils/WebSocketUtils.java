@@ -26,6 +26,7 @@ public class WebSocketUtils {
 		if (session == null) {
 			return null;
 		}
+		// 远程IP地址
 		return (String) getField(session.getAsyncRemote(), "base.socketWrapper.remoteAddr");
 	}
 

@@ -9,8 +9,8 @@ server:
     key-password: 123456
   tomcat:
     thread:
-      max: 128
-      min-spare: 4
+      max: 256
+      min-spare: 8
     remoteip:
       host-header: X-Forwarded-Host
       port-header: X-Forwarded-Port

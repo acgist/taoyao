@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.room;
+package com.acgist.taoyao.signal.media;
 
 import java.io.Closeable;
 import java.util.List;
@@ -7,8 +7,6 @@ import java.util.Objects;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientStatus;
-import com.acgist.taoyao.signal.media.MediaClient;
-import com.acgist.taoyao.signal.media.Transport;
 
 import lombok.Getter;
 import lombok.Setter;

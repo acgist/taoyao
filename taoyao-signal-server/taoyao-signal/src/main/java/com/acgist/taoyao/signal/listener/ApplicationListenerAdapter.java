@@ -7,7 +7,7 @@ import org.springframework.context.ApplicationListener;
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
 import com.acgist.taoyao.signal.media.MediaClientManager;
-import com.acgist.taoyao.signal.room.RoomManager;
+import com.acgist.taoyao.signal.media.RoomManager;
 
 /**
  * 事件监听适配器

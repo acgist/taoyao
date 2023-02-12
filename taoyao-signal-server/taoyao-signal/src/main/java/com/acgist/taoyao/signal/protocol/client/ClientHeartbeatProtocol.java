@@ -30,9 +30,9 @@ public class ClientHeartbeatProtocol extends ProtocolMapAdapter {
 		client.push(message.cloneWidthoutBody());
 		// 设置状态
 		final ClientStatus status = client.status();
-		status.setSignal((Integer) body.get(Constant.SIGNAL));
-		status.setBattery((Integer) body.get(Constant.BATTERY));
-		status.setCharging((Boolean) body.get(Constant.CHARGING));
+		status.setSignal(this.get(body, Constant.SIGNAL));
+		status.setBattery(this.get(body, Constant.BATTERY));
+		status.setCharging(this.get(body, Constant.CHARGING));
 		status.setLastHeartbeat(LocalDateTime.now());
 	}
 	

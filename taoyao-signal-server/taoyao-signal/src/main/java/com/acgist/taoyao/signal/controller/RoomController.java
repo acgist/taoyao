@@ -10,9 +10,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientStatus;
-import com.acgist.taoyao.signal.room.Room;
-import com.acgist.taoyao.signal.room.RoomManager;
-import com.acgist.taoyao.signal.room.RoomStatus;
+import com.acgist.taoyao.signal.media.Room;
+import com.acgist.taoyao.signal.media.RoomManager;
+import com.acgist.taoyao.signal.media.RoomStatus;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;

@@ -10,8 +10,8 @@ import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.room.RoomEnterEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
 import com.acgist.taoyao.signal.media.MediaClient;
+import com.acgist.taoyao.signal.media.Room;
 import com.acgist.taoyao.signal.protocol.Constant;
-import com.acgist.taoyao.signal.room.Room;
 
 /**
  * 进入房间监听

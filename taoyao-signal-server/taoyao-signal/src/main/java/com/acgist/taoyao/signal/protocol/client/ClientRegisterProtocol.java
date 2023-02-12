@@ -35,9 +35,9 @@ public class ClientRegisterProtocol extends ProtocolMapAdapter {
 
 	@Override
 	public void execute(String sn, Map<?, ?> body, Client client, Message message) {
-		final String clientSn = (String) body.get(Constant.SN);
-		final String username = (String) body.get(Constant.USERNAME);
-		final String password = (String) body.get(Constant.PASSWORD);
+		final String clientSn = this.get(body, Constant.SN);
+		final String username = this.get(body, Constant.USERNAME);
+		final String password = this.get(body, Constant.PASSWORD);
 		// 如果需要终端鉴权在此实现
 		if(this.securityService.authenticate(username, password)) {
 			log.info("终端注册：{}", clientSn);

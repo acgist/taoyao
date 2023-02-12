@@ -1,9 +1,6 @@
 package com.acgist.taoyao.signal.protocol.client;
 
 import java.util.Map;
-import java.util.Objects;
-
-import org.apache.commons.lang3.StringUtils;
 
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
@@ -28,11 +25,7 @@ public class ClientStatusProtocol extends ProtocolMapAdapter {
 	@Override
 	public void execute(String sn, Map<?, ?> body, Client client, Message message) {
 		// 如果没有指定终端标识默认查询自己
-		String querySn = (String) body.get(Constant.SN);
-		if(StringUtils.isEmpty(querySn)) {
-			querySn = sn;
-		}
-		message.setBody(this.clientManager.status(querySn));
+		message.setBody(this.clientManager.status(this.get(body, Constant.SN, sn)));
 		client.push(message);
 	}
 	

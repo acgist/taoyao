@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.room;
+package com.acgist.taoyao.signal.media;
 
 import java.util.List;
 import java.util.Map;
@@ -12,8 +12,6 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.media.MediaClient;
-import com.acgist.taoyao.signal.media.MediaClientManager;
 import com.acgist.taoyao.signal.protocol.Constant;
 
 import lombok.extern.slf4j.Slf4j;

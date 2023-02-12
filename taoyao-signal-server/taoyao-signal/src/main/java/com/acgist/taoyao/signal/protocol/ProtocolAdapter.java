@@ -12,7 +12,7 @@ import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
 import com.acgist.taoyao.signal.media.MediaClientManager;
-import com.acgist.taoyao.signal.room.RoomManager;
+import com.acgist.taoyao.signal.media.RoomManager;
 
 /**
  * 信令适配器

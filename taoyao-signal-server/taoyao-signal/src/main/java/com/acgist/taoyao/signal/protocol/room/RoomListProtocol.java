@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.media.RoomManager;
 import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
-import com.acgist.taoyao.signal.room.RoomManager;
 
 /**
  * 房间列表信令

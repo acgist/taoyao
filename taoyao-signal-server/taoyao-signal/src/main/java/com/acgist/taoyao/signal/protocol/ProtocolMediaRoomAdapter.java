@@ -5,15 +5,16 @@ import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
+import com.acgist.taoyao.signal.MapBodyGetter;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.room.Room;
+import com.acgist.taoyao.signal.media.Room;
 
 /**
  * 房间媒体服务信令适配器
  * 
  * @author acgist
  */
-public abstract class ProtocolMediaRoomAdapter extends ProtocolMediaAdapter {
+public abstract class ProtocolMediaRoomAdapter extends ProtocolMediaAdapter implements MapBodyGetter {
 
 	protected ProtocolMediaRoomAdapter(String name, String signal) {
 		super(name, signal);
@@ -45,27 +46,12 @@ public abstract class ProtocolMediaRoomAdapter extends ProtocolMediaAdapter {
 	 * @return 房间
 	 */
 	protected Room room(Map<?, ?> map) {
-		final Long roomId = this.roomId(map);
+		final Long roomId = this.getLong(map, Constant.ROOM_ID);
 		final Room room = this.roomManager.room(roomId);
 		if(room == null) {
 			throw MessageCodeException.of("房间无效：" + roomId);
 		}
 		return room;
-	}
-	
-	/**
-	 * @param map 参数
-	 * 
-	 * @return 房间ID
-	 */
-	protected Long roomId(Map<?, ?> map) {
-		final Object object = map.get(Constant.ROOM_ID);
-		if(object == null) {
-			return null;
-		} else if(object instanceof Long value) {
-			return value;
-		}
-		return Long.valueOf(object.toString());
 	}
 	
 	/**
