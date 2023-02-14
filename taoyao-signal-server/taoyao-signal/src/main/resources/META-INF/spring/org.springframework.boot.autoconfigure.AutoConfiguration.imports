@@ -1,1 +1,3 @@
+com.acgist.taoyao.signal.config.ScriptAutoConfiguration
 com.acgist.taoyao.signal.config.SignalAutoConfiguration
+com.acgist.taoyao.signal.config.SocketAutoConfigruation

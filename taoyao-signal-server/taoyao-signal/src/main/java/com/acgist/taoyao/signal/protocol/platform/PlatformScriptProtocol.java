@@ -22,7 +22,7 @@ public class PlatformScriptProtocol extends ProtocolMapAdapter {
 
 	@Override
 	public void execute(String sn, Map<?, ?> body, Client client, Message message) {
-		this.publishEvent(new PlatformScriptEvent(body, client, message));
+		this.publishEvent(new PlatformScriptEvent(body, message, client));
 	}
 	
 }

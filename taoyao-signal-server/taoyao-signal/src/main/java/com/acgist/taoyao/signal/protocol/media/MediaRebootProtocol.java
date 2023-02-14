@@ -33,7 +33,7 @@ public class MediaRebootProtocol extends ProtocolAdapter {
 		// 全员广播
 		this.clientManager.broadcast(message);
 		// 推送事件
-		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getMediaReboot(), client, message));
+		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getMediaReboot(), message, client));
 	}
 
 }

@@ -41,10 +41,5 @@ public class TaoyaoProperties {
 	 */
 	@Schema(title = "超时时间", description = "超时时间")
 	private Long timeout;
-	/**
-	 * 最大超时时间
-	 */
-	@Schema(title = "最大超时时间", description = "最大超时时间")
-	private Long maxTimeout;
 
 }

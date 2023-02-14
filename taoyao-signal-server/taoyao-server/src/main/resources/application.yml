@@ -52,7 +52,6 @@ taoyao:
   version: 1.0.0
   description: 桃夭WebRTC信令服务
   timeout: 5000
-  max-timeout: 120000
   id:
     sn: 0
     max-index: 999999
@@ -116,11 +115,13 @@ taoyao:
     enabled: true
     host: 0.0.0.0
     port: 9999
+    timeout: ${taoyao.timeout}
     queue-size: 100000
     thread-min: 4
     thread-max: 128
     thread-name-prefix: ${spring.application.name}-signal-
     keep-alive-time: 60
+    buffer-size: 2048
   # WebRTC配置
   webrtc:
     # STUN服务
@@ -147,19 +148,10 @@ taoyao:
     client: 0 * * * * ?
   # 脚本配置
   script:
-    # Linux
-    linux:
-      media-reboot: pm2 restart taoyao-media-server
-      media-shutdown: pm2 stop taoyao-media-server
-      system-reboot: reboot
-      system-shutdown: shutdown now
-      platform-reboot: systemctl restart taoyao-signal-server
-      platform-shutdown: systemctl stop taoyao-signal-server
-    # Windows
-    windows:
-      media-reboot: pm2 restart taoyao-media-server
-      media-shutdown: pm2 stop taoyao-media-server
-      system-reboot: shutdown -s -t 0
-      system-shutdown: shutdown -r -t 0
-      platform-reboot: net stop taoyao-signal-server & net start taoyao-signal-server
-      platform-shutdown: net stop taoyao-signal-server
+    enabled: true
+    media-reboot: pm2 restart taoyao-media-server
+    media-shutdown: pm2 stop taoyao-media-server
+    system-reboot: reboot
+    system-shutdown: shutdown now
+    platform-reboot: systemctl restart taoyao-signal-server
+    platform-shutdown: systemctl stop taoyao-signal-server

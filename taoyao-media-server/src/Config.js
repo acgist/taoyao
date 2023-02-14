@@ -9,6 +9,7 @@ module.exports = {
   version: "1.0.0",
   // 交互式命令行
   command: true,
+  welcome: `${__dirname}/index.html`,
   // 日志级别
   logLevel: "DEBUG",
   // 信令服务
@@ -144,19 +145,4 @@ module.exports = {
       maxSctpMessageSize: 262144,
     },
   },
-  wellcome: `<!DOCTYPE html>
-  <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>桃夭媒体服务</title>
-    <style type="text/css">
-      p{text-align:center;}
-      a{text-decoration:none;}
-    </style>
-  </head>
-  <body>
-    <p><a href="https://gitee.com/acgist/taoyao">taoyao-media-server</a></p>
-    <p><a href="https://www.acgist.com">acgist</a></p>
-  </body>
-  </html>`,
 };

@@ -10,7 +10,3 @@
 	path = taoyao-client-android/libmediasoupclient
 	url = https://gitee.com/acgist/libmediasoupclient.git
 	branch = taoyao
-[submodule "taoyao-client-desktop/libmediasoupclient"]
-	path = taoyao-client-desktop/libmediasoupclient
-	url = https://gitee.com/acgist/libmediasoupclient.git
-	branch = taoyao

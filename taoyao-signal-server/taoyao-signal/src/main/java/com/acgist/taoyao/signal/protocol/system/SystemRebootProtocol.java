@@ -31,7 +31,7 @@ public class SystemRebootProtocol extends ProtocolAdapter {
 	public void execute(String sn, Client client, Message message) {
 		log.info("重启系统：{}", sn);
 		this.clientManager.broadcast(message);
-		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getSystemReboot(), client, message));
+		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getSystemReboot(), message, client));
 	}
 
 }

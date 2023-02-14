@@ -1,0 +1,8 @@
+taoyao:
+  script:
+    media-reboot: pm2 restart taoyao-media-server
+    media-shutdown: pm2 stop taoyao-media-server
+    system-reboot: shutdown -s -t 0
+    system-shutdown: shutdown -r -t 0
+    platform-reboot: net stop taoyao-signal-server & net start taoyao-signal-server
+    platform-shutdown: net stop taoyao-signal-server

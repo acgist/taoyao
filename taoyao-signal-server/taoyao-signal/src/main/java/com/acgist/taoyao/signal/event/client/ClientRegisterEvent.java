@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
+import com.acgist.taoyao.signal.event.ClientEventAdapter;
 import com.acgist.taoyao.signal.protocol.Constant;
 
 import lombok.Getter;
@@ -17,12 +17,12 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class ClientRegisterEvent extends ApplicationEventAdapter {
+public class ClientRegisterEvent extends ClientEventAdapter {
 	
 	private static final long serialVersionUID = 1L;
 
-	public ClientRegisterEvent(Map<?, ?> body, Client client, Message message) {
-		super(body, client, message);
+	public ClientRegisterEvent(Map<?, ?> body, Message message, Client client) {
+		super(body, message, client);
 	}
 	
 	/**

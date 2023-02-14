@@ -31,7 +31,7 @@ public class SystemShutdownProtocol extends ProtocolAdapter {
 	public void execute(String sn, Client client, Message message) {
 		log.info("关闭系统：{}", sn);
 		this.clientManager.broadcast(message);
-		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getSystemShutdown(), client, message));
+		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getSystemShutdown(), message, client));
 	}
 
 }

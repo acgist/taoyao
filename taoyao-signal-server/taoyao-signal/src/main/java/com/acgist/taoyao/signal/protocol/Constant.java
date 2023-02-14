@@ -91,5 +91,9 @@ public interface Constant {
 	 * 终端ID
 	 */
 	String STREAM_ID = "streamId";
+	/**
+	 * 换行
+	 */
+	String LINE = "\n";
 
 }

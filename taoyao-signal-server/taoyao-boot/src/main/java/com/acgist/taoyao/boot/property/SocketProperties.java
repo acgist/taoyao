@@ -28,6 +28,10 @@ public class SocketProperties {
 	 */
 	private Integer port;
 	/**
+	 * 超时时间
+	 */
+	private Integer timeout;
+	/**
 	 * 线程队列长度
 	 */
 	private Integer queueSize;
@@ -47,6 +51,9 @@ public class SocketProperties {
 	 * 线程销毁时间
 	 */
 	private Integer keepAliveTime;
-	
+	/**
+	 * 缓冲大小
+	 */
+	private Integer bufferSize;
 	
 }

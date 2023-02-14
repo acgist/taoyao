@@ -3,7 +3,7 @@ package com.acgist.taoyao.signal.protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
+import com.acgist.taoyao.signal.event.ClientEventAdapter;
 
 /**
  * 信令协议
@@ -55,7 +55,7 @@ public interface Protocol {
 	 * 
 	 * @param event 事件
 	 */
-	<E extends ApplicationEventAdapter> void publishEvent(E event);
+	<E extends ClientEventAdapter> void publishEvent(E event);
 	
 	/**
 	 * 创建信令消息

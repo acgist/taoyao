@@ -33,7 +33,7 @@ public class PlatformRebootProtocol extends ProtocolAdapter {
 		// 全员广播
 		this.clientManager.broadcast(message);
 		// 推送事件
-		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getPlatformReboot(), client, message));
+		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getPlatformReboot(), message, client));
 	}
 
 }

@@ -164,6 +164,21 @@ public class ClientManager {
 			.map(Client::status)
 			.toList();
 	}
+
+	/**
+	 * 发送消息
+	 * 
+	 * @param instance 会话实例
+	 * @param message 消息
+	 */
+	public void send(AutoCloseable instance, Message message) {
+		final Client client = this.client(instance);
+		if(client == null) {
+			log.warn("发送消息终端无效：{}-{}", instance, message);
+			return;
+		}
+		client.push(message);
+	}
 	
 	/**
 	 * 关闭会话
@@ -186,7 +201,7 @@ public class ClientManager {
 				// 移除管理
 				this.clients.remove(client);
 				// 关闭事件
-				this.applicationContext.publishEvent(new ClientCloseEvent(client, null));
+				this.applicationContext.publishEvent(new ClientCloseEvent(null, client));
 			}
 		}
 	}

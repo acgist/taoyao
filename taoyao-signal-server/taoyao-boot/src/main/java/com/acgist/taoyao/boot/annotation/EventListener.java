@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 /**
  * 事件监听
+ * 事件用来处理异步业务还有广播业务
  * 
  * @author acgist
  */

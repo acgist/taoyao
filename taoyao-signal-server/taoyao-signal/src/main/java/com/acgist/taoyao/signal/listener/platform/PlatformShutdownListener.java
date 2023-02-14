@@ -36,8 +36,8 @@ public class PlatformShutdownListener extends ApplicationListenerAdapter<Platfor
 			// 命令关闭
 			this.applicationContext.publishEvent(new PlatformScriptEvent(
 				this.scriptProperties.getPlatformShutdown(),
-				event.getClient(),
-				event.getMessage()
+				event.getMessage(),
+				event.getClient()
 			));
 		}
 	}

@@ -202,6 +202,7 @@ vim /usr/libexec/urlgrabber-ext-down
 ---
 
 ## 验证
+yum --version
 pip --version
 python --version
 ```
@@ -327,16 +328,15 @@ pm2 start | stop | restart taoyao-client
 
 ## 配置防火墙
 
-### taoyao-media-server
-
-
 ```
-# 终端
-firewall-cmd --zone=public --add-port=5173/tcp --permanent
-# 信令服务
+# 终端服务：建议使用Nginx代理
+firewall-cmd --zone=public --add-port=8443/tcp --permanent
+# 信令服务（Socket）：没有启用不用添加规则
+firewall-cmd --zone=public --add-port=9999/tcp --permanent
+# 信令服务（WebSocket）
 firewall-cmd --zone=public --add-port=8888/tcp --permanent
-# 媒体服务（控制）：建议关闭
-firewall-cmd --zone=public --add-port=4443/tcp --permanent
+# 媒体服务（控制）：只暴露给信令服务
+firewall-cmd --permanent --add-rich-rule="rule family="ipv4" source address="192.168.1.0/24" port protocol="tcp" port="4443" accept"
 # 媒体服务（数据）
 firewall-cmd --zone=public --add-port=40000-49999/udp --permanent
 
@@ -344,9 +344,10 @@ firewall-cmd --reload
 firewall-cmd --list-ports
 
 # 删除端口
-#firewall-cmd --zone=public --remove-port=5173/udp --permanent
-#firewall-cmd --zone=public --remove-port=8888/udp --permanent
-#firewall-cmd --zone=public --remove-port=4443/tcp --permanent
+#firewall-cmd --zone=public --remove-port=8443/tcp --permanent
+firewall-cmd --permanent --remove-rich-rule="rule family="ipv4" source address="192.168.1.0/24" port protocol="tcp" port="4443" accept"
+#firewall-cmd --zone=public --remove-port=9999/tcp --permanent
+#firewall-cmd --zone=public --remove-port=8888/tcp --permanent
 #firewall-cmd --zone=public --remove-port=40000-49999/udp --permanent
 ```
 

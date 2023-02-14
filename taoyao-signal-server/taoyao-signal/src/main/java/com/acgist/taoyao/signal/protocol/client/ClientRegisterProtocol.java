@@ -49,7 +49,7 @@ public class ClientRegisterProtocol extends ProtocolMapAdapter {
 		// 推送消息
 		client.push(message.cloneWidthoutBody());
 		// 发送事件
-		this.publishEvent(new ClientRegisterEvent(body, client, message));
+		this.publishEvent(new ClientRegisterEvent(body, message, client));
 	}
 	
 }

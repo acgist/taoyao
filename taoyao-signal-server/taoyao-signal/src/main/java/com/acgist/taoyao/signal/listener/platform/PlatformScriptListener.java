@@ -8,6 +8,8 @@ import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.EventListener;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.model.MessageCode;
+import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.platform.PlatformScriptEvent;
 import com.acgist.taoyao.signal.listener.ApplicationListenerAdapter;
@@ -46,8 +48,7 @@ public class PlatformScriptListener extends ApplicationListenerAdapter<PlatformS
 	 */
 	private String execute(String script) {
 		if(StringUtils.isEmpty(script)) {
-			log.warn("执行命令失败：{}", script);
-			return "命令为空";
+		    throw MessageCodeException.of(MessageCode.CODE_1002, "无效命令：" + script);
 		}
 		String result = null;
 		Process process = null;

@@ -24,7 +24,7 @@ public class RoomCreateProtocol extends ProtocolMapAdapter {
 
 	@Override
 	public void execute(String sn, Map<?, ?> body, Client client, Message message) {
-		this.publishEvent(new RoomCreateEvent(body, client, message));
+		this.publishEvent(new RoomCreateEvent(body, message, client));
 	}
 
 }

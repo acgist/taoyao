@@ -2,7 +2,7 @@ package com.acgist.taoyao.signal.event.client;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
+import com.acgist.taoyao.signal.event.ClientEventAdapter;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -14,12 +14,12 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class ClientCloseEvent extends ApplicationEventAdapter {
+public class ClientCloseEvent extends ClientEventAdapter {
 	
 	private static final long serialVersionUID = 1L;
 
-	public ClientCloseEvent(Client client, Message message) {
-		super(client, message);
+	public ClientCloseEvent(Message message, Client client) {
+		super(message, client);
 	}
 
 }

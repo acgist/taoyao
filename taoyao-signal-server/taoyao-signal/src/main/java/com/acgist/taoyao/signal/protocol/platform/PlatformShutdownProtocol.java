@@ -27,7 +27,7 @@ public class PlatformShutdownProtocol extends ProtocolAdapter {
 		// 全员广播
 		this.clientManager.broadcast(message);
 		// 推送事件
-		this.publishEvent(new PlatformShutdownEvent(client, message));
+		this.publishEvent(new PlatformShutdownEvent(message, client));
 	}
 
 }

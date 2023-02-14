@@ -59,6 +59,11 @@ public class MediaClient {
 	private TaoyaoProperties taoyaoProperties;
 	@Autowired
 	private MediaRegisterProtocol mediaRegisterProtocol;
+
+	/**
+	 * 最长重试周期
+	 */
+	private static final long MAX_DURATION = 60L * 1000;
 	
 	/**
 	 * 名称
@@ -184,7 +189,7 @@ public class MediaClient {
 	 * @return 重试周期
 	 */
 	private long retryDuration() {
-		return this.duration = Math.min(this.duration + this.taoyaoProperties.getTimeout(), this.taoyaoProperties.getMaxTimeout());
+		return this.duration = Math.min(this.duration + this.taoyaoProperties.getTimeout(), MAX_DURATION);
 	}
 	
 	/**

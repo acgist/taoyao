@@ -3,7 +3,7 @@
 const fs = require("fs");
 const ws = require("ws");
 const https = require("https");
-const mediasoup = require("mediasoup");
+// const mediasoup = require("mediasoup");
 const config = require("./Config");
 const Logger = require("./Logger");
 const Signal = require("./Signal");
@@ -80,7 +80,7 @@ async function buildSignalServer() {
   // 配置HTTPS
   httpsServer = https.createServer(tls, (request, response) => {
     response.writeHead(200);
-    response.end(config.wellcome);
+    response.end(fs.readFileSync(config.welcome));
   });
   // 配置WebSocket
   webSocketServer = new ws.Server({ server: httpsServer });
@@ -176,9 +176,12 @@ async function buildCommandConsole() {
  * 启动方法
  */
 async function main() {
-  logger.debug("DEBUG").info("INFO").warn("WARN").error("ERROR");
+  logger.debug("闹市早行客");
+  logger.info("江边独钓翁");
+  logger.warn("山中与谁同");
+  logger.error("绿竹细雨风");
   logger.info("开始启动", config.name);
-  await buildMediasoupWorkers();
+  // await buildMediasoupWorkers();
   await buildSignalServer();
   await buildClientInterval();
   await buildCommandConsole();
