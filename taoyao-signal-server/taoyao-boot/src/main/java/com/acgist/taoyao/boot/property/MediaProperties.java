@@ -32,25 +32,30 @@ public class MediaProperties {
 	@Schema(title = "视频配置", description = "视频配置")
 	private MediaVideoProperties video;
 	/**
+	 * 4K视频
+	 */
+	@Schema(title = "4K视频", description = "4K视频")
+	private MediaVideoProperties udVideo;
+	/**
+	 * 2K视频
+	 */
+	@Schema(title = "2K视频", description = "2K视频")
+	private MediaVideoProperties qdVideo;
+	/**
 	 * 超清视频
 	 */
 	@Schema(title = "超清视频", description = "超清视频")
-	private MediaVideoProperties mostVideo;
+	private MediaVideoProperties fdVideo;
 	/**
 	 * 高清视频
 	 */
 	@Schema(title = "高清视频", description = "高清视频")
-	private MediaVideoProperties highVideo;
+	private MediaVideoProperties hdVideo;
 	/**
 	 * 标清视频
 	 */
 	@Schema(title = "标清视频", description = "标清视频")
-	private MediaVideoProperties normVideo;
-	/**
-	 * 流畅视频
-	 */
-	@Schema(title = "流畅视频", description = "流畅视频")
-	private MediaVideoProperties flowVideo;
+	private MediaVideoProperties sdVideo;
 	/**
 	 * 媒体服务配置
 	 */

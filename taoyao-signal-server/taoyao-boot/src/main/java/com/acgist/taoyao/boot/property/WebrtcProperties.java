@@ -21,11 +21,11 @@ public class WebrtcProperties {
 	 * STUN服务器
 	 */
 	@Schema(title = "STUN服务器", description = "STUN服务器")
-	private String[] stun;
+	private WebrtcStunProperties[] stun;
 	/**
 	 * TURN服务器
 	 */
 	@Schema(title = "TURN服务器", description = "TURN服务器")
-	private String[] turn;
+	private WebrtcTurnProperties[] turn;
 	
 }

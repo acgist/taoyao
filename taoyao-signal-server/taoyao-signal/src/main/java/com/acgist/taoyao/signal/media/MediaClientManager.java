@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.scheduling.annotation.Scheduled;
 
 import com.acgist.taoyao.boot.annotation.Manager;
 import com.acgist.taoyao.boot.property.MediaProperties;
@@ -30,6 +31,11 @@ public class MediaClientManager {
 	 */
 	private Map<String, MediaClient> clientMap = new ConcurrentHashMap<>();
 	
+    @Scheduled(cron = "${taoyao.scheduled.media:0 * * * * ?}")
+    public void scheduled() {
+        this.heartbeat();
+    }
+	
 	/**
 	 * 加载媒体服务终端
 	 */
@@ -51,6 +57,15 @@ public class MediaClientManager {
 	 */
 	public MediaClient mediaClient(String name) {
 		return this.clientMap.get(name);
+	}
+
+	/**
+	 * 心跳
+	 */
+	private void heartbeat() {
+	    this.clientMap.forEach((k, v) -> {
+	        v.heartbeat();
+	    });
 	}
 	
 }

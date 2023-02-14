@@ -20,7 +20,7 @@ server:
 #   context-path: /taoyao
 spring:
   profiles:
-    active: local
+    active: dev
   application:
     name: taoyao-signal-server
   servlet:
@@ -68,30 +68,36 @@ taoyao:
       bitrate: 1200
       frame-rate: 24
       resolution: 1920*1080
-    # 超清视频
-    most-video:
+    # 4K：UD=UHD=4K
+    ud-video:
+      format: H264
+      bitrate: 1600
+      frame-rate: 30
+      resolution: 4096*2160
+    # 2K：QD=QHD=2K
+    qd-video:
+      format: H264
+      bitrate: 1600
+      frame-rate: 30
+      resolution: 2560*1440
+    # 超清视频：FD=FHD=1080P
+    fd-video:
       format: H264
       bitrate: 1200
       frame-rate: 24
       resolution: 1920*1080
-    # 高清视频
-    high-video:
+    # 高清视频：HD=720P
+    hd-video:
       format: H264
       bitrate: 1000
       frame-rate: 18
       resolution: 1280*720
-    # 标清视频
-    norm-video:
+    # 标清视频：SD=480P
+    sd-video:
       format: H264
       bitrate: 800
       frame-rate: 16
       resolution: 720*480
-    # 流畅视频
-    flow-video:
-      format: H264
-      bitrate: 600
-      frame-rate: 16
-      resolution: 640*480
     # 媒体服务配置
     media-server-list:
       - name: media-local-a
@@ -120,22 +126,26 @@ taoyao:
     thread-min: 4
     thread-max: 128
     thread-name-prefix: ${spring.application.name}-signal-
-    keep-alive-time: 60
+    keep-alive-time: 60000
     buffer-size: 2048
-  # WebRTC配置
+  # WebRTC配置：没有P2P所以不会用到
   webrtc:
     # STUN服务
     stun:
-      - stun:stun1.l.google.com:19302
-      - stun:stun2.l.google.com:19302
-      - stun:stun3.l.google.com:19302
-      - stun:stun4.l.google.com:19302
-    # TURN服务
+      - host: stun1.l.google.com
+        port: 19302
+      - host: stun2.l.google.com
+        port: 19302
+    # TURN服务：需要自己搭建coturn
     turn:
-      - turn:192.168.8.110:3478
-      - turn:192.168.8.111:3478
-      - turn:192.168.8.112:3478
-      - turn:192.168.8.113:3478
+      - host: 192.168.8.110
+        port: 3478
+        username: taoyao
+        password: taoyao
+      - host: 192.168.8.111
+        port: 3478
+        username: taoyao
+        password: taoyao
   # 安全配置
   security:
     enabled: true
@@ -145,6 +155,7 @@ taoyao:
     password: taoyao
   # 定时任务
   scheduled:
+    media: 0 * * * * ?
     client: 0 * * * * ?
   # 脚本配置
   script:

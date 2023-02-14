@@ -58,7 +58,7 @@ public class MediaVideoProperties {
 	/**
 	 * 分辨率（画面大小）
 	 */
-	@Schema(title = "分辨率", description = "分辨率影响画面大小", example = "1920*1080|1280*720|480*360")
+	@Schema(title = "分辨率", description = "分辨率影响画面大小", example = "1920*1080|1280*720")
 	private String resolution;
 	/**
 	 * 宽度

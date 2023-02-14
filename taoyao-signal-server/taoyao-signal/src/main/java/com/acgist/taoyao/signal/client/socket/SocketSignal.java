@@ -67,7 +67,7 @@ public class SocketSignal {
 				this.socketProperties.getThreadMin(),
 				this.socketProperties.getThreadMax(),
 				this.socketProperties.getKeepAliveTime(),
-				TimeUnit.SECONDS,
+				TimeUnit.MILLISECONDS,
 				new LinkedBlockingQueue<>(this.socketProperties.getQueueSize()),
 				this.newThreadFactory()
 			);

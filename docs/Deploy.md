@@ -336,7 +336,7 @@ firewall-cmd --zone=public --add-port=9999/tcp --permanent
 # 信令服务（WebSocket）
 firewall-cmd --zone=public --add-port=8888/tcp --permanent
 # 媒体服务（控制）：只暴露给信令服务
-firewall-cmd --permanent --add-rich-rule="rule family="ipv4" source address="192.168.1.0/24" port protocol="tcp" port="4443" accept"
+firewall-cmd --zone=public --add-rich-rule="rule family="ipv4" source address="192.168.1.0/24" port protocol="tcp" port="4443" accept" --permanent
 # 媒体服务（数据）
 firewall-cmd --zone=public --add-port=40000-49999/udp --permanent
 
@@ -345,7 +345,7 @@ firewall-cmd --list-ports
 
 # 删除端口
 #firewall-cmd --zone=public --remove-port=8443/tcp --permanent
-firewall-cmd --permanent --remove-rich-rule="rule family="ipv4" source address="192.168.1.0/24" port protocol="tcp" port="4443" accept"
+#firewall-cmd --zone=public --remove-rich-rule="rule family="ipv4" source address="192.168.1.0/24" port protocol="tcp" port="4443" accept" --permanent
 #firewall-cmd --zone=public --remove-port=9999/tcp --permanent
 #firewall-cmd --zone=public --remove-port=8888/tcp --permanent
 #firewall-cmd --zone=public --remove-port=40000-49999/udp --permanent

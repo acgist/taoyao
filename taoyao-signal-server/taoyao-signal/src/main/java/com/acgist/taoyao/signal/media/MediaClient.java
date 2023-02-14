@@ -1,24 +1,18 @@
 package com.acgist.taoyao.signal.media;
 
 import java.net.URI;
-import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.net.http.WebSocket.Listener;
 import java.nio.ByteBuffer;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
-
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.X509TrustManager;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +27,7 @@ import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.property.MediaServerProperties;
 import com.acgist.taoyao.boot.property.TaoyaoProperties;
+import com.acgist.taoyao.boot.utils.HTTPUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.signal.protocol.Protocol;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
@@ -104,6 +99,19 @@ public class MediaClient {
 	public String name() {
 		return this.name;
 	}
+
+	/**
+	 * 心跳
+	 */
+	public void heartbeat() {
+	    final CompletableFuture<WebSocket> future = this.webSocket.sendPing(ByteBuffer.allocate(0));
+	    try {
+	        log.debug("心跳：{}", this.name);
+            future.get(this.taoyaoProperties.getTimeout(), TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException | TimeoutException e) {
+            log.error("心跳异常：{}", this.name, e);
+        }
+	}
 	
 	/**
 	 * 连接WebSocket通道
@@ -112,14 +120,12 @@ public class MediaClient {
 		final URI uri = URI.create(this.mediaServerProperties.getAddress());
 		log.info("连接媒体服务：{}", uri);
 		try {
-			HttpClient
-				.newBuilder()
-				.sslContext(buildSSLContext())
-				.build()
+			final WebSocket webSocket = HTTPUtils.newClient()
 				.newWebSocketBuilder()
 				.connectTimeout(Duration.ofMillis(this.taoyaoProperties.getTimeout()))
 				.buildAsync(uri, new MessageListener())
 				.get();
+			log.info("连接媒体服务成功：{}", webSocket);
 		} catch (InterruptedException | ExecutionException e) {
 			log.error("连接媒体服务异常：{}", uri, e);
 			this.taskScheduler.schedule(
@@ -302,61 +308,6 @@ public class MediaClient {
     		return Listener.super.onPong(webSocket, message);
     	}
     	
-	}
-	
-	/**
-	 * SSLContext
-	 * 
-	 * @return {@link SSLContext}
-	 */
-	private static final SSLContext buildSSLContext() {
-		try {
-			// SSL协议：SSL、SSLv2、SSLv3、TLS、TLSv1、TLSv1.1、TLSv1.2、TLSv1.3
-			final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-			sslContext.init(null, new X509TrustManager[] { TaoyaoTrustManager.INSTANCE }, new SecureRandom());
-			return sslContext;
-		} catch (KeyManagementException | NoSuchAlgorithmException e) {
-			log.error("新建SSLContext异常", e);
-		}
-		try {
-			return SSLContext.getDefault();
-		} catch (NoSuchAlgorithmException e) {
-			log.error("新建SSLContext异常", e);
-		}
-		return null;
-	}
-
-	/**
-	 * 证书验证
-	 * 
-	 * @author acgist
-	 */
-	public static class TaoyaoTrustManager implements X509TrustManager {
-
-		private static final TaoyaoTrustManager INSTANCE = new TaoyaoTrustManager();
-
-		private TaoyaoTrustManager() {
-		}
-		
-		@Override
-		public X509Certificate[] getAcceptedIssuers() {
-			return new X509Certificate[0];
-		}
-
-		@Override
-		public void checkClientTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-			if(chain == null) {
-				throw new CertificateException("证书验证失败");
-			}
-		}
-		
-		@Override
-		public void checkServerTrusted(X509Certificate[] chain, String authType) throws CertificateException {
-			if(chain == null) {
-				throw new CertificateException("证书验证失败");
-			}
-		}
-		
 	}
 	
 }

@@ -16,7 +16,7 @@ import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 会话管理
+ * 终端管理
  * 
  * @author acgist
  */
@@ -30,7 +30,7 @@ public class ClientManager {
 	private ApplicationContext applicationContext;
 	
 	/**
-	 * 会话列表
+	 * 终端列表
 	 */
 	private List<Client> clients = new CopyOnWriteArrayList<>();
 
@@ -40,6 +40,8 @@ public class ClientManager {
 	}
 	
 	/**
+	 * 终端打开加入管理
+	 * 
 	 * @param client 终端
 	 */
 	public void open(Client client) {
@@ -118,7 +120,7 @@ public class ClientManager {
 	/**
 	 * @param sn 终端标识
 	 * 
-	 * @return 终端会话
+	 * @return 终端列表
 	 */
 	public List<Client> clients(String sn) {
 		return this.clients().stream()
@@ -127,7 +129,7 @@ public class ClientManager {
 	}
 	
 	/**
-	 * @return 所有终端会话
+	 * @return 所有终端列表
 	 */
 	public List<Client> clients() {
 		return this.clients.stream()
@@ -148,7 +150,7 @@ public class ClientManager {
 	/**
 	 * @param sn 终端标识
 	 * 
-	 * @return 终端状态
+	 * @return 终端状态列表
 	 */
 	public List<ClientStatus> status(String sn) {
 		return this.clients(sn).stream()
@@ -157,7 +159,7 @@ public class ClientManager {
 	}
 
 	/**
-	 * @return 所有终端状态
+	 * @return 所有终端状态列表
 	 */
 	public List<ClientStatus> status() {
 		return this.clients().stream()
@@ -168,7 +170,7 @@ public class ClientManager {
 	/**
 	 * 发送消息
 	 * 
-	 * @param instance 会话实例
+	 * @param instance 终端实例
 	 * @param message 消息
 	 */
 	public void send(AutoCloseable instance, Message message) {
@@ -181,9 +183,9 @@ public class ClientManager {
 	}
 	
 	/**
-	 * 关闭会话
+	 * 关闭终端
 	 * 
-	 * @param instance 会话实例
+	 * @param instance 终端实例
 	 */
 	public void close(AutoCloseable instance) {
 		final Client client = this.client(instance);
@@ -195,7 +197,7 @@ public class ClientManager {
 				instance.close();
 			}
 		} catch (Exception e) {
-			log.error("关闭会话异常", e);
+			log.error("关闭终端异常", e);
 		} finally {
 			if(client != null) {
 				// 移除管理
@@ -207,15 +209,15 @@ public class ClientManager {
 	}
 	
 	/**
-	 * 定时关闭超时会话
+	 * 定时关闭超时终端
 	 */
 	private void closeTimeout() {
-		log.debug("定时关闭超时会话");
+		log.debug("定时关闭超时终端");
 		this.clients.stream()
 		.filter(v -> !v.authorized())
 		.filter(v -> v.timeout(this.taoyaoProperties.getTimeout()))
 		.forEach(v -> {
-			log.debug("关闭超时会话：{}", v);
+			log.debug("关闭超时终端：{}", v);
 			this.close(v);
 		});
 	}

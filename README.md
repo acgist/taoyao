@@ -8,7 +8,6 @@
 |:--|:--|:--|
 |taoyao-client-web|终端示例|Web终端示例|
 |taoyao-client-android|终端示例|安卓终端示例|
-|taoyao-client-desktop|终端示例|桌面终端示例|
 |taoyao-media-server|媒体服务|Mediasoup媒体服务|
 |taoyao-signal-server|信令服务|信令业务逻辑|
 
