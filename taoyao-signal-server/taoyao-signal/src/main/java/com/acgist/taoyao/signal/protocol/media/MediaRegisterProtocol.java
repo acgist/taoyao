@@ -1,12 +1,12 @@
 package com.acgist.taoyao.signal.protocol.media;
 
-import java.net.http.WebSocket;
 import java.util.Map;
 
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.property.MediaServerProperties;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.media.MediaClient;
 import com.acgist.taoyao.signal.protocol.Constant;
 import com.acgist.taoyao.signal.protocol.ProtocolMediaAdapter;
 
@@ -42,12 +42,12 @@ public class MediaRegisterProtocol extends ProtocolMediaAdapter {
 	}
 	
 	@Override
-	public void execute(Message message, WebSocket webSocket) {
+	public void execute(Map<?, ?> body, MediaClient mediaClient, Message message) {
 		log.info("媒体终端注册结果：{}", message);
 	}
 	
 	@Override
-	public void execute(String sn, Client client, Message message) {
+	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
 	}
 
 }

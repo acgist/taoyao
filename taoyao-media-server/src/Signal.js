@@ -31,7 +31,7 @@ const config = require("./Config");
    * @returns 信令消息
    */
   buildMessage: function (signal, roomId, body = {}, id) {
-    let message = {
+    const message = {
       header: {
         v: config.version,
         id: id || this.buildId(),
@@ -47,12 +47,32 @@ const config = require("./Config");
 };
 
 /**
+ * Peer
+ */
+class Peer {
+
+  peerId;
+  device;
+  displayName;
+  rtpCapabilities;
+  sctpCapabilities;
+  transports = new Map();
+  producers = new Map();
+  consumers = new Map();
+  dataProducers = new Map();
+  dataConsumers = new Map();
+
+}
+
+/**
  * 房间
  */
 class Room {
 
   // 是否关闭
   close = false;
+  // 终端
+  peers = new Map();
   // 房间ID
   roomId = null;
   // 网络节流
@@ -104,7 +124,7 @@ class Room {
       }
     });
     // 静音
-    this.audioLevelObserver.on('silence', () => {
+    this.audioLevelObserver.on("silence", () => {
       this.signal.push(protocol.buildMessage(
         "audio::active::speaker",
         this.roomId,
@@ -116,9 +136,16 @@ class Room {
   }
 
   handleActiveSpeakerObserver() {
-    this.activeSpeakerObserver.on('dominantspeaker', (dominantSpeaker) => {
+    this.activeSpeakerObserver.on("dominantspeaker", (dominantSpeaker) => {
       logger.debug("dominantspeaker", dominantSpeaker.producer.id);
     });
+  }
+
+  close() {
+    this.close = true;
+    if(this.mediasoupRouter) {
+      this.mediasoupRouter.close();
+    }
   }
 
 }
@@ -134,9 +161,9 @@ class Signal {
   clients = [];
   // 日志
   logger = new Logger();
-  // Mediasoup Worker列表
+  // Worker列表
   mediasoupWorkers = [];
-  // Mediasoup Worker索引
+  // Worker索引
   nextMediasoupWorkerIndex = 0;
 
   constructor(mediasoupWorkers) {
@@ -245,7 +272,7 @@ class Signal {
    * @param {*} message 消息
    * @param {*} body 消息主体
    * 
-   * @returns 路由
+   * @returns 房间
    */
   async roomCreate(session, message, body) {
     const roomId = body.roomId;
@@ -256,6 +283,12 @@ class Signal {
     const mediasoupWorker = this.nextMediasoupWorker();
     const { mediaCodecs } = config.mediasoup.routerOptions;
     const mediasoupRouter = await mediasoupWorker.createRouter({ mediaCodecs });
+    mediasoupRouter.on("workerclose", () => {
+      // TODO：通知房间关闭
+    });
+    mediasoupRouter.observer.on("close", () => {
+      // TODO：通知房间关闭
+    });
     // TODO：下面两个监控改为配置启用
     const audioLevelObserver = await mediasoupRouter.createAudioLevelObserver({
       maxEntries: 1,

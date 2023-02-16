@@ -59,6 +59,7 @@ import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.boot.service.impl.IdServiceImpl;
 import com.acgist.taoyao.boot.utils.ErrorUtils;
 import com.acgist.taoyao.boot.utils.FileUtils;
+import com.acgist.taoyao.boot.utils.HTTPUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -122,12 +123,17 @@ public class BootAutoConfiguration {
 	public TaskScheduler taskScheduler(TaskSchedulerBuilder builder) {
 		return builder.build();
 	}
-	
+
 	@Bean
-	public CommandLineRunner successCommandLineRunner() {
+	@Autowired
+	public CommandLineRunner successCommandLineRunner(
+	    TaskExecutor taskExecutor,
+	    TaoyaoProperties taoyaoProperties
+	) {
 		return new CommandLineRunner() {
 			@Override
 			public void run(String ... args) throws Exception {
+			    HTTPUtils.init(taoyaoProperties.getTimeout(), taskExecutor);
 				log.info("项目启动成功：{}", BootAutoConfiguration.this.name);
 			}
 		};

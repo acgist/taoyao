@@ -40,16 +40,16 @@ public class ClientController {
 	}
 	
 	@Operation(summary = "终端状态", description = "终端状态")
-	@GetMapping("/status/{sn}")
+	@GetMapping("/status/{clientId}")
 	@ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
-	public Message status(@PathVariable String sn) {
-		return Message.success(this.clientManager.status(sn));
+	public Message status(@PathVariable String clientId) {
+		return Message.success(this.clientManager.status(clientId));
 	}
 	
 	@Operation(summary = "重启终端", description = "重启终端")
-	@GetMapping("/reboot/{sn}")
-	public Message reboot(@PathVariable String sn) {
-		this.clientManager.unicast(sn, this.clientRebootProtocol.build());
+	@GetMapping("/reboot/{clientId}")
+	public Message reboot(@PathVariable String clientId) {
+		this.clientManager.unicast(clientId, this.clientRebootProtocol.build());
 		return Message.success();
 	}
 	

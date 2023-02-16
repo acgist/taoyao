@@ -1,13 +1,13 @@
 package com.acgist.taoyao.signal.protocol.media;
 
-import java.net.http.WebSocket;
 import java.util.Map;
 
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.media.MediaClient;
 import com.acgist.taoyao.signal.media.Room;
-import com.acgist.taoyao.signal.protocol.ProtocolMediaRoomAdapter;
+import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**
  * 当前讲话终端信令
@@ -15,7 +15,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolMediaRoomAdapter;
  * @author acgist
  */
 @Protocol
-public class AudioActiveSpeakerProtocol extends ProtocolMediaRoomAdapter {
+public class AudioActiveSpeakerProtocol extends ProtocolRoomAdapter {
 
 	public static final String SIGNAL = "audio::active::speaker";
 	
@@ -24,12 +24,12 @@ public class AudioActiveSpeakerProtocol extends ProtocolMediaRoomAdapter {
 	}
 
 	@Override
-	public void execute(Room room, Map<?, ?> body, Message message, WebSocket webSocket) {
+	public void execute(Room room, Map<?, ?> body, MediaClient mediaClient, Message message) {
 		room.broadcast(message);
 	}
 	
 	@Override
-	public void execute(String sn, Room room, Map<?, ?> body, Client client, Message message) {
+	public void execute(String clientId, Room room, Map<?, ?> body, Client client, Message message) {
 		// 忽略
 	}
 

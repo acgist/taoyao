@@ -1,13 +1,13 @@
 package com.acgist.taoyao.signal.protocol.media;
 
-import java.net.http.WebSocket;
 import java.util.Map;
 
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.media.MediaClient;
 import com.acgist.taoyao.signal.media.Room;
-import com.acgist.taoyao.signal.protocol.ProtocolMediaRoomAdapter;
+import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**
  * 路由RTP能力信令
@@ -15,7 +15,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolMediaRoomAdapter;
  * @author acgist
  */
 @Protocol
-public class RouterRtpCapabilitiesProtocol extends ProtocolMediaRoomAdapter {
+public class RouterRtpCapabilitiesProtocol extends ProtocolRoomAdapter {
 
 	public static final String SIGNAL = "router::rtp::capabilities";
 	
@@ -24,12 +24,12 @@ public class RouterRtpCapabilitiesProtocol extends ProtocolMediaRoomAdapter {
 	}
 
 	@Override
-	public void execute(Room room, Map<?, ?> body, Message message, WebSocket webSocket) {
+	public void execute(Room room, Map<?, ?> body, MediaClient mediaClient, Message message) {
 		// 忽略
 	}
 
 	@Override
-	public void execute(String sn, Room room, Map<?, ?> body, Client client, Message message) {
+	public void execute(String clientId, Room room, Map<?, ?> body, Client client, Message message) {
 		client.push(room.sendSync(message));
 	}
 

@@ -13,14 +13,14 @@ import com.acgist.taoyao.signal.media.MediaClient;
 public interface Client extends AutoCloseable {
 
 	/**
-	 * @return 终端标识
-	 */
-	String sn();
-	
-	/**
 	 * @return IP
 	 */
 	String ip();
+	
+	/**
+	 * @return 终端标识
+	 */
+	String clientId();
 	
 	/**
 	 * @return 终端状态
@@ -49,9 +49,9 @@ public interface Client extends AutoCloseable {
 	/**
 	 * 设置授权
 	 * 
-	 * @param sn 重点标识
+	 * @param clientId 终端标识
 	 */
-	void authorize(String sn);
+	void authorize(String clientId);
 	
 	/**
 	 * @return 是否授权

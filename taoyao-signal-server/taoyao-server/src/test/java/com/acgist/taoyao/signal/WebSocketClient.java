@@ -21,11 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class WebSocketClient {
 
-	public static final WebSocket build(String uri, String sn) throws InterruptedException {
-		return build(uri, sn, null);
+	public static final WebSocket build(String uri, String clientId) throws InterruptedException {
+		return build(uri, clientId, null);
 	}
 	
-	public static final WebSocket build(String uri, String sn, CountDownLatch count) throws InterruptedException {
+	public static final WebSocket build(String uri, String clientId, CountDownLatch count) throws InterruptedException {
 		final Object lock = new Object();
 		try {
 			return HttpClient
@@ -37,8 +37,8 @@ public class WebSocketClient {
 					@Override
 					public void onOpen(WebSocket webSocket) {
 						webSocket.sendText(String.format("""
-							{"header":{"signal":"client::register","v":"1.0.0","id":"1"},"body":{"username":"taoyao","password":"taoyao","ip":"127.0.0.1","sn":"%s"}}
-						""", sn), true);
+							{"header":{"signal":"client::register","v":"1.0.0","id":"1"},"body":{"username":"taoyao","password":"taoyao","ip":"127.0.0.1","clientId":"%s"}}
+						""", clientId), true);
 						Listener.super.onOpen(webSocket);
 					}
 					@Override

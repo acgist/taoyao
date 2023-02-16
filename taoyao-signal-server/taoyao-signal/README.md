@@ -7,8 +7,8 @@
 	"header": {
 		"v": "版本",
 		"id": 请求标识,
-		"sn": "设备标识"
 		"signal": "信令标识",
+		"clientId": "设备标识"
 	},
 	"code": "响应编码",
 	"message": "响应描述",
@@ -101,12 +101,12 @@
 # 响应主体
 [
 	{
-		"sn": "终端标识",
+		"clientId": "终端标识",
 		"ip": "终端IP",
 		"signal": 信号强度（0~100）,
 		"battery": 电池电量（0~100）,
 		"charging": 是否充电（true|false）,
-		"mediaName": "媒体服务名称",
+		"mediaId": "媒体服务标识",
 		"lastHeartbeat": "最后心跳时间"
 	},
 	...
@@ -119,7 +119,7 @@
 ```
 # 广播主体
 {
-	"sn": "下线终端标识"
+	"clientId": "下线终端标识"
 }
 # 消息流程：终端-[终端关闭]>信令服务-)终端
 ```
@@ -129,12 +129,12 @@
 ```
 # 广播主体
 {
-	"sn": "终端标识",
+	"clientId": "终端标识",
 	"ip": "终端IP",
 	"signal": 信号强度（0~100）,
 	"battery": 电池电量（0~100）,
 	"charging": 是否充电（true|false）,
-	"mediaName": "媒体服务名称",
+	"mediaId": "媒体服务标识",
 	"lastHeartbeat": "最后心跳时间"
 }
 # 消息流程：终端-[终端注册]>信令服务-)终端
@@ -156,7 +156,7 @@
 {
 	"username": "信令用户",
 	"password": "信令密码",
-	"sn": "终端标识",
+	"clientId": "终端标识",
 	"ip": "终端IP",
 	"signal": 信号强度（0~100）,
 	"battery": 电池电量（0~100）,
@@ -174,16 +174,16 @@
 ```
 # 请求主体
 {
-	"sn": "终端标识"
+	"clientId": "终端标识"
 }
 # 响应主体
 {
-	"sn": "终端标识",
+	"clientId": "终端标识",
 	"ip": "终端IP",
 	"signal": 信号强度（0~100）,
 	"battery": 电池电量（0~100）,
 	"charging": 是否充电（true|false）,
-	"mediaName": "媒体服务名称",
+	"mediaId": "媒体服务标识",
 	"lastHeartbeat": "最后心跳时间"
 }
 # 消息流程：终端->信令服务->终端
@@ -335,7 +335,7 @@
 # 广播
 {
 	"id": "房间标识",
-	"sn": "终端标识"
+	"clientId": "终端标识"
 }
 ```
 
@@ -393,6 +393,6 @@
 
 ```
 let socket = new WebSocket("wss://localhost:8888/websocket.signal");
-socket.send('{"header":{"signal":"client::register","v":"1.0.0","id":"1"},"body":{"username":"taoyao","password":"taoyao","sn":"taoyao"}}');
+socket.send('{"header":{"signal":"client::register","v":"1.0.0","id":"1"},"body":{"username":"taoyao","password":"taoyao","clientId":"taoyao"}}');
 socket.send('{"header":{"signal":"client::heartbeat","v":"1.0.0","id":"1"},"body":{}}');
 ```

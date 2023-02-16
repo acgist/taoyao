@@ -12,7 +12,7 @@ import com.acgist.taoyao.boot.property.WebrtcProperties;
 import com.acgist.taoyao.boot.utils.DateUtils.DateTimeStyle;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.protocol.Constant;
-import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
+import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**
  * 终端配置信令
@@ -20,7 +20,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
  * @author acgist
  */
 @Protocol
-public class ClientConfigProtocol extends ProtocolAdapter {
+public class ClientConfigProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "client::config";
 	
@@ -34,7 +34,7 @@ public class ClientConfigProtocol extends ProtocolAdapter {
 	}
 
 	@Override
-	public void execute(String sn, Client client, Message message) {
+	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
 		// 忽略
 	}
 	

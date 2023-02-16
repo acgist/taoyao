@@ -18,11 +18,11 @@ import lombok.Setter;
 @Schema(title = "终端状态", description = "终端状态")
 public class ClientStatus {
 
-	/**
-	 * 终端标识
-	 */
-	@Schema(title = "终端标识", description = "终端标识")
-	private String sn;
+    /**
+     * 终端标识
+     */
+    @Schema(title = "终端标识", description = "终端标识")
+    private String clientId;
 	/**
 	 * 终端IP
 	 */
@@ -44,14 +44,14 @@ public class ClientStatus {
 	@Schema(title = "是否充电", description = "是否充电")
 	private Boolean charging = false;
 	/**
-	 * 媒体服务名称
+	 * 媒体服务标识
 	 */
-	@Schema(title = "媒体服务名称", description = "媒体服务名称")
-	private String mediaName;
+	@Schema(title = "媒体服务标识", description = "媒体服务标识")
+	private String mediaId;
 	/**
 	 * 最后心跳时间
 	 */
 	@Schema(title = "最后心跳时间", description = "最后心跳时间")
-	private LocalDateTime lastHeartbeat = LocalDateTime.now();
+	private LocalDateTime lastHeartbeat;
 	
 }

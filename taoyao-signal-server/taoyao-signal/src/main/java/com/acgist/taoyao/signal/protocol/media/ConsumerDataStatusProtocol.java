@@ -1,5 +1,5 @@
 package com.acgist.taoyao.signal.protocol.media;
 
-public class NetworkThrottleApplyProtocol {
+public class ConsumerDataStatusProtocol {
 
 }

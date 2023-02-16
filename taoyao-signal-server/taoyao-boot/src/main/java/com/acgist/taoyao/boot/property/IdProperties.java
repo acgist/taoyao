@@ -18,7 +18,7 @@ public class IdProperties {
 	/**
 	 * 机器序号
 	 */
-	private Integer sn;
+	private Integer index;
 	/**
 	 * 最大序号
 	 */

@@ -9,8 +9,7 @@ import java.lang.annotation.Target;
 import org.springframework.stereotype.Component;
 
 /**
- * 事件监听
- * 事件用来处理异步业务还有广播业务
+ * 事件信令协议
  * 
  * @author acgist
  */
@@ -18,6 +17,6 @@ import org.springframework.stereotype.Component;
 @Component
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-public @interface EventListener {
+public @interface EventProtocol {
 
 }

@@ -6,9 +6,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.time.Duration;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
+
+import org.springframework.core.task.TaskExecutor;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -20,7 +23,25 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class HTTPUtils {
 
+    /**
+     * 超时时间
+     */
+    private static long timeout;
+    /**
+     * 线程池
+     */
+    private static TaskExecutor executor;
+    
     private HTTPUtils() {
+    }
+    
+    /**
+     * @param timeout 超时时间
+     * @param executor 线程池
+     */
+    public static final void init(long timeout, TaskExecutor executor) {
+        HTTPUtils.timeout = timeout;
+        HTTPUtils.executor = executor;
     }
     
     /**
@@ -29,7 +50,11 @@ public final class HTTPUtils {
     public static final HttpClient newClient() {
         return HttpClient
             .newBuilder()
-            .sslContext(buildSSLContext())
+//          .version(Version.HTTP_2)
+            .executor(HTTPUtils.executor)
+            .sslContext(HTTPUtils.buildSSLContext())
+            .connectTimeout(Duration.ofMillis(HTTPUtils.timeout))
+//          .followRedirects(Redirect.ALWAYS)
             .build();
     }
  

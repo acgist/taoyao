@@ -45,7 +45,7 @@ public class MediaClientManager {
 		.forEach(v -> {
 			final MediaClient client = this.applicationContext.getBean(MediaClient.class);
 			client.init(v);
-			this.clientMap.put(client.name(), client);
+			this.clientMap.put(client.mediaId(), client);
 			log.info("注册媒体服务终端：{}-{}", v.getAddress(), client);
 		});
 	}

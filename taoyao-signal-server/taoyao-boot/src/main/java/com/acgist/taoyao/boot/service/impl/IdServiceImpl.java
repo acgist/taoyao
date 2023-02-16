@@ -33,7 +33,7 @@ public class IdServiceImpl implements IdService {
 			1000000000L * time.getMinute() +
 			10000000L * time.getSecond() +
 			// 机器序号一位
-			1000000L * this.idProperties.getSn() +
+			1000000L * this.idProperties.getIndex() +
 			// 每秒并发数量
 			this.index;
 	}

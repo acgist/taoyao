@@ -25,7 +25,7 @@ public class Room implements Closeable {
 	/**
 	 * ID
 	 */
-	private Long id;
+	private Long roomId;
 	/**
 	 * 密码
 	 */
@@ -67,7 +67,7 @@ public class Room implements Closeable {
 				return;
 			}
 			if(this.clients.add(client)) {
-				this.status.setSnSize(this.status.getSnSize() + 1);
+				this.status.setClientSize(this.status.getClientSize() + 1);
 			}
 		}
 	}
@@ -80,7 +80,7 @@ public class Room implements Closeable {
 	public void leave(Client client) {
 		synchronized (this.clients) {
 			if(this.clients.remove(client)) {
-				this.status.setSnSize(this.status.getSnSize() - 1);
+				this.status.setClientSize(this.status.getClientSize() - 1);
 			}
 		}
 	}
@@ -102,7 +102,7 @@ public class Room implements Closeable {
 	 */
 	public void broadcast(String from, Message message) {
 		this.clients.stream()
-		.filter(v -> !Objects.equals(from, v.sn()))
+		.filter(v -> !Objects.equals(from, v.clientId()))
 		.forEach(v -> v.push(message));
 	}
 	
@@ -134,8 +134,8 @@ public class Room implements Closeable {
 	
 	@Override
 	public void close() {
-		log.info("关闭房间：{}", this.id);
-		this.transports.forEach(Transport::close);
+		log.info("关闭房间：{}", this.roomId);
+		this.mediaClient.send(null);
 	}
 	
 }

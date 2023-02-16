@@ -3,7 +3,7 @@
   <el-dialog v-model="localVisible" title="终端设置" width="30%" :show-close="false" center>
     <el-form ref="SettingSignalForm">
       <el-form-item label="终端名称">
-        <el-input v-model="config.sn" placeholder="终端名称" />
+        <el-input v-model="config.clientId" placeholder="终端名称" />
       </el-form-item>
       <el-form-item label="信令帐号">
         <el-input v-model="config.username" placeholder="信令帐号" />

@@ -8,7 +8,7 @@ package com.acgist.taoyao.boot.service;
 public interface IdService {
 
 	/**
-	 * 生成十九位的ID：YYMMddHHmmss(12) + sn(1) + xxxxxx(6)
+	 * 生成十九位的ID：YYMMddHHmmss(12) + index(1) + xxxxxx(6)
 	 * 
 	 * @return ID
 	 */

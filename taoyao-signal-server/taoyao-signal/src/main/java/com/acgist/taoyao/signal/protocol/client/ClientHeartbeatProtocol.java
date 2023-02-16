@@ -8,7 +8,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientStatus;
 import com.acgist.taoyao.signal.protocol.Constant;
-import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
+import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**
  * 终端心跳信令
@@ -16,7 +16,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
  * @author acgist
  */
 @Protocol
-public class ClientHeartbeatProtocol extends ProtocolMapAdapter {
+public class ClientHeartbeatProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "client::heartbeat";
 	
@@ -25,7 +25,7 @@ public class ClientHeartbeatProtocol extends ProtocolMapAdapter {
 	}
 	
 	@Override
-	public void execute(String sn, Map<?, ?> body, Client client, Message message) {
+	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
 		// 响应心跳
 		client.push(message.cloneWidthoutBody());
 		// 设置状态

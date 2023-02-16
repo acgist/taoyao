@@ -22,7 +22,7 @@ public abstract class ClientEventAdapter extends ApplicationEventAdapter {
 	/**
 	 * 终端标识
 	 */
-	private String sn;
+	private String clientId;
 	/**
 	 * 终端
 	 */
@@ -34,7 +34,7 @@ public abstract class ClientEventAdapter extends ApplicationEventAdapter {
 	
 	public ClientEventAdapter(Map<?, ?> body, Message message, Client client) {
 		super(body, message, client);
-		this.sn = client.sn();
+		this.clientId = client.clientId();
 		this.client = client;
 	}
 	

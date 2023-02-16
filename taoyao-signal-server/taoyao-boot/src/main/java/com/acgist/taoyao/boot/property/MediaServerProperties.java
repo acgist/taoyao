@@ -17,10 +17,10 @@ import lombok.Setter;
 public class MediaServerProperties {
 
 	/**
-	 * 名称
+	 * 媒体服务标识
 	 */
-	@Schema(title = "名称", description = "名称")
-	private String name;
+	@Schema(title = "媒体服务标识", description = "媒体服务标识")
+	private String mediaId;
 	/**
 	 * 是否启用
 	 */

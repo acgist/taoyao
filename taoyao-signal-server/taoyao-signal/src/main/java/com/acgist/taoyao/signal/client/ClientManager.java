@@ -56,7 +56,7 @@ public class ClientManager {
 	 */
 	public void unicast(String to, Message message) {
 		this.clients().stream()
-		.filter(v -> Objects.equals(to, v.sn()))
+		.filter(v -> Objects.equals(to, v.clientId()))
 		.forEach(v -> v.push(message));
 	}
 	
@@ -89,7 +89,7 @@ public class ClientManager {
 	 */
 	public void broadcast(String from, Message message) {
 		this.clients().stream()
-		.filter(v -> !Objects.equals(from, v.sn()))
+		.filter(v -> !Objects.equals(from, v.clientId()))
 		.forEach(v -> v.push(message));
 	}
 	
@@ -118,13 +118,13 @@ public class ClientManager {
 	}
 	
 	/**
-	 * @param sn 终端标识
+	 * @param clientId 终端标识
 	 * 
 	 * @return 终端列表
 	 */
-	public List<Client> clients(String sn) {
+	public List<Client> clients(String clientId) {
 		return this.clients().stream()
-			.filter(v -> Objects.equals(sn, v.sn()))
+			.filter(v -> Objects.equals(clientId, v.clientId()))
 			.toList();
 	}
 	
@@ -148,12 +148,12 @@ public class ClientManager {
 	}
 	
 	/**
-	 * @param sn 终端标识
+	 * @param clientId 终端标识
 	 * 
 	 * @return 终端状态列表
 	 */
-	public List<ClientStatus> status(String sn) {
-		return this.clients(sn).stream()
+	public List<ClientStatus> status(String clientId) {
+		return this.clients(clientId).stream()
 			.map(Client::status)
 			.toList();
 	}
@@ -203,7 +203,7 @@ public class ClientManager {
 				// 移除管理
 				this.clients.remove(client);
 				// 关闭事件
-				this.applicationContext.publishEvent(new ClientCloseEvent(null, client));
+				this.applicationContext.publishEvent(new ClientCloseEvent(client));
 			}
 		}
 	}

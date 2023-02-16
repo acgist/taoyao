@@ -10,10 +10,6 @@ import com.acgist.taoyao.signal.media.MediaClient;
 public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 
 	/**
-	 * 终端标识
-	 */
-	protected String sn;
-	/**
 	 * IP
 	 */
 	protected String ip;
@@ -21,6 +17,10 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	 * 进入时间
 	 */
 	protected final long time;
+	/**
+	 * 终端标识
+	 */
+	protected String clientId;
 	/**
 	 * 会话实例
 	 */
@@ -44,15 +44,15 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 		this.authorized = false;
 		this.status = new ClientStatus();
 	}
-
-	@Override
-	public String sn() {
-		return this.sn;
-	}
 	
 	@Override
 	public String ip() {
 		return this.ip;
+	}
+	
+	@Override
+	public String clientId() {
+	    return this.clientId;
 	}
 	
 	@Override
@@ -71,8 +71,8 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	}
 	
 	@Override
-	public void authorize(String sn) {
-		this.sn = sn;
+	public void authorize(String clientId) {
+		this.clientId = clientId;
 		this.authorized = true;
 	}
 	
@@ -89,7 +89,7 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	@Override
 	public void mediaClient(MediaClient mediaClient) {
 		this.mediaClient = mediaClient;
-		this.status.setMediaName(mediaClient.name());
+		this.status.setMediaId(mediaClient.mediaId());
 	}
 	
 	@Override
@@ -99,7 +99,7 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	
 	@Override
 	public String toString() {
-		return this.getClass().getSimpleName() + " - " + this.sn;
+		return this.getClass().getSimpleName() + " - " + this.clientId;
 	}
 	
 }

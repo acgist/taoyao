@@ -4,10 +4,11 @@
 
 /**
  * 信令配置
+ * TODO：合并到taoyao
  */
 const config = {
   // 终端标识
-  sn: "taoyao",
+  clientId: "taoyao",
   // 信令服务地址
   host: "localhost",
   port: "8888",

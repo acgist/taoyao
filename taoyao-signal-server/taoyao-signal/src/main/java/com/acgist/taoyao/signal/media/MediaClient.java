@@ -31,7 +31,6 @@ import com.acgist.taoyao.boot.utils.HTTPUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.signal.protocol.Protocol;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
-import com.acgist.taoyao.signal.protocol.ProtocolMediaAdapter;
 import com.acgist.taoyao.signal.protocol.media.MediaRegisterProtocol;
 
 import lombok.extern.slf4j.Slf4j;
@@ -61,9 +60,9 @@ public class MediaClient {
 	private static final long MAX_DURATION = 60L * 1000;
 	
 	/**
-	 * 名称
+	 * 标识
 	 */
-	private String name;
+	private String mediaId;
 	/**
 	 * 重试周期
 	 */
@@ -88,16 +87,16 @@ public class MediaClient {
 	 */
 	public void init(MediaServerProperties mediaServerProperties) {
 		this.mediaServerProperties = mediaServerProperties;
-		this.name = mediaServerProperties.getName();
+		this.mediaId = mediaServerProperties.getMediaId();
 		this.duration = this.taoyaoProperties.getTimeout();
 		this.buildClient();
 	}
 	
 	/**
-	 * @return 名称
+	 * @return 标识
 	 */
-	public String name() {
-		return this.name;
+	public String mediaId() {
+		return this.mediaId;
 	}
 
 	/**
@@ -106,10 +105,10 @@ public class MediaClient {
 	public void heartbeat() {
 	    final CompletableFuture<WebSocket> future = this.webSocket.sendPing(ByteBuffer.allocate(0));
 	    try {
-	        log.debug("心跳：{}", this.name);
+	        log.debug("心跳：{}", this.mediaId);
             future.get(this.taoyaoProperties.getTimeout(), TimeUnit.MILLISECONDS);
         } catch (InterruptedException | ExecutionException | TimeoutException e) {
-            log.error("心跳异常：{}", this.name, e);
+            log.error("心跳异常：{}", this.mediaId, e);
         }
 	}
 	
@@ -126,7 +125,17 @@ public class MediaClient {
 				.buildAsync(uri, new MessageListener())
 				.get();
 			log.info("连接媒体服务成功：{}", webSocket);
-		} catch (InterruptedException | ExecutionException e) {
+	        // 关闭旧的通道
+	        if(this.webSocket != null && !(this.webSocket.isInputClosed() && this.webSocket.isOutputClosed())) {
+	            this.webSocket.abort();
+	        }
+	        // 设置新的通道
+	        this.webSocket = webSocket;
+	        // 重置重试周期
+	        this.duration = this.taoyaoProperties.getTimeout();
+	        // 发送授权消息
+	        this.send(this.mediaRegisterProtocol.build(this.mediaServerProperties));
+		} catch (Exception e) {
 			log.error("连接媒体服务异常：{}", uri, e);
 			this.taskScheduler.schedule(
 				this::buildClient,
@@ -174,24 +183,6 @@ public class MediaClient {
 	}
 	
 	/**
-	 * 打开通道
-	 * 
-	 * @param webSocket 通道
-	 */
-	private void open(WebSocket webSocket) {
-		// 关闭旧的通道
-		if(this.webSocket != null && !(this.webSocket.isInputClosed() && this.webSocket.isOutputClosed())) {
-			this.webSocket.abort();
-		}
-		// 重置重试周期
-		this.duration = this.taoyaoProperties.getTimeout();
-		// 设置新的通道
-		this.webSocket = webSocket;
-		// 发送授权消息
-		this.send(this.mediaRegisterProtocol.build(this.mediaServerProperties));
-	}
-	
-	/**
 	 * @return 重试周期
 	 */
 	private long retryDuration() {
@@ -204,38 +195,40 @@ public class MediaClient {
 	 * @param data 消息
 	 */
 	private void execute(String data) {
-		if(StringUtils.isNotEmpty(data)) {
-			final Message message = JSONUtils.toJava(data, Message.class);
-			final Header header = message.getHeader();
-			if(header == null) {
-				log.warn("消息格式错误（没有头部）：{}", message);
-				return;
-			}
-			final String v = header.getV();
-			final String id = header.getId();
-			final String signal = header.getSignal();
-			if(v == null || id == null || signal == null) {
-				log.warn("消息格式错误（缺失头部关键参数）：{}", message);
-				return;
-			}
-			final Message request = this.syncMessage.get(id);
-			if(request != null) {
-				// 同步处理
-				// 重新设置消息
-				this.syncMessage.put(id, message);
-				// 唤醒等待现场
-				synchronized (request) {
-					request.notifyAll();
-				}
-				// 同步处理不要执行回调
-			} else {
-				final Protocol protocol = this.protocolManager.protocol(signal);
-				if(protocol instanceof ProtocolMediaAdapter protocolMediaAdapter) {
-					protocolMediaAdapter.execute(message, this.webSocket);
-				} else {
-					log.warn("未知媒体服务信令：{}", data);
-				}
-			}
+		if(StringUtils.isEmpty(data)) {
+		    log.warn("媒体服务消息格式错误：{}", data);
+		    return;
+		}
+		final Message message = JSONUtils.toJava(data, Message.class);
+		final Header header = message.getHeader();
+		if(header == null) {
+		    log.warn("媒体服务消息格式错误（没有头部）：{}", message);
+		    return;
+		}
+		final String v = header.getV();
+		final String id = header.getId();
+		final String signal = header.getSignal();
+		if(v == null || id == null || signal == null) {
+		    log.warn("媒体服务消息格式错误（缺失头部关键参数）：{}", message);
+		    return;
+		}
+		final Message request = this.syncMessage.get(id);
+		if(request != null) {
+		    // 同步处理
+		    // 重新设置消息
+		    this.syncMessage.put(id, message);
+		    // 唤醒等待现场
+		    synchronized (request) {
+		        request.notifyAll();
+		    }
+		    // 同步处理不要执行回调
+		} else {
+		    final Protocol protocol = this.protocolManager.protocol(signal);
+		    if(protocol == null) {
+		        log.warn("未知媒体服务信令：{}", message);
+		    } else {
+		        protocol.execute(this, message);
+		    }
 		}
 	}
 	
@@ -250,7 +243,6 @@ public class MediaClient {
     	public void onOpen(WebSocket webSocket) {
     		log.info("媒体服务通道打开：{}", webSocket);
     		Listener.super.onOpen(webSocket);
-    		MediaClient.this.open(webSocket);
     	}
 		
     	@Override

@@ -3,7 +3,8 @@ package com.acgist.taoyao.signal.protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.event.ClientEventAdapter;
+import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
+import com.acgist.taoyao.signal.media.MediaClient;
 
 /**
  * 信令协议
@@ -42,11 +43,18 @@ public interface Protocol {
 	/**
 	 * 处理信令消息
 	 * 
-	 * @param sn 终端标识
 	 * @param client 终端
 	 * @param message 信令消息
 	 */
-	void execute(String sn, Client client, Message message);
+	void execute(Client client, Message message);
+	
+	/**
+	 * 处理媒体信令消息
+	 * 
+	 * @param mediaClient 媒体服务终端
+	 * @param message 信令消息
+	 */
+	void execute(MediaClient mediaClient, Message message);
 
 	/**
 	 * 发布事件
@@ -55,7 +63,7 @@ public interface Protocol {
 	 * 
 	 * @param event 事件
 	 */
-	<E extends ClientEventAdapter> void publishEvent(E event);
+	<E extends ApplicationEventAdapter> void publishEvent(E event);
 	
 	/**
 	 * 创建信令消息

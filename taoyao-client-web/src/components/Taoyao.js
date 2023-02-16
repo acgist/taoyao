@@ -14,6 +14,10 @@ import {
 // 日志
 const logger = new Logger();
 
+const PC_PROPRIETARY_CONSTRAINTS = {
+	optional : [ { googDscp: true } ]
+};
+
 /**
  * 信令通道
  */
@@ -94,7 +98,7 @@ const signalChannel = {
         self.push(
           protocol.buildMessage("client::register", {
             ip: "localhost",
-            sn: config.sn,
+            clientId: config.clientId,
             signal: 100,
             battery: battery.level * 100,
             charging: battery.charging,
@@ -284,38 +288,66 @@ const signalChannel = {
  */
 class Taoyao {
   // 发送信令
-  push = null;
+  push;
+  // 房间ID
+  roomId;
   // 请求信令
-  request = null;
+  request;
   // 本地视频
-  localVideo = null;
+  localVideo;
   // 本地终端
   localClient;
   // 远程终端
-  remoteClientList;
+  remoteClients = new Map();
   // 媒体通道
-  sendTransport = null;
-  recvTransport = null;
+  sendTransport;
+  recvTransport;
   // 信令通道
-  signalChannel = null;
+  signalChannel;
   // 媒体设备
-  mediasoupDevice = null;
+  mediasoupDevice;
   // 是否消费
   consume = true;
   // 是否生产
   produce = true;
+  // 强制使用TCP
+  forceTcp = false;
+  // 使用数据通道
+  useDataChannel = true;
   // 是否生产音频
   audioProduce = true && this.produce;
   // 是否生成视频
   videoProduce = true && this.produce;
   // 音频生产者
-  audioProducer = null;
+  audioProducer;
   // 视频生产者
-  videoProducer = null;
+  videoProducer;
   // 消费者
   consumers = new Map();
   // 数据消费者
   dataConsumers = new Map();
+
+  constructor({
+    roomId,
+    peerId,
+    displayName,
+    device,
+    handlerName,
+    useSimulcast,
+    useSharingSimulcast,
+    forceTcp,
+    produce,
+    consume,
+    forceH264,
+    forceVP9,
+    svc,
+    datachannel,
+    externalVideo,
+    e2eKey,
+    consumerReplicas
+  }) {
+    this.roomId = roomId;
+  }
 
   /**
    * 打开信令通道
@@ -338,21 +370,134 @@ class Taoyao {
   };
   /**
    * 打开媒体通道
-   * navigator.mediaDevices.getDisplayMedia();
+   * TODO：共享 navigator.mediaDevices.getDisplayMedia();
    */
   buildMedia = async function (roomId) {
     let self = this;
     // 释放资源
     self.closeMedia();
     self.mediasoupDevice = new mediasoupClient.Device();
-    const response = await this.request(protocol.buildMessage(
+    const response = await self.request(protocol.buildMessage(
       "router::rtp::capabilities",
-      { roomId }
+      { roomId : roomId || self.roomId }
     ));
     const routerRtpCapabilities = response.body;
-    console.log(self.mediasoupDevice);
-    console.log(routerRtpCapabilities);
+    self.mediasoupDevice.load({ routerRtpCapabilities });
+    self.produce();
   };
+  /**
+   * 生产媒体
+   */
+  produceMedia = async function() {    
+    // 打开媒体：TODO：参数
+    const self = this;
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video : true });
+    const audioTrack = stream.getAudioTracks()[0];
+    const videoTrack = stream.getVideoTracks()[0];
+    if(self.produce) {
+      const transportInfo = await self.request("webrtc::transport::create", {
+          forceTcp         : self.forceTcp,
+          producing        : true,
+          consuming        : false,
+          sctpCapabilities : self.useDataChannel ? self.mediasoupDevice.sctpCapabilities : undefined
+        });
+      const {
+        id,
+        iceParameters,
+        iceCandidates,
+        dtlsParameters,
+        sctpParameters
+      } = transportInfo;
+
+      self.sendTransport = self.mediasoupDevice.createSendTransport(
+        {
+          id,
+          iceParameters,
+          iceCandidates,
+          dtlsParameters :
+          {
+            ...dtlsParameters,
+            role : 'auto'
+          },
+          sctpParameters,
+          iceServers             : [],
+          proprietaryConstraints : PC_PROPRIETARY_CONSTRAINTS,
+          additionalSettings 	   :
+          // TODO：加密解密
+            { encodedInsertableStreams: true }
+        });
+
+      self.sendTransport.on(
+        'connect', ({ dtlsParameters }, callback, errback) =>
+        {
+          self.request(
+            'webrtc::transport::connect',
+            {
+              transportId : self.sendTransport.id,
+              dtlsParameters
+            })
+            .then(callback)
+            .catch(errback);
+        });
+
+      self.sendTransport.on(
+        'produce', async ({ kind, rtpParameters, appData }, callback, errback) =>
+        {
+          try
+          {
+            const { id } = await self.request(
+              'produce',
+              {
+                transportId : self.sendTransport.id,
+                kind,
+                rtpParameters,
+                appData
+              });
+
+            callback({ id });
+          }
+          catch (error)
+          {
+            errback(error);
+          }
+        });
+
+      sef.sendTransport.on('producedata', async (
+        {
+          sctpStreamParameters,
+          label,
+          protocol,
+          appData
+        },
+        callback,
+        errback
+      ) =>
+      {
+        logger.debug(
+          '"producedata" event: [sctpStreamParameters:%o, appData:%o]',
+          sctpStreamParameters, appData);
+
+        try
+        {
+          const { id } = await self.request(
+            'produceData',
+            {
+              transportId : self.sendTransport.id,
+              sctpStreamParameters,
+              label,
+              protocol,
+              appData
+            });
+
+          callback({ id });
+        }
+        catch (error)
+        {
+          errback(error);
+        }
+      });
+    }
+  }
   /**
    * 关闭媒体
    */

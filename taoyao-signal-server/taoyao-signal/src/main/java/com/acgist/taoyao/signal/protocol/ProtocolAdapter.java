@@ -9,17 +9,18 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.property.TaoyaoProperties;
 import com.acgist.taoyao.boot.service.IdService;
+import com.acgist.taoyao.signal.MapBodyGetter;
 import com.acgist.taoyao.signal.client.ClientManager;
-import com.acgist.taoyao.signal.event.ClientEventAdapter;
+import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
 import com.acgist.taoyao.signal.media.MediaClientManager;
 import com.acgist.taoyao.signal.media.RoomManager;
 
 /**
- * 信令适配器
+ * 信令协议适配器
  * 
  * @author acgist
  */
-public abstract class ProtocolAdapter implements Protocol {
+public abstract class ProtocolAdapter implements Protocol, MapBodyGetter {
 
 	@Autowired
 	protected IdService idService;
@@ -59,7 +60,7 @@ public abstract class ProtocolAdapter implements Protocol {
 	}
 	
 	@Override
-	public <E extends ClientEventAdapter> void publishEvent(E event) {
+	public <E extends ApplicationEventAdapter> void publishEvent(E event) {
 		this.applicationContext.publishEvent(event);
 	}
 	

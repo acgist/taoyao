@@ -24,14 +24,14 @@ public class RoomStatus {
 	@Schema(title = "名称", description = "名称")
 	private String name;
 	/**
+	 * 媒体服务标识
+	 */
+	@Schema(title = "媒体服务标识", description = "媒体服务标识")
+	private String mediaId;
+	/**
 	 * 终端数量
 	 */
 	@Schema(title = "终端数量", description = "终端数量")
-	private Long snSize;
-	/**
-	 * 媒体服务名称
-	 */
-	@Schema(title = "媒体服务名称", description = "媒体服务名称")
-	private String mediaName;
+	private Long clientSize;
 	
 }

@@ -23,7 +23,7 @@
         </el-tab-pane>
         <el-tab-pane label="创建房间" name="create">
           <el-form-item label="媒体服务">
-            <el-select v-model="room.mediaName" placeholder="媒体服务">
+            <el-select v-model="room.mediaId" placeholder="媒体服务">
               <el-option
                 v-for="value in config.mediaServerList"
                 :key="value.name"

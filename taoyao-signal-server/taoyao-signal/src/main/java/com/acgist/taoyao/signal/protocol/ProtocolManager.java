@@ -115,9 +115,9 @@ public class ProtocolManager {
 			return;
 		}
 		if(protocol instanceof ClientRegisterProtocol) {
-			protocol.execute(null, client, message);
+			protocol.execute(client, message);
 		} else if(this.securityService.authenticate(message, client, protocol)) {
-			protocol.execute(client.sn(), client, message);
+			protocol.execute(client, message);
 		} else {
 			log.warn("终端会话没有授权：{}", content);
 			client.push(this.platformErrorProtocol.build(MessageCode.CODE_3401, "终端会话没有授权"));

@@ -1,12 +1,14 @@
 package com.acgist.taoyao.signal.protocol.system;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.property.ScriptProperties;
+import com.acgist.taoyao.boot.utils.ScriptUtils;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.event.platform.PlatformScriptEvent;
-import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
+import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-public class SystemRebootProtocol extends ProtocolAdapter {
+public class SystemRebootProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "system::reboot";
 	
@@ -28,10 +30,10 @@ public class SystemRebootProtocol extends ProtocolAdapter {
 	}
 
 	@Override
-	public void execute(String sn, Client client, Message message) {
-		log.info("重启系统：{}", sn);
+	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
+		log.info("重启系统：{}", clientId);
 		this.clientManager.broadcast(message);
-		this.publishEvent(new PlatformScriptEvent(this.scriptProperties.getSystemReboot(), message, client));
+		ScriptUtils.execute(this.scriptProperties.getSystemReboot());
 	}
 
 }

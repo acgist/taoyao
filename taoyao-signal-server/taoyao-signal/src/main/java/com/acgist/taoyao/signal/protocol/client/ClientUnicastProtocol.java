@@ -8,7 +8,7 @@ import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.protocol.Constant;
-import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
+import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Protocol
-public class ClientUnicastProtocol extends ProtocolMapAdapter {
+public class ClientUnicastProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "client::unicast";
 	
@@ -28,7 +28,7 @@ public class ClientUnicastProtocol extends ProtocolMapAdapter {
 	}
 
 	@Override
-	public void execute(String sn, Map<?, ?> body, Client client, Message message) {
+	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
 		final String to = (String) body.remove(Constant.TO);
 		if(StringUtils.isNotEmpty(to)) {
 			this.clientManager.unicast(to, message);

@@ -1,11 +1,13 @@
 package com.acgist.taoyao.signal.protocol.platform;
 
+import java.util.Map;
+
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
+import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**
  * 平台异常信令
@@ -13,7 +15,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
  * @author acgist
  */
 @Protocol
-public class PlatformErrorProtocol extends ProtocolAdapter {
+public class PlatformErrorProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "platform::error";
 	
@@ -34,7 +36,7 @@ public class PlatformErrorProtocol extends ProtocolAdapter {
 	}
 	
 	@Override
-	public void execute(String sn, Client client, Message message) {
+	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
 	}
 	
 	/**

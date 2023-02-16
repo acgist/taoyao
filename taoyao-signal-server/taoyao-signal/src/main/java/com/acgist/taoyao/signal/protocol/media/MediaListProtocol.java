@@ -8,7 +8,7 @@ import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.property.MediaProperties;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
+import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**
  * 媒体服务列表信令
@@ -16,7 +16,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolMapAdapter;
  * @author acgist
  */
 @Protocol
-public class MediaListProtocol extends ProtocolMapAdapter {
+public class MediaListProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "media::list";
 	
@@ -28,7 +28,7 @@ public class MediaListProtocol extends ProtocolMapAdapter {
 	}
 
 	@Override
-	public void execute(String sn, Map<?, ?> body, Client client, Message message) {
+	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
 		message.setBody(this.mediaProperties.getMediaServerList());
 		client.push(message);
 	}

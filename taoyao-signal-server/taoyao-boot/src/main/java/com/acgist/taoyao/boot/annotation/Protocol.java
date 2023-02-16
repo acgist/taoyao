@@ -9,7 +9,7 @@ import java.lang.annotation.Target;
 import org.springframework.stereotype.Component;
 
 /**
- * 协议
+ * 信令协议
  * 
  * @author acgist
  */

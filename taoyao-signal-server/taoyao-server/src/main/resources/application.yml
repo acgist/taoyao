@@ -20,7 +20,7 @@ server:
 #   context-path: /taoyao
 spring:
   profiles:
-    active: dev
+    active: local
   application:
     name: taoyao-signal-server
   servlet:
@@ -53,7 +53,7 @@ taoyao:
   description: 桃夭WebRTC信令服务
   timeout: 5000
   id:
-    sn: 0
+    index: 0
     max-index: 999999
   # 媒体配置
   media:
@@ -100,14 +100,14 @@ taoyao:
       resolution: 720*480
     # 媒体服务配置
     media-server-list:
-      - name: media-local-a
+      - media-id: media-local-a
         enabled: true
         host: localhost
         port: 4443
         schema: wss
         username: taoyao
         password: taoyao
-      - name: media-local-z
+      - media-id: media-local-z
         enabled: true
         host: localhost
         port: 4443

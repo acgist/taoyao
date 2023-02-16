@@ -1,12 +1,14 @@
 package com.acgist.taoyao.signal.protocol.room;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.media.RoomManager;
-import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
+import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**
  * 房间列表信令
@@ -14,7 +16,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolAdapter;
  * @author acgist
  */
 @Protocol
-public class RoomListProtocol extends ProtocolAdapter {
+public class RoomListProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "room::list";
 	
@@ -26,7 +28,7 @@ public class RoomListProtocol extends ProtocolAdapter {
 	}
 
 	@Override
-	public void execute(String sn, Client client, Message message) {
+	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
 		message.setBody(this.roomManager.status());
 		client.push(message);
 	}

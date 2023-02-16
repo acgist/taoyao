@@ -36,13 +36,13 @@ public class RoomManager {
 	private List<Room> rooms = new CopyOnWriteArrayList<>();
 	
 	/**
-	 * @param id ID
+	 * @param roomId ID
 	 * 
 	 * @return 房间信息
 	 */
-	public Room room(Long id) {
+	public Room room(Long roomId) {
 		return this.rooms.stream()
-			.filter(v -> Objects.equals(id, v.getId()))
+			.filter(v -> Objects.equals(roomId, v.getRoomId()))
 			.findFirst()
 			.orElse(null);
 	}
@@ -55,12 +55,12 @@ public class RoomManager {
 	}
 	
 	/**
-	 * @param id ID
+	 * @param roomId ID
 	 * 
 	 * @return 房间信息
 	 */
-	public RoomStatus status(Long id) {
-		final Room room = this.room(id);
+	public RoomStatus status(Long roomId) {
+		final Room room = this.room(roomId);
 		return room == null ? null : room.getStatus();
 	}
 	
@@ -76,29 +76,29 @@ public class RoomManager {
 	/**
 	 * 创建房间
 	 * 
-	 * @param sn 创建终端标识
+	 * @param clientId 创建终端标识
 	 * @param name 名称
 	 * @param password 密码
-	 * @param mediaName 媒体服务名称
+	 * @param mediaId 媒体服务标识
 	 * @param message 创建消息
 	 * 
 	 * @return 房间信息
 	 */
-	public Room create(String sn, String name, String password, String mediaName, Message message) {
-		final MediaClient mediaClient = this.mediaClientManager.mediaClient(mediaName);
+	public Room create(String clientId, String name, String password, String mediaId, Message message) {
+		final MediaClient mediaClient = this.mediaClientManager.mediaClient(mediaId);
 		if(mediaClient == null) {
-			throw MessageCodeException.of("无效媒体服务：" + mediaName);
+			throw MessageCodeException.of("无效媒体服务：" + mediaId);
 		}
 		final Long id = this.idService.buildId();
 		// 状态
 		final RoomStatus roomStatus = new RoomStatus();
 		roomStatus.setId(id);
 		roomStatus.setName(name);
-		roomStatus.setSnSize(0L);
-		roomStatus.setMediaName(mediaName);
+		roomStatus.setMediaId(mediaId);
+		roomStatus.setClientSize(0L);
 		// 房间
 		final Room room = new Room();
-		room.setId(id);
+		room.setRoomId(id);
 		room.setPassword(password);
 		room.setStatus(roomStatus);
 		room.setMediaClient(mediaClient);

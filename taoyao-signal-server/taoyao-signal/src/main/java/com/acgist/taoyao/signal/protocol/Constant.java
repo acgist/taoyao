@@ -7,18 +7,14 @@ package com.acgist.taoyao.signal.protocol;
  */
 public interface Constant {
 
-	/**
-	 * ID
-	 */
-	String ID = "id";
+    /**
+     * 换行
+     */
+    String LINE = "\n";
 	/**
 	 * IP
 	 */
 	String IP = "ip";
-	/**
-	 * 终端标识
-	 */
-	String SN = "sn";
 	/**
 	 * 接收方
 	 */
@@ -39,10 +35,6 @@ public interface Constant {
 	 * 是否充电
 	 */
 	String CHARGING = "charging";
-	/**
-	 * 媒体服务名称
-	 */
-	String MEDIA_NAME = "mediaName";
 	/**
 	 * 名称
 	 */
@@ -76,11 +68,23 @@ public interface Constant {
 	 */
 	String WEBRTC = "webrtc";
 	/**
+	 * PeerId
+	 * 
+	 * @see #CLIENT_ID
+	 */
+	String PEER_ID = "peerId";
+	/**
 	 * 房间ID
 	 */
 	String ROOM_ID = "roomId";
 	/**
+	 * 媒体服务ID
+	 */
+	String MEDIA_ID = "mediaId";
+	/**
 	 * 终端ID
+	 * 
+	 * @see #PEER_ID
 	 */
 	String CLIENT_ID = "clientId";
 	/**
@@ -88,12 +92,24 @@ public interface Constant {
 	 */
 	String ROUTER_ID = "routerId";
 	/**
-	 * 终端ID
+	 * 传输通道ID
 	 */
-	String STREAM_ID = "streamId";
+	String TRANSPORT_ID = "transportId";
 	/**
-	 * 换行
+	 * 生产者ID
 	 */
-	String LINE = "\n";
+	String PRODUCER_ID = "producerId";
+	/**
+	 * 消费者ID
+	 */
+	String CONSUMER_ID = "consumerId";
+	/**
+	 * 数据生产者ID
+	 */
+	String DATA_PRODUCER_ID = "dataProducerId";
+	/**
+	 * 数据消费者ID
+	 */
+	String DATA_CONSUMER_ID = "dataConsumerId";
 
 }

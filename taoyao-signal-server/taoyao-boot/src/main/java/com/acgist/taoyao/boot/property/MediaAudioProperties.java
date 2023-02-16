@@ -22,9 +22,13 @@ public class MediaAudioProperties {
 	public enum Format {
 		
 		/**
-		 * PCM
+		 * PCMA
 		 */
-		PCM,
+		PCMA,
+		/**
+		 * PCMU
+		 */
+		PCMU,
 		/**
 		 * OPUS
 		 */

@@ -20,9 +20,9 @@ public class Peer {
 	 * 终端会话
 	 */
 	private Client client;
+	private String device;
 	private String produce;
 	private String consume;
-	private String device;
 	private String rtpCapabilities;
 	private String sctpCapabilities;
 	private Map<String, Transport> transports;
