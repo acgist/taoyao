@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-@ServerEndpoint(value = "/websocket.signal")
+@ServerEndpoint(value = "/websocket.signal", configurator = WebSocketSignalConfigurator.class)
 public class WebSocketSignal {
 	
 	private static ClientManager clientManager;
@@ -29,7 +29,7 @@ public class WebSocketSignal {
 	
 	@OnOpen
 	public void open(Session session) {
-		log.debug("WebSocket信令连接成功：{}", session);
+		log.debug("WebSocket信令终端连接成功：{}", session);
 		WebSocketSignal.clientManager.open(new WebSocketClient(session));
 	}
 	
@@ -40,19 +40,19 @@ public class WebSocketSignal {
 			WebSocketSignal.protocolManager.execute(message.strip(), session);
 		} catch (Exception e) {
 			log.error("处理WebSocket信令消息异常：{}", message, e);
-			WebSocketSignal.clientManager.send(session, WebSocketSignal.platformErrorProtocol.build(e));
+			WebSocketSignal.clientManager.push(session, WebSocketSignal.platformErrorProtocol.build(e));
 		}
 	}
 	
 	@OnClose
 	public void close(Session session) {
-		log.debug("WebSocket信令关闭：{}", session);
+		log.debug("WebSocket信令终端关闭：{}", session);
 		WebSocketSignal.clientManager.close(session);
 	}
 	
 	@OnError
 	public void error(Session session, Throwable e) {
-		log.error("WebSocket信令异常：{}", session, e);
+		log.error("WebSocket信令终端异常：{}", session, e);
 		this.close(session);
 	}
 	

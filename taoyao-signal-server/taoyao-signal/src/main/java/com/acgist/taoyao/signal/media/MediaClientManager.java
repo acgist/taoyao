@@ -46,7 +46,7 @@ public class MediaClientManager {
 			final MediaClient client = this.applicationContext.getBean(MediaClient.class);
 			client.init(v);
 			this.clientMap.put(client.mediaId(), client);
-			log.info("注册媒体服务终端：{}-{}", v.getAddress(), client);
+			log.info("注册媒体服务终端：{}-{}", v.getMediaId(), v.getAddress());
 		});
 	}
 	

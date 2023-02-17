@@ -32,7 +32,7 @@ public interface Constant {
 	 */
 	String BATTERY = "battery";
 	/**
-	 * 是否充电
+	 * 是否正在充电
 	 */
 	String CHARGING = "charging";
 	/**
@@ -47,6 +47,10 @@ public interface Constant {
 	 * 结果
 	 */
 	String RESULT = "result";
+	/**
+	 * 请求
+	 */
+	String REQUEST = "request";
 	/**
 	 * 帐号
 	 */

@@ -11,26 +11,15 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@Schema(title = "房间状态", description = "房间状态")
 public class RoomStatus {
 	
-	/**
-	 * ID
-	 */
-	@Schema(title = "ID", description = "ID")
-	private Long id;
-	/**
-	 * 名称
-	 */
-	@Schema(title = "名称", description = "名称")
+	@Schema(title = "房间标识", description = "房间标识")
+	private Long roomId;
+	@Schema(title = "房间名称", description = "房间名称")
 	private String name;
-	/**
-	 * 媒体服务标识
-	 */
 	@Schema(title = "媒体服务标识", description = "媒体服务标识")
 	private String mediaId;
-	/**
-	 * 终端数量
-	 */
 	@Schema(title = "终端数量", description = "终端数量")
 	private Long clientSize;
 	

@@ -10,24 +10,24 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 过慢请求统计拦截
+ * 过慢请求拦截器
  * 
  * @author acgist
  */
 @Slf4j
 public class SlowInterceptor extends InterceptorAdapter {
-
-	/**
-	 * 时间
-	 */
-	private ThreadLocal<Long> local = new ThreadLocal<>();
 	
 	@Autowired
 	private TaoyaoProperties taoyaoProperties;
 	
+	/**
+	 * 请求开始时间
+	 */
+	private final ThreadLocal<Long> local = new ThreadLocal<>();
+	
 	@Override
 	public String name() {
-		return "过慢请求统计拦截";
+		return "过慢请求拦截器";
 	}
 	
 	@Override

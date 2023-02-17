@@ -16,7 +16,7 @@ import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 终端管理
+ * 终端管理器
  * 
  * @author acgist
  */
@@ -49,7 +49,7 @@ public class ClientManager {
 	}
 	
 	/**
-	 * 单播消息
+	 * 授权终端单播消息
 	 * 
 	 * @param to 接收终端
 	 * @param message 消息
@@ -61,7 +61,7 @@ public class ClientManager {
 	}
 	
 	/**
-	 * 单播消息
+	 * 授权终端单播消息
 	 * 
 	 * @param to 接收终端
 	 * @param message 消息
@@ -73,7 +73,7 @@ public class ClientManager {
 	}
 	
 	/**
-	 * 广播消息
+	 * 授权终端广播消息
 	 * 
 	 * @param message 消息
 	 */
@@ -82,7 +82,7 @@ public class ClientManager {
 	}
 	
 	/**
-	 * 广播消息
+	 * 授权终端广播消息
 	 * 
 	 * @param from 发送终端
 	 * @param message 消息
@@ -94,7 +94,7 @@ public class ClientManager {
 	}
 	
 	/**
-	 * 广播消息
+	 * 授权终端广播消息
 	 * 
 	 * @param from 发送终端
 	 * @param message 消息
@@ -120,7 +120,7 @@ public class ClientManager {
 	/**
 	 * @param clientId 终端标识
 	 * 
-	 * @return 终端列表
+	 * @return 授权终端列表
 	 */
 	public List<Client> clients(String clientId) {
 		return this.clients().stream()
@@ -129,7 +129,7 @@ public class ClientManager {
 	}
 	
 	/**
-	 * @return 所有终端列表
+	 * @return 所有授权终端列表
 	 */
 	public List<Client> clients() {
 		return this.clients.stream()
@@ -150,7 +150,7 @@ public class ClientManager {
 	/**
 	 * @param clientId 终端标识
 	 * 
-	 * @return 终端状态列表
+	 * @return 授权终端状态列表
 	 */
 	public List<ClientStatus> status(String clientId) {
 		return this.clients(clientId).stream()
@@ -159,7 +159,7 @@ public class ClientManager {
 	}
 
 	/**
-	 * @return 所有终端状态列表
+	 * @return 所有授权终端状态列表
 	 */
 	public List<ClientStatus> status() {
 		return this.clients().stream()
@@ -168,15 +168,15 @@ public class ClientManager {
 	}
 
 	/**
-	 * 发送消息
+	 * 推送消息
 	 * 
 	 * @param instance 终端实例
 	 * @param message 消息
 	 */
-	public void send(AutoCloseable instance, Message message) {
+	public void push(AutoCloseable instance, Message message) {
 		final Client client = this.client(instance);
 		if(client == null) {
-			log.warn("发送消息终端无效：{}-{}", instance, message);
+			log.warn("推送消息终端无效：{}-{}", instance, message);
 			return;
 		}
 		client.push(message);
@@ -189,7 +189,6 @@ public class ClientManager {
 	 */
 	public void close(AutoCloseable instance) {
 		final Client client = this.client(instance);
-		// TODO：如果出现异常可以提前移除
 		try {
 			if(client != null) {
 				client.close();
@@ -197,7 +196,7 @@ public class ClientManager {
 				instance.close();
 			}
 		} catch (Exception e) {
-			log.error("关闭终端异常", e);
+			log.error("关闭终端异常：{}", instance, e);
 		} finally {
 			if(client != null) {
 				// 移除管理
@@ -212,7 +211,7 @@ public class ClientManager {
 	 * 定时关闭超时终端
 	 */
 	private void closeTimeout() {
-		log.debug("定时关闭超时终端");
+	    final int oldSize = this.clients.size();
 		this.clients.stream()
 		.filter(v -> !v.authorized())
 		.filter(v -> v.timeout(this.taoyaoProperties.getTimeout()))
@@ -220,6 +219,8 @@ public class ClientManager {
 			log.debug("关闭超时终端：{}", v);
 			this.close(v);
 		});
+		final int newSize = this.clients.size();
+		log.debug("定时关闭超时终端：{}", newSize - oldSize);
 	}
 
 }

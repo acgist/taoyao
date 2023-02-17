@@ -17,7 +17,7 @@ import lombok.Setter;
 public class Peer {
 
 	/**
-	 * 终端会话
+	 * 终端
 	 */
 	private Client client;
 	private String device;

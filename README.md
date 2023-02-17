@@ -2,6 +2,20 @@
 
 桃夭是套基于`Mediasoup`开发的`WebRTC`音视频信令服务
 
+<p align="center">
+    <img alt="Java" src="https://img.shields.io/badge/dynamic/xml?style=flat-square&label=Java&color=blueviolet&url=https://raw.githubusercontent.com/acgist/taoyao/master/taoyao-signal-server/pom.xml&query=//*[local-name()=%27java.version%27]&cacheSeconds=3600" />
+    <a target="_blank" href="https://starchart.cc/acgist/taoyao">
+        <img alt="GitHub stars" src="https://img.shields.io/github/stars/acgist/taoyao?style=flat-square&label=Github%20stars&color=crimson" />
+    </a>
+    <img alt="Gitee stars" src="https://img.shields.io/badge/dynamic/json?style=flat-square&label=Gitee%20stars&color=crimson&url=https://gitee.com/api/v5/repos/acgist/taoyao&query=$.stargazers_count&cacheSeconds=3600" />
+    <br />
+    <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/acgist/taoyao?style=flat-square&color=orange" />
+    <img alt="GitHub code size in bytes" src="https://img.shields.io/github/languages/code-size/acgist/taoyao?style=flat-square&color=blue" />
+    <img alt="GitHub" src="https://img.shields.io/github/license/acgist/taoyao?style=flat-square&color=blue" />
+</p>
+
+----
+
 ## 模块
 
 |模块|名称|描述|
@@ -54,6 +68,7 @@
 * P2P
 * 信令直传
 * 信令服务集群
+* 安全处理：房间
 * 媒体交互式启动
 * 会议调整为房间
 * 内外网/多网卡环境

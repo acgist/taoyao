@@ -62,10 +62,12 @@ public class SocketSignal {
 	 */
 	public void init() {
 		boolean success = true;
+		final String host = this.socketProperties.getHost();
+		final Integer port = this.socketProperties.getPort();
 		try {
 			final ExecutorService executor = new ThreadPoolExecutor(
-				this.socketProperties.getThreadMin(),
-				this.socketProperties.getThreadMax(),
+				this.socketProperties.getMinThread(),
+				this.socketProperties.getMaxThread(),
 				this.socketProperties.getKeepAliveTime(),
 				TimeUnit.MILLISECONDS,
 				new LinkedBlockingQueue<>(this.socketProperties.getQueueSize()),
@@ -73,7 +75,7 @@ public class SocketSignal {
 			);
 			this.group = AsynchronousChannelGroup.withThreadPool(executor);
 			this.channel = AsynchronousServerSocketChannel.open(this.group);
-			this.channel.bind(new InetSocketAddress(this.socketProperties.getHost(), this.socketProperties.getPort()));
+			this.channel.bind(new InetSocketAddress(host, port));
 			this.channel.accept(this.channel, new SocketSignalAcceptHandler(
 				this.clientManager,
 				this.protocolManager,
@@ -85,7 +87,7 @@ public class SocketSignal {
 			success = false;
 		} finally {
 			if(success) {
-				log.info("启动Socket信令服务：{}-{}", this.socketProperties.getHost(), this.socketProperties.getPort());
+				log.info("启动Socket信令服务成功：{}-{}", host, port);
 			} else {
 				this.destroy();
 			}
@@ -100,7 +102,7 @@ public class SocketSignal {
 			final Thread thread = new Thread(runnable);
 			// 线程名称
 			synchronized(this) {
-				if(++this.index > this.socketProperties.getThreadMax()) {
+				if(++this.index > this.socketProperties.getMaxThread()) {
 					this.index = 0;
 				}
 				thread.setName(this.socketProperties.getThreadNamePrefix() + this.index);
@@ -113,7 +115,7 @@ public class SocketSignal {
 	
 	@PreDestroy
 	public void destroy() {
-		log.debug("关闭Socket信令服务");
+		log.debug("关闭Socket信令服务：{}", this.channel);
 		CloseableUtils.close(this.channel);
 		this.group.shutdown();
 	}

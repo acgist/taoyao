@@ -7,11 +7,11 @@ import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
+import java.util.concurrent.Executor;
 
+import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
-
-import org.springframework.core.task.TaskExecutor;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -30,7 +30,7 @@ public final class HTTPUtils {
     /**
      * 线程池
      */
-    private static TaskExecutor executor;
+    private static Executor executor;
     
     private HTTPUtils() {
     }
@@ -39,7 +39,7 @@ public final class HTTPUtils {
      * @param timeout 超时时间
      * @param executor 线程池
      */
-    public static final void init(long timeout, TaskExecutor executor) {
+    public static final void init(long timeout, Executor executor) {
         HTTPUtils.timeout = timeout;
         HTTPUtils.executor = executor;
     }
@@ -59,15 +59,17 @@ public final class HTTPUtils {
     }
  
     /**
-     * SSLContext
-     * 
      * @return {@link SSLContext}
      */
     private static final SSLContext buildSSLContext() {
         try {
             // SSL协议：SSL、SSLv2、SSLv3、TLS、TLSv1、TLSv1.1、TLSv1.2、TLSv1.3
             final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
-            sslContext.init(null, new X509TrustManager[] { TaoyaoTrustManager.INSTANCE }, new SecureRandom());
+            sslContext.init(
+                new KeyManager[0],
+                new X509TrustManager[] { TaoyaoTrustManager.INSTANCE },
+                new SecureRandom()
+            );
             return sslContext;
         } catch (KeyManagementException | NoSuchAlgorithmException e) {
             log.error("新建SSLContext异常", e);

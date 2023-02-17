@@ -207,6 +207,9 @@ class Signal {
       case "room::create":
         this.roomCreate(session, message, message.body);
         break;
+      case "transport:webrtc::create":
+        this.transportWebrtcCreate(session, message, message.body);
+        break;
     }
   }
 
@@ -309,6 +312,95 @@ class Signal {
     this.logger.info("创建房间", roomId, room);
     this.push(message, session);
     return room;
+  }
+
+  /**
+   * @param {*} session 信令通道
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  transportWebrtcCreate(session, message, body) {
+    const {
+      roomId,
+      forceTcp,
+      producing,
+      consuming,
+      sctpCapabilities
+    } = body;
+    const webRtcTransportOptions =
+    {
+      ...config.mediasoup.webRtcTransportOptions,
+      enableSctp     : Boolean(sctpCapabilities),
+      numSctpStreams : (sctpCapabilities || {}).numStreams,
+      appData        : { producing, consuming }
+    };
+
+    if (forceTcp)
+    {
+      webRtcTransportOptions.enableUdp = false;
+      webRtcTransportOptions.enableTcp = true;
+    }
+    const room = this.rooms.get(roomId);
+    const transport = await room.mediasoupRouter.createWebRtcTransport(
+      {
+        ...webRtcTransportOptions,
+        webRtcServer : room.webRtcServer
+      });
+
+    transport.on('sctpstatechange', (sctpState) =>
+    {
+      logger.debug('WebRtcTransport "sctpstatechange" event [sctpState:%s]', sctpState);
+    });
+
+    transport.on('dtlsstatechange', (dtlsState) =>
+    {
+      if (dtlsState === 'failed' || dtlsState === 'closed')
+        logger.warn('WebRtcTransport "dtlsstatechange" event [dtlsState:%s]', dtlsState);
+    });
+
+    // NOTE: For testing.
+    // await transport.enableTraceEvent([ 'probation', 'bwe' ]);
+    await transport.enableTraceEvent([ 'bwe' ]);
+
+    transport.on('trace', (trace) =>
+    {
+      logger.debug(
+        'transport "trace" event [transportId:%s, trace.type:%s, trace:%o]',
+        transport.id, trace.type, trace);
+
+      if (trace.type === 'bwe' && trace.direction === 'out')
+      {
+        peer.notify(
+          'downlinkBwe',
+          {
+            desiredBitrate          : trace.info.desiredBitrate,
+            effectiveDesiredBitrate : trace.info.effectiveDesiredBitrate,
+            availableBitrate        : trace.info.availableBitrate
+          })
+          .catch(() => {});
+      }
+    });
+
+    // Store the WebRtcTransport into the protoo Peer data Object.
+    peer.data.transports.set(transport.id, transport);
+
+    self.push(
+      {
+        id             : transport.id,
+        iceParameters  : transport.iceParameters,
+        iceCandidates  : transport.iceCandidates,
+        dtlsParameters : transport.dtlsParameters,
+        sctpParameters : transport.sctpParameters
+      }, session);
+
+    const { maxIncomingBitrate } = config.mediasoup.webRtcTransportOptions;
+
+    // If set, apply max incoming bitrate limit.
+    if (maxIncomingBitrate)
+    {
+      try { await transport.setMaxIncomingBitrate(maxIncomingBitrate); }
+      catch (error) {}
+    }
   }
 
 }

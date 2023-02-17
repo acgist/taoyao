@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MediaShutdownProtocol extends ProtocolClientAdapter {
 
-    public static final String SIGNAL = "media::reboot";
+    public static final String SIGNAL = "media::shutdown";
     
     @Autowired
     private ScriptProperties scriptProperties;

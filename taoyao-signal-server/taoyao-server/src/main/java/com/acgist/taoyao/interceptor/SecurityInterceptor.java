@@ -18,28 +18,26 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 安全拦截
+ * 安全拦截器
  * 
  * @author acgist
  */
 @Slf4j
 public class SecurityInterceptor extends InterceptorAdapter {
 
-	/**
-	 * Basic认证
-	 */
-	private static final String BASIC = "Basic";
-	
-	private AntPathMatcher matcher = new AntPathMatcher();
-	
 	@Autowired
 	private SecurityService securityService;
 	@Autowired
 	private SecurityProperties securityProperties;
+
+	/**
+	 * 地址匹配
+	 */
+	private final AntPathMatcher matcher = new AntPathMatcher();
 	
 	@Override
 	public String name() {
-		return "安全拦截";
+		return "安全拦截器";
 	}
 	
 	@Override
@@ -94,12 +92,13 @@ public class SecurityInterceptor extends InterceptorAdapter {
 		if(StringUtils.isEmpty(authorization)) {
 			return false;
 		}
-		if(!StringUtils.startsWithIgnoreCase(authorization, BASIC)) {
-			return false;
+		int index = authorization.indexOf(' ');
+		if(index < 0) {
+		    return false;
 		}
-		authorization = authorization.substring(BASIC.length()).strip();
-		authorization = new String(Base64.getDecoder().decode(authorization));
-		final int index = authorization.indexOf(':');
+		authorization = authorization.substring(index + 1).strip();
+		authorization = new String(Base64.getMimeDecoder().decode(authorization));
+		index = authorization.indexOf(':');
 		if(index < 0) {
 			return false;
 		}

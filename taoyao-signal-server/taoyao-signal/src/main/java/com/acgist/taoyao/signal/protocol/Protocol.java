@@ -20,19 +20,19 @@ import com.acgist.taoyao.signal.media.MediaClient;
 public interface Protocol {
 	
 	/**
-	 * @return 信令协议名称
+	 * @return 信令名称
 	 */
 	String name();
 	
 	/**
-	 * @return 信令协议标识
+	 * @return 信令标识
 	 */
 	String signal();
 	
 	/**
 	 * 鉴权
 	 * 
-	 * @param message 信令
+	 * @param message 信令消息
 	 * 
 	 * @return 是否成功
 	 */

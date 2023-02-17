@@ -2,6 +2,7 @@ package com.acgist.taoyao.boot.property;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,28 +13,19 @@ import lombok.Setter;
  */
 @Getter
 @Setter
+@Schema(title = "安全配置", description = "安全配置")
 @ConfigurationProperties(prefix = "taoyao.security")
 public class SecurityProperties {
 	
-	/**
-	 * 是否启用
-	 */
+    @Schema(title = "是否启用", description = "是否启用")
 	private Boolean enabled;
-	/**
-	 * 范围
-	 */
+    @Schema(title = "安全范围", description = "安全范围")
 	private String realm;
-	/**
-	 * 公共地址
-	 */
+    @Schema(title = "公共地址", description = "公共地址")
 	private String[] permit;
-	/**
-	 * 名称
-	 */
+    @Schema(title = "名称", description = "名称")
 	private String username;
-	/**
-	 * 密码
-	 */
+    @Schema(title = "密码", description = "密码")
 	private String password;
 	
 }

@@ -84,7 +84,7 @@
 {
 	"signal": 信号强度（0~100）,
 	"battery": 电池电量（0~100）,
-	"charging": 是否充电（true|false）
+	"charging": 是否正在充电（true|false）
 }
 # 响应主体
 {
@@ -105,7 +105,7 @@
 		"ip": "终端IP",
 		"signal": 信号强度（0~100）,
 		"battery": 电池电量（0~100）,
-		"charging": 是否充电（true|false）,
+		"charging": 是否正在充电（true|false）,
 		"mediaId": "媒体服务标识",
 		"lastHeartbeat": "最后心跳时间"
 	},
@@ -133,7 +133,7 @@
 	"ip": "终端IP",
 	"signal": 信号强度（0~100）,
 	"battery": 电池电量（0~100）,
-	"charging": 是否充电（true|false）,
+	"charging": 是否正在充电（true|false）,
 	"mediaId": "媒体服务标识",
 	"lastHeartbeat": "最后心跳时间"
 }
@@ -160,7 +160,7 @@
 	"ip": "终端IP",
 	"signal": 信号强度（0~100）,
 	"battery": 电池电量（0~100）,
-	"charging": 是否充电（true|false）
+	"charging": 是否正在充电（true|false）
 }
 # 响应主体
 {
@@ -182,7 +182,7 @@
 	"ip": "终端IP",
 	"signal": 信号强度（0~100）,
 	"battery": 电池电量（0~100）,
-	"charging": 是否充电（true|false）,
+	"charging": 是否正在充电（true|false）,
 	"mediaId": "媒体服务标识",
 	"lastHeartbeat": "最后心跳时间"
 }

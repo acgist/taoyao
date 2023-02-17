@@ -1,4 +1,4 @@
-package com.acgist.taoyao.boot.config;
+package com.acgist.taoyao.boot.configuration;
 
 import java.util.List;
 
@@ -22,11 +22,11 @@ import io.swagger.v3.oas.models.security.SecurityRequirement;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 
 /**
- * 文档配置
+ * 文档自动配置
  * 
  * @author acgist
  */
-@Profile("dev")
+@Profile({ "dev", "local" })
 @Configuration
 @ConditionalOnClass(OpenAPI.class)
 public class SpringDocAutoConfiguration {
@@ -43,7 +43,7 @@ public class SpringDocAutoConfiguration {
 	private TaoyaoProperties taoyaoProperties;
 	
 	@Bean
-	public GroupedOpenApi roomApi() {
+	public GroupedOpenApi signalApi() {
 		return GroupedOpenApi.builder()
 			.group("signal")
 			.displayName("信令")
@@ -63,8 +63,8 @@ public class SpringDocAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public OpenAPI openAPI() {
-		// 本地测试不要配置服务器的信息
 		return new OpenAPI()
+//          .servers(null)
 			.info(this.buildInfo())
 			.security(this.buildSecurity())
 			.components(this.buildComponents());
@@ -96,12 +96,12 @@ public class SpringDocAutoConfiguration {
 	 */
 	private License buildLicense() {
 		return new License()
-			.name("Apache 2.0")
-			.url("https://www.apache.org/licenses/LICENSE-2.0.html");
+		    .url("https://www.apache.org/licenses/LICENSE-2.0.html")
+			.name("Apache 2.0");
 	}
 
 	/**
-	 * @return 授权
+	 * @return 安全授权
 	 */
 	private List<SecurityRequirement> buildSecurity() {
 		return List.of(
@@ -111,7 +111,7 @@ public class SpringDocAutoConfiguration {
 	}
 	
 	/**
-	 * @return 授权
+	 * @return 安全授权
 	 */
 	private Components buildComponents() {
 		return new Components()
@@ -119,7 +119,7 @@ public class SpringDocAutoConfiguration {
 	}
 	
 	/**
-	 * @return 授权
+	 * @return 授权模式
 	 */
 	private SecurityScheme buildSecurityScheme() {
 		return new SecurityScheme()

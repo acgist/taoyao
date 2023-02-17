@@ -22,7 +22,7 @@ public class MessageCodeException extends RuntimeException {
 	private final MessageCode code;
 
 	/**
-	 * @param message 错误消息
+	 * @param message 异常消息
 	 * 
 	 * @return 状态编码异常
 	 */
@@ -32,7 +32,7 @@ public class MessageCodeException extends RuntimeException {
 	
 	/**
 	 * @param t 异常
-	 * @param message 错误消息
+	 * @param message 异常消息
 	 * 
 	 * @return 状态编码异常
 	 */
@@ -42,7 +42,7 @@ public class MessageCodeException extends RuntimeException {
 	
 	/**
 	 * @param code 状态编码
-	 * @param message 错误消息
+	 * @param message 异常消息
 	 * 
 	 * @return 状态编码异常
 	 */
@@ -53,7 +53,7 @@ public class MessageCodeException extends RuntimeException {
 	/**
 	 * @param t 异常
 	 * @param code 状态编码
-	 * @param message 错误消息
+	 * @param message 异常消息
 	 * 
 	 * @return 状态编码异常
 	 */
@@ -70,7 +70,7 @@ public class MessageCodeException extends RuntimeException {
 	/**
 	 * @param t 异常
 	 * @param code 状态编码
-	 * @param message 错误消息
+	 * @param message 异常消息
 	 */
 	public MessageCodeException(Throwable t, MessageCode code, String message) {
 		super(message, t);

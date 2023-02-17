@@ -1,6 +1,7 @@
 package com.acgist.taoyao.boot.model;
 
 import java.io.Serializable;
+import java.util.HashMap;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -15,6 +16,7 @@ import lombok.Setter;
 
 /**
  * 消息
+ * 接口、信令、媒体信令通用消息模型
  * 
  * @author acgist
  */
@@ -50,8 +52,6 @@ public class Message implements Cloneable, Serializable {
 	private Object body;
 	
 	/**
-	 * 重载方法
-	 * 
 	 * @param code 状态编码
 	 */
 	public void setCode(String code) {
@@ -97,7 +97,7 @@ public class Message implements Cloneable, Serializable {
 	}
 
 	/**
-	 * @return 错误消息
+	 * @return 失败消息
 	 */
 	public static final Message fail() {
 		return fail(null, null, null);
@@ -106,7 +106,7 @@ public class Message implements Cloneable, Serializable {
 	/**
 	 * @param code 状态编码
 	 * 
-	 * @return 错误消息
+	 * @return 失败消息
 	 */
 	public static final Message fail(MessageCode code) {
 		return fail(code, null, null);
@@ -116,7 +116,7 @@ public class Message implements Cloneable, Serializable {
 	 * @param code 状态编码
 	 * @param body 消息主体
 	 * 
-	 * @return 错误消息
+	 * @return 失败消息
 	 */
 	public static final Message fail(MessageCode code, Object body) {
 		return fail(code, null, body);
@@ -125,7 +125,7 @@ public class Message implements Cloneable, Serializable {
 	/**
 	 * @param message 状态描述
 	 * 
-	 * @return 错误消息
+	 * @return 失败消息
 	 */
 	public static final Message fail(String message) {
 		return fail(null, message, null);
@@ -135,7 +135,7 @@ public class Message implements Cloneable, Serializable {
 	 * @param message 状态描述
 	 * @param body 消息主体
 	 * 
-	 * @return 错误消息
+	 * @return 失败消息
 	 */
 	public static final Message fail(String message, Object body) {
 		return fail(null, message, body);
@@ -145,7 +145,7 @@ public class Message implements Cloneable, Serializable {
 	 * @param code 状态编码
 	 * @param message 状态描述
 	 * 
-	 * @return 错误消息
+	 * @return 失败消息
 	 */
 	public static final Message fail(MessageCode code, String message) {
 		return fail(code, message, null);
@@ -156,7 +156,7 @@ public class Message implements Cloneable, Serializable {
 	 * @param message 状态描述
 	 * @param body 消息主体
 	 * 
-	 * @return 错误消息
+	 * @return 失败消息
 	 */
 	public static final Message fail(MessageCode code, String message, Object body) {
 		final Message failMessage = new Message();
@@ -171,7 +171,18 @@ public class Message implements Cloneable, Serializable {
 	}
 	
 	/**
-	 * 克隆排除消息主体
+	 * 克隆消息设置Map消息主体
+	 * 
+	 * @return 克隆消息
+	 */
+	public Message CloneWithMapBody() {
+	    final Message message = this.clone();
+	    message.setBody(new HashMap<>());
+	    return message;
+	}
+	
+	/**
+	 * 克隆消息排除消息主体
 	 * 
 	 * @return 克隆消息
 	 */

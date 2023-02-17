@@ -1,8 +1,10 @@
 package com.acgist.taoyao.signal.client.websocket;
 
+import java.util.Map;
+
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.boot.utils.WebSocketUtils;
 import com.acgist.taoyao.signal.client.ClientAdapter;
+import com.acgist.taoyao.signal.protocol.Constant;
 
 import jakarta.websocket.Session;
 import lombok.Getter;
@@ -21,7 +23,8 @@ public class WebSocketClient extends ClientAdapter<Session> {
 
 	public WebSocketClient(Session instance) {
 		super(instance);
-		this.ip = WebSocketUtils.getRemoteAddress(instance);
+		final Map<String, Object> userProperties = instance.getUserProperties();
+		this.ip = (String) userProperties.get(Constant.IP);
 	}
 	
 	@Override
@@ -31,10 +34,10 @@ public class WebSocketClient extends ClientAdapter<Session> {
 				if(this.instance.isOpen()) {
 					this.instance.getBasicRemote().sendText(message.toString(), true);
 				} else {
-					log.error("WebSocket信令已经关闭：{}", this.instance);
+					log.error("WebSocket终端已经关闭：{}", this.instance);
 				}
 			} catch (Exception e) {
-				log.error("WebSocket信令发送消息异常：{}", message, e);
+				log.error("WebSocket终端发送消息异常：{}", message, e);
 			}
 		}
 	}

@@ -4,11 +4,9 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.media.MediaClient;
 
 /**
- * 终端会话
+ * 终端
  * 
  * @author acgist
- *
- * @param <T> 会话类型
  */
 public interface Client extends AutoCloseable {
 
@@ -37,7 +35,7 @@ public interface Client extends AutoCloseable {
 	/**
 	 * @param timeout 超时时间
 	 * 
-	 * @return 是否超时会话
+	 * @return 授权是否超时
 	 */
 	boolean timeout(long timeout);
 	

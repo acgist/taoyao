@@ -103,19 +103,17 @@ taoyao:
       - media-id: media-local-a
         enabled: true
         host: localhost
-        port: 4443
+        port: 9443
         schema: wss
         username: taoyao
         password: taoyao
       - media-id: media-local-z
         enabled: true
         host: localhost
-        port: 4443
+        port: 9443
         schema: wss
         username: taoyao
         password: taoyao
-    # 录像配置
-    record-storage-path: /data/record
   # Socket信令
   socket:
     enabled: true
@@ -123,8 +121,8 @@ taoyao:
     port: 9999
     timeout: ${taoyao.timeout}
     queue-size: 100000
-    thread-min: 4
-    thread-max: 128
+    min-thread: 4
+    max-thread: 128
     thread-name-prefix: ${spring.application.name}-signal-
     keep-alive-time: 60000
     buffer-size: 2048

@@ -61,19 +61,21 @@ public final class ErrorUtils {
 	/**
 	 * 注册异常（注意继承顺序）
 	 * 
-	 * @param code 异常编码
+	 * @param code 状态编码
 	 * @param clazz 异常类型
 	 */
 	public static final void register(MessageCode code, Class<?> clazz) {
-		log.info("注册异常映射：{}-{}", code, clazz);
-		CODE_MAPPING.put(clazz, code);
+		log.info("注册状态编码异常映射：{}-{}", code, clazz);
+		synchronized (CODE_MAPPING) {
+		    CODE_MAPPING.put(clazz, code);
+        }
 	}
 	
 	/**
 	 * @param request 请求
 	 * @param response 响应
 	 * 
-	 * @return 错误信息
+	 * @return 错误消息
 	 */
 	public static final Message message(HttpServletRequest request, HttpServletResponse response) {
 		return message(null, request, response);
@@ -84,29 +86,29 @@ public final class ErrorUtils {
 	 * @param request 请求
 	 * @param response 响应
 	 * 
-	 * @return 错误信息
+	 * @return 错误消息
 	 */
 	public static final Message message(Throwable t, HttpServletRequest request, HttpServletResponse response) {
 		final Message message;
+		// 错误状态编码
 		int status = globalStatus(request, response);
+		// 全局异常
 		final Object globalError = t == null ? globalError(request) : t;
+		// 原始异常
 		final Object rootError = rootException(globalError);
-		if(rootError instanceof MessageCodeException) {
-			// 自定义的异常
-			final MessageCodeException messageCodeException = (MessageCodeException) rootError;
+		if(rootError instanceof MessageCodeException messageCodeException) {
+			// 状态编码异常
 			final MessageCode messageCode = messageCodeException.getCode();
 			status = messageCode.getStatus();
 			message = Message.fail(messageCode, messageCodeException.getMessage());
-		} else if(rootError instanceof Throwable) {
-			// 未知异常
-			final Throwable throwable = (Throwable) rootError;
+		} else if(rootError instanceof Throwable throwable) {
+			// 未知异常：异常转换
 			final MessageCode messageCode = messageCode(status, throwable);
 			status = messageCode.getStatus();
 			message = Message.fail(messageCode, message(messageCode, throwable));
 		} else {
 			// 没有异常
 			final MessageCode messageCode = MessageCode.of(status);
-//			status = messageCode.getStatus();
 			message = Message.fail(messageCode);
 		}
 		// 状态编码
@@ -114,12 +116,13 @@ public final class ErrorUtils {
 			status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 		}
 		response.setStatus(status);
+		// 打印信息
 		final String path = Objects.toString(request.getAttribute(SERVLET_REQUEST_URI), request.getServletPath());
 		final String query = request.getQueryString();
 		final String method = request.getMethod();
 		if(globalError instanceof Throwable) {
 			log.error("""
-				请求错误
+				请求异常
 				请求地址：{}
 				请求参数：{}
 				请求方法：{}
@@ -144,7 +147,7 @@ public final class ErrorUtils {
 	 * @param request 请求
 	 * @param response 响应
 	 * 
-	 * @return 响应状态
+	 * @return 状态编码
 	 */
 	public static final int globalStatus(HttpServletRequest request, HttpServletResponse response) {
 		final Object status = request.getAttribute(SERVLET_STATUS_CODE);
@@ -174,18 +177,18 @@ public final class ErrorUtils {
 	}
 	
 	/**
-	 * @param status 原始状态
-	 * @param t 异常
+	 * @param status 原始状态编码
+	 * @param throwable 异常
 	 * 
-	 * @return 响应状态
+	 * @return 状态编码
 	 * 
 	 * @see ResponseEntityExceptionHandler
 	 * @see DefaultHandlerExceptionResolver
 	 */
-	public static final MessageCode messageCode(int status, Throwable t) {
+	public static final MessageCode messageCode(int status, Throwable throwable) {
+	    final Class<?> clazz = throwable.getClass();
 		return CODE_MAPPING.entrySet().stream()
 			.filter(entry -> {
-				final Class<?> clazz = t.getClass();
 				final Class<?> mappingClazz = entry.getKey();
 				return mappingClazz.equals(clazz) || mappingClazz.isAssignableFrom(clazz);
 			})
@@ -195,27 +198,28 @@ public final class ErrorUtils {
 	}
 	
 	/**
-	 * @param messageCode 错误编码
-	 * @param t 异常
+	 * @param messageCode 状态编码
+	 * @param throwable 异常
 	 * 
 	 * @return 异常信息
 	 */
-	public static final String message(MessageCode messageCode, Throwable t) {
-		// ValidationException
+	public static final String message(MessageCode messageCode, Throwable throwable) {
+	    // 数据校验异常：ValidationException
 		if(
-			t instanceof BindException ||
-			t instanceof MethodArgumentNotValidException
+			throwable instanceof BindException ||
+			throwable instanceof MethodArgumentNotValidException
 		) {
-			final BindException bindException = (BindException) t;
+			final BindException bindException = (BindException) throwable;
 			final List<ObjectError> allErrors = bindException.getAllErrors();
 			return allErrors.stream().map(ObjectError::getDefaultMessage).collect(Collectors.joining(","));
 		}
 		// 为了系统安全建议不要直接返回
-		final String message = t.getMessage();
-		if(messageCode == MessageCode.CODE_9999 && StringUtils.isNotEmpty(message)) {
+		final String message = throwable.getMessage();
+		if(StringUtils.isNotEmpty(message) && messageCode == MessageCode.CODE_9999) {
 			return message;
 		}
-		if(StringUtils.isNotEmpty(message) && message.length() < 64) {
+		// 匹配含有中文
+		if(StringUtils.isNotEmpty(message) && message.matches(".*[\\u4e00-\\u9fa5]+.*")) {
 			return message;
 		}
 		return messageCode.getMessage();
@@ -229,8 +233,8 @@ public final class ErrorUtils {
 	 * @see #rootException(Throwable)
 	 */
 	public static final Object rootException(Object t) {
-		if(t instanceof Throwable) {
-			return rootException((Throwable) t);
+		if(t instanceof Throwable throwable) {
+			return rootException(throwable);
 		}
 		return t;
 	}

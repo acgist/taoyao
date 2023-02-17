@@ -5,6 +5,6 @@ package com.acgist.taoyao.signal.protocol.media;
  * 
  * @author acgist
  */
-public class WebRtcTransportConnectProtocol {
+public class TransportWebRtcConnectProtocol {
 
 }

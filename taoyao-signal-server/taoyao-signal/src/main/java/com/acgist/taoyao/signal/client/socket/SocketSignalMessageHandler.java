@@ -22,7 +22,6 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
 
 	private ClientManager clientManager;
 	private ProtocolManager protocolManager;
-	private AsynchronousSocketChannel channel;
 	private PlatformErrorProtocol platformErrorProtocol;
 	
 	/**
@@ -38,9 +37,13 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
 	 */
 	private int bufferSize;
 	/**
-	 * 消息缓存
+	 * 粘包消息处理
 	 */
 	private StringBuilder builder;
+	/**
+	 * 终端通道
+	 */
+	private AsynchronousSocketChannel channel;
 	
 	public SocketSignalMessageHandler(
 		int bufferSize,
@@ -51,9 +54,9 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
 	) {
 		this.line = Constant.LINE;
 		this.lineLength = this.line.length();
+		this.bufferSize = bufferSize;
 		this.builder = new StringBuilder();
 		this.channel = channel;
-		this.bufferSize = bufferSize;
 		this.clientManager = clientManager;
 		this.protocolManager = protocolManager;
 		this.platformErrorProtocol = platformErrorProtocol;
@@ -67,7 +70,7 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
 			final ByteBuffer buffer = ByteBuffer.allocateDirect(this.bufferSize);
 			this.channel.read(buffer, buffer, this);
 		} else {
-			log.debug("Socket信令退出消息轮询");
+			log.debug("Socket信令消息轮询退出（通道已经关闭）");
 		}
 	}
 
@@ -75,15 +78,14 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
 	 * 关闭通道
 	 */
 	private void close() {
+	    log.debug("Socket信令终端关闭：{}", this.channel);
 		CloseableUtils.close(this.channel);
 	}
 	
 	@Override
 	public void completed(Integer result, ByteBuffer buffer) {
-		if (result == null) {
-			this.close();
-		} else if(result < 0) {
-			// 服务端关闭
+		if (result == null || result < 0) {
+		    log.warn("Socket信令接收消息失败关闭通道：{}", result);
 			this.close();
 		} else if(result == 0) {
 			// 消息空轮询
@@ -93,6 +95,7 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
 			final byte[] bytes = new byte[buffer.remaining()];
 			buffer.get(bytes);
 			this.builder.append(new String(bytes));
+			// 开始处理年报
 			int index = 0;
 			while((index = this.builder.indexOf(this.line)) >= 0) {
 				final String message = this.builder.substring(0, index);
@@ -102,7 +105,7 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
 					this.protocolManager.execute(message.strip(), this.channel);
 				} catch (Exception e) {
 					log.error("处理Socket信令消息异常：{}", message, e);
-					this.clientManager.send(this.channel, this.platformErrorProtocol.build(e));
+					this.clientManager.push(this.channel, this.platformErrorProtocol.build(e));
 				}
 			}
 		}
@@ -111,7 +114,7 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
 	
 	@Override
 	public void failed(Throwable throwable, ByteBuffer buffer) {
-		log.error("Socket信令异常：{}", this.channel, throwable);
+		log.error("Socket信令终端异常：{}", this.channel, throwable);
 		this.close();
 	}
 	

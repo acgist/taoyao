@@ -21,7 +21,7 @@ import jakarta.servlet.http.HttpServletResponse;
 @RestController
 public class TaoyaoErrorController implements ErrorController {
 
-	@Operation(summary = "统一错误地址", description = "全局统一错误地址")
+	@Operation(summary = "统一错误页面", description = "全局统一错误页面")
 	@RequestMapping(value = ErrorUtils.ERROR_PATH)
 	public Message index(HttpServletRequest request, HttpServletResponse response) {
 		return ErrorUtils.message(request, response);

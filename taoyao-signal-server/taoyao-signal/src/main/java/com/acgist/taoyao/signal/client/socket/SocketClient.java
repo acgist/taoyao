@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
 
 	/**
-	 * 发送超时时间
+	 * 超时时间
 	 */
 	private final long timeout;
 	/**
@@ -38,7 +38,7 @@ public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
 	 */
 	private final int lineLength;
 	
-	public SocketClient(Integer timeout, AsynchronousSocketChannel instance) {
+	public SocketClient(Long timeout, AsynchronousSocketChannel instance) {
 		super(instance);
 		this.timeout = timeout;
 		this.line = Constant.LINE.getBytes();
@@ -46,14 +46,14 @@ public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
 		try {
 			this.ip = ((InetSocketAddress) instance.getRemoteAddress()).getHostString();
 		} catch (IOException e) {
-			log.error("Socket信令获取远程IP异常", e);
+			log.error("Socket终端获取远程IP异常", e);
 		}
 	}
 
 	@Override
 	public void push(Message message) {
-		try {
-			synchronized (this.instance) {
+	    synchronized (this.instance) {
+	        try {
 				if(this.instance.isOpen()) {
 					final byte[] bytes = message.toString().getBytes();
 					final ByteBuffer buffer = ByteBuffer.allocateDirect(bytes.length + this.lineLength);
@@ -63,11 +63,11 @@ public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
 					final Future<Integer> future = this.instance.write(buffer);
 					future.get(this.timeout, TimeUnit.MILLISECONDS);
 				} else {
-					log.error("Socket信令已经关闭：{}", this.instance);
+					log.error("Socket终端已经关闭：{}", this.instance);
 				}
+			} catch (Exception e) {
+			    log.error("Socket终端发送消息异常：{}", message, e);
 			}
-		} catch (Exception e) {
-			log.error("Socket信令发送消息异常：{}", message, e);
 		}
 	}
 	

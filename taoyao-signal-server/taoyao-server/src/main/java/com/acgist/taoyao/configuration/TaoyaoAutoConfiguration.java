@@ -1,4 +1,4 @@
-package com.acgist.taoyao.config;
+package com.acgist.taoyao.configuration;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -7,9 +7,11 @@ import org.springframework.context.annotation.Configuration;
 
 import com.acgist.taoyao.interceptor.SecurityInterceptor;
 import com.acgist.taoyao.interceptor.SlowInterceptor;
+import com.acgist.taoyao.signal.service.SecurityService;
+import com.acgist.taoyao.signal.service.impl.SecurityServiceImpl;
 
 /**
- * 配置
+ * 自动配置
  * 
  * @author acgist
  */
@@ -21,6 +23,12 @@ public class TaoyaoAutoConfiguration {
 	public SlowInterceptor slowInterceptor() {
 		return new SlowInterceptor();
 	}
+	
+    @Bean
+    @ConditionalOnMissingBean
+    public SecurityService securityService() {
+        return new SecurityServiceImpl();
+    }
 	
 	@Bean
 	@ConditionalOnProperty(prefix = "taoyao.security", name = "enabled", havingValue = "true", matchIfMissing = true)

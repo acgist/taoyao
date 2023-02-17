@@ -16,6 +16,10 @@ public final class FileUtils {
 	}
 	
 	/**
+	 * 数据进制
+	 */
+	private static final int SCALE = 1024;
+	/**
 	 * 文件大小单位
 	 */
 	private static final String[] UNITS = {"B", "KB", "MB", "GB", "TB", "PB"};
@@ -36,20 +40,19 @@ public final class FileUtils {
 	 * @return 文件大小
 	 */
 	public static final String formatSize(Long size, String unit) {
-		if(size == null || size == 0L) {
+		if(size == null || size <= 0L) {
 			return "0B";
 		}
 		int index = ArrayUtils.indexOf(UNITS, unit);
-		BigDecimal decimal = BigDecimal.valueOf(size);
-		final BigDecimal dataScale = BigDecimal.valueOf(1024);
-		while(decimal.compareTo(dataScale) >= 0) {
+		double value = size;
+		while(value >= SCALE) {
 			if(++index >= UNITS.length) {
 				index = UNITS.length - 1;
 				break;
 			}
-			decimal = decimal.divide(dataScale);
+			value /= SCALE;
 		}
-		return decimal.setScale(2, RoundingMode.HALF_UP) + UNITS[index];
+		return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_EVEN) + UNITS[index];
 	}
 	
 }

@@ -50,15 +50,15 @@ public class ProtocolManager {
 		map.entrySet().stream()
 		.sorted((a, z) -> a.getValue().signal().compareTo(z.getValue().signal()))
 		.forEach(e -> {
-			final String k = e.getKey();
-			final Protocol v = e.getValue();
-			final String name = v.name();
-			final String signal = v.signal();
+			final String key = e.getKey();
+			final Protocol value = e.getValue();
+			final String name = value.name();
+			final String signal = value.signal();
 			if(this.protocolMapping.containsKey(signal)) {
 				throw MessageCodeException.of("存在重复信令协议：" + signal);
 			}
-			log.info("注册信令协议：{} - {} - {}", String.format("%-32s", signal), String.format("%-32s", k), name);
-			this.protocolMapping.put(signal, v);
+			log.info("注册信令协议：{} - {} - {}", String.format("%-32s", signal), String.format("%-32s", key), name);
+			this.protocolMapping.put(signal, value);
 		});
 	}
 	
@@ -75,7 +75,7 @@ public class ProtocolManager {
 	 * 执行信令消息
 	 * 
 	 * @param content 信令消息
-	 * @param instance 会话实例
+	 * @param instance 终端实例
 	 */
 	public void execute(String content, AutoCloseable instance) {
 		log.debug("执行信令消息：{}", content);
@@ -87,14 +87,14 @@ public class ProtocolManager {
 		// 验证请求
 		final Message message = JSONUtils.toJava(content, Message.class);
 		if(message == null) {
-			log.warn("消息格式错误（解析失败）：{}", content);
-			client.push(this.platformErrorProtocol.build("消息格式错误（解析失败）"));
+			log.warn("信令消息格式错误（解析失败）：{}", content);
+			client.push(this.platformErrorProtocol.build("信令消息格式错误（解析失败）"));
 			return;
 		}
 		final Header header = message.getHeader();
 		if(header == null) {
-			log.warn("消息格式错误（没有头部）：{}", content);
-			client.push(this.platformErrorProtocol.build("消息格式错误（没有头部）"));
+			log.warn("信令消息格式错误（没有头部）：{}", content);
+			client.push(this.platformErrorProtocol.build("信令消息格式错误（没有头部）"));
 			return;
 		}
 		final String v = header.getV();
@@ -103,8 +103,8 @@ public class ProtocolManager {
 		// 设置缓存ID
 		this.platformErrorProtocol.set(id);
 		if(v == null || id == null || signal == null) {
-			log.warn("消息格式错误（缺失头部关键参数）：{}", content);
-			client.push(this.platformErrorProtocol.build("消息格式错误（缺失头部关键参数）"));
+			log.warn("信令消息格式错误（缺失头部关键参数）：{}", content);
+			client.push(this.platformErrorProtocol.build("信令消息格式错误（缺失头部关键参数）"));
 			return;
 		}
 		// 开始处理协议
@@ -116,11 +116,11 @@ public class ProtocolManager {
 		}
 		if(protocol instanceof ClientRegisterProtocol) {
 			protocol.execute(client, message);
-		} else if(this.securityService.authenticate(message, client, protocol)) {
+		} else if(this.securityService.authenticate(client, message, protocol)) {
 			protocol.execute(client, message);
 		} else {
-			log.warn("终端会话没有授权：{}", content);
-			client.push(this.platformErrorProtocol.build(MessageCode.CODE_3401, "终端会话没有授权"));
+			log.warn("终端没有授权：{}", content);
+			client.push(this.platformErrorProtocol.build(MessageCode.CODE_3401, "终端没有授权"));
 		}
 	}
 	

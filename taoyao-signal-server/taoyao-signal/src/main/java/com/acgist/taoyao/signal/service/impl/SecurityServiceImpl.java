@@ -27,7 +27,7 @@ public class SecurityServiceImpl implements SecurityService {
 	}
 	
 	@Override
-	public boolean authenticate(Message message, Client client, Protocol protocol) {
+	public boolean authenticate(Client client, Message message, Protocol protocol) {
 	    return client.authorized() && protocol.authenticate(message);
 	}
 

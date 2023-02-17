@@ -6,7 +6,6 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.media.MediaClient;
 
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * 媒体事件适配器
@@ -14,13 +13,12 @@ import lombok.Setter;
  * @author acgist
  */
 @Getter
-@Setter
 public class MediaEventAdapter extends ApplicationEventAdapter {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * 终端
+     * 媒体服务终端
      */
     private final MediaClient mediaClient;
     

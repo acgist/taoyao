@@ -185,8 +185,6 @@ public final class JSONUtils {
 			return List.of();
 		}
 		try {
-//			final JavaType javaType = MAPPER.getTypeFactory().constructParametricType(ArrayList.class, clazz);
-//			return MAPPER.readValue(json, javaType);
 			return MAPPER.readValue(json, new TypeReference<List<T>>() {
 			});
 		} catch (IOException e) {

@@ -23,11 +23,12 @@ import lombok.extern.slf4j.Slf4j;
 public class Room implements Closeable {
 	
 	/**
-	 * ID
+	 * 房间标识
 	 */
 	private Long roomId;
 	/**
 	 * 密码
+	 * 设置密码之后进入房间需要验证密码
 	 */
 	private String password;
 	/**
@@ -44,6 +45,7 @@ public class Room implements Closeable {
 	private List<Client> clients;
 	/**
 	 * 传输通道列表
+	 * TODO：是否需要
 	 */
 	private List<Transport> transports;
 	
@@ -126,10 +128,10 @@ public class Room implements Closeable {
 	}
 	
 	/**
-	 * @see MediaClient#sendSync(Message)
+	 * @see MediaClient#request(Message)
 	 */
 	public Message sendSync(Message message) {
-		return this.mediaClient.sendSync(message);
+		return this.mediaClient.request(message);
 	}
 	
 	@Override

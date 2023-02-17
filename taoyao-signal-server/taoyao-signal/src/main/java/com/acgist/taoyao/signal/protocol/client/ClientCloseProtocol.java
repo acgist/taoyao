@@ -5,7 +5,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 
-import com.acgist.taoyao.boot.annotation.EventProtocol;
+import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-@EventProtocol
+@Protocol
 public class ClientCloseProtocol extends ProtocolClientAdapter implements ApplicationListener<ClientCloseEvent> {
 
 	public static final String SIGNAL = "client::close";

@@ -3,7 +3,7 @@ package com.acgist.taoyao.signal;
 import java.util.Map;
 
 /**
- * Map参数
+ * Map参数Getter
  * 
  * @author acgist
  */
@@ -42,7 +42,6 @@ public interface MapBodyGetter {
 		final T t = (T) body.get(key);
 		return t == null ? defaultValue : t;
 	}
-	
 	
 	/**
 	 * @param body 消息主体

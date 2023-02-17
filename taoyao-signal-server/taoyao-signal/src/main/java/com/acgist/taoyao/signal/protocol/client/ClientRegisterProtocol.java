@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 终端注册信令
+ * 如果需要验证终端授权自行实现
  * 
  * @author acgist
  */

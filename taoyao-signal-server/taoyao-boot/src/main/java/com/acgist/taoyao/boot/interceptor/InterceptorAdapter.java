@@ -4,11 +4,11 @@ import org.springframework.core.Ordered;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
- * 拦截器适配器
+ * MVC拦截器适配器
  * 
  * @author acgist
  */
-public abstract class InterceptorAdapter implements Ordered, HandlerInterceptor, Comparable<InterceptorAdapter> {
+public abstract class InterceptorAdapter implements Ordered, Comparable<InterceptorAdapter>, HandlerInterceptor {
 
 	/**
 	 * @return 名称
@@ -21,8 +21,8 @@ public abstract class InterceptorAdapter implements Ordered, HandlerInterceptor,
 	public abstract String[] pathPattern();
 	
 	@Override
-	public int compareTo(InterceptorAdapter o) {
-		return Integer.compare(this.getOrder(), o.getOrder());
+	public int compareTo(InterceptorAdapter target) {
+		return Integer.compare(this.getOrder(), target.getOrder());
 	}
 	
 }

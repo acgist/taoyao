@@ -6,17 +6,19 @@ const os = require("os");
 module.exports = {
   // 服务名称
   name: "taoyao-media-server",
+  // 服务版本
   version: "1.0.0",
-  // 交互式命令行
-  command: true,
+  // 欢迎页面
   welcome: `${__dirname}/index.html`,
   // 日志级别
   logLevel: "DEBUG",
+  // 录像目录
+  recordStoragePath: "/data/record",
   // 信令服务
   https: {
     // 信令服务地址端口
     listenIp: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-    listenPort: process.env.HTTPS_LISTEN_PORT || 4443,
+    listenPort: process.env.HTTPS_LISTEN_PORT || 9443,
     // 信令服务安全配置
     username: "taoyao",
     password: "taoyao",
@@ -25,6 +27,14 @@ module.exports = {
       cert: process.env.HTTPS_CERT_PUBLIC_KEY || `${__dirname}/certs/publicKey.pem`,
       key: process.env.HTTPS_CERT_PRIVATE_KEY || `${__dirname}/certs/privateKey.pem`,
     },
+  },
+  // 水印
+  watermark: {
+    enabled: false,
+    text: "taoyao",
+    posx: 0,
+    posy: 0,
+    opacity: 1,
   },
   // Mediasoup
   mediasoup: {

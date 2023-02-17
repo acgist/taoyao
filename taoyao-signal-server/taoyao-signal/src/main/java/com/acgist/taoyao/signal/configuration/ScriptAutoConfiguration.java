@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.config;
+package com.acgist.taoyao.signal.configuration;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

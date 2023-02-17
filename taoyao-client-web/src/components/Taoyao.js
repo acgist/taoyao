@@ -395,7 +395,8 @@ class Taoyao {
     const audioTrack = stream.getAudioTracks()[0];
     const videoTrack = stream.getVideoTracks()[0];
     if(self.produce) {
-      const transportInfo = await self.request("webrtc::transport::create", {
+      const transportInfo = await self.request("transport::webrtc::create", {
+          roomId           : self.roomId,
           forceTcp         : self.forceTcp,
           producing        : true,
           consuming        : false,
@@ -431,7 +432,7 @@ class Taoyao {
         'connect', ({ dtlsParameters }, callback, errback) =>
         {
           self.request(
-            'webrtc::transport::connect',
+            'transport::webrtc::connect',
             {
               transportId : self.sendTransport.id,
               dtlsParameters

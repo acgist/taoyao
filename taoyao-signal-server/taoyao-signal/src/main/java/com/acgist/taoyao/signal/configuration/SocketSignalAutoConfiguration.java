@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.config;
+package com.acgist.taoyao.signal.configuration;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -21,7 +21,7 @@ import com.acgist.taoyao.signal.protocol.platform.PlatformErrorProtocol;
  */
 @Configuration
 @ConditionalOnProperty(prefix = "taoyao.socket", name = "enabled", havingValue = "true", matchIfMissing = true)
-public class SocketAutoConfigruation {
+public class SocketSignalAutoConfiguration {
 
 	@Bean
 	@Autowired

@@ -3,9 +3,11 @@ package com.acgist.taoyao.signal.client;
 import com.acgist.taoyao.signal.media.MediaClient;
 
 /**
- * 会话适配器
+ * 终端适配器
  * 
  * @author acgist
+ * 
+ * @param <T> 实例泛型
  */
 public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 
@@ -22,7 +24,7 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	 */
 	protected String clientId;
 	/**
-	 * 会话实例
+	 * 终端实例
 	 */
 	protected final T instance;
 	/**
@@ -99,7 +101,7 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	
 	@Override
 	public String toString() {
-		return this.getClass().getSimpleName() + " - " + this.clientId;
+		return this.getClass().getSimpleName() + " - " + this.ip + " - " + this.clientId;
 	}
 	
 }

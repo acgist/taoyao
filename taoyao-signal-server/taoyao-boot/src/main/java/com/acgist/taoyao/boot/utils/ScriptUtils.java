@@ -15,7 +15,10 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-public class ScriptUtils {
+public final class ScriptUtils {
+    
+    private ScriptUtils() {
+    }
 
     /**
      * 执行命令
@@ -44,9 +47,6 @@ public class ScriptUtils {
                     失败结果：{}
                     """, script, inputValue, errorValue);
                 result = StringUtils.isEmpty(inputValue) ? errorValue : inputValue;
-            } catch (Exception e) {
-                log.error("命令执行异常：{}", script, e);
-                result = e.getMessage();
             }
         } catch (Exception e) {
             log.error("执行命令异常：{}", script, e);

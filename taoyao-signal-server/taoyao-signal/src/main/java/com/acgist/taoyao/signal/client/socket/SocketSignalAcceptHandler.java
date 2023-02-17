@@ -14,7 +14,7 @@ import com.acgist.taoyao.signal.protocol.platform.PlatformErrorProtocol;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Socket信令接收处理器
+ * Socket信令终端接收器
  * 
  * @author acgist
  */
@@ -51,9 +51,9 @@ public final class SocketSignalAcceptHandler implements CompletionHandler<Asynch
 				this.platformErrorProtocol
 			);
 			messageHandler.loopMessage();
-			log.debug("Socket信令连接成功：{}", channel);
+			log.debug("Socket信令终端连接成功：{}", channel);
 		} catch (IOException e) {
-			log.error("Socket信令连接异常", e);
+			log.error("Socket信令终端连接异常：", channel, e);
 		} finally {
 			server.accept(server, this);
 		}
@@ -61,7 +61,7 @@ public final class SocketSignalAcceptHandler implements CompletionHandler<Asynch
 	
 	@Override
 	public void failed(Throwable throwable, AsynchronousServerSocketChannel server) {
-		log.error("Socket信令连接异常：{}", server, throwable);
+		log.error("Socket信令终端连接异常：{}", server, throwable);
 	}
 	
 }

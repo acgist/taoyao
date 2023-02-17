@@ -8,7 +8,6 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.MapBodyGetter;
 
 import lombok.Getter;
-import lombok.Setter;
 
 /**
  * 事件适配器
@@ -16,7 +15,6 @@ import lombok.Setter;
  * @author acgist
  */
 @Getter
-@Setter
 public class ApplicationEventAdapter extends ApplicationEvent implements MapBodyGetter {
 
     private static final long serialVersionUID = 1L;
@@ -47,21 +45,28 @@ public class ApplicationEventAdapter extends ApplicationEvent implements MapBody
      * @see #get(Map, String, Object)
      */
     public <T> T get(String key, T defaultValue) {
-        return this.get(body, key, defaultValue);
+        return this.get(this.body, key, defaultValue);
     }
     
     /**
      * @see #getLong(Map, String)
      */
     public Long getLong(String key) {
-        return this.getLong(body, key);
+        return this.getLong(this.body, key);
     }
     
     /**
      * @see #getInteger(Map, String)
      */
     public Integer getInteger(String key) {
-        return this.getInteger(body, key);
+        return this.getInteger(this.body, key);
+    }
+    
+    /**
+     * @see #getBoolean(Map, String)
+     */
+    public Boolean getBoolean(String key) {
+        return this.getBoolean(this.body, key);
     }
 
 }

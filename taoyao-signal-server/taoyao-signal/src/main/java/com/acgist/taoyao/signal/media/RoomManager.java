@@ -36,9 +36,9 @@ public class RoomManager {
 	private List<Room> rooms = new CopyOnWriteArrayList<>();
 	
 	/**
-	 * @param roomId ID
+	 * @param roomId 房间标识
 	 * 
-	 * @return 房间信息
+	 * @return 房间
 	 */
 	public Room room(Long roomId) {
 		return this.rooms.stream()
@@ -55,9 +55,9 @@ public class RoomManager {
 	}
 	
 	/**
-	 * @param roomId ID
+	 * @param roomId 房间标识
 	 * 
-	 * @return 房间信息
+	 * @return 房间状态
 	 */
 	public RoomStatus status(Long roomId) {
 		final Room room = this.room(roomId);
@@ -65,7 +65,7 @@ public class RoomManager {
 	}
 	
 	/**
-	 * @return 所有房间状态
+	 * @return 所有房间状态列表
 	 */
 	public List<RoomStatus> status() {
 		return this.rooms().stream()
@@ -92,7 +92,7 @@ public class RoomManager {
 		final Long id = this.idService.buildId();
 		// 状态
 		final RoomStatus roomStatus = new RoomStatus();
-		roomStatus.setId(id);
+		roomStatus.setRoomId(id);
 		roomStatus.setName(name);
 		roomStatus.setMediaId(mediaId);
 		roomStatus.setClientSize(0L);
@@ -105,7 +105,7 @@ public class RoomManager {
 		room.setClients(new CopyOnWriteArrayList<>());
 		// 创建媒体服务房间
 		message.setBody(Map.of(Constant.ROOM_ID, id));
-		mediaClient.sendSync(message);
+		mediaClient.request(message);
 		log.info("创建房间：{}-{}", id, name);
 		this.rooms.add(room);
 		return room;
@@ -114,12 +114,12 @@ public class RoomManager {
 	/**
 	 * 关闭房间
 	 * 
-	 * @param id ID
+	 * @param roomId 房间标识
 	 */
-	public void close(Long id) {
-		final Room room = this.room(id);
+	public void close(Long roomId) {
+		final Room room = this.room(roomId);
 		if(room == null) {
-			log.warn("房间无效：{}", id);
+			log.warn("关闭房间无效：{}", roomId);
 			return;
 		}
 		if(this.rooms.remove(room)) {
@@ -128,7 +128,7 @@ public class RoomManager {
 	}
 
 	/**
-	 * 释放房间
+	 * 离开房间
 	 * 
 	 * @param client 终端
 	 */

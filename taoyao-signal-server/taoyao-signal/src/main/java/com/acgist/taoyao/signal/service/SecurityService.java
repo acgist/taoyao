@@ -12,7 +12,7 @@ import com.acgist.taoyao.signal.protocol.Protocol;
 public interface SecurityService {
 
 	/**
-	 * 鉴权
+	 * 认证
 	 * 
 	 * @param username 用户名称
 	 * @param password 用户密码
@@ -24,12 +24,12 @@ public interface SecurityService {
 	/**
 	 * 鉴权
 	 * 
+	 * @param client 终端
 	 * @param message 信令
-	 * @param client 会话
 	 * @param protocol 协议
 	 * 
 	 * @return 是否成功
 	 */
-	boolean authenticate(Message message, Client client, Protocol protocol);
+	boolean authenticate(Client client, Message message, Protocol protocol);
 	
 }
