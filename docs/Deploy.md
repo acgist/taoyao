@@ -140,7 +140,11 @@ tar -zxvf openjdk-17.0.2_linux-x64_bin.tar.gz
 
 # 配置
 vim ~/.bash_profile
+
+---
 PATH=$PATH:/data/java/jdk-17.0.2/bin
+---
+
 . ~/.bash_profile
 ln -sf /data/java/jdk-17.0.2/bin/java /usr/local/bin/java
 
@@ -159,7 +163,11 @@ tar -zxvf apache-maven-3.8.6-bin.tar.gz
 
 # 配置
 vim ~/.bash_profile
+
+---
 PATH=$PATH:/data/maven/apache-maven-3.8.6/bin
+---
+
 . ~/.bash_profile
 
 # 验证
@@ -285,7 +293,7 @@ cp taoyao-server/target/taoyao-server-1.0.0/bin/deploy.sh ./
 # 配置服务
 vim /usr/lib/systemd/system/taoyao-signal-server.service
 
-----
+---
 [Unit]
 Description=taoyao signal server
 After=network.target
@@ -303,7 +311,7 @@ RestartSec=5s
 
 [Install]
 WantedBy=multi-user.target
-----
+---
 
 # 配置自启
 systemctl daemon-reload
@@ -316,19 +324,64 @@ systemctl enable taoyao-signal-server
 systemctl start | stop | restart taoyao-signal-server
 ```
 
+## 安装Nginx
+
+```
+# 安装
+rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
+yum install nginx
+
+# 配置服务
+systemctl enable nginx
+
+# 管理服务
+systemctl start | stop | restart nginx
+
+# 加载配置
+nginx -s reload
+
+# 权限问题
+vim /etc/selinux/config
+
+---
+SELINUX=disabled
+---
+```
+
 ## 安装终端
+
+如果不是本机测试需要配置`HTTPS`
 
 ```
 # 编译代码
-cd /data/taoyao/taoyao-client
+cd /data/taoyao/taoyao-client-web
 npm install
 
 # 配置服务
-pm2 start npm --name "taoyao-client" -- run dev
+pm2 start npm --name "taoyao-client-web" -- run dev
 pm2 save
 
 # 管理服务
-pm2 start | stop | restart taoyao-client
+pm2 start | stop | restart taoyao-client-web
+
+# Nginx配置
+vim /etc/nginx/taoyao-client-web.cnf
+
+---
+server {
+    listen      8443 http2;
+    server_name localhost;
+
+    access_log  /var/log/nginx/taoyao-client-web.access.log main buffer=32k flush=10s;
+
+    location / {
+        root  /data/taoyao/taoyao-client-web/dist;
+        index index.html;
+    }
+}
+---
+
+nginx -s reload
 ```
 
 ## 配置防火墙
