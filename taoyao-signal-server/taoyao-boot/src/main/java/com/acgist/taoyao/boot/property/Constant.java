@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.protocol;
+package com.acgist.taoyao.boot.property;
 
 /**
  * 字符常量
@@ -35,6 +35,42 @@ public interface Constant {
 	 * 是否正在充电
 	 */
 	String CHARGING = "charging";
+	/**
+	 * 地址
+	 */
+	String URLS = "urls";
+	/**
+	 * 凭证
+	 */
+	String CREDENTIAL = "credential";
+	/**
+	 * 最小
+	 */
+	String MIN = "min";
+	/**
+	 * 最大
+	 */
+	String MAX = "max";
+	/**
+	 * 建议
+	 */
+	String IDEAL = "ideal";
+	/**
+	 * 最小宽度
+	 */
+	Integer MIN_WIDTH = 720;
+	/**
+	 * 最大宽度
+	 */
+	Integer MAX_WIDTH = 4096;
+	/**
+	 * 最小高度
+	 */
+	Integer MIN_HEIGHT = 480;
+	/**
+	 * 最大高度
+	 */
+	Integer MAX_HEIGHT = 2160;
 	/**
 	 * 名称
 	 */
@@ -115,5 +151,9 @@ public interface Constant {
 	 * 数据消费者ID
 	 */
 	String DATA_CONSUMER_ID = "dataConsumerId";
+	String ICE_CANDIDATES = "iceCandidates";
+	String ICE_PARAMETERS = "iceParameters";
+	String DTLS_PARAMETERS = "dtlsParameters";
+	String SCTP_PARAMETERS = "sctpParameters";
 
 }

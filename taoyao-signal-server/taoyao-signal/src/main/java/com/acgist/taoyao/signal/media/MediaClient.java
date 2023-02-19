@@ -75,7 +75,7 @@ public class MediaClient {
 	/**
 	 * 同步消息
 	 */
-	private final Map<String, Message> syncMessage = new ConcurrentHashMap<>();
+	private final Map<String, Message> requestMessage = new ConcurrentHashMap<>();
 
 	/**
 	 * 加载终端
@@ -131,7 +131,7 @@ public class MediaClient {
 	public Message request(Message request) {
 	    final Header header = request.getHeader();
 		final String id = header.getId();
-		this.syncMessage.put(id, request);
+		this.requestMessage.put(id, request);
 		synchronized (request) {
 			this.send(request);
 			try {
@@ -140,7 +140,7 @@ public class MediaClient {
 				log.error("媒体服务等待响应异常：{}", request, e);
 			}
 		}
-		final Message response = this.syncMessage.remove(id);
+		final Message response = this.requestMessage.remove(id);
 		if(response == null || request.equals(response)) {
 			log.warn("媒体服务没有响应：{}", request);
 			throw MessageCodeException.of(MessageCode.CODE_2001, "媒体服务没有响应");
@@ -210,10 +210,10 @@ public class MediaClient {
 		    log.warn("媒体服务信令消息格式错误（缺失头部关键参数）：{}", content);
 		    return;
 		}
-		final Message request = this.syncMessage.get(id);
+		final Message request = this.requestMessage.get(id);
 		if(request != null) {
 		    // 同步处理：重新设置响应消息
-		    this.syncMessage.put(id, message);
+		    this.requestMessage.put(id, message);
 		    // 唤醒等待线程
 		    synchronized (request) {
 		        request.notifyAll();

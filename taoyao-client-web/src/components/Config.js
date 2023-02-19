@@ -1,40 +1,5 @@
 /**
- * 桃夭配置
- */
-
-/**
- * 信令配置
- * TODO：合并到taoyao
- */
-const config = {
-  // 终端标识
-  clientId: "taoyao",
-  // 信令服务地址
-  host: "localhost",
-  port: "8888",
-  // 终端名称
-  name: "taoyao-client-web",
-  // 终端版本
-  version: "1.0.0",
-  // 日志级别
-  logLevel: "DEBUG",
-  // 帐号密码
-  username: "taoyao",
-  password: "taoyao",
-  signal: function () {
-    return `wss://${this.host}:${this.port}/websocket.signal`;
-  },
-  // 媒体配置
-  audio: {},
-  video: {},
-  // WebRTC配置
-  webrtc: {},
-  // 媒体服务配置
-  mediaServerList: [],
-};
-
-/**
- * 信令协议
+ * 信令
  */
 const protocol = {
   // 当前索引
@@ -46,25 +11,28 @@ const protocol = {
   /**
    * @returns 索引
    */
-  buildId: function () {
-    if (this.index++ >= this.maxIndex) {
-      this.index = this.minIndex;
+  buildId() {
+    const self = this;
+    if (self.index++ >= self.maxIndex) {
+      self.index = self.minIndex;
     }
-    return Date.now() + "" + this.index;
+    return Date.now() + "" + self.index;
   },
   /**
-   * 生成信令消息
-   *
    * @param {*} signal 信令标识
-   * @param {*} body 信令消息
-   * @param {*} id ID
+   * @param {*} body 消息主体
+   * @param {*} id 消息标识
+   * @param {*} v 消息版本
    *
    * @returns 信令消息
    */
-  buildMessage: function (signal, body = {}, id) {
-    let message = {
+  buildMessage(signal, body = {}, id, v) {
+    if (!signal) {
+      throw new Error("信令标识缺失");
+    }
+    const message = {
       header: {
-        v: config.version,
+        v: v || "1.0.0",
         id: id || this.buildId(),
         signal: signal,
       },
@@ -75,7 +43,7 @@ const protocol = {
 };
 
 /**
- * 默认音频配置
+ * 音频默认配置
  */
 const defaultAudioConfig = {
   // 设备
@@ -87,7 +55,7 @@ const defaultAudioConfig = {
   // 采样数：16
   sampleSize: 16,
   // 采样率：8000|16000|32000|48000
-  sampleRate: 32000,
+  sampleRate: 48000,
   // 声道数量：1|2
   channelCount: 1,
   // 是否开启自动增益：true|false
@@ -101,15 +69,15 @@ const defaultAudioConfig = {
 };
 
 /**
- * 默认视频配置
+ * 视频默认配置
  */
 const defaultVideoConfig = {
   // 设备
   // deviceId: '',
   // 宽度
-  width: 1280,
+  width: { min: 720, ideal: 1280, max: 4096 },
   // 高度
-  height: 720,
+  height: { min: 480, ideal: 720, max: 2160 },
   // 帧率
   frameRate: 24,
   // 选摄像头：user|left|right|environment
@@ -117,11 +85,11 @@ const defaultVideoConfig = {
 };
 
 /**
- * 默认RTCPeerConnection配置
+ * RTCPeerConnection默认配置
  */
 const defaultRTCPeerConnectionConfig = {
   // ICE代理的服务器
-  iceServers: null,
+  iceServers: [],
   // 传输通道绑定策略：balanced|max-compat|max-bundle
   bundlePolicy: "balanced",
   // RTCP多路复用策略：require|negotiate
@@ -133,7 +101,6 @@ const defaultRTCPeerConnectionConfig = {
 };
 
 export {
-  config,
   protocol,
   defaultAudioConfig,
   defaultVideoConfig,

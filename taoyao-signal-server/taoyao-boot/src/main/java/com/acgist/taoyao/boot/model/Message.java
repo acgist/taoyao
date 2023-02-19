@@ -186,7 +186,7 @@ public class Message implements Cloneable, Serializable {
 	 * 
 	 * @return 克隆消息
 	 */
-	public Message cloneWidthoutBody() {
+	public Message cloneWithoutBody() {
 		final Message message = this.clone();
 		message.setBody(null);
 		return message;

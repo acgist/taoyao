@@ -1,6 +1,7 @@
 package com.acgist.taoyao.signal.client;
 
 import com.acgist.taoyao.signal.media.MediaClient;
+import com.acgist.taoyao.signal.media.Peer;
 
 /**
  * 终端适配器
@@ -32,6 +33,10 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	 */
 	protected boolean authorized;
 	/**
+	 * Peer
+	 */
+	protected Peer peer;
+	/**
 	 * 终端状态
 	 */
 	protected ClientStatus status;
@@ -44,6 +49,7 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 		this.time = System.currentTimeMillis();
 		this.instance = instance;
 		this.authorized = false;
+		this.peer = new Peer(this);
 		this.status = new ClientStatus();
 	}
 	
@@ -55,6 +61,11 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	@Override
 	public String clientId() {
 	    return this.clientId;
+	}
+	
+	@Override
+	public Peer peer() {
+	    return this.peer;
 	}
 	
 	@Override

@@ -2,14 +2,15 @@ package com.acgist.taoyao.signal.protocol.room;
 
 import java.util.Map;
 
+import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
+import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.media.MediaClient;
 import com.acgist.taoyao.signal.media.Room;
-import com.acgist.taoyao.signal.protocol.Constant;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**
@@ -18,6 +19,22 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
  * @author acgist
  */
 @Protocol
+@Description(
+    body = {
+        """
+        {
+            "roomId": "房间标识"
+        }
+        """,
+        """
+        {
+            "roomId": "房间标识",
+            "clientId": "终端标识"
+        }
+        """
+    },
+    flow = "终端->服务端-)终端"
+)
 public class RoomEnterProtocol extends ProtocolRoomAdapter {
 
 	public static final String SIGNAL = "room::enter";

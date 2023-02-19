@@ -19,9 +19,9 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "taoyao.media")
 public class MediaProperties {
 	
-	@Schema(title = "音频配置", description = "音频配置")
+	@Schema(title = "音频默认配置", description = "音频默认配置")
 	private MediaAudioProperties audio;
-	@Schema(title = "视频配置", description = "视频配置")
+	@Schema(title = "视频默认配置", description = "视频默认配置")
 	private MediaVideoProperties video;
 	@Schema(title = "4K视频配置", description = "4K视频配置")
 	private MediaVideoProperties udVideo;

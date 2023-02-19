@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.property.MediaProperties;
@@ -16,6 +17,21 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
  * @author acgist
  */
 @Protocol
+@Description(
+    body = """
+        [
+            {
+                "name": "名称",
+                "enabled": "是否启用",
+                "host": "主机",
+                "port": "端口",
+                "schema": "协议",
+                "address": "完整地址"
+            }
+        ]
+        """,
+    flow = "终端->信令服务->终端"
+)
 public class MediaListProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "media::list";

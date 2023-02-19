@@ -3,8 +3,8 @@ package com.acgist.taoyao.signal.client.websocket;
 import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.signal.client.ClientAdapter;
-import com.acgist.taoyao.signal.protocol.Constant;
 
 import jakarta.websocket.Session;
 import lombok.Getter;

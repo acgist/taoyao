@@ -35,9 +35,9 @@ public class Header implements Serializable {
 	@Schema(title = "消息标识", description = "消息标识")
 	private String id;
 	/**
-	 * 协议标识
+	 * 信令标识
 	 */
-	@Schema(title = "协议标识", description = "协议标识")
+	@Schema(title = "信令标识", description = "信令标识")
 	private String signal;
 	
 	@Override

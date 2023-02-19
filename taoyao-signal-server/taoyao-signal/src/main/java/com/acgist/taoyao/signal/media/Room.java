@@ -25,7 +25,7 @@ public class Room implements Closeable {
 	/**
 	 * 房间标识
 	 */
-	private Long roomId;
+	private String roomId;
 	/**
 	 * 密码
 	 * 设置密码之后进入房间需要验证密码
@@ -130,7 +130,7 @@ public class Room implements Closeable {
 	/**
 	 * @see MediaClient#request(Message)
 	 */
-	public Message sendSync(Message message) {
+	public Message request(Message message) {
 		return this.mediaClient.request(message);
 	}
 	

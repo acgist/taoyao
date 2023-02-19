@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.property.ScriptProperties;
 import com.acgist.taoyao.boot.utils.ScriptUtils;
@@ -18,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
+@Description(flow = "终端->信令服务+)终端")
 public class PlatformRebootProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "platform::reboot";

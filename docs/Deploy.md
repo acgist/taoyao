@@ -242,6 +242,11 @@ npm install
 pm2 start npm --name "taoyao-media-server" -- run dev | release
 pm2 save
 
+# 配置ecosystem
+pm2 ecosystem
+pm2 start | reload ecosystem.config.json
+pm2 save
+
 # 管理服务
 pm2 start | stop | restart taoyao-media-server
 ```
@@ -352,8 +357,6 @@ firewall-cmd --list-ports
 ```
 
 ## 证书
-
-正式环境建议关闭项目`SSL`配置，可以使用`Nginx`配置证书。
 
 ```
 keytool -genkeypair -keyalg RSA -dname "CN=localhost, OU=acgist, O=taoyao, L=GZ, ST=GD, C=CN" -alias taoyao -validity 3650 -ext ku:c=dig,keyE -ext eku=serverAuth -ext SAN=dns:localhost,ip:127.0.0.1 -keystore taoyao.jks -keypass 123456 -storepass 123456

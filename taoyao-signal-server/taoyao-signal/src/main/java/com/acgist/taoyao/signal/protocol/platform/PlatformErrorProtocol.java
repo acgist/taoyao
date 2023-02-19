@@ -2,6 +2,7 @@ package com.acgist.taoyao.signal.protocol.platform;
 
 import java.util.Map;
 
+import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
@@ -15,6 +16,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
  * @author acgist
  */
 @Protocol
+@Description(flow = "终端->信令服务->终端")
 public class PlatformErrorProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "platform::error";

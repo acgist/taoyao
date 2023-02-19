@@ -1,5 +1,5 @@
 package com.acgist.taoyao.signal.protocol.media;
 
-public class ConsumerRequestKeyFrameProtocol {
+public class MediaVideoOrientationChangeProtocol {
 
 }

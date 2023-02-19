@@ -22,7 +22,9 @@ public final class CloseableUtils {
 	 */
 	public static final void close(Closeable closeable) {
 		try {
-			closeable.close();
+		    if(closeable != null) {
+		        closeable.close();
+		    }
 		} catch (Exception e) {
 			log.error("关闭资源异常", e);
 		}
@@ -35,7 +37,9 @@ public final class CloseableUtils {
 	 */
 	public static final void close(AutoCloseable closeable) {
 		try {
-			closeable.close();
+		    if(closeable != null) {
+		        closeable.close();
+		    }
 		} catch (Exception e) {
 			log.error("关闭资源异常", e);
 		}

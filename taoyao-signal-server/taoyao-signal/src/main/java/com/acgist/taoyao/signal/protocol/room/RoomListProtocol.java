@@ -4,6 +4,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
@@ -16,6 +17,19 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
  * @author acgist
  */
 @Protocol
+@Description(
+    body = """
+    [
+        {
+            "name": "房间名称",
+            "passowrd": "房间密码",
+            "mediaId": "媒体服务标识",
+            "clientSize": "终端数量"
+        },
+        ...
+    ]
+    """
+)
 public class RoomListProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "room::list";

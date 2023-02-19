@@ -5,9 +5,7 @@ const ws = require("ws");
 const https = require("https");
 const mediasoup = require("mediasoup");
 const config = require("./Config");
-const Logger = require("./Logger");
 const Signal = require("./Signal");
-const { fail } = require("assert");
 
 // 线程名称
 process.title = config.name;
@@ -21,8 +19,6 @@ const mediasoupWorkers = [];
 let httpsServer;
 // WebSocket server
 let webSocketServer;
-// 日志
-const logger = new Logger();
 // 信令
 const signal = new Signal(mediasoupWorkers);
 
@@ -31,7 +27,7 @@ const signal = new Signal(mediasoupWorkers);
  */
 async function buildMediasoupWorkers() {
   const { workerSize } = config.mediasoup;
-  logger.info("启动Worker", workerSize);
+  console.info("启动Worker", workerSize);
   for (let index = 0; index < workerSize; index++) {
     // 新建Worker
     const worker = await mediasoup.createWorker({
@@ -42,11 +38,11 @@ async function buildMediasoupWorkers() {
     });
     // 监听Worker事件
     worker.on("died", () => {
-      logger.warn("Worker停止服务", worker.pid);
+      console.warn("Worker停止服务", worker.pid);
       setTimeout(() => process.exit(1), 2000);
     });
     worker.observer.on("close", () => {
-      logger.warn("Worker关闭服务", worker.pid);
+      console.warn("Worker关闭服务", worker.pid);
     });
     // 配置WebRTC服务
     const webRtcServerOptions = JSON.parse(
@@ -78,22 +74,22 @@ async function buildSignalServer() {
   // 配置WebSocket Server
   webSocketServer = new ws.Server({ server: httpsServer });
   webSocketServer.on("connection", (session) => {
-    logger.info("打开信令通道", session._socket.remoteAddress);
+    console.info("打开信令通道", session._socket.remoteAddress);
     session.datetime = Date.now();
     session.authorize = false;
     clients.push(session);
     session.on("close", (code) => {
-      logger.info("关闭信令通道", session._socket.remoteAddress, code);
+      console.info("关闭信令通道", session._socket.remoteAddress, code);
     });
     session.on("error", (error) => {
-      logger.error("信令通道异常", session._socket.remoteAddress, error);
+      console.error("信令通道异常", session._socket.remoteAddress, error);
     });
     session.on("message", (message) => {
-      logger.debug("处理信令消息", message.toString());
+      console.debug("处理信令消息", message.toString());
       try {
         signal.on(JSON.parse(message), session);
       } catch (error) {
-        logger.error("处理信令消息异常", message.toString(), error);
+        console.error("处理信令消息异常", message.toString(), error);
       }
     });
   });
@@ -102,7 +98,7 @@ async function buildSignalServer() {
     Number(config.https.listenPort),
     config.https.listenIp,
     () => {
-      logger.info("信令服务启动完成");
+      console.info("信令服务启动完成");
     }
   );
 }
@@ -111,6 +107,10 @@ async function buildSignalServer() {
  * 定时任务
  */
 async function buildInterval() {
+  // 定时打印使用情况
+  setInterval(async () => {
+    signal.usage();
+  }, 300 * 1000);
   // 定时清理过期无效终端
   setInterval(() => {
     let failSize = 0;
@@ -132,33 +132,21 @@ async function buildInterval() {
         silentSize++;
       }
     }
-    logger.info("定时清理无效信令终端（无效|静默|成功|现存）", failSize, silentSize, successSize, clients.length);
+    console.info("定时清理无效信令终端（无效|静默|成功|现存）", failSize, silentSize, successSize, clients.length);
   }, 60 * 1000);
-  // 定时打印Worker使用情况
-  setInterval(async () => {
-    for (const worker of mediasoupWorkers) {
-      const usage = await worker.getResourceUsage();
-      logger.info("Worker使用情况", worker.pid, usage);
-    }
-  }, 120 * 1000);
 }
 
 /**
  * 启动方法
  */
 async function main() {
-  logger
-    .info("桃之夭夭，灼灼其华。")
-    .info("之子于归，宜其室家。")
-    .debug("DEBUG")
-    .info("INFO")
-    .warn("WARN")
-    .error("ERROR");
-  logger.info("开始启动", config.name);
+  console.info("桃之夭夭，灼灼其华。")
+  console.info("之子于归，宜其室家。")
+  console.info("开始启动", config.name);
   await buildMediasoupWorkers();
   await buildSignalServer();
   await buildInterval();
-  logger.info("启动完成", config.name);
+  console.info("启动完成", config.name);
 }
 
 // 启动服务

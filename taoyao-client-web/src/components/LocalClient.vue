@@ -15,9 +15,10 @@ export default defineComponent({
     this._externalVideo.setAttribute("playsinline", "");
     this._externalVideo.src = EXTERNAL_VIDEO_SRC;
 
+    // TODO：关闭摄像头、视频、音频
     this._externalVideo
       .play()
-      .catch((error) => logger.warn("externalVideo.play() failed:%o", error));
+      .catch((error) => console.warn("externalVideo.play() failed:%o", error));
   },
 });
 </script>

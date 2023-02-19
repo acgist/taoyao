@@ -2,6 +2,7 @@ package com.acgist.taoyao.signal.client;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.media.MediaClient;
+import com.acgist.taoyao.signal.media.Peer;
 
 /**
  * 终端
@@ -19,6 +20,11 @@ public interface Client extends AutoCloseable {
 	 * @return 终端标识
 	 */
 	String clientId();
+	
+	/**
+	 * @return Peer
+	 */
+	Peer peer();
 	
 	/**
 	 * @return 终端状态

@@ -21,7 +21,7 @@ public class WebrtcStunProperties {
     
     @Schema(title = "完整地址", description = "完整地址")
     public String getAddress() {
-        return "stun://" + this.host + ":" + this.port;
+        return "stun:" + this.host + ":" + this.port;
     }
 
 }

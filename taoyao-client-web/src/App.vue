@@ -1,11 +1,10 @@
 <!-- 桃夭 -->
 <template>
-  <SettingRoom :roomVisible="roomVisible" :taoyao="taoyao" @buildMedia="buildMedia"></SettingRoom>
+  <SettingRoom :taoyao="taoyao" :roomVisible="roomVisible" @buildMedia="buildMedia"></SettingRoom>
   <SettingSignal :signalVisible="signalVisible" @buildSignal="buildSignal"></SettingSignal>
 </template>
 
 <script>
-import { Logger } from "./components/Logger.js";
 import { Taoyao } from "./components/Taoyao.js";
 import SettingRoom from "./components/SettingRoom.vue";
 import SettingSignal from "./components/SettingSignal.vue";
@@ -14,24 +13,22 @@ export default {
   name: "Taoyao",
   data() {
     return {
-      logger: {},
       taoyao: {},
       roomVisible: false,
       signalVisible: true,
     };
   },
   mounted() {
-    this.logger = new Logger();
-    this.taoyao = new Taoyao();
-    this.logger.info("桃夭终端开始启动");
+    console.info("桃夭终端开始启动");
   },
   methods: {
-    buildSignal: function() {
+    buildSignal(config) {
       let self = this;
+      self.taoyao = new Taoyao({...config});
       self.signalVisible = false;
       self.taoyao.buildSignal(self.callback);
     },
-    buildMedia: function(roomId) {
+    buildMedia(roomId) {
       let self = this;
       self.taoyao.buildMedia(roomId);
     },
@@ -42,7 +39,7 @@ export default {
      *
      * @return 是否继续执行
      */
-    callback: function (data) {
+    callback(data) {
       let self = this;
       switch (data.header.signal) {
         case "client::config":

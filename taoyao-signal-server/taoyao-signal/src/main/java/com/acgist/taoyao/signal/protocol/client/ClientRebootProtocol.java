@@ -2,6 +2,7 @@ package com.acgist.taoyao.signal.protocol.client;
 
 import java.util.Map;
 
+import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
@@ -13,6 +14,9 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
  * @author acgist
  */
 @Protocol
+@Description(
+    flow = "信令服务->终端"
+)
 public class ClientRebootProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "client::reboot";

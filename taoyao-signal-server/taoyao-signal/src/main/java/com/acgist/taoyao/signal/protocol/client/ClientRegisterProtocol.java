@@ -6,13 +6,14 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
+import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientStatus;
-import com.acgist.taoyao.signal.protocol.Constant;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 import com.acgist.taoyao.signal.service.SecurityService;
 
@@ -26,6 +27,20 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Protocol
+@Description(
+    body = """
+    {
+        "clientId": "终端标识",
+        "username": "信令用户",
+        "password": "信令密码",
+        "ip": "终端IP（选填）",
+        "signal": 信号强度（0~100）,
+        "battery": 电池电量（0~100）,
+        "charging": 是否正在充电（true|false）
+    }
+    """,
+    flow = { "终端->信令服务->终端", "终端->信令服务-[终端上线])终端" }
+)
 public class ClientRegisterProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "client::register";
@@ -55,7 +70,7 @@ public class ClientRegisterProtocol extends ProtocolClientAdapter {
 		    throw MessageCodeException.of(MessageCode.CODE_3401, "注册失败");
 		}
 		// 推送消息
-		client.push(message.cloneWidthoutBody());
+		client.push(message.cloneWithoutBody());
         // 下发配置
         client.push(this.configProtocol.build());
         // 终端状态

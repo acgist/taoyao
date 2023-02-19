@@ -5,11 +5,12 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 
+import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
-import com.acgist.taoyao.signal.protocol.Constant;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +22,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Protocol
+@Description(
+    flow = { "终端->信令服务->终端", "终端->信令服务-[终端下线])终端" }
+)
 public class ClientCloseProtocol extends ProtocolClientAdapter implements ApplicationListener<ClientCloseEvent> {
 
 	public static final String SIGNAL = "client::close";
@@ -40,7 +44,7 @@ public class ClientCloseProtocol extends ProtocolClientAdapter implements Applic
 	@Override
 	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
 		// 响应消息
-		client.push(message.cloneWidthoutBody());
+		client.push(message.cloneWithoutBody());
 		// 不用发布事件：关闭连接后会发布事件
 		try {
 			client.close();

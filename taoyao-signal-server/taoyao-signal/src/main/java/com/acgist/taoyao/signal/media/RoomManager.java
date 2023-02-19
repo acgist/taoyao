@@ -10,9 +10,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.acgist.taoyao.boot.annotation.Manager;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
+import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.protocol.Constant;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -40,7 +40,7 @@ public class RoomManager {
 	 * 
 	 * @return 房间
 	 */
-	public Room room(Long roomId) {
+	public Room room(String roomId) {
 		return this.rooms.stream()
 			.filter(v -> Objects.equals(roomId, v.getRoomId()))
 			.findFirst()
@@ -59,7 +59,7 @@ public class RoomManager {
 	 * 
 	 * @return 房间状态
 	 */
-	public RoomStatus status(Long roomId) {
+	public RoomStatus status(String roomId) {
 		final Room room = this.room(roomId);
 		return room == null ? null : room.getStatus();
 	}
@@ -74,39 +74,59 @@ public class RoomManager {
 	}
 
 	/**
+	 * 重建房间
+	 * 
+	 * @param mediaClient 媒体服务终端
+	 * @param message 消息
+	 */
+	public void recreate(MediaClient mediaClient, Message message) {
+	    this.rooms.stream()
+	    .filter(room -> room.getMediaClient() == mediaClient)
+	    .forEach(room -> {
+	        log.info("重建房间：{}", room.getRoomId());
+	        final Message clone = message.cloneWithoutBody();
+	        clone.getHeader().setId(this.idService.buildIdToString());
+	        clone.setBody(Map.of(Constant.ROOM_ID, room.getRoomId()));
+	        // 异步发送防止线程卡死
+	        mediaClient.send(clone);
+	        // 同步需要添加异步注解
+//	        mediaClient.request(clone);
+	    });
+	}
+
+	/**
 	 * 创建房间
 	 * 
-	 * @param clientId 创建终端标识
 	 * @param name 名称
 	 * @param password 密码
 	 * @param mediaId 媒体服务标识
-	 * @param message 创建消息
+	 * @param message 消息
 	 * 
 	 * @return 房间信息
 	 */
-	public Room create(String clientId, String name, String password, String mediaId, Message message) {
+	public Room create(String name, String password, String mediaId, Message message) {
 		final MediaClient mediaClient = this.mediaClientManager.mediaClient(mediaId);
 		if(mediaClient == null) {
 			throw MessageCodeException.of("无效媒体服务：" + mediaId);
 		}
-		final Long id = this.idService.buildId();
+		final String roomId = this.idService.buildIdToString();
 		// 状态
 		final RoomStatus roomStatus = new RoomStatus();
-		roomStatus.setRoomId(id);
+		roomStatus.setRoomId(roomId);
 		roomStatus.setName(name);
 		roomStatus.setMediaId(mediaId);
 		roomStatus.setClientSize(0L);
 		// 房间
 		final Room room = new Room();
-		room.setRoomId(id);
+		room.setRoomId(roomId);
 		room.setPassword(password);
 		room.setStatus(roomStatus);
 		room.setMediaClient(mediaClient);
 		room.setClients(new CopyOnWriteArrayList<>());
 		// 创建媒体服务房间
-		message.setBody(Map.of(Constant.ROOM_ID, id));
+		message.setBody(Map.of(Constant.ROOM_ID, roomId));
 		mediaClient.request(message);
-		log.info("创建房间：{}-{}", id, name);
+		log.info("创建房间：{}-{}", roomId, name);
 		this.rooms.add(room);
 		return room;
 	}
@@ -116,7 +136,7 @@ public class RoomManager {
 	 * 
 	 * @param roomId 房间标识
 	 */
-	public void close(Long roomId) {
+	public void close(String roomId) {
 		final Room room = this.room(roomId);
 		if(room == null) {
 			log.warn("关闭房间无效：{}", roomId);

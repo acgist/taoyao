@@ -15,7 +15,7 @@ import lombok.Setter;
 public class RoomStatus {
 	
 	@Schema(title = "房间标识", description = "房间标识")
-	private Long roomId;
+	private String roomId;
 	@Schema(title = "房间名称", description = "房间名称")
 	private String name;
 	@Schema(title = "媒体服务标识", description = "媒体服务标识")

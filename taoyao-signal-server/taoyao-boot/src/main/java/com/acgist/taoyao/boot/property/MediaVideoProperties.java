@@ -1,5 +1,8 @@
 package com.acgist.taoyao.boot.property;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
@@ -36,23 +39,29 @@ public class MediaVideoProperties {
 	private Integer frameRate;
 	@Schema(title = "分辨率", description = "分辨率影响画面大小", example = "1920*1080|1280*720")
 	private String resolution;
-	@Schema(title = "宽度", description = "宽度")
-	private Integer width;
-	@Schema(title = "高度", description = "高度")
-	private Integer height;
+	@Schema(title = "宽度", description = "宽度", example = "{ min: 720, ideal: 1280, max: 4096 }")
+	private Map<String, Object> width;
+	@Schema(title = "高度", description = "高度", example = "{ min: 480, ideal: 720, max: 2160 }")
+	private Map<String, Object> height;
 
-	public Integer getWidth() {
+	public Map<String, Object> getWidth() {
 		if(this.width == null) {
-			final int index = this.resolution.indexOf('*');
-			this.width = Integer.valueOf(this.resolution.substring(0, index).strip());
+		    final int index = this.resolution.indexOf('*');
+		    this.width = new LinkedHashMap<>();
+			this.width.put(Constant.MIN, Constant.MIN_WIDTH);
+			this.width.put(Constant.IDEAL, Integer.valueOf(this.resolution.substring(0, index).strip()));
+			this.width.put(Constant.MAX, Constant.MAX_WIDTH);
 		}
 		return this.width;
 	}
 	
-	public Integer getHeight() {
+	public Map<String, Object> getHeight() {
 		if(this.height == null) {
 			final int index = this.resolution.indexOf('*');
-			this.height = Integer.valueOf(this.resolution.substring(index + 1).strip());
+			this.height = new LinkedHashMap<>();
+			this.height.put(Constant.MIN, Constant.MIN_HEIGHT);
+			this.height.put(Constant.IDEAL, Integer.valueOf(this.resolution.substring(index + 1).strip()));
+			this.height.put(Constant.MAX, Constant.MAX_HEIGHT);
 		}
 		return this.height;
 	}

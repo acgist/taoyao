@@ -18,6 +18,8 @@ public class ClientStatus {
 
     @Schema(title = "终端IP", description = "终端IP")
     private String ip;
+    @Schema(title = "媒体服务标识", description = "媒体服务标识")
+    private String mediaId;
     @Schema(title = "终端标识", description = "终端标识")
     private String clientId;
 	@Schema(title = "信号强度（0~100）", description = "信号强度（0~100）")
@@ -26,8 +28,8 @@ public class ClientStatus {
 	private Integer battery = 0;
 	@Schema(title = "是否正在充电", description = "是否正在充电")
 	private Boolean charging = false;
-	@Schema(title = "媒体服务标识", description = "媒体服务标识")
-	private String mediaId;
+	@Schema(title = "是否正在录像", description = "是否正在录像")
+	private Boolean recording = false;
 	@Schema(title = "生产者数量", description = "生产者数量")
 	private Integer producerSize;
 	@Schema(title = "消费者数量", description = "消费者数量")

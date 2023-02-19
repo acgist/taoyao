@@ -1,5 +1,5 @@
 package com.acgist.taoyao.signal.protocol.media;
 
-public class ProducerResumeProtocol {
+public class MediaProducerResumeProtocol {
 
 }

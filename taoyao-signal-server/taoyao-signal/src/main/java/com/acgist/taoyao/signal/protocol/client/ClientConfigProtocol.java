@@ -5,13 +5,14 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.boot.property.MediaProperties;
 import com.acgist.taoyao.boot.property.WebrtcProperties;
 import com.acgist.taoyao.boot.utils.DateUtils.DateTimeStyle;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.protocol.Constant;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**
@@ -20,6 +21,16 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
  * @author acgist
  */
 @Protocol
+@Description(
+    body = """
+    {
+        "time": "系统时间（yyyyMMddHHmmss）",
+        "media": "媒体配置",
+        "webrtc": "WebRTC配置"
+    }
+    """,
+    flow = "终端-[终端注册]>信令服务->终端"
+)
 public class ClientConfigProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "client::config";

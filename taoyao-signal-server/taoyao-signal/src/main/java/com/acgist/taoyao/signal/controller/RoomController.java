@@ -43,14 +43,14 @@ public class RoomController {
 	@Operation(summary = "房间状态", description = "房间状态")
 	@GetMapping("/status/{roomId}")
 	@ApiResponse(content = @Content(schema = @Schema(implementation = RoomStatus.class)))
-	public Message status(@PathVariable Long roomId) {
+	public Message status(@PathVariable String roomId) {
 		return Message.success(this.roomManager.status(roomId));
 	}
 	
 	@Operation(summary = "房间终端列表", description = "房间终端列表")
 	@GetMapping("/list/client/{roomId}")
 	@ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
-	public Message listClient(@PathVariable Long roomId) {
+	public Message listClient(@PathVariable String roomId) {
 		final Room room = this.roomManager.room(roomId);
 		return Message.success(room == null ? List.of() : room.clientStatus());
 	}

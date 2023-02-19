@@ -1,34 +1,35 @@
 <!-- 房间设置 -->
 <template>
   <el-dialog
-    v-model="localVisible"
-    @open="init"
-    width="30%"
-    :show-close="false"
     center
+    width="30%"
+    title="房间设置"
+    @open="init"
+    :show-close="false"
+    v-model="localVisible"
   >
     <el-form ref="SettingRoomForm" :model="room">
       <el-tabs v-model="activeName">
         <el-tab-pane label="进入房间" name="enter">
           <el-form-item label="房间标识">
-            <el-select v-model="room.id" placeholder="房间标识">
+            <el-select v-model="room.roomId" placeholder="房间标识">
               <el-option
                 v-for="value in rooms"
-                :key="value.id"
+                :key="value.roomId"
                 :label="value.name"
-                :value="value.id"
+                :value="value.roomId"
               />
             </el-select>
           </el-form-item>
         </el-tab-pane>
         <el-tab-pane label="创建房间" name="create">
           <el-form-item label="媒体服务">
-            <el-select v-model="room.mediaId" placeholder="媒体服务">
+            <el-select v-model="room.mediaId" placeholder="媒体服务标识">
               <el-option
-                v-for="value in config.mediaServerList"
-                :key="value.name"
-                :label="value.name"
-                :value="value.name"
+                v-for="value in taoyao.mediaServerList"
+                :key="value.mediaId"
+                :label="value.mediaId"
+                :value="value.mediaId"
               />
             </el-select>
           </el-form-item>
@@ -42,19 +43,23 @@
       </el-form-item>
     </el-form>
     <template #footer>
-      <el-button type="primary" @click="setting">设置</el-button>
+      <el-button type="primary" @click="enter" v-if="activeName === 'enter'"
+        >进入</el-button
+      >
+      <el-button type="primary" @click="create" v-if="activeName === 'create'"
+        >创建</el-button
+      >
     </template>
   </el-dialog>
 </template>
 
 <script>
-import { config, protocol } from "./Config.js";
+import { protocol } from "./Config.js";
 
 export default {
   name: "SettingRoom",
   data() {
     return {
-      config,
       room: {},
       rooms: [],
       activeName: "enter",
@@ -72,30 +77,28 @@ export default {
   },
   methods: {
     async init() {
-      let response = await this.taoyao.request(
+      const response = await this.taoyao.request(
         protocol.buildMessage("room::list")
       );
       this.rooms = response.body;
     },
-    async setting() {
-      let roomId;
+    async enter() {
+      await this.taoyao.request(
+        protocol.buildMessage("room::enter", {
+          ...this.room,
+        })
+      );
       this.localVisible = false;
-      if (this.activeName === "enter") {
-        roomId = this.room.id;
-        await this.taoyao.request(
-          protocol.buildMessage("room::enter", {
-            ...this.room,
-          })
-        );
-      } else {
-        let response = await this.taoyao.request(
-          protocol.buildMessage("room::create", {
-            ...this.room,
-          })
-        );
-        roomId = response.body.id;
-      }
-      this.$emit("buildMedia", roomId);
+      this.$emit("buildMedia", this.room.roomId);
+    },
+    async create() {
+      const response = await this.taoyao.request(
+        protocol.buildMessage("room::create", {
+          ...this.room,
+        })
+      );
+      this.localVisible = false;
+      this.$emit("buildMedia", response.body.roomId);
     },
   },
 };

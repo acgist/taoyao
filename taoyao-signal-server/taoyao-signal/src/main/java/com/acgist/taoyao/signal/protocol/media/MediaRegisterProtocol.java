@@ -2,13 +2,17 @@ package com.acgist.taoyao.signal.protocol.media;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.boot.property.MediaServerProperties;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.media.MediaClient;
-import com.acgist.taoyao.signal.protocol.Constant;
 import com.acgist.taoyao.signal.protocol.ProtocolMediaAdapter;
+import com.acgist.taoyao.signal.protocol.room.RoomCreateProtocol;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -19,9 +23,21 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Protocol
+@Description(
+    body = """
+        {
+            "username": "媒体用户",
+            "password": "媒体密码"
+        }
+        """,
+    flow = "信令服务->媒体服务->信令服务"
+)
 public class MediaRegisterProtocol extends ProtocolMediaAdapter {
 
 	public static final String SIGNAL = "media::register";
+	
+	@Autowired
+	private RoomCreateProtocol roomCreateProtocol;
 	
 	public MediaRegisterProtocol() {
 		super("媒体服务注册信令", SIGNAL);
@@ -44,6 +60,7 @@ public class MediaRegisterProtocol extends ProtocolMediaAdapter {
 	@Override
 	public void execute(Map<?, ?> body, MediaClient mediaClient, Message message) {
 		log.info("媒体终端注册结果：{}", message);
+		this.roomManager.recreate(mediaClient, this.roomCreateProtocol.build());
 	}
 	
 	@Override

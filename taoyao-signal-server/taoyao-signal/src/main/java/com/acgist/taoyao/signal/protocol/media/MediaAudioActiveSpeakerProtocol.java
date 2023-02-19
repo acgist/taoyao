@@ -10,27 +10,27 @@ import com.acgist.taoyao.signal.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**
- * 路由RTP能力信令
+ * 当前讲话终端信令
  * 
  * @author acgist
  */
 @Protocol
-public class RouterRtpCapabilitiesProtocol extends ProtocolRoomAdapter {
+public class MediaAudioActiveSpeakerProtocol extends ProtocolRoomAdapter {
 
-	public static final String SIGNAL = "router::rtp::capabilities";
+	public static final String SIGNAL = "audio::active::speaker";
 	
-	public RouterRtpCapabilitiesProtocol() {
-		super("路由RTP能力信令", SIGNAL);
+	public MediaAudioActiveSpeakerProtocol() {
+		super("当前讲话终端信令", SIGNAL);
 	}
 
 	@Override
 	public void execute(Room room, Map<?, ?> body, MediaClient mediaClient, Message message) {
-		// 忽略
+		room.broadcast(message);
 	}
-
+	
 	@Override
 	public void execute(String clientId, Room room, Map<?, ?> body, Client client, Message message) {
-		client.push(room.sendSync(message));
+		// 忽略
 	}
 
 }

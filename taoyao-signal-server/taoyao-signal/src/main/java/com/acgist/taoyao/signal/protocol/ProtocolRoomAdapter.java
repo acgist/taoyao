@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
+import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.media.MediaClient;
 import com.acgist.taoyao.signal.media.Room;
@@ -37,7 +38,7 @@ public abstract class ProtocolRoomAdapter extends ProtocolMediaAdapter {
 	 * @return 房间
 	 */
 	protected Room room(Map<?, ?> body) {
-		final Long roomId = this.getLong(body, Constant.ROOM_ID);
+		final String roomId = this.get(body, Constant.ROOM_ID);
 		final Room room = this.roomManager.room(roomId);
 		if(room == null) {
 			throw MessageCodeException.of("房间无效：" + roomId);

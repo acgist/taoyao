@@ -10,7 +10,7 @@ import java.util.concurrent.Executors;
 
 import org.junit.jupiter.api.Test;
 
-import com.acgist.taoyao.signal.protocol.Constant;
+import com.acgist.taoyao.boot.property.Constant;
 
 import lombok.extern.slf4j.Slf4j;
 

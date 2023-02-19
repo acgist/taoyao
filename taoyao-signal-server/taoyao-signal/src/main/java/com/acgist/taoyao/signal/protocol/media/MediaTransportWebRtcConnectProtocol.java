@@ -2,6 +2,7 @@ package com.acgist.taoyao.signal.protocol.media;
 
 import java.util.Map;
 
+import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
@@ -10,17 +11,24 @@ import com.acgist.taoyao.signal.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**
- * 创建WebRTC通道信令
+ * 连接WebRTC通道信令
  * 
  * @author acgist
  */
 @Protocol
-public class TransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
+@Description(
+    body = {
+        """
+        """
+    },
+    flow = "终端->信令服务->媒体服务->信令服务->终端"
+)
+public class MediaTransportWebRtcConnectProtocol extends ProtocolRoomAdapter {
 
-    public static final String SIGNAL = "transport:webrtc::create";
+    public static final String SIGNAL = "media::transport::webrtc::connect";
     
-    protected TransportWebRtcCreateProtocol() {
-        super("创建WebRTC通道信令", SIGNAL);
+    public MediaTransportWebRtcConnectProtocol() {
+        super("连接WebRTC通道信令", SIGNAL);
     }
 
     @Override
@@ -29,7 +37,8 @@ public class TransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
 
     @Override
     public void execute(String clientId, Room room, Map<?, ?> body, Client client, Message message) {
-        room.send(message);
+        final Message response = room.request(message);
+        client.push(response);
     }
-
+    
 }
