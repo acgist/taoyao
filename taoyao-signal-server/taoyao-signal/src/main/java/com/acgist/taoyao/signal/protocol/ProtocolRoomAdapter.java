@@ -2,15 +2,15 @@ package com.acgist.taoyao.signal.protocol;
 
 import java.util.Map;
 
+import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
-import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.media.MediaClient;
 import com.acgist.taoyao.signal.media.Room;
 
 /**
- * 房间信令协议适配器
+ * 房间信令适配器
  * 
  * TODO：校验是否是房间内的用户权限
  * 
@@ -33,7 +33,7 @@ public abstract class ProtocolRoomAdapter extends ProtocolMediaAdapter {
 	}
 	
 	/**
-	 * @param body 信令主体
+	 * @param body 消息主体
 	 * 
 	 * @return 房间
 	 */
@@ -41,30 +41,32 @@ public abstract class ProtocolRoomAdapter extends ProtocolMediaAdapter {
 		final String roomId = this.get(body, Constant.ROOM_ID);
 		final Room room = this.roomManager.room(roomId);
 		if(room == null) {
-			throw MessageCodeException.of("房间无效：" + roomId);
+			throw MessageCodeException.of("无效房间：" + roomId);
 		}
 		return room;
 	}
 	
 	/**
-	 * 处理房间信令
+	 * 处理媒体服务房间信令
 	 * 
 	 * @param room 房间
-	 * @param body 消息
+	 * @param body 消息主体
 	 * @param mediaClient 媒体服务终端
 	 * @param message 信令消息
 	 */
-	public abstract void execute(Room room, Map<?, ?> body, MediaClient mediaClient, Message message);
+	public void execute(Room room, Map<?, ?> body, MediaClient mediaClient, Message message) {
+	}
 	
 	/**
-	 * 处理终端信令
+	 * 处理终端房间信令
 	 * 
 	 * @param clientId 终端标识
 	 * @param room 房间
-	 * @param body 消息
+	 * @param body 消息主体
 	 * @param client 终端
 	 * @param message 信令消息
 	 */
-	public abstract void execute(String clientId, Room room, Map<?, ?> body, Client client, Message message);
+	public void execute(String clientId, Room room, Map<?, ?> body, Client client, Message message) {
+	}
 	
 }

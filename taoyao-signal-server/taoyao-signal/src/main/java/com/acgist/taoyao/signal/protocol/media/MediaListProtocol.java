@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
+import com.acgist.taoyao.boot.config.MediaProperties;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.boot.property.MediaProperties;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 

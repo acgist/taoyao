@@ -239,7 +239,7 @@ trusted-host = mirrors.aliyun.com
 pip config list
 
 # 编译代码
-cd /data/taoyao/taoyao-media-server
+cd /data/taoyao/taoyao-client-media
 git submodule update --remote
 cd modulesup
 git checkout taoyao
@@ -247,7 +247,7 @@ cd ..
 npm install
 
 # 配置服务
-pm2 start npm --name "taoyao-media-server" -- run dev | release
+pm2 start npm --name "taoyao-client-media" -- run dev | prd
 pm2 save
 
 # 配置ecosystem
@@ -256,7 +256,7 @@ pm2 start | reload ecosystem.config.json
 pm2 save
 
 # 管理服务
-pm2 start | stop | restart taoyao-media-server
+pm2 start | stop | restart taoyao-client-media
 ```
 
 ### Mediasoup单独编译
@@ -266,7 +266,7 @@ pm2 start | stop | restart taoyao-media-server
 ```
 # 编译代码
 # make -C worker
-cd /data/taoyao/taoyao-media-server/mediasoup/worker
+cd /data/taoyao/taoyao-client-media/mediasoup/worker
 make
 
 # 清理结果
@@ -285,7 +285,7 @@ make clean
 # 编译代码
 cd /data/taoyao/taoyao-signal-server
 mvn clean package -D skipTests
-#mvn clean package -D skipTests -P release
+#mvn clean package -D skipTests -P prd
 
 # 拷贝脚本
 cp taoyao-server/target/taoyao-server-1.0.0/bin/deploy.sh ./

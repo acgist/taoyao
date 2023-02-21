@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-import com.acgist.taoyao.boot.property.TaoyaoProperties;
+import com.acgist.taoyao.boot.config.TaoyaoProperties;
 
 import io.swagger.v3.oas.models.Components;
 import io.swagger.v3.oas.models.OpenAPI;
@@ -26,7 +26,7 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
  * 
  * @author acgist
  */
-@Profile({ "dev", "local" })
+@Profile({ "dev", "sit" })
 @Configuration
 @ConditionalOnClass(OpenAPI.class)
 public class SpringDocAutoConfiguration {

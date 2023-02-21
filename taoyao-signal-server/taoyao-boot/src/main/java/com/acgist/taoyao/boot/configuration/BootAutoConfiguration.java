@@ -45,18 +45,21 @@ import org.springframework.web.context.request.async.AsyncRequestTimeoutExceptio
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import com.acgist.taoyao.boot.config.IdProperties;
+import com.acgist.taoyao.boot.config.MediaProperties;
+import com.acgist.taoyao.boot.config.ScriptProperties;
+import com.acgist.taoyao.boot.config.SecurityProperties;
+import com.acgist.taoyao.boot.config.SocketProperties;
+import com.acgist.taoyao.boot.config.TaoyaoProperties;
+import com.acgist.taoyao.boot.config.WebrtcProperties;
 import com.acgist.taoyao.boot.controller.TaoyaoControllerAdvice;
 import com.acgist.taoyao.boot.controller.TaoyaoErrorController;
 import com.acgist.taoyao.boot.model.MessageCode;
-import com.acgist.taoyao.boot.property.IdProperties;
-import com.acgist.taoyao.boot.property.MediaProperties;
-import com.acgist.taoyao.boot.property.ScriptProperties;
-import com.acgist.taoyao.boot.property.SecurityProperties;
-import com.acgist.taoyao.boot.property.SocketProperties;
-import com.acgist.taoyao.boot.property.TaoyaoProperties;
-import com.acgist.taoyao.boot.property.WebrtcProperties;
+import com.acgist.taoyao.boot.runner.OrderedCommandLineRunner;
 import com.acgist.taoyao.boot.service.IdService;
+import com.acgist.taoyao.boot.service.IpService;
 import com.acgist.taoyao.boot.service.impl.IdServiceImpl;
+import com.acgist.taoyao.boot.service.impl.IpServiceImpl;
 import com.acgist.taoyao.boot.utils.ErrorUtils;
 import com.acgist.taoyao.boot.utils.FileUtils;
 import com.acgist.taoyao.boot.utils.HTTPUtils;
@@ -104,6 +107,12 @@ public class BootAutoConfiguration {
     }
     
     @Bean
+    @ConditionalOnMissingBean
+    public IpService ipService() {
+        return new IpServiceImpl();
+    }
+    
+    @Bean
     @Primary
     @ConditionalOnMissingBean
     public ObjectMapper objectMapper() {
@@ -142,10 +151,15 @@ public class BootAutoConfiguration {
         TaskExecutor taskExecutor,
         TaoyaoProperties taoyaoProperties
     ) {
-        return new CommandLineRunner() {
+        return new OrderedCommandLineRunner() {
+            @Override
+            public int getOrder() {
+                return Integer.MAX_VALUE;
+            }
             @Override
             public void run(String ... args) throws Exception {
                 HTTPUtils.init(taoyaoProperties.getTimeout(), taskExecutor);
+                BootAutoConfiguration.this.registerException();
                 log.info("项目启动成功：{}", BootAutoConfiguration.this.name);
             }
         };
@@ -181,7 +195,6 @@ public class BootAutoConfiguration {
         this.applicationContext.getBeansOfType(TaskScheduler.class).forEach((k, v) -> {
             log.info("系统定时任务线程池：{}-{}", k, v);
         });
-        this.registerException();
     }
     
     /**

@@ -18,11 +18,10 @@ import com.acgist.taoyao.signal.protocol.client.ClientRegisterProtocol;
 import com.acgist.taoyao.signal.protocol.platform.PlatformErrorProtocol;
 import com.acgist.taoyao.signal.service.SecurityService;
 
-import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 协议管理
+ * 信令管理
  * 
  * @author acgist
  */
@@ -31,7 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 public class ProtocolManager {
 
 	/**
-	 * 协议映射
+	 * 信令映射
 	 */
 	private Map<String, Protocol> protocolMapping = new ConcurrentHashMap<>();
 	
@@ -44,10 +43,11 @@ public class ProtocolManager {
 	@Autowired
 	private PlatformErrorProtocol platformErrorProtocol;
 	
-	@PostConstruct
+	/**
+	 * 加载信令映射
+	 */
 	public void init() {
-		final Map<String, Protocol> map = this.applicationContext.getBeansOfType(Protocol.class);
-		map.entrySet().stream()
+	    this.applicationContext.getBeansOfType(Protocol.class).entrySet().stream()
 		.sorted((a, z) -> a.getValue().signal().compareTo(z.getValue().signal()))
 		.forEach(e -> {
 			final String key = e.getKey();
@@ -57,7 +57,7 @@ public class ProtocolManager {
 			if(this.protocolMapping.containsKey(signal)) {
 				throw MessageCodeException.of("存在重复信令协议：" + signal);
 			}
-			log.info("注册信令协议：{} - {} - {}", String.format("%-32s", signal), String.format("%-32s", key), name);
+			log.info("注册信令协议：{} - {} - {}", String.format("%-36s", signal), String.format("%-36s", key), name);
 			this.protocolMapping.put(signal, value);
 		});
 	}

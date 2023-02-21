@@ -7,8 +7,8 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.signal.client.ClientAdapter;
 
 import lombok.Getter;

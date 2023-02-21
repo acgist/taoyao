@@ -7,7 +7,7 @@ import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.signal.media.MediaClient;
 
 /**
- * 媒体服务信令协议适配器
+ * 媒体服务信令适配器
  * 
  * @author acgist
  */
@@ -37,10 +37,11 @@ public abstract class ProtocolMediaAdapter extends ProtocolClientAdapter {
 	/**
 	 * 处理媒体服务信令
 	 * 
-	 * @param body 信令主体
+	 * @param body 消息主体
 	 * @param mediaClient 媒体服务终端
 	 * @param message 信令消息
 	 */
-    public abstract void execute(Map<?, ?> body, MediaClient mediaClient, Message message);
+    public void execute(Map<?, ?> body, MediaClient mediaClient, Message message) {
+    }
 	
 }

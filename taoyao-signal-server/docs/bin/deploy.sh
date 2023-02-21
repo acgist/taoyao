@@ -16,6 +16,8 @@ fi
 if [ -z "$mvned" ]; then
   echo "编译代码：${project.artifactId}-${project.version}"
   mvn clean package -D skipTests -P ${profile}
+# 指定编译模块以及依赖
+# mvn clean package -pl "${project.groupId}:${project.artifactId}" -am -D skipTests -P ${profile}
 fi
 
 # 删除文件：注意不要删除日志

@@ -1,12 +1,12 @@
-[submodule "taoyao-media-server/mediasoup"]
-	path = taoyao-media-server/mediasoup
+[submodule "taoyao-client-media/mediasoup"]
+	path = taoyao-client-media/mediasoup
 	url = https://gitee.com/acgist/mediasoup.git
 	branch = taoyao
 [submodule "taoyao-client-web/mediasoup-client"]
 	path = taoyao-client-web/mediasoup-client
 	url = https://gitee.com/acgist/mediasoup-client.git
 	branch = taoyao
-[submodule "taoyao-client-android/libmediasoupclient"]
-	path = taoyao-client-android/libmediasoupclient
+[submodule "taoyao-client-harmony/libmediasoupclient"]
+	path = taoyao-client-harmony/libmediasoupclient
 	url = https://gitee.com/acgist/libmediasoupclient.git
 	branch = taoyao

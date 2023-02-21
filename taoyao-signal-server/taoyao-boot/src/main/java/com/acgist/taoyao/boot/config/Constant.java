@@ -1,4 +1,4 @@
-package com.acgist.taoyao.boot.property;
+package com.acgist.taoyao.boot.config;
 
 /**
  * 字符常量
@@ -96,10 +96,6 @@ public interface Constant {
 	 */
 	String PASSWORD = "password";
 	/**
-	 * 时间
-	 */
-	String TIME = "time";
-	/**
 	 * 媒体
 	 */
 	String MEDIA = "media";
@@ -107,6 +103,10 @@ public interface Constant {
 	 * WebRTC
 	 */
 	String WEBRTC = "webrtc";
+	/**
+	 * 日期时间
+	 */
+	String DATETIME = "datetime";
 	/**
 	 * PeerId
 	 * 
@@ -151,9 +151,25 @@ public interface Constant {
 	 * 数据消费者ID
 	 */
 	String DATA_CONSUMER_ID = "dataConsumerId";
+	/**
+	 * ICE服务：P2P直连使用
+	 */
+	String ICE_SERVERS = "iceServers";
+	/**
+	 * ICE候选
+	 */
 	String ICE_CANDIDATES = "iceCandidates";
+	/**
+	 * ICE参数
+	 */
 	String ICE_PARAMETERS = "iceParameters";
+	/**
+	 * DTLS参数
+	 */
 	String DTLS_PARAMETERS = "dtlsParameters";
+	/**
+	 * SCTP参数
+	 */
 	String SCTP_PARAMETERS = "sctpParameters";
 
 }

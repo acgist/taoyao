@@ -2,7 +2,9 @@ taoyao:
   media:
     media-server-list:
       - media-id: media-local-a
-        enabled: true
+        enabled: false
+        rewrite-ip: true
+#       host: 192.168.1.110
         host: 192.168.8.110
         port: 9443
         schema: wss

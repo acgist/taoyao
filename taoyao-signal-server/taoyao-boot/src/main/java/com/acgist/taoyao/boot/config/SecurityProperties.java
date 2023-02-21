@@ -1,4 +1,4 @@
-package com.acgist.taoyao.boot.property;
+package com.acgist.taoyao.boot.config;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -8,6 +8,7 @@ import lombok.Setter;
 
 /**
  * 安全配置
+ * 注意：没有配置`UsernamePasswordService`使用帐号密码
  * 
  * @author acgist
  */

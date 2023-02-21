@@ -249,9 +249,9 @@
 			</dependencyManagement>
 		</profile>
 		<profile>
-			<id>release</id>
+			<id>prd</id>
 			<properties>
-				<profile>release</profile>
+				<profile>prd</profile>
 				<taoyao.maven.jvm.arg></taoyao.maven.jvm.arg>
 				<taoyao.maven.jvm.mem>-Xms2048M -Xmx4096M -XX:NewRatio=1 -XX:SurvivorRatio=2</taoyao.maven.jvm.mem>
 			</properties>
@@ -262,7 +262,7 @@
 						<artifactId>maven-assembly-plugin</artifactId>
 						<configuration>
 							<descriptors>
-								<descriptor>${taoyao.maven.basedir}/docs/assembly/release.xml</descriptor>
+								<descriptor>${taoyao.maven.basedir}/docs/assembly/prd.xml</descriptor>
 							</descriptors>
 						</configuration>
 					</plugin>

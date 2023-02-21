@@ -99,15 +99,7 @@
 		</root>
 	</springProfile>
 
-	<springProfile name="test">
-		<root level="INFO">
-			<appender-ref ref="fileDebugAsync" />
-			<appender-ref ref="fileInfoAsync" />
-			<appender-ref ref="fileErrorAsync" />
-		</root>
-	</springProfile>
-	
-	<springProfile name="release">
+	<springProfile name="sit | uat | prd">
 		<root level="INFO">
 			<appender-ref ref="fileDebugAsync" />
 			<appender-ref ref="fileInfoAsync" />
@@ -115,7 +107,7 @@
 		</root>
 	</springProfile>
 
-	<springProfile name="!dev &amp; !test &amp; !release">
+	<springProfile name="!dev &amp; !sit &amp; !uat &amp; !prd">
 		<root level="DEBUG">
 			<appender-ref ref="console" />
 			<appender-ref ref="fileDebugAsync" />

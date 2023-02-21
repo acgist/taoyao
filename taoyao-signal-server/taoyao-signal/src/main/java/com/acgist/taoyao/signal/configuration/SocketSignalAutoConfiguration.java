@@ -8,7 +8,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.acgist.taoyao.boot.property.SocketProperties;
+import com.acgist.taoyao.boot.config.SocketProperties;
+import com.acgist.taoyao.boot.runner.OrderedCommandLineRunner;
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.client.socket.SocketSignal;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
@@ -39,7 +40,7 @@ public class SocketSignalAutoConfiguration {
 	@Autowired
 	@ConditionalOnBean(SocketSignal.class)
 	public CommandLineRunner socketSignalCommandLineRunner(SocketSignal socketSignal) {
-		return new CommandLineRunner() {
+		return new OrderedCommandLineRunner() {
 			@Override
 			public void run(String ... args) throws Exception {
 				socketSignal.init();

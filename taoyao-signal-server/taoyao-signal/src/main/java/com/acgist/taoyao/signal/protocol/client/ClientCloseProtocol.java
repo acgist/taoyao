@@ -7,8 +7,8 @@ import org.springframework.context.ApplicationListener;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
+import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;

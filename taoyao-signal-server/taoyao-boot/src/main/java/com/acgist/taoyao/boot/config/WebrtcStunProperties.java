@@ -1,6 +1,7 @@
-package com.acgist.taoyao.boot.property;
+package com.acgist.taoyao.boot.config;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,6 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Schema(title = "WebRTC STUN配置", description = "WebRTC STUN配置")
+@EqualsAndHashCode(of = { "host", "port" })
 public class WebrtcStunProperties {
     
     @Schema(title = "主机", description = "主机")

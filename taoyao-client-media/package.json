@@ -1,12 +1,12 @@
 {
-  "name": "taoyao-media-server",
+  "name": "taoyao-client-media",
   "author": "acgist",
   "version": "1.0.0",
   "private": true,
-  "description": "taoyao media server",
+  "description": "taoyao client media",
   "scripts": {
     "dev": "node src/Server.js",
-    "release": "node src/Server.js"
+    "prd": "node src/Server.js"
   },
   "dependencies": {
     "ws": "^8.12.0",

@@ -1,4 +1,4 @@
-package com.acgist.taoyao.boot.property;
+package com.acgist.taoyao.boot.config;
 
 import java.util.List;
 

@@ -8,7 +8,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.acgist.taoyao.boot.annotation.Manager;
-import com.acgist.taoyao.boot.property.MediaProperties;
+import com.acgist.taoyao.boot.config.MediaProperties;
 
 import lombok.extern.slf4j.Slf4j;
 

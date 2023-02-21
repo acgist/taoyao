@@ -2,8 +2,8 @@ package com.acgist.taoyao.interceptor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.boot.interceptor.InterceptorAdapter;
-import com.acgist.taoyao.boot.property.TaoyaoProperties;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;

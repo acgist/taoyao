@@ -10,7 +10,7 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import com.acgist.taoyao.boot.property.SocketProperties;
+import com.acgist.taoyao.boot.config.SocketProperties;
 import com.acgist.taoyao.boot.utils.CloseableUtils;
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;

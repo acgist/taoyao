@@ -8,11 +8,15 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.concurrent.Executor;
+import java.util.function.Function;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.commons.lang3.StringUtils;
+
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -31,6 +35,10 @@ public final class HTTPUtils {
      * 线程池
      */
     private static Executor executor;
+    /**
+     * 无效IP验证
+     */
+    private static final Function<String, Boolean> NEXT_IP = ip -> StringUtils.isEmpty(ip) || "unknown".equalsIgnoreCase(ip);
     
     private HTTPUtils() {
     }
@@ -56,6 +64,22 @@ public final class HTTPUtils {
             .connectTimeout(Duration.ofMillis(HTTPUtils.timeout))
 //          .followRedirects(Redirect.ALWAYS)
             .build();
+    }
+    
+    /**
+     * @param request HTTP请求
+     * 
+     * @return IP地址
+     */
+    public static final String httpIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (NEXT_IP.apply(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (NEXT_IP.apply(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
     }
  
     /**

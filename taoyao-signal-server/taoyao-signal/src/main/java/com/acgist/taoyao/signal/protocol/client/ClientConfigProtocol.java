@@ -7,13 +7,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
+import com.acgist.taoyao.boot.config.Constant;
+import com.acgist.taoyao.boot.config.MediaProperties;
+import com.acgist.taoyao.boot.config.WebrtcProperties;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.boot.property.Constant;
-import com.acgist.taoyao.boot.property.MediaProperties;
-import com.acgist.taoyao.boot.property.WebrtcProperties;
+import com.acgist.taoyao.boot.service.IpService;
+import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.boot.utils.DateUtils.DateTimeStyle;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
+import com.acgist.taoyao.signal.wrapper.WebrtcPropertiesWrapper;
 
 /**
  * 终端配置信令
@@ -24,9 +27,9 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 @Description(
     body = """
     {
-        "time": "系统时间（yyyyMMddHHmmss）",
         "media": "媒体配置",
-        "webrtc": "WebRTC配置"
+        "webrtc": "WebRTC配置",
+        "datetime": "日期时间（yyyyMMddHHmmss）"
     }
     """,
     flow = "终端-[终端注册]>信令服务->终端"
@@ -35,6 +38,8 @@ public class ClientConfigProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "client::config";
 	
+	@Autowired
+	private IpService ipService;
 	@Autowired
 	private MediaProperties mediaProperties;
 	@Autowired
@@ -46,19 +51,24 @@ public class ClientConfigProtocol extends ProtocolClientAdapter {
 
 	@Override
 	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
-		// 忽略
+	    client.push(this.build(client));
 	}
 	
-	@Override
-	public Message build() {
-		final Message message = super.build();
+	/**
+	 * @param client 终端
+	 * 
+	 * @return 信令消息
+	 */
+	public Message build(Client client) {
+	    final String clientIp = client.ip();
+		final Message message = this.build();
+		final WebrtcPropertiesWrapper webrtcPropertiesWrapper = new WebrtcPropertiesWrapper(clientIp, this.ipService, this.webrtcProperties);
 		message.setBody(Map.of(
-			// 系统时间
-			Constant.TIME, DateTimeStyle.YYYYMMDDHH24MMSS.getDateTimeFormatter().format(LocalDateTime.now()),
 			Constant.MEDIA, this.mediaProperties,
-			Constant.WEBRTC, this.webrtcProperties
+			Constant.WEBRTC, webrtcPropertiesWrapper,
+			Constant.DATETIME, DateUtils.format(LocalDateTime.now(), DateTimeStyle.YYYYMMDDHH24MMSS)
 		));
 		return message;
 	}
-
+	
 }

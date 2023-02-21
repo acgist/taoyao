@@ -1,4 +1,4 @@
-package com.acgist.taoyao.boot.property;
+package com.acgist.taoyao.boot.config;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

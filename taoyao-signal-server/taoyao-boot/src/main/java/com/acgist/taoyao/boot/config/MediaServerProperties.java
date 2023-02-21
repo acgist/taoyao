@@ -1,4 +1,4 @@
-package com.acgist.taoyao.boot.property;
+package com.acgist.taoyao.boot.config;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
@@ -18,6 +18,8 @@ public class MediaServerProperties {
 	private String mediaId;
 	@Schema(title = "是否启用", description = "是否启用")
 	private Boolean enabled;
+	@Schema(title = "是否启用重写本地IP", description = "内外网多网卡环境重写IP地址")
+	private Boolean rewriteIp;
 	@Schema(title = "主机", description = "主机")
 	private String host;
 	@Schema(title = "端口", description = "端口")

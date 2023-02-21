@@ -4,10 +4,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
+import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
-import com.acgist.taoyao.boot.property.TaoyaoProperties;
 import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.signal.MapBodyGetter;
 import com.acgist.taoyao.signal.client.ClientManager;
@@ -16,7 +16,7 @@ import com.acgist.taoyao.signal.media.MediaClientManager;
 import com.acgist.taoyao.signal.media.RoomManager;
 
 /**
- * 信令协议适配器
+ * 信令适配器
  * 
  * @author acgist
  */
@@ -91,18 +91,18 @@ public abstract class ProtocolAdapter implements Protocol, MapBodyGetter {
 	
 	@Override
 	public Message build(String id, MessageCode code, String message, Object body) {
+	    // 消息标识
 		if(StringUtils.isEmpty(id)) {
 			id = this.idService.buildIdToString();
 		}
+		// 消息头部
 		final Header header = Header.builder()
 			.v(this.taoyaoProperties.getVersion())
 			.id(id)
 			.signal(this.signal)
 			.build();
 		final Message build = Message.builder().build();
-		// 设置状态编码
-		// 设置状态描述
-		// 默认状态设置成功
+		// 设置状态编码、状态描述：默认成功
 		build.setCode(code == null ? MessageCode.CODE_0000 : code, message);
 		// 设置消息头部
 		build.setHeader(header);

@@ -15,7 +15,7 @@ public interface MapBodyGetter {
 	 * @param body 消息主体
 	 * @param key 参数名称
 	 * 
-	 * @return 值
+	 * @return 参数值
 	 */
 	@SuppressWarnings("unchecked")
 	default <T> T get(Map<?, ?> body, String key) {
@@ -30,9 +30,9 @@ public interface MapBodyGetter {
 	 * 
 	 * @param body 消息主体
 	 * @param key 参数名称
-	 * @param defaultValue 默认值
+	 * @param defaultValue 参数默认值
 	 * 
-	 * @return 值
+	 * @return 参数值
 	 */
 	@SuppressWarnings("unchecked")
 	default <T> T get(Map<?, ?> body, String key, T defaultValue) {
@@ -47,7 +47,7 @@ public interface MapBodyGetter {
 	 * @param body 消息主体
 	 * @param key 参数名称
 	 * 
-	 * @return 值
+	 * @return 参数值
 	 */
 	default Long getLong(Map<?, ?> body, String key) {
 		if(body == null) {
@@ -66,7 +66,7 @@ public interface MapBodyGetter {
 	 * @param body 消息主体
 	 * @param key 参数名称
 	 * 
-	 * @return 值
+	 * @return 参数值
 	 */
 	default Integer getInteger(Map<?, ?> body, String key) {
 		if(body == null) {
@@ -85,7 +85,7 @@ public interface MapBodyGetter {
 	 * @param body 消息主体
 	 * @param key 参数名称
 	 * 
-	 * @return 值
+	 * @return 参数值
 	 */
 	default Boolean getBoolean(Map<?, ?> body, String key) {
 		if(body == null) {

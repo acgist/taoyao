@@ -4,7 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 
-import com.acgist.taoyao.boot.property.Constant;
+import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.utils.CloseableUtils;
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;

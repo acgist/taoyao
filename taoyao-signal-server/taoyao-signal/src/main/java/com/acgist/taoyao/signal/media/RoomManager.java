@@ -8,9 +8,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.annotation.Manager;
+import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
-import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.signal.client.Client;
 

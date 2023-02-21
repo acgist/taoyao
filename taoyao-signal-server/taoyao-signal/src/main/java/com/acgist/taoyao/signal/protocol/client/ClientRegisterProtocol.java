@@ -8,10 +8,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
+import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
-import com.acgist.taoyao.boot.property.Constant;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientStatus;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
@@ -72,7 +72,7 @@ public class ClientRegisterProtocol extends ProtocolClientAdapter {
 		// 推送消息
 		client.push(message.cloneWithoutBody());
         // 下发配置
-        client.push(this.configProtocol.build());
+		client.push(this.configProtocol.build(client));
         // 终端状态
         final ClientStatus status = client.status();
         status.setClientId(clientId);

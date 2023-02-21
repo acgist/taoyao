@@ -1,10 +1,11 @@
-package com.acgist.taoyao.boot.service;
+package com.acgist.taoyao.service;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.annotation.CostedTest;
 import com.acgist.taoyao.annotation.TaoyaoTest;
+import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.main.TaoyaoApplication;
 
 import lombok.extern.slf4j.Slf4j;

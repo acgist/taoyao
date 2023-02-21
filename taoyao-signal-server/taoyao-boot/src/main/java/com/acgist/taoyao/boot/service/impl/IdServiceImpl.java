@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.acgist.taoyao.boot.property.IdProperties;
+import com.acgist.taoyao.boot.config.IdProperties;
 import com.acgist.taoyao.boot.service.IdService;
 
 public class IdServiceImpl implements IdService {

@@ -9,8 +9,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.AntPathMatcher;
 
+import com.acgist.taoyao.boot.config.SecurityProperties;
 import com.acgist.taoyao.boot.interceptor.InterceptorAdapter;
-import com.acgist.taoyao.boot.property.SecurityProperties;
 import com.acgist.taoyao.signal.service.SecurityService;
 
 import jakarta.servlet.http.HttpServletRequest;

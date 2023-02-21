@@ -10,13 +10,11 @@ import org.springframework.stereotype.Component;
 
 /**
  * 信令描述
- * 生成文档采用`RUNTIME`
  * 
  * @author acgist
  */
 @Target(ElementType.TYPE)
 @Component
-//@Retention(RetentionPolicy.SOURCE)
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Description {

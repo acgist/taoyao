@@ -19,12 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.TaskScheduler;
 
 import com.acgist.taoyao.boot.annotation.Prototype;
+import com.acgist.taoyao.boot.config.MediaServerProperties;
+import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
-import com.acgist.taoyao.boot.property.MediaServerProperties;
-import com.acgist.taoyao.boot.property.TaoyaoProperties;
 import com.acgist.taoyao.boot.utils.HTTPUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.signal.protocol.Protocol;
@@ -94,6 +94,13 @@ public class MediaClient {
 	 */
 	public String mediaId() {
 		return this.mediaId;
+	}
+	
+	/**
+	 * @return 媒体服务配置
+	 */
+	public MediaServerProperties mediaServerProperties() {
+	    return this.mediaServerProperties;
 	}
 
 	/**

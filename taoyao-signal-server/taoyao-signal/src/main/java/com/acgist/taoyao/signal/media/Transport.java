@@ -3,7 +3,7 @@ package com.acgist.taoyao.signal.media;
 import java.io.Closeable;
 import java.util.Map;
 
-import com.acgist.taoyao.boot.property.Constant;
+import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.signal.MapBodyGetter;
 import com.acgist.taoyao.signal.client.Client;
 

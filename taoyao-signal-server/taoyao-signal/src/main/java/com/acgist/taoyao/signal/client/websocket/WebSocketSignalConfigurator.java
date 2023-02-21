@@ -5,7 +5,7 @@ import java.util.Map;
 
 import org.apache.catalina.connector.RequestFacade;
 
-import com.acgist.taoyao.boot.property.Constant;
+import com.acgist.taoyao.boot.config.Constant;
 
 import jakarta.websocket.HandshakeResponse;
 import jakarta.websocket.server.HandshakeRequest;

@@ -5,7 +5,7 @@ const os = require("os");
  */
 module.exports = {
   // 服务名称
-  name: "taoyao-media-server",
+  name: "taoyao-client-media",
   // 服务版本
   version: "1.0.0",
   // 欢迎页面

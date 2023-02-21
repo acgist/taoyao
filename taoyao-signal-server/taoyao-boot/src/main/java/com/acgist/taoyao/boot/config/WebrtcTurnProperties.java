@@ -1,6 +1,7 @@
-package com.acgist.taoyao.boot.property;
+package com.acgist.taoyao.boot.config;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,6 +13,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Schema(title = "WebRTC TURN配置", description = "WebRTC TURN配置")
+@EqualsAndHashCode(callSuper = true)
 public class WebrtcTurnProperties extends WebrtcStunProperties {
     
     @Schema(title = "帐号", description = "帐号")

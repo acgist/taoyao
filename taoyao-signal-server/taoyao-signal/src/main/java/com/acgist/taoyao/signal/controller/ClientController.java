@@ -10,6 +10,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.client.ClientStatus;
 import com.acgist.taoyao.signal.protocol.client.ClientRebootProtocol;
+import com.acgist.taoyao.signal.protocol.client.ClientShutdownProtocol;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -31,6 +32,8 @@ public class ClientController {
 	private ClientManager clientManager;
 	@Autowired
 	private ClientRebootProtocol clientRebootProtocol;
+	@Autowired
+	private ClientShutdownProtocol clientShutdownProtocol;
 	
 	@Operation(summary = "终端列表", description = "终端列表")
 	@GetMapping("/list")
@@ -49,8 +52,15 @@ public class ClientController {
 	@Operation(summary = "重启终端", description = "重启终端")
 	@GetMapping("/reboot/{clientId}")
 	public Message reboot(@PathVariable String clientId) {
-		this.clientManager.unicast(clientId, this.clientRebootProtocol.build());
+		this.clientRebootProtocol.execute(clientId);
 		return Message.success();
+	}
+
+	@Operation(summary = "关闭终端", description = "关闭终端")
+	@GetMapping("/shutdown/{clientId}")
+	public Message shutdown(@PathVariable String clientId) {
+	    this.clientShutdownProtocol.execute(clientId);
+	    return Message.success();
 	}
 	
 }

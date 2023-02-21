@@ -20,7 +20,7 @@ server:
 #   context-path: /taoyao
 spring:
   profiles:
-    active: local
+    active: dev
   application:
     name: taoyao-signal-server
   servlet:
@@ -51,6 +51,7 @@ taoyao:
   name: 桃夭信令服务
   version: 1.0.0
   description: 桃夭WebRTC信令服务
+  ip-mask: 24
   timeout: 5000
   id:
     index: 0
@@ -102,14 +103,16 @@ taoyao:
     media-server-list:
       - media-id: media-local-a
         enabled: true
-        host: localhost
+        rewrite-ip: true
+        host: 127.0.0.1
         port: 9443
         schema: wss
         username: taoyao
         password: taoyao
       - media-id: media-local-z
         enabled: true
-        host: localhost
+        rewrite-ip: true
+        host: 127.0.0.1
         port: 9443
         schema: wss
         username: taoyao
@@ -126,21 +129,21 @@ taoyao:
     thread-name-prefix: ${spring.application.name}-signal-
     keep-alive-time: 60000
     buffer-size: 2048
-  # WebRTC配置：没有P2P所以不会用到
+  # WebRTC配置
   webrtc:
     # STUN服务
     stun:
-      - host: stun1.l.google.com
-        port: 19302
-      - host: stun2.l.google.com
-        port: 19302
-    # TURN服务：需要自己搭建coturn
-    turn:
+      - host: 192.168.1.110
+        port: 3478
       - host: 192.168.8.110
+        port: 3478
+    # TURN服务
+    turn:
+      - host: 192.168.1.110
         port: 3478
         username: taoyao
         password: taoyao
-      - host: 192.168.8.111
+      - host: 192.168.8.110
         port: 3478
         username: taoyao
         password: taoyao
@@ -158,8 +161,8 @@ taoyao:
   # 脚本配置
   script:
     enabled: true
-    media-reboot: pm2 restart taoyao-media-server
-    media-shutdown: pm2 stop taoyao-media-server
+    media-reboot: pm2 restart taoyao-client-media
+    media-shutdown: pm2 stop taoyao-client-media
     system-reboot: reboot
     system-shutdown: shutdown now
     platform-reboot: systemctl restart taoyao-signal-server

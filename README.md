@@ -1,6 +1,6 @@
 # 桃夭
 
-桃夭是套基于`Mediasoup`开发的`WebRTC`音视频信令服务
+桃夭是套基于`Mediasoup`开发的`WebRTC`音视频信令服务，可以扩展其他智能终端接入。
 
 <p align="center">
     <img alt="Java" src="https://img.shields.io/badge/dynamic/xml?style=flat-square&label=Java&color=blueviolet&url=https://raw.githubusercontent.com/acgist/taoyao/master/taoyao-signal-server/pom.xml&query=//*[local-name()=%27java.version%27]&cacheSeconds=3600" />
@@ -20,10 +20,10 @@
 
 |模块|名称|描述|
 |:--|:--|:--|
-|taoyao-client-web|终端示例|Web终端示例|
-|taoyao-client-android|终端示例|安卓终端示例|
-|taoyao-media-server|媒体服务|媒体服务|
-|taoyao-signal-server|信令服务|信令服务|
+|taoyao-client-web|Web终端|提供前端控制页面|
+|taoyao-client-media|媒体服务|提供音视频接入服务|
+|taoyao-client-harmony|鸿蒙终端|鸿蒙智能终端接入|
+|taoyao-signal-server|信令服务|终端信令控制|
 
 > 注意：只有Web实现完成信令控制
 

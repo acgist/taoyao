@@ -7,7 +7,7 @@ import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
 import com.acgist.taoyao.signal.media.MediaClient;
 
 /**
- * 信令协议
+ * 信令
  * 
  * room::     房间信令
  * media::    媒体信令
@@ -39,22 +39,22 @@ public interface Protocol {
 	default boolean authenticate(Message message) {
 		return true;
 	}
-
-	/**
-	 * 处理信令消息
-	 * 
-	 * @param client 终端
-	 * @param message 信令消息
-	 */
-	void execute(Client client, Message message);
 	
 	/**
-	 * 处理媒体信令消息
+	 * 处理媒体服务信令
 	 * 
 	 * @param mediaClient 媒体服务终端
 	 * @param message 信令消息
 	 */
 	void execute(MediaClient mediaClient, Message message);
+
+	/**
+	 * 处理终端信令
+	 * 
+	 * @param client 终端
+	 * @param message 信令消息
+	 */
+	void execute(Client client, Message message);
 
 	/**
 	 * 发布事件
@@ -66,15 +66,11 @@ public interface Protocol {
 	<E extends ApplicationEventAdapter> void publishEvent(E event);
 	
 	/**
-	 * 创建信令消息
-	 * 
 	 * @return 信令消息
 	 */
 	Message build();
 	
 	/**
-	 * 创建信令消息
-	 * 
 	 * @param body 消息主体
 	 * 
 	 * @return 信令消息
@@ -82,8 +78,6 @@ public interface Protocol {
 	Message build(Object body);
 	
 	/**
-	 * 创建信令消息
-	 * 
 	 * @param code 状态编码
 	 * @param body 消息主体
 	 * 
@@ -92,9 +86,6 @@ public interface Protocol {
 	Message build(MessageCode code, Object body);
 	
 	/**
-	 * 创建信令消息
-	 * 
-	 * @param code 状态编码
 	 * @param message 状态描述
 	 * @param body 消息主体
 	 * 
@@ -103,8 +94,6 @@ public interface Protocol {
 	Message build(String message, Object body);
 	
 	/**
-	 * 创建信令消息
-	 * 
 	 * @param code 状态编码
 	 * @param message 状态描述
 	 * @param body 消息主体
@@ -114,8 +103,6 @@ public interface Protocol {
 	Message build(MessageCode code, String message, Object body);
 	
 	/**
-	 * 创建信令消息
-	 * 
 	 * @param id 消息标识
 	 * @param code 状态编码
 	 * @param message 状态描述

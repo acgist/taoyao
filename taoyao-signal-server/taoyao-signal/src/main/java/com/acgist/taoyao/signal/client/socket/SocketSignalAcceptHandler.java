@@ -6,7 +6,7 @@ import java.nio.channels.AsynchronousServerSocketChannel;
 import java.nio.channels.AsynchronousSocketChannel;
 import java.nio.channels.CompletionHandler;
 
-import com.acgist.taoyao.boot.property.SocketProperties;
+import com.acgist.taoyao.boot.config.SocketProperties;
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
 import com.acgist.taoyao.signal.protocol.platform.PlatformErrorProtocol;
