@@ -10,10 +10,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.2.45",
+    "vue": "^3.2.44",
     "moment": "^2.29.4",
-    "element-plus": "^2.2.29",
-    "mediasoup-client": "^3.6.77"
+    "element-plus": "^2.2.32",
+    "mediasoup-client": "^3.6.82"
   },
   "devDependencies": {
     "vite": "^4.0.0",
