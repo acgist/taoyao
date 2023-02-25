@@ -63,7 +63,7 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
         // 重写地址
         this.rewriteIp(client.ip(), responseBody);
         // 处理逻辑
-        final ClientWrapper clientWrapper = room.client(client);
+        final ClientWrapper clientWrapper = room.clientWrapper(client);
         // 消费者
         final Boolean consuming = MapUtils.getBoolean(body, Constant.CONSUMING);
         if(Boolean.TRUE.equals(consuming)) {

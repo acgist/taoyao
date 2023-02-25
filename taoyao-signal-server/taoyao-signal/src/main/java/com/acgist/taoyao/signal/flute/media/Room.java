@@ -156,8 +156,20 @@ public class Room implements Closeable {
 	 * @param client
 	 * @return
 	 */
-	public ClientWrapper client(Client client) {
+	public ClientWrapper clientWrapper(Client client) {
 	    return this.clients.get(client);
+	}
+	
+	/**
+	 * 
+	 * @param client
+	 * @return
+	 */
+	public ClientWrapper clientWrapper(String clientId) {
+	    return this.clients.values().stream()
+	        .filter(v -> clientId.equals(v.getClientId()))
+	        .findFirst()
+	        .orElse(null);
 	}
 	
 	/**

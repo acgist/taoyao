@@ -55,9 +55,9 @@ public class MediaProduceProtocol extends ProtocolRoomAdapter {
         final Message response = room.request(message);
         final Map<String, Object> responseBody = response.mapBody();
         final String producerId = MapUtils.get(responseBody, Constant.PRODUCER_ID);
-        final ClientWrapper clientWrapper = room.client(client);
+        final ClientWrapper clientWrapper = room.clientWrapper(client);
         final Map<String, Producer> producers = clientWrapper.getProducers();
-        final Producer producer = producers.computeIfAbsent(producerId, key -> new Producer(client, kind, streamId, producerId));
+        final Producer producer = producers.computeIfAbsent(producerId, key -> new Producer(clientWrapper, kind, streamId, producerId));
         final Message responseMessage = response.cloneWithoutBody();
         responseMessage.setBody(Map.of(
             Constant.KIND, kind,
