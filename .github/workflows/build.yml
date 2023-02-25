@@ -34,7 +34,7 @@ jobs:
       with:
         cache: npm
         node-version:  16.x
-      working-directory: ./taoyao-client-web
+        cache-dependency-path: ./taoyao-client-web
     - name: Build with NodeJS
       run: |
         npm install
@@ -54,7 +54,7 @@ jobs:
       with:
         cache: npm
         node-version:  16.x
-      working-directory: ./taoyao-client-media
+        cache-dependency-path: ./taoyao-client-media
     - name: Build with NodeJS
       run: |
         npm install
