@@ -58,5 +58,6 @@ jobs:
     - name: Build with NodeJS
       run: |
         npm install
+        npm run dev
       working-directory: ./taoyao-client-media
       
