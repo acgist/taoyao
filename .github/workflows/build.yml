@@ -35,7 +35,7 @@ jobs:
         cache: npm
         node-version:  16.x
     - run: |
-      cd taoyao-client-web
+      cd ./taoyao-client-web
       npm install
       npm run build
   taoyao-client-media:
@@ -53,6 +53,6 @@ jobs:
         cache: npm
         node-version:  16.x
     - run: |
-      cd taoyao-client-media
+      cd ./taoyao-client-media
       npm install
       
