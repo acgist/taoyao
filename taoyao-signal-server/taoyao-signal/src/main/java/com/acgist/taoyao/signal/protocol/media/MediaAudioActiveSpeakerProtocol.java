@@ -5,9 +5,9 @@ import java.util.Map;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.media.MediaClient;
-import com.acgist.taoyao.signal.media.Room;
+import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
+import com.acgist.taoyao.signal.terminal.media.Room;
 
 /**
  * 当前讲话终端信令
@@ -17,20 +17,19 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 @Protocol
 public class MediaAudioActiveSpeakerProtocol extends ProtocolRoomAdapter {
 
-	public static final String SIGNAL = "audio::active::speaker";
+	public static final String SIGNAL = "media::audio::active::speaker";
 	
 	public MediaAudioActiveSpeakerProtocol() {
 		super("当前讲话终端信令", SIGNAL);
 	}
 
 	@Override
-	public void execute(Room room, Map<?, ?> body, MediaClient mediaClient, Message message) {
-		room.broadcast(message);
-	}
-	
-	@Override
-	public void execute(String clientId, Room room, Map<?, ?> body, Client client, Message message) {
-		// 忽略
+	public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
+	    if(clientType == ClientType.MEDIA) {
+	        room.broadcast(message);
+	    } else {
+	        // 忽略其他情况
+	    }
 	}
 
 }

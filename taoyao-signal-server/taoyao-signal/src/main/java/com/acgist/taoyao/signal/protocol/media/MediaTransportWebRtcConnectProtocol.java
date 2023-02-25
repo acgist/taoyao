@@ -4,17 +4,22 @@ import java.util.Map;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
+import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.media.MediaClient;
-import com.acgist.taoyao.signal.media.Room;
+import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
+import com.acgist.taoyao.signal.terminal.media.Room;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 连接WebRTC通道信令
  * 
  * @author acgist
  */
+@Slf4j
 @Protocol
 @Description(
     body = {
@@ -32,13 +37,16 @@ public class MediaTransportWebRtcConnectProtocol extends ProtocolRoomAdapter {
     }
 
     @Override
-    public void execute(Room room, Map<?, ?> body, MediaClient mediaClient, Message message) {
-    }
-
-    @Override
-    public void execute(String clientId, Room room, Map<?, ?> body, Client client, Message message) {
-        final Message response = room.request(message);
-        client.push(response);
+    public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
+        if(clientType == ClientType.WEB || clientType == ClientType.CAMERA) {
+            final Message response = room.request(message);
+            final Map<String, Object> responseBody = response.mapBody();
+            client.push(response);
+            final String transportId = MapUtils.get(responseBody, Constant.TRANSPORT_ID);
+            log.info("{} 连接WebRTC信令通道：{}", clientId, transportId);
+        } else {
+            // 忽略其他情况
+        }
     }
     
 }

@@ -1,7 +1,7 @@
 package com.acgist.taoyao.boot.model;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -171,25 +171,26 @@ public class Message implements Cloneable, Serializable {
 	}
 	
 	/**
-	 * 克隆消息设置Map消息主体
-	 * 
-	 * @return 克隆消息
-	 */
-	public Message CloneWithMapBody() {
-	    final Message message = this.clone();
-	    message.setBody(new HashMap<>());
-	    return message;
-	}
-	
-	/**
 	 * 克隆消息排除消息主体
 	 * 
 	 * @return 克隆消息
 	 */
 	public Message cloneWithoutBody() {
-		final Message message = this.clone();
-		message.setBody(null);
-		return message;
+	    return new Message(this.code, this.message, this.header.clone(), null);
+	}
+	
+	/**
+	 * @return Map消息主体
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+    public Map<String, Object> mapBody() {
+        if(this.body instanceof Map map) {
+            return map;
+        } else if(this.body == null) {
+            return Map.of();
+        } else {
+            throw MessageCodeException.of("信令主体类型错误：" + this.body);
+        }
 	}
 	
 	@Override

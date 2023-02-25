@@ -25,6 +25,7 @@ class IdServiceTest {
 	void testId() {
 		final long id = this.idService.buildId();
 		log.info("生成ID：{}", id);
+		log.info("生成ID：{}", String.valueOf(id).length());
 	}
 	
 	@Test

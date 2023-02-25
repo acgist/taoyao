@@ -1,7 +1,6 @@
 package com.acgist.taoyao.signal.service.impl;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.config.SecurityProperties;
 import com.acgist.taoyao.boot.model.Message;
@@ -12,12 +11,15 @@ import com.acgist.taoyao.signal.service.UsernamePasswordService;
 
 public class SecurityServiceImpl implements SecurityService {
 
-	@Autowired
-	private SecurityProperties securityProperties;
-	@Autowired(required = false)
-	private UsernamePasswordService usernamePasswordService;
+	private final SecurityProperties securityProperties;
+	private final UsernamePasswordService usernamePasswordService;
 	
-	@Override
+	public SecurityServiceImpl(SecurityProperties securityProperties, UsernamePasswordService usernamePasswordService) {
+        this.securityProperties = securityProperties;
+        this.usernamePasswordService = usernamePasswordService;
+    }
+
+    @Override
 	public boolean authenticate(String username, String password) {
 	    if(Boolean.FALSE.equals(this.securityProperties.getEnabled())) {
 	        return true;

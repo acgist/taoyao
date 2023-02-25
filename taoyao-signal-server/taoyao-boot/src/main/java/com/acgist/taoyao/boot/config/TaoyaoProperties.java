@@ -25,8 +25,6 @@ public class TaoyaoProperties {
 	private String version;
 	@Schema(title = "项目描述", description = "项目描述")
 	private String description;
-	@Schema(title = "子网掩码", description = "子网掩码")
-	private Integer ipMask;
 	@Schema(title = "超时时间", description = "超时时间")
 	private Long timeout;
 

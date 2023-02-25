@@ -1,8 +1,7 @@
 package com.acgist.taoyao.boot.configuration;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -13,16 +12,21 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * MVC自动配置
  * 
+ * TODO：ErrorPageRegistrar拦截400错误https://localhost:8888/?\%3E%3C
+ * 
  * @author acgist
  */
 @Slf4j
-@Configuration
+@AutoConfiguration
 public class WebMvcConfigurerAutoConfiguration implements WebMvcConfigurer {
 	
-	@Autowired
-	private ApplicationContext applicationContext;
+	private final ApplicationContext applicationContext;
 	
-	@Override
+	public WebMvcConfigurerAutoConfiguration(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+	
+    @Override
 	public void addInterceptors(InterceptorRegistry registry) {
 		this.applicationContext.getBeansOfType(InterceptorAdapter.class).entrySet().stream()
 		.sorted((a, z) -> a.getValue().compareTo(z.getValue()))
@@ -32,5 +36,10 @@ public class WebMvcConfigurerAutoConfiguration implements WebMvcConfigurer {
 			registry.addInterceptor(value).addPathPatterns(value.pathPattern());
 		});
 	}
-	
+    
+//  @Override
+//  public void addCorsMappings(CorsRegistry registry) {
+//      WebMvcConfigurer.super.addCorsMappings(registry);
+//  }
+    
 }

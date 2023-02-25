@@ -6,7 +6,9 @@ import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**
@@ -19,7 +21,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
     body = {
         """
         {
-            "clientId": "终端标识"
+            "clientId": "终端标识（可选）"
         }
         """,
         """
@@ -45,9 +47,9 @@ public class ClientStatusProtocol extends ProtocolClientAdapter {
 	}
 
 	@Override
-	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
-		// 如果没有指定终端标识默认查询自己
-		message.setBody(this.clientManager.status(this.get(body, Constant.CLIENT_ID, clientId)));
+	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+	    final String queryClientId = MapUtils.get(body, Constant.CLIENT_ID, clientId);
+		message.setBody(this.clientManager.status(queryClientId));
 		client.push(message);
 	}
 	

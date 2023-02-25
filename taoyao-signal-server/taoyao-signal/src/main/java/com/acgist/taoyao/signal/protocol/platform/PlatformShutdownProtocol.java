@@ -2,7 +2,6 @@ package com.acgist.taoyao.signal.protocol.platform;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ConfigurableApplicationContext;
 
 import com.acgist.taoyao.boot.annotation.Description;
@@ -10,6 +9,7 @@ import com.acgist.taoyao.boot.config.ScriptProperties;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.ScriptUtils;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ControlProtocol;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
@@ -21,18 +21,27 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-@Description(flow = "终端->信令服务+)终端")
+@Description(
+    flow = "终端->信令服务+)终端"
+)
 public class PlatformShutdownProtocol extends ProtocolClientAdapter implements ControlProtocol {
 
 	public static final String SIGNAL = "platform::shutdown";
 	
-	@Autowired
-	private ScriptProperties scriptProperties;
+	private final ScriptProperties scriptProperties;
 	
-	public PlatformShutdownProtocol() {
+	public PlatformShutdownProtocol(ScriptProperties scriptProperties) {
 		super("关闭平台信令", SIGNAL);
+		this.scriptProperties = scriptProperties;
 	}
 
+	@Override
+	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+		log.info("关闭平台：{}", clientId);
+		this.clientManager.broadcast(message);
+		this.shutdown();
+	}
+	
 	/**
 	 * 执行命令信令
 	 */
@@ -40,13 +49,6 @@ public class PlatformShutdownProtocol extends ProtocolClientAdapter implements C
 	    log.info("关闭平台");
 	    this.clientManager.broadcast(this.build());
 	    this.shutdown();
-	}
-
-	@Override
-	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
-		log.info("关闭平台：{}", clientId);
-		this.clientManager.broadcast(message);
-		this.shutdown();
 	}
 	
 	/**

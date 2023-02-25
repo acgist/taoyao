@@ -6,9 +6,9 @@ import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.media.MediaClient;
-import com.acgist.taoyao.signal.media.Room;
+import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
+import com.acgist.taoyao.signal.terminal.media.Room;
 
 /**
  * 路由RTP能力信令
@@ -41,13 +41,12 @@ public class MediaRouterRtpCapabilitiesProtocol extends ProtocolRoomAdapter {
 	}
 
 	@Override
-	public void execute(Room room, Map<?, ?> body, MediaClient mediaClient, Message message) {
-		// 忽略
-	}
-
-	@Override
-	public void execute(String clientId, Room room, Map<?, ?> body, Client client, Message message) {
-		client.push(room.request(message));
+	public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
+	    if(clientType == ClientType.WEB || clientType == ClientType.CAMERA) {
+	        client.push(room.request(message));
+	    } else {
+	        // 忽略其他情况
+	    }
 	}
 
 }

@@ -3,20 +3,17 @@
  */
 const protocol = {
   // 当前索引
-  index: 100000,
-  // 最小索引
-  minIndex: 100000,
+  index: 0,
   // 最大索引
-  maxIndex: 999999,
+  maxIndex: 1000,
   /**
    * @returns 索引
    */
   buildId() {
-    const self = this;
-    if (self.index++ >= self.maxIndex) {
-      self.index = self.minIndex;
+    if (++this.index >= this.maxIndex) {
+      this.index = 0;
     }
-    return Date.now() + "" + self.index;
+    return Date.now() * 1000 + this.index;
   },
   /**
    * @param {*} signal 信令标识

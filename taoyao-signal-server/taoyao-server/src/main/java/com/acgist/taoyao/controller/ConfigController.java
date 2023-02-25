@@ -1,6 +1,5 @@
 package com.acgist.taoyao.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,13 +23,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/config")
 public class ConfigController {
-
-	@Autowired
-	private MediaProperties mediaProperties;
-	@Autowired
-	private WebrtcProperties webrtcProperties;
+    
+	private final MediaProperties mediaProperties;
+	private final WebrtcProperties webrtcProperties;
 	
-	@Operation(summary = "媒体配置", description = "媒体配置")
+	public ConfigController(MediaProperties mediaProperties, WebrtcProperties webrtcProperties) {
+        this.mediaProperties = mediaProperties;
+        this.webrtcProperties = webrtcProperties;
+    }
+
+    @Operation(summary = "媒体配置", description = "媒体配置")
 	@GetMapping("/media")
 	@ApiResponse(content = @Content(schema = @Schema(implementation = MediaProperties.class)))
 	public Message media() {

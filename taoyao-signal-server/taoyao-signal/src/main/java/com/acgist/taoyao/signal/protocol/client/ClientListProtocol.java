@@ -2,10 +2,15 @@ package com.acgist.taoyao.signal.protocol.client;
 
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
+import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**
@@ -16,15 +21,26 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 @Protocol
 @Description(
     body = """
+        {
+            "clientType": "终端类型（可选）"
+        }
         [
             {
-                "clientId": "终端标识",
                 "ip": "终端IP",
+                "name": "终端名称",
+                "clientId": "终端标识",
+                "clientType": "终端类型",
+                "latitude": 纬度,
+                "longitude": 经度,
+                "humidity": 湿度,
+                "temperature": 温度,
                 "signal": 信号强度（0~100）,
                 "battery": 电池电量（0~100）,
+                "running": 是否正在运行（true|false）,
                 "charging": 是否正在充电（true|false）,
-                "mediaId": "媒体服务标识",
-                "lastHeartbeat": "最后心跳时间"
+                "recording": 是否正在录像（true|false）,
+                "status": {更多状态},
+                "config": {更多配置}
             },
             ...
         ]
@@ -40,8 +56,13 @@ public class ClientListProtocol extends ProtocolClientAdapter {
 	}
 
 	@Override
-	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
-		message.setBody(this.clientManager.status());
+	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+	    final String queryClientType = MapUtils.get(body, Constant.CLIENT_TYPE);
+	    if(StringUtils.isEmpty(queryClientType)) {
+	        message.setBody(this.clientManager.status());
+	    } else {
+	        message.setBody(this.clientManager.status(ClientType.of(queryClientType)));
+	    }
 		client.push(message);
 	}
 	

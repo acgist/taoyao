@@ -3,12 +3,11 @@ package com.acgist.taoyao.boot.configuration;
 import java.util.List;
 
 import org.springdoc.core.models.GroupedOpenApi;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 import com.acgist.taoyao.boot.config.TaoyaoProperties;
@@ -27,20 +26,20 @@ import io.swagger.v3.oas.models.security.SecurityScheme;
  * @author acgist
  */
 @Profile({ "dev", "sit" })
-@Configuration
+@AutoConfiguration
 @ConditionalOnClass(OpenAPI.class)
 public class SpringDocAutoConfiguration {
-	
-	/**
-	 * Basic认证
-	 */
-	private static final String BASIC = "Basic";
-
-	@Value("${server.port:8888}")
-	private Integer port;
-	
-	@Autowired
-	private TaoyaoProperties taoyaoProperties;
+    
+    @Value("${server.port:8888}")
+    private Integer port;
+    @Value("${taoyao.security.scheme:Basic}")
+    private String scheme;
+    
+    private final TaoyaoProperties taoyaoProperties;
+    
+	public SpringDocAutoConfiguration(TaoyaoProperties taoyaoProperties) {
+        this.taoyaoProperties = taoyaoProperties;
+    }
 	
 	@Bean
 	public GroupedOpenApi signalApi() {
@@ -106,7 +105,7 @@ public class SpringDocAutoConfiguration {
 	private List<SecurityRequirement> buildSecurity() {
 		return List.of(
 			new SecurityRequirement()
-			.addList(BASIC)
+			.addList(this.scheme)
 		);
 	}
 	
@@ -115,7 +114,7 @@ public class SpringDocAutoConfiguration {
 	 */
 	private Components buildComponents() {
 		return new Components()
-			.addSecuritySchemes(BASIC, this.buildSecurityScheme());
+			.addSecuritySchemes(this.scheme, this.buildSecurityScheme());
 	}
 	
 	/**
@@ -123,8 +122,8 @@ public class SpringDocAutoConfiguration {
 	 */
 	private SecurityScheme buildSecurityScheme() {
 		return new SecurityScheme()
-			.name(BASIC)
-			.scheme(BASIC)
+			.name(this.scheme)
+			.scheme(this.scheme)
 			.in(SecurityScheme.In.HEADER)
 			.type(SecurityScheme.Type.HTTP);
 	}

@@ -16,7 +16,7 @@
               <el-option
                 v-for="value in rooms"
                 :key="value.roomId"
-                :label="value.name"
+                :label="value.name || value.roomId"
                 :value="value.roomId"
               />
             </el-select>
@@ -26,10 +26,10 @@
           <el-form-item label="媒体服务">
             <el-select v-model="room.mediaId" placeholder="媒体服务标识">
               <el-option
-                v-for="value in taoyao.mediaServerList"
-                :key="value.mediaId"
-                :label="value.mediaId"
-                :value="value.mediaId"
+                v-for="value in medias"
+                :key="value.clientId"
+                :label="value.name || value.clientId"
+                :value="value.clientId"
               />
             </el-select>
           </el-form-item>
@@ -62,6 +62,7 @@ export default {
     return {
       room: {},
       rooms: [],
+      medias: [],
       activeName: "enter",
       localVisible: false,
     };
@@ -77,28 +78,26 @@ export default {
   },
   methods: {
     async init() {
-      const response = await this.taoyao.request(
+      const roomResponse = await this.taoyao.request(
         protocol.buildMessage("room::list")
       );
-      this.rooms = response.body;
+      this.rooms = roomResponse.body;
+      const mediaResponse = await this.taoyao.request(
+        protocol.buildMessage("client::list", {clientType:"MEDIA"})
+      );
+      this.medias = mediaResponse.body;
     },
     async enter() {
-      await this.taoyao.request(
-        protocol.buildMessage("room::enter", {
-          ...this.room,
-        })
-      );
+      await this.taoyao.enter(this.room.roomId);
       this.localVisible = false;
-      this.$emit("buildMedia", this.room.roomId);
+      this.$emit("produceMedia");
     },
     async create() {
-      const response = await this.taoyao.request(
-        protocol.buildMessage("room::create", {
-          ...this.room,
-        })
-      );
+      const room = await this.taoyao.create(this.room);
+      this.room.roomId = room.roomId;
+      await this.enter(room.roomId);
       this.localVisible = false;
-      this.$emit("buildMedia", response.body.roomId);
+      this.$emit("produceMedia");
     },
   },
 };

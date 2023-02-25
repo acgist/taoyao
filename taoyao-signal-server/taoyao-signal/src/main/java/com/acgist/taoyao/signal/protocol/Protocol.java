@@ -4,7 +4,6 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
-import com.acgist.taoyao.signal.media.MediaClient;
 
 /**
  * 信令
@@ -13,6 +12,7 @@ import com.acgist.taoyao.signal.media.MediaClient;
  * media::    媒体信令
  * client::   终端信令
  * system::   系统信令
+ * control::  控制信令
  * platform:: 平台信令
  * 
  * @author acgist
@@ -40,14 +40,6 @@ public interface Protocol {
 		return true;
 	}
 	
-	/**
-	 * 处理媒体服务信令
-	 * 
-	 * @param mediaClient 媒体服务终端
-	 * @param message 信令消息
-	 */
-	void execute(MediaClient mediaClient, Message message);
-
 	/**
 	 * 处理终端信令
 	 * 
@@ -110,6 +102,6 @@ public interface Protocol {
 	 * 
 	 * @return 信令消息
 	 */
-	Message build(String id, MessageCode code, String message, Object body);
+	Message build(Long id, MessageCode code, String message, Object body);
 	
 }

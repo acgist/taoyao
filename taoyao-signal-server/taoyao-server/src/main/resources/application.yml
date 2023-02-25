@@ -19,6 +19,8 @@ server:
 # servlet:
 #   context-path: /taoyao
 spring:
+# main:
+#   lazy-initialization: true
   profiles:
     active: dev
   application:
@@ -51,7 +53,6 @@ taoyao:
   name: 桃夭信令服务
   version: 1.0.0
   description: 桃夭WebRTC信令服务
-  ip-mask: 24
   timeout: 5000
   id:
     index: 0
@@ -99,24 +100,6 @@ taoyao:
       bitrate: 800
       frame-rate: 16
       resolution: 720*480
-    # 媒体服务配置
-    media-server-list:
-      - media-id: media-local-a
-        enabled: true
-        rewrite-ip: true
-        host: 127.0.0.1
-        port: 9443
-        schema: wss
-        username: taoyao
-        password: taoyao
-      - media-id: media-local-z
-        enabled: true
-        rewrite-ip: true
-        host: 127.0.0.1
-        port: 9443
-        schema: wss
-        username: taoyao
-        password: taoyao
   # Socket信令
   socket:
     enabled: true
@@ -151,18 +134,31 @@ taoyao:
   security:
     enabled: true
     realm: taoyao
-    permit: /,/error,/index.html,/favicon.ico
+    permit:
+      - /
+      - /error
+      - /index.html
+      - /favicon.ico
     username: taoyao
     password: taoyao
   # 定时任务
   scheduled:
     media: 0 * * * * ?
     client: 0 * * * * ?
+  # 地址重写
+  ip-rewrite:
+    enabled: true
+    prefix: 24
+    rule:
+      - prefix: 24
+        network: 192.168.1.0
+        target-host:
+      - prefix: 24
+        network: 192.168.8.0
+        target-host:
   # 脚本配置
   script:
     enabled: true
-    media-reboot: pm2 restart taoyao-client-media
-    media-shutdown: pm2 stop taoyao-client-media
     system-reboot: reboot
     system-shutdown: shutdown now
     platform-reboot: systemctl restart taoyao-signal-server

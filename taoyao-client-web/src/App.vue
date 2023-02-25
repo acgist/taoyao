@@ -1,6 +1,12 @@
 <!-- 桃夭 -->
 <template>
-  <SettingRoom :taoyao="taoyao" :roomVisible="roomVisible" @buildMedia="buildMedia"></SettingRoom>
+  <div class="menu">
+    <el-button type="primary" @click="signalVisible = true">连接信令</el-button>
+    <el-button type="primary" @click="roomVisible = true">选择房间</el-button>
+    <el-button type="danger">关闭房间</el-button>
+    <el-button>退出房间</el-button>
+  </div>
+  <SettingRoom :taoyao="taoyao" :roomVisible="roomVisible" @produceMedia="produceMedia"></SettingRoom>
   <SettingSignal :signalVisible="signalVisible" @buildSignal="buildSignal"></SettingSignal>
 </template>
 
@@ -15,11 +21,14 @@ export default {
     return {
       taoyao: {},
       roomVisible: false,
-      signalVisible: true,
+      signalVisible: false,
     };
   },
   mounted() {
-    console.info("桃夭终端开始启动");
+    console.info(`
+      中庭地白树栖鸦，冷露无声湿桂花。
+      今夜月明人尽望，不知秋思落谁家。
+    `);
   },
   methods: {
     buildSignal(config) {
@@ -28,19 +37,24 @@ export default {
       self.signalVisible = false;
       self.taoyao.buildSignal(self.callback);
     },
-    buildMedia(roomId) {
+    produceMedia() {
       let self = this;
-      self.taoyao.buildMedia(roomId);
+      self.taoyao.produceMedia();
     },
     /**
      * 信令回调
      *
      * @param {*} data 消息
+     * @param {*} error 异常
      *
      * @return 是否继续执行
      */
-    callback(data) {
+    callback(data, error) {
       let self = this;
+      if(data.header.signal === "platform::error") {
+        console.error("发生异常：", data, error);
+        return false;
+      }
       switch (data.header.signal) {
         case "client::config":
           self.roomVisible = true;

@@ -1,7 +1,5 @@
 package com.acgist.taoyao.boot.config;
 
-import java.util.List;
-
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -33,7 +31,5 @@ public class MediaProperties {
 	private MediaVideoProperties hdVideo;
 	@Schema(title = "标清视频配置", description = "标清视频配置")
 	private MediaVideoProperties sdVideo;
-	@Schema(title = "媒体服务配置", description = "媒体服务配置")
-	private List<MediaServerProperties> mediaServerList;
 
 }

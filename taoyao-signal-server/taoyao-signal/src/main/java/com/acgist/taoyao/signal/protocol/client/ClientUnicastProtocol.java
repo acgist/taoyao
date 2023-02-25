@@ -9,6 +9,7 @@ import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
     body = """
         {
             "to": "接收终端标识",
-            // 主体信息
+            ...自定义的主体
         }
         """,
     flow = "终端->信令服务->终端"
@@ -38,7 +39,7 @@ public class ClientUnicastProtocol extends ProtocolClientAdapter {
 	}
 
 	@Override
-	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
+	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
 		final String to = (String) body.remove(Constant.TO);
 		if(StringUtils.isNotEmpty(to)) {
 			this.clientManager.unicast(to, message);

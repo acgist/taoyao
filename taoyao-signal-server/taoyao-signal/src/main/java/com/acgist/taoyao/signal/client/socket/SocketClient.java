@@ -9,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.signal.client.ClientAdapter;
 
 import lombok.Getter;
@@ -26,10 +27,6 @@ import lombok.extern.slf4j.Slf4j;
 public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
 
 	/**
-	 * 超时时间
-	 */
-	private final long timeout;
-	/**
 	 * 换行符号
 	 */
 	private final byte[] line;
@@ -39,15 +36,10 @@ public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
 	private final int lineLength;
 	
 	public SocketClient(Long timeout, AsynchronousSocketChannel instance) {
-		super(instance);
-		this.timeout = timeout;
+		super(timeout, instance);
+		this.ip = this.clientIp(instance);
 		this.line = Constant.LINE.getBytes();
 		this.lineLength = this.line.length;
-		try {
-			this.ip = ((InetSocketAddress) instance.getRemoteAddress()).getHostString();
-		} catch (IOException e) {
-			log.error("Socket终端获取远程IP异常", e);
-		}
 	}
 
 	@Override
@@ -69,6 +61,19 @@ public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
 			    log.error("Socket终端发送消息异常：{}", message, e);
 			}
 		}
+	}
+	
+	/**
+	 * @param instance 终端实例
+	 * 
+	 * @return 终端IP
+	 */
+	private String clientIp(AsynchronousSocketChannel instance) {
+	    try {
+            return ((InetSocketAddress) instance.getRemoteAddress()).getHostString();
+        } catch (IOException e) {
+            throw MessageCodeException.of(e, "无效终端（IP）：" + instance);
+        }
 	}
 	
 }

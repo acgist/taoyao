@@ -1,9 +1,8 @@
 package com.acgist.taoyao.signal.protocol.client;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
@@ -11,12 +10,11 @@ import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.config.MediaProperties;
 import com.acgist.taoyao.boot.config.WebrtcProperties;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.boot.service.IpService;
 import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.boot.utils.DateUtils.DateTimeStyle;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
-import com.acgist.taoyao.signal.wrapper.WebrtcPropertiesWrapper;
 
 /**
  * 终端配置信令
@@ -27,8 +25,8 @@ import com.acgist.taoyao.signal.wrapper.WebrtcPropertiesWrapper;
 @Description(
     body = """
     {
-        "media": "媒体配置",
-        "webrtc": "WebRTC配置",
+        "media": "媒体配置（可选）",
+        "webrtc": "WebRTC配置（可选）",
         "datetime": "日期时间（yyyyMMddHHmmss）"
     }
     """,
@@ -38,36 +36,38 @@ public class ClientConfigProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "client::config";
 	
-	@Autowired
-	private IpService ipService;
-	@Autowired
-	private MediaProperties mediaProperties;
-	@Autowired
-	private WebrtcProperties webrtcProperties;
+	private final MediaProperties mediaProperties;
+	private final WebrtcProperties webrtcProperties;
 	
-	public ClientConfigProtocol() {
+	public ClientConfigProtocol(MediaProperties mediaProperties, WebrtcProperties webrtcProperties) {
 		super("终端配置信令", SIGNAL);
+		this.mediaProperties = mediaProperties;
+		this.webrtcProperties = webrtcProperties;
 	}
 
 	@Override
-	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
-	    client.push(this.build(client));
+	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+	    client.push(this.build(clientType));
 	}
 	
 	/**
-	 * @param client 终端
+	 * @param clientType 终端类型
 	 * 
-	 * @return 信令消息
+	 * @return 消息
 	 */
-	public Message build(Client client) {
-	    final String clientIp = client.ip();
-		final Message message = this.build();
-		final WebrtcPropertiesWrapper webrtcPropertiesWrapper = new WebrtcPropertiesWrapper(clientIp, this.ipService, this.webrtcProperties);
-		message.setBody(Map.of(
-			Constant.MEDIA, this.mediaProperties,
-			Constant.WEBRTC, webrtcPropertiesWrapper,
-			Constant.DATETIME, DateUtils.format(LocalDateTime.now(), DateTimeStyle.YYYYMMDDHH24MMSS)
-		));
+	public Message build(ClientType clientType) {
+		final Message message = super.build();
+		final Map<String, Object> config = new HashMap<>();
+		// 日期时间
+		config.put(Constant.DATETIME, DateUtils.format(LocalDateTime.now(), DateTimeStyle.YYYYMMDDHH24MMSS));
+		// Web、摄像头：媒体配置
+		if(clientType == ClientType.WEB || clientType == ClientType.CAMERA) {
+		    config.put(Constant.MEDIA, this.mediaProperties);
+		    config.put(Constant.WEBRTC, this.webrtcProperties);
+		} else {
+		    this.logNoAdapter(clientType);
+		}
+		message.setBody(config);
 		return message;
 	}
 	

@@ -3,7 +3,7 @@ package com.acgist.taoyao.signal.event;
 import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.media.Room;
+import com.acgist.taoyao.signal.terminal.media.Room;
 
 import lombok.Getter;
 
@@ -22,12 +22,16 @@ public class RoomEventAdapter extends ApplicationEventAdapter {
      */
     private final Room room;
     
-    public RoomEventAdapter(Message message, Room room) {
-        this(Map.of(), message, room);
+    public RoomEventAdapter(Room room) {
+        this(room, null, null);
     }
     
-    public RoomEventAdapter(Map<?, ?> body, Message message, Room room) {
-        super(body, message, room);
+    public RoomEventAdapter(Room room, Message message) {
+        this(room, message, null);
+    }
+    
+    public RoomEventAdapter(Room room, Message message, Map<String, Object> body) {
+        super(room, message, body);
         this.room = room;
     }
 

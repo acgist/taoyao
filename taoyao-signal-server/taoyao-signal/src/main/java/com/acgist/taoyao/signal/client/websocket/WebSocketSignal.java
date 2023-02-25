@@ -2,6 +2,7 @@ package com.acgist.taoyao.signal.client.websocket;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
 import com.acgist.taoyao.signal.protocol.platform.PlatformErrorProtocol;
@@ -25,12 +26,13 @@ public class WebSocketSignal {
 	
 	private static ClientManager clientManager;
 	private static ProtocolManager protocolManager;
+	private static TaoyaoProperties taoyaoProperties;
 	private static PlatformErrorProtocol platformErrorProtocol;
 	
 	@OnOpen
 	public void open(Session session) {
 		log.debug("WebSocket信令终端连接成功：{}", session);
-		WebSocketSignal.clientManager.open(new WebSocketClient(session));
+		WebSocketSignal.clientManager.open(new WebSocketClient(WebSocketSignal.taoyaoProperties.getTimeout(), session));
 	}
 	
 	@OnMessage
@@ -39,7 +41,7 @@ public class WebSocketSignal {
 		try {
 			WebSocketSignal.protocolManager.execute(message.strip(), session);
 		} catch (Exception e) {
-			log.error("处理WebSocket信令消息异常：{}", message, e);
+			log.error("处理WebSocket信令消息异常：{}-{}", WebSocketSignal.clientManager.clients(session), message, e);
 			WebSocketSignal.clientManager.push(session, WebSocketSignal.platformErrorProtocol.build(e));
 		}
 	}
@@ -64,6 +66,11 @@ public class WebSocketSignal {
 	@Autowired
 	public void setProtocolManager(ProtocolManager protocolManager) {
 		WebSocketSignal.protocolManager = protocolManager;
+	}
+	
+	@Autowired
+	public void setTaoyaoProperties(TaoyaoProperties taoyaoProperties) {
+	    WebSocketSignal.taoyaoProperties = taoyaoProperties;
 	}
 	
 	@Autowired

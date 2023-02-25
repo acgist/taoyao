@@ -8,16 +8,21 @@ import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
+import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.media.MediaClient;
-import com.acgist.taoyao.signal.media.Room;
+import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
+import com.acgist.taoyao.signal.terminal.media.ClientWrapper;
+import com.acgist.taoyao.signal.terminal.media.Room;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 进入房间信令
  * 
  * @author acgist
  */
+@Slf4j
 @Protocol
 @Description(
     body = {
@@ -44,31 +49,25 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
 	}
 	
 	@Override
-    public void execute(Room room, Map<?, ?> body, MediaClient mediaClient, Message message) {
-    }
-
-	@Override
-	public void execute(String clientId, Room room, Map<?, ?> body, Client client, Message message) {
-        final String password = this.get(body, Constant.PASSWORD);
+	public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
+        final String password = MapUtils.get(body, Constant.PASSWORD);
+        final Object rtpCapabilities = MapUtils.get(body, Constant.RTP_CAPABILITIES);
+        final Object sctpCapabilities = MapUtils.get(body, Constant.SCTP_CAPABILITIES);
         final String roomPassowrd = room.getPassword();
         if(roomPassowrd != null && !roomPassowrd.equals(password)) {
             throw MessageCodeException.of(MessageCode.CODE_3401, "密码错误");
         }
-        final MediaClient mediaClient = room.getMediaClient();
-        if(client.mediaClient() == null) {
-            client.mediaClient(mediaClient);
-        } else if(client.mediaClient() == mediaClient) {
-        } else {
-            throw MessageCodeException.of("不在相同媒体服务：" + mediaClient.mediaId());
-        }
         // 进入房间
-        room.enter(client);
+        final ClientWrapper clientWrapper = room.enter(client);
+        clientWrapper.setRtpCapabilities(rtpCapabilities);
+        clientWrapper.setSctpCapabilities(sctpCapabilities);
         // 发送通知
         message.setBody(Map.of(
             Constant.ROOM_ID, room.getRoomId(),
             Constant.CLIENT_ID, clientId
         ));
         room.broadcast(message);
+        log.info("进入房间：{} - {}", clientId, room.getRoomId());
 	}
 
 }

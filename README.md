@@ -25,8 +25,6 @@
 |taoyao-client-harmony|鸿蒙终端|鸿蒙智能终端接入|
 |taoyao-signal-server|信令服务|终端信令控制|
 
-> 注意：只有Web实现完成信令控制
-
 ## 模式
 
 监控模式、直播模式、会议模式、屏幕共享模式

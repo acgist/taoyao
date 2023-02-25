@@ -1,5 +1,4 @@
 com.acgist.taoyao.signal.configuration.ScriptAutoConfiguration
 com.acgist.taoyao.signal.configuration.SignalAutoConfiguration
-com.acgist.taoyao.signal.configuration.MediaClientAutoConfiguration
 com.acgist.taoyao.signal.configuration.SocketSignalAutoConfiguration
 com.acgist.taoyao.signal.configuration.WebSocketSignalAutoConfiguration

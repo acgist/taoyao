@@ -1,8 +1,6 @@
 package com.acgist.taoyao.signal.client;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.media.MediaClient;
-import com.acgist.taoyao.signal.media.Peer;
 
 /**
  * 终端
@@ -22,9 +20,9 @@ public interface Client extends AutoCloseable {
 	String clientId();
 	
 	/**
-	 * @return Peer
+	 * @return 终端类型
 	 */
-	Peer peer();
+	ClientType clientType();
 	
 	/**
 	 * @return 终端状态
@@ -37,6 +35,25 @@ public interface Client extends AutoCloseable {
 	 * @param message 消息
 	 */
 	void push(Message message);
+	
+    /**
+     * 请求消息
+     * 
+     * @param request 消息
+     * 
+     * @return 响应
+     */
+    Message request(Message request);
+    
+    /**
+     * 响应消息
+     * 
+     * @param id 消息标识
+     * @param message 消息
+     * 
+     * @return 是否响应消息
+     */
+    boolean response(Long id, Message message);
 	
 	/**
 	 * @param timeout 超时时间
@@ -61,15 +78,5 @@ public interface Client extends AutoCloseable {
 	 * @return 是否授权
 	 */
 	boolean authorized();
-	
-	/**
-	 * @return 媒体服务终端
-	 */
-	MediaClient mediaClient();
-	
-	/**
-	 * @param mediaClient 媒体服务终端
-	 */
-	void mediaClient(MediaClient mediaClient);
 	
 }

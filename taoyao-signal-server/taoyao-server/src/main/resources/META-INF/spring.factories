@@ -1,1 +1,1 @@
-org.springframework.context.ApplicationListener=com.acgist.taoyao.listener.HTTPClientListener
+org.springframework.context.ApplicationListener=com.acgist.taoyao.listener.QnjrcmzListener

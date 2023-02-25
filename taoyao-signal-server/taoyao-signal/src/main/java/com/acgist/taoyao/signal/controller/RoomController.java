@@ -2,7 +2,6 @@ package com.acgist.taoyao.signal.controller;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -10,9 +9,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientStatus;
-import com.acgist.taoyao.signal.media.Room;
-import com.acgist.taoyao.signal.media.RoomManager;
-import com.acgist.taoyao.signal.media.RoomStatus;
+import com.acgist.taoyao.signal.terminal.media.Room;
+import com.acgist.taoyao.signal.terminal.media.RoomManager;
+import com.acgist.taoyao.signal.terminal.media.RoomStatus;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -30,10 +29,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/room")
 public class RoomController {
 	
-	@Autowired
-	private RoomManager roomManager;
+	private final RoomManager roomManager;
 	
-	@Operation(summary = "房间列表", description = "房间列表")
+	public RoomController(RoomManager roomManager) {
+        this.roomManager = roomManager;
+    }
+
+    @Operation(summary = "房间列表", description = "房间列表")
 	@GetMapping("/list")
 	@ApiResponse(content = @Content(schema = @Schema(implementation = RoomStatus.class)))
 	public Message list() {

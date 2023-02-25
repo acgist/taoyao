@@ -1,23 +1,25 @@
 package com.acgist.taoyao.boot.service.impl;
 
 import java.time.LocalDateTime;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import java.util.UUID;
 
 import com.acgist.taoyao.boot.config.IdProperties;
 import com.acgist.taoyao.boot.service.IdService;
 
 public class IdServiceImpl implements IdService {
 	
+	private final IdProperties idProperties;
+	
+	public IdServiceImpl(IdProperties idProperties) {
+        this.idProperties = idProperties;
+    }
+
 	/**
 	 * 当前索引
 	 */
 	private int index;
-
-	@Autowired
-	private IdProperties idProperties;
 	
-	@Override
+    @Override
 	public long buildId() {
 		synchronized (this) {
 			if (++this.index > this.idProperties.getMaxIndex()) {
@@ -26,21 +28,18 @@ public class IdServiceImpl implements IdService {
 		}
 		final LocalDateTime time = LocalDateTime.now();
 		return
-			100000000000000000L * (time.getYear() % 100) +
-			1000000000000000L * time.getMonthValue() +
-			10000000000000L * time.getDayOfMonth() +
-			100000000000L * time.getHour() +
-			1000000000L * time.getMinute() +
-			10000000L * time.getSecond() +
-			// 机器序号一位
+			100000000000000L * time.getDayOfMonth() +
+			1000000000000L * time.getHour() +
+			10000000000L * time.getMinute() +
+			100000000L * time.getSecond() +
 			1000000L * this.idProperties.getIndex() +
 			// 每秒并发数量
 			this.index;
 	}
-	
-	@Override
-	public String buildIdToString() {
-		return String.valueOf(this.buildId());
-	}
+    
+    @Override
+    public String buildUuid() {
+        return UUID.randomUUID().toString();
+    }
 	
 }

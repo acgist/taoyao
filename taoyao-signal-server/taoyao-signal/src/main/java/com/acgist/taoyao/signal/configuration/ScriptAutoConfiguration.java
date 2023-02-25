@@ -1,12 +1,11 @@
 package com.acgist.taoyao.signal.configuration;
 
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 
-import com.acgist.taoyao.signal.protocol.media.MediaRebootProtocol;
-import com.acgist.taoyao.signal.protocol.media.MediaShutdownProtocol;
+import com.acgist.taoyao.boot.config.ScriptProperties;
 import com.acgist.taoyao.signal.protocol.platform.PlatformRebootProtocol;
 import com.acgist.taoyao.signal.protocol.platform.PlatformScriptProtocol;
 import com.acgist.taoyao.signal.protocol.platform.PlatformShutdownProtocol;
@@ -18,50 +17,38 @@ import com.acgist.taoyao.signal.protocol.system.SystemShutdownProtocol;
  * 
  * @author acgist
  */
-@Configuration
+@AutoConfiguration
 @ConditionalOnProperty(prefix = "taoyao.script", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ScriptAutoConfiguration {
 
 	@Bean
 	@ConditionalOnMissingBean
-	public MediaRebootProtocol mediaRebootProtocol() {
-		return new MediaRebootProtocol();
+	public SystemRebootProtocol systemRebootProtocol(ScriptProperties scriptProperties) {
+		return new SystemRebootProtocol(scriptProperties);
 	}
 	
 	@Bean
 	@ConditionalOnMissingBean
-	public MediaShutdownProtocol mediaShutdownProtocol() {
-		return new MediaShutdownProtocol();
+	public SystemShutdownProtocol systemShutdownProtocol(ScriptProperties scriptProperties) {
+		return new SystemShutdownProtocol(scriptProperties);
 	}
 	
 	@Bean
 	@ConditionalOnMissingBean
-	public SystemRebootProtocol systemRebootProtocol() {
-		return new SystemRebootProtocol();
+	public PlatformRebootProtocol platformRebootProtocol(ScriptProperties scriptProperties) {
+		return new PlatformRebootProtocol(scriptProperties);
 	}
 	
 	@Bean
 	@ConditionalOnMissingBean
-	public SystemShutdownProtocol systemShutdownProtocol() {
-		return new SystemShutdownProtocol();
+	public PlatformShutdownProtocol platformShutdownProtocol(ScriptProperties scriptProperties) {
+		return new PlatformShutdownProtocol(scriptProperties);
 	}
 	
 	@Bean
 	@ConditionalOnMissingBean
 	public PlatformScriptProtocol platformScriptProtocol() {
-		return new PlatformScriptProtocol();
-	}
-	
-	@Bean
-	@ConditionalOnMissingBean
-	public PlatformRebootProtocol platformRebootProtocol() {
-		return new PlatformRebootProtocol();
-	}
-	
-	@Bean
-	@ConditionalOnMissingBean
-	public PlatformShutdownProtocol platformShutdownProtocol() {
-		return new PlatformShutdownProtocol();
+	    return new PlatformScriptProtocol();
 	}
 	
 }

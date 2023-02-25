@@ -1,7 +1,14 @@
 package com.acgist.taoyao.signal.client;
 
-import com.acgist.taoyao.signal.media.MediaClient;
-import com.acgist.taoyao.signal.media.Peer;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.acgist.taoyao.boot.model.Header;
+import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.model.MessageCode;
+import com.acgist.taoyao.boot.model.MessageCodeException;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 终端适配器
@@ -10,6 +17,7 @@ import com.acgist.taoyao.signal.media.Peer;
  * 
  * @param <T> 实例泛型
  */
+@Slf4j
 public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 
 	/**
@@ -20,6 +28,10 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	 * 进入时间
 	 */
 	protected final long time;
+	/**
+     * 超时时间
+     */
+    protected final long timeout;
 	/**
 	 * 终端标识
 	 */
@@ -33,24 +45,21 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	 */
 	protected boolean authorized;
 	/**
-	 * Peer
-	 */
-	protected Peer peer;
-	/**
 	 * 终端状态
 	 */
-	protected ClientStatus status;
+	protected final ClientStatus status;
 	/**
-	 * 媒体服务终端
-	 */
-	protected MediaClient mediaClient;
+     * 同步消息
+     */
+    protected final Map<Long, Message> requestMessage;
 	
-	protected ClientAdapter(T instance) {
+	protected ClientAdapter(long timeout, T instance) {
 		this.time = System.currentTimeMillis();
+		this.timeout = timeout;
 		this.instance = instance;
 		this.authorized = false;
-		this.peer = new Peer(this);
 		this.status = new ClientStatus();
+		this.requestMessage = new ConcurrentHashMap<>();
 	}
 	
 	@Override
@@ -64,13 +73,50 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	}
 	
 	@Override
-	public Peer peer() {
-	    return this.peer;
+	public ClientType clientType() {
+	    return this.status.getClientType();
 	}
 	
 	@Override
 	public ClientStatus status() {
 		return this.status;
+	}
+	
+	@Override
+    public Message request(Message request) {
+        final Header header = request.getHeader();
+        final Long id = header.getId();
+        this.requestMessage.put(id, request);
+        synchronized (request) {
+            this.push(request);
+            try {
+                request.wait(this.timeout);
+            } catch (InterruptedException e) {
+                log.error("媒体服务等待响应异常：{}", request, e);
+            }
+        }
+        final Message response = this.requestMessage.remove(id);
+        if (response == null || request.equals(response)) {
+            log.warn("媒体服务没有响应：{}", request);
+            throw MessageCodeException.of(MessageCode.CODE_2001, "媒体服务没有响应");
+        }
+        return response;
+    }
+	
+	@Override
+	public boolean response(Long id, Message message) {
+        final Message request = this.requestMessage.get(id);
+        if (request != null) {
+            // 同步处理：重新设置响应消息
+            this.requestMessage.put(id, message);
+            // 唤醒等待线程
+            synchronized (request) {
+                request.notifyAll();
+            }
+            return true;
+        } else {
+            return false;
+        }
 	}
 	
 	@Override
@@ -92,17 +138,6 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
 	@Override
 	public boolean authorized() {
 		return this.authorized;
-	}
-	
-	@Override
-	public MediaClient mediaClient() {
-		return this.mediaClient;
-	}
-	
-	@Override
-	public void mediaClient(MediaClient mediaClient) {
-		this.mediaClient = mediaClient;
-		this.status.setMediaId(mediaClient.mediaId());
 	}
 	
 	@Override

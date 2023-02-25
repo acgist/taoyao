@@ -3,7 +3,6 @@ package com.acgist.taoyao.signal.controller;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -28,9 +27,12 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/protocol")
 public class ProtocolController {
 
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
     
+    public ProtocolController(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
     @Operation(summary = "信令列表", description = "信令列表Markdown")
     @GetMapping("/list")
     public String list() {
@@ -52,18 +54,11 @@ public class ProtocolController {
             }
             ```
             
-            ### 数据流向
+            ### 符号解释
             
             ```
-            请求：终端->信令服务 || 信令服务->媒体服务
-            响应：信令服务->终端 || 服务媒体->信令服务
-            广播：信令服务-)终端 || 信令服务+)终端
-            ```
-            
-            ### 流向解释
-            
-            ```
-            -[消息类型]> 请求（单播）：定向请求（单播）信令
+            -[消息类型]> 异步请求 | 定向单播
+            =[消息类型]> 同步请求
             -[消息类型]) 全员广播：对所有的终端广播信令（排除自己）
             +[消息类型]) 全员广播：对所有的终端广播信令（包含自己）
             ```

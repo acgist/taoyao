@@ -10,9 +10,8 @@ import org.slf4j.ILoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.ConversionNotSupportedException;
 import org.springframework.beans.TypeMismatchException;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.task.TaskExecutionAutoConfiguration;
 import org.springframework.boot.autoconfigure.task.TaskSchedulingAutoConfiguration;
@@ -21,7 +20,6 @@ import org.springframework.boot.task.TaskExecutorBuilder;
 import org.springframework.boot.task.TaskSchedulerBuilder;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
@@ -46,6 +44,7 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.acgist.taoyao.boot.config.IdProperties;
+import com.acgist.taoyao.boot.config.IpRewriteProperties;
 import com.acgist.taoyao.boot.config.MediaProperties;
 import com.acgist.taoyao.boot.config.ScriptProperties;
 import com.acgist.taoyao.boot.config.SecurityProperties;
@@ -57,18 +56,19 @@ import com.acgist.taoyao.boot.controller.TaoyaoErrorController;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.runner.OrderedCommandLineRunner;
 import com.acgist.taoyao.boot.service.IdService;
-import com.acgist.taoyao.boot.service.IpService;
 import com.acgist.taoyao.boot.service.impl.IdServiceImpl;
-import com.acgist.taoyao.boot.service.impl.IpServiceImpl;
 import com.acgist.taoyao.boot.utils.ErrorUtils;
 import com.acgist.taoyao.boot.utils.FileUtils;
 import com.acgist.taoyao.boot.utils.HTTPUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
+import com.acgist.taoyao.boot.utils.NetUtils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ch.qos.logback.classic.LoggerContext;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
+import jakarta.validation.ConstraintViolationException;
+import jakarta.validation.ValidationException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -80,8 +80,8 @@ import lombok.extern.slf4j.Slf4j;
 @Order(Ordered.HIGHEST_PRECEDENCE)
 @Import({ TaskExecutionAutoConfiguration.class, TaskSchedulingAutoConfiguration.class })
 @EnableAsync
-@Configuration
 @EnableScheduling
+@AutoConfiguration
 @EnableAspectJAutoProxy(exposeProxy = false)
 @EnableConfigurationProperties({
     IdProperties.class,
@@ -90,26 +90,23 @@ import lombok.extern.slf4j.Slf4j;
     SocketProperties.class,
     TaoyaoProperties.class,
     WebrtcProperties.class,
-    SecurityProperties.class
+    SecurityProperties.class,
+    IpRewriteProperties.class
 })
 public class BootAutoConfiguration {
-
-    @Value("${spring.application.name:taoyao}")
-    private String name;
     
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final TaoyaoProperties taoyaoProperties;
+    private final ApplicationContext applicationContext;
     
-    @Bean
-    @ConditionalOnMissingBean
-    public IdService idService() {
-        return new IdServiceImpl();
+    public BootAutoConfiguration(TaoyaoProperties taoyaoProperties, ApplicationContext applicationContext) {
+        this.taoyaoProperties = taoyaoProperties;
+        this.applicationContext = applicationContext;
     }
     
     @Bean
     @ConditionalOnMissingBean
-    public IpService ipService() {
-        return new IpServiceImpl();
+    public IdService idService(IdProperties idProperties) {
+        return new IdServiceImpl(idProperties);
     }
     
     @Bean
@@ -146,21 +143,17 @@ public class BootAutoConfiguration {
     }
     
     @Bean
-    @Autowired
     public CommandLineRunner successCommandLineRunner(
         TaskExecutor taskExecutor,
-        TaoyaoProperties taoyaoProperties
+        TaoyaoProperties taoyaoProperties,
+        IpRewriteProperties ipRewriteProperties
     ) {
         return new OrderedCommandLineRunner() {
             @Override
-            public int getOrder() {
-                return Integer.MAX_VALUE;
-            }
-            @Override
             public void run(String ... args) throws Exception {
+                NetUtils.init(ipRewriteProperties);
                 HTTPUtils.init(taoyaoProperties.getTimeout(), taskExecutor);
                 BootAutoConfiguration.this.registerException();
-                log.info("项目启动成功：{}", BootAutoConfiguration.this.name);
             }
         };
     }
@@ -190,10 +183,10 @@ public class BootAutoConfiguration {
         log.info("临时目录：{}", System.getProperty("java.io.tmpdir"));
         log.info("文件编码：{}", System.getProperty("file.encoding"));
         this.applicationContext.getBeansOfType(TaskExecutor.class).forEach((k, v) -> {
-            log.info("系统任务线程池：{}-{}", k, v);
+            log.info("系统任务线程池：{} - {}", k, v);
         });
         this.applicationContext.getBeansOfType(TaskScheduler.class).forEach((k, v) -> {
-            log.info("系统定时任务线程池：{}-{}", k, v);
+            log.info("系统定时任务线程池：{} - {}", k, v);
         });
     }
     
@@ -202,9 +195,11 @@ public class BootAutoConfiguration {
      */
     public void registerException() {
         ErrorUtils.register(MessageCode.CODE_3400, BindException.class);
+        ErrorUtils.register(MessageCode.CODE_3400, ValidationException.class);
         ErrorUtils.register(MessageCode.CODE_3400, TypeMismatchException.class);
         ErrorUtils.register(MessageCode.CODE_3404, NoHandlerFoundException.class);
         ErrorUtils.register(MessageCode.CODE_3503, AsyncRequestTimeoutException.class);
+        ErrorUtils.register(MessageCode.CODE_3400, ConstraintViolationException.class);
         ErrorUtils.register(MessageCode.CODE_3500, MissingPathVariableException.class);
         ErrorUtils.register(MessageCode.CODE_3400, ServletRequestBindingException.class);
         ErrorUtils.register(MessageCode.CODE_3400, HttpMessageNotReadableException.class);
@@ -220,7 +215,7 @@ public class BootAutoConfiguration {
     
     @PreDestroy
     public void destroy() {
-        log.info("系统关闭：{}", this.name);
+        log.info("系统关闭：{}", this.taoyaoProperties.getName());
         // 刷出日志缓存
         final ILoggerFactory factory = LoggerFactory.getILoggerFactory();
         if (factory instanceof LoggerContext context) {

@@ -5,8 +5,10 @@ import java.util.Map;
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.boot.utils.ScriptUtils;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -41,9 +43,9 @@ public class PlatformScriptProtocol extends ProtocolClientAdapter {
 	}
 
 	@Override
-	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
-	    final String script = this.get(body, Constant.SCRIPT);
-	    final String result = ScriptUtils.execute(this.get(body, Constant.SCRIPT));
+	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+	    final String script = MapUtils.get(body, Constant.SCRIPT);
+	    final String result = ScriptUtils.execute(script);
 	    log.info("""
 	        执行终端：{}
 	        执行命令：{}

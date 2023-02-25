@@ -22,7 +22,6 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
@@ -211,7 +210,8 @@ public final class JSONUtils {
 	 */
 	private static final Module buildCustomModule() {
 		final SimpleModule customModule = new SimpleModule("CustomModule");
-		customModule.addSerializer(Long.class, ToStringSerializer.instance);
+		// 注意不能转换Long类型数据：请求数据类型变化
+//		customModule.addSerializer(Long.class, ToStringSerializer.instance);
 		return customModule;
 	}
 	

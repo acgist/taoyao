@@ -3,7 +3,6 @@ package com.acgist.taoyao.signal.protocol;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
 import com.acgist.taoyao.boot.annotation.Manager;
@@ -28,20 +27,24 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Manager
 public class ProtocolManager {
+    
+    private final ClientManager clientManager;
+    private final SecurityService securityService;
+    private final ApplicationContext applicationContext;
+    private final PlatformErrorProtocol platformErrorProtocol;
+    
+    /**
+     * 信令映射
+     */
+    private final Map<String, Protocol> protocolMapping;
 
-	/**
-	 * 信令映射
-	 */
-	private Map<String, Protocol> protocolMapping = new ConcurrentHashMap<>();
-	
-	@Autowired
-	private ClientManager clientManager;
-	@Autowired
-	private SecurityService securityService;
-	@Autowired
-	private ApplicationContext applicationContext;
-	@Autowired
-	private PlatformErrorProtocol platformErrorProtocol;
+	public ProtocolManager(ClientManager clientManager, SecurityService securityService, ApplicationContext applicationContext, PlatformErrorProtocol platformErrorProtocol) {
+        this.clientManager = clientManager;
+        this.securityService = securityService;
+        this.applicationContext = applicationContext;
+        this.platformErrorProtocol = platformErrorProtocol;
+        this.protocolMapping = new ConcurrentHashMap<>();
+    }
 	
 	/**
 	 * 加载信令映射
@@ -79,7 +82,7 @@ public class ProtocolManager {
 	 */
 	public void execute(String content, AutoCloseable instance) {
 		log.debug("执行信令消息：{}", content);
-		final Client client = this.clientManager.client(instance);
+		final Client client = this.clientManager.clients(instance);
 		if(client == null) {
 			log.warn("信令终端无效：{}-{}", instance, content);
 			return;
@@ -98,7 +101,7 @@ public class ProtocolManager {
 			return;
 		}
 		final String v = header.getV();
-		final String id = header.getId();
+		final Long id = header.getId();
 		final String signal = header.getSignal();
 		// 设置缓存ID
 		this.platformErrorProtocol.set(id);
@@ -117,7 +120,11 @@ public class ProtocolManager {
 		if(protocol instanceof ClientRegisterProtocol) {
 			protocol.execute(client, message);
 		} else if(this.securityService.authenticate(client, message, protocol)) {
-			protocol.execute(client, message);
+		    if(client.response(id, message)) {
+		        // 响应消息不做其他处理
+		    } else {
+		        protocol.execute(client, message);
+		    }
 		} else {
 			log.warn("终端没有授权：{}", content);
 			client.push(this.platformErrorProtocol.build(MessageCode.CODE_3401, "终端没有授权"));

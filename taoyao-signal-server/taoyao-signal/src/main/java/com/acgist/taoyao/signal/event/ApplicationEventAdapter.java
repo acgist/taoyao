@@ -5,7 +5,7 @@ import java.util.Map;
 import org.springframework.context.ApplicationEvent;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.MapBodyGetter;
+import com.acgist.taoyao.boot.utils.MapUtils;
 
 import lombok.Getter;
 
@@ -15,58 +15,58 @@ import lombok.Getter;
  * @author acgist
  */
 @Getter
-public class ApplicationEventAdapter extends ApplicationEvent implements MapBodyGetter {
+public class ApplicationEventAdapter extends ApplicationEvent {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主体
-     */
-    private final Map<?, ?> body;
-    /**
      * 消息
      */
     private final Message message;
+    /**
+     * 主体
+     */
+    private final Map<String, Object> body;
     
-    protected ApplicationEventAdapter(Map<?, ?> body, Message message, Object source) {
+    protected ApplicationEventAdapter(Object source, Message message, Map<String, Object> body) {
         super(source);
         this.body = body;
         this.message = message;
     }
     
     /**
-     * @see #get(Map, String)
+     * @see MapUtils#get(Map, String)
      */
     public <T> T get(String key) {
-        return this.get(this.body, key);
+        return MapUtils.get(this.body, key);
     }
 
     /**
-     * @see #get(Map, String, Object)
+     * @see MapUtils#get(Map, String, Object)
      */
     public <T> T get(String key, T defaultValue) {
-        return this.get(this.body, key, defaultValue);
+        return MapUtils.get(this.body, key, defaultValue);
     }
     
     /**
-     * @see #getLong(Map, String)
+     * @see MapUtils#getLong(Map, String)
      */
     public Long getLong(String key) {
-        return this.getLong(this.body, key);
+        return MapUtils.getLong(this.body, key);
     }
     
     /**
-     * @see #getInteger(Map, String)
+     * @see MapUtils#getInteger(Map, String)
      */
     public Integer getInteger(String key) {
-        return this.getInteger(this.body, key);
+        return MapUtils.getInteger(this.body, key);
     }
     
     /**
-     * @see #getBoolean(Map, String)
+     * @see MapUtils#getBoolean(Map, String)
      */
     public Boolean getBoolean(String key) {
-        return this.getBoolean(this.body, key);
+        return MapUtils.getBoolean(this.body, key);
     }
 
 }

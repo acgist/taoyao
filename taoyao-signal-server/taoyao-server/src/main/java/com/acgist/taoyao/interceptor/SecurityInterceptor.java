@@ -4,7 +4,6 @@ import java.util.Base64;
 
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.util.AntPathMatcher;
@@ -25,12 +24,16 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SecurityInterceptor extends InterceptorAdapter {
 
-	@Autowired
-	private SecurityService securityService;
-	@Autowired
-	private SecurityProperties securityProperties;
+	private final SecurityService securityService;
+	private final SecurityProperties securityProperties;
+	
+	public SecurityInterceptor(SecurityService securityService, SecurityProperties securityProperties) {
+        this.securityService = securityService;
+        this.securityProperties = securityProperties;
+        log.info("安全拦截密码：{}", securityProperties.getPassword());
+    }
 
-	/**
+    /**
 	 * 地址匹配
 	 */
 	private final AntPathMatcher matcher = new AntPathMatcher();

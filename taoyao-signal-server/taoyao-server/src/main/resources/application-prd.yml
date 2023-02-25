@@ -1,4 +1,6 @@
 taoyao:
+  security:
+    password: ${random.uuid}
   script:
     enabled: false
     

@@ -19,10 +19,6 @@ public class ScriptProperties {
 
     @Schema(title = "是否启用", description = "是否启用")
 	private Boolean enabled;
-    @Schema(title = "重启媒体服务", description = "重启媒体服务")
-	private String mediaReboot;
-    @Schema(title = "关闭媒体服务", description = "关闭媒体服务")
-	private String mediaShutdown;
     @Schema(title = "重启系统", description = "重启系统")
 	private String systemReboot;
     @Schema(title = "关闭系统", description = "关闭系统")

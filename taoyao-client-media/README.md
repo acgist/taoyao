@@ -1,4 +1,4 @@
-# 媒体
+# 媒体终端
 
 只要负责媒体处理，不要添加任何业务逻辑，所有业务逻辑都由[taoyao-signal-server](../taoyao-signal-server)处理。
 
@@ -16,50 +16,9 @@ make
 make -C worker
 ```
 
-## 事件
+## 节点配置
 
-```
-mediasoup.observer.on("newworker", fn(worker));
-worker.on("died", fn(error));
-worker.observer.on("close", fn());
-worker.observer.on("newrouter", fn(router));
-worker.observer.on("newwebrtcserver", fn(router));
-router.on(“workerclose”, fn());
-router.observer.on(“close”, fn());
-router.observer.on(“newtransport”, fn(transport));
-router.observer.on(“newrtpobserver”, fn(rtpObserver));
-transport.on("trace", fn(trace));
-transport.on(“routerclose”, fn());
-transport.on(“listenserverclose”, fn());
-transport.on(“trace”, fn(trace));
-webRtcTransport.on(“icestatechange”, fn(iceState))
-webRtcTransport.on(“iceselectedtuplechange”, fn(iceSelectedTuple))
-webRtcTransport.on(“dtlsstatechange”, fn(dtlsState))
-webRtcTransport.on(“sctpstatechange”, fn(sctpState))
-plainTransport.on(“tuple”, fn(tuple))
-plainTransport.on(“rtcptuple”, fn(rtcpTuple))
-plainTransport.on(“sctpstatechange”, fn(sctpState))
-pipeTransport.on(“sctpstatechange”, fn(sctpState))
-directTransport.on(“rtcp”, fn(rtcpPacket))
-transport.observer.on(“close”, fn())
-transport.observer.on(“newproducer”, fn(producer))
-transport.observer.on(“newconsumer”, fn(consumer))
-transport.observer.on(“newdataproducer”, fn(dataProducer))
-transport.observer.on(“newdataconsumer”, fn(dataConsumer))
-transport.observer.on(“trace”, fn(trace))
-webRtcTransport.observer.on(“icestatechange”, fn(iceState))
-webRtcTransport.observer.on(“iceselectedtuplechange”, fn(iceSelectedTuple))
-webRtcTransport.observer.on(“dtlsstatechange”, fn(dtlsState))
-webRtcTransport.observer.on(“sctpstatechange”, fn(sctpState))
-plainTransport.observer.on(“tuple”, fn(tuple))
-plainTransport.observer.on(“rtcptuple”, fn(rtcpTuple))
-plainTransport.observer.on(“sctpstatechange”, fn(sctpState))
-pipeTransport.observer.on(“sctpstatechange”, fn(sctpState))
-```
-
-## 安全
-
-默认媒体服务只要暴露媒体`UDP`端口，信令接口不用暴露，所以使用简单鉴权。
+需要保证`src/Config.js`中的`clientId`和`ecosystem.config.json`中的`name`保持一致，否者重启和关闭信令无效。
 
 ## 动态调节码率
 

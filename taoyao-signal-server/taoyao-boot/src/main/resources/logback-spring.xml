@@ -4,12 +4,23 @@
 	<springProperty scope="context" name="log.name" source="spring.application.name" />
 	
 	<contextName>${log.name}</contextName>
+
 	<property name="log.path" value="logs" />
 	<property name="log.queue" value="2048" />
 	<property name="log.buffer" value="8192" />
 	<property name="log.history" value="30" />
 	<property name="log.charset" value="UTF-8" />
 	<property name="log.pattern" value="[${log.name}] %d{YYYY-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} %file:%line - %m%n" />
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>${log.charset}</charset>
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
 
 	<appender name="fileDebug" class="ch.qos.logback.core.rolling.RollingFileAppender">
 		<file>${log.path}/${log.name}.debug.log</file>
@@ -79,35 +90,16 @@
 		<includeCallerData>true</includeCallerData>
 		<discardingThreshold>0</discardingThreshold>
 	</appender>
-
-	<appender name="console" class="ch.qos.logback.core.ConsoleAppender">
-		<encoder>
-			<charset>${log.charset}</charset>
-			<pattern>${log.pattern}</pattern>
-		</encoder>
-		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-			<level>INFO</level>
-		</filter>
-	</appender>
 	
-	<springProfile name="dev">
+	<springProfile name="uat | prd">
 		<root level="DEBUG">
-			<appender-ref ref="console" />
 			<appender-ref ref="fileDebugAsync" />
 			<appender-ref ref="fileInfoAsync" />
 			<appender-ref ref="fileErrorAsync" />
 		</root>
 	</springProfile>
 
-	<springProfile name="sit | uat | prd">
-		<root level="INFO">
-			<appender-ref ref="fileDebugAsync" />
-			<appender-ref ref="fileInfoAsync" />
-			<appender-ref ref="fileErrorAsync" />
-		</root>
-	</springProfile>
-
-	<springProfile name="!dev &amp; !sit &amp; !uat &amp; !prd">
+	<springProfile name="!(uat | prd)">
 		<root level="DEBUG">
 			<appender-ref ref="console" />
 			<appender-ref ref="fileDebugAsync" />

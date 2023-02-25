@@ -33,7 +33,7 @@ public class Header implements Serializable {
 	 * 消息标识
 	 */
 	@Schema(title = "消息标识", description = "消息标识")
-	private String id;
+	private Long id;
 	/**
 	 * 信令标识
 	 */

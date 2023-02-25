@@ -51,6 +51,7 @@ const signalChannel = {
     self.heartbeatTimer = setTimeout(async function () {
       if (self.channel && self.channel.readyState === WebSocket.OPEN) {
         const battery = await navigator.getBattery();
+        // TODO：信号强度
         self.push(
           protocol.buildMessage("client::heartbeat", {
             signal: 100,
@@ -60,7 +61,7 @@ const signalChannel = {
         );
         self.heartbeat();
       } else {
-        console.warn("发送心跳失败", self.channel);
+        console.warn("发送心跳失败：", self.address);
       }
     }, self.heartbeatTime);
   },
@@ -76,22 +77,26 @@ const signalChannel = {
   async connect(address, callback, reconnection = true) {
     const self = this;
     if (self.channel && self.channel.readyState === WebSocket.OPEN) {
-      return;
+      return new Promise((resolve, reject) => {
+        resolve(self.channel);
+      });
     }
     self.address = address;
     self.callback = callback;
     self.reconnection = reconnection;
     return new Promise((resolve, reject) => {
-      console.debug("连接信令通道", address);
-      self.channel = new WebSocket(address);
-      self.channel.onopen = async function (e) {
-        console.debug("打开信令通道", e);
+      console.debug("连接信令通道：", self.address);
+      self.channel = new WebSocket(self.address);
+      self.channel.onopen = async function () {
+        console.debug("打开信令通道：", self.address);
         // 注册终端
+        // TODO：信号强度
         const battery = await navigator.getBattery();
         self.push(
           protocol.buildMessage("client::register", {
-            ip: "localhost",
+            name: "桃夭Web",
             clientId: self.taoyao.clientId,
+            clientType: "WEB",
             signal: 100,
             battery: battery.level * 100,
             charging: battery.charging,
@@ -104,21 +109,21 @@ const signalChannel = {
         // 开始心跳
         self.heartbeat();
         // 成功回调
-        resolve(e);
+        resolve(self.channel);
       };
-      self.channel.onclose = function (e) {
-        console.error("信令通道关闭", self.channel, e);
+      self.channel.onclose = async function () {
+        console.warn("信令通道关闭：", self.channel);
         if (self.reconnection) {
           self.reconnect();
         }
-        reject(e);
+        // 不要失败回调
       };
-      self.channel.onerror = function (e) {
-        console.error("信令通道异常", self.channel, e);
+      self.channel.onerror = async function (e) {
+        console.error("信令通道异常：", self.channel, e);
         if (self.reconnection) {
           self.reconnect();
         }
-        reject(e);
+        // 不要失败回调
       };
       /**
        * 回调策略：
@@ -127,7 +132,7 @@ const signalChannel = {
        * 3. 如果前面所有回调没有返回true执行默认回调。
        */
       self.channel.onmessage = function (e) {
-        console.debug("信令通道消息", e.data);
+        console.debug("信令通道消息：", e.data);
         let done = false;
         const message = JSON.parse(e.data);
         // 请求回调
@@ -154,22 +159,20 @@ const signalChannel = {
    */
   reconnect() {
     const self = this;
-    if (self.lockReconnect) {
+    if (
+      self.lockReconnect ||
+      (self.channel && self.channel.readyState === WebSocket.OPEN)
+    ) {
       return;
     }
     self.lockReconnect = true;
-    // 关闭旧的通道
-    if (self.channel && self.channel.readyState === WebSocket.OPEN) {
-      self.channel.close();
-      self.channel = null;
-    }
     if (self.reconnectTimer) {
       clearTimeout(self.reconnectTimer);
     }
-    // 打开定时重连
+    // 定时重连
     self.reconnectTimer = setTimeout(function () {
-      console.info("信令通道重连", self.address);
-      self.connect(self.address, self.callback, true);
+      console.info("信令通道重连：", self.address);
+      self.connect(self.address, self.callback, self.reconnection);
       self.lockReconnect = false;
     }, self.connectionTimeout);
     self.connectionTimeout = Math.min(
@@ -190,7 +193,11 @@ const signalChannel = {
       self.callbackMapping.set(message.header.id, callback);
     }
     // 发送消息
-    self.channel.send(JSON.stringify(message));
+    try {
+      self.channel.send(JSON.stringify(message));
+    } catch (error) {
+      console.error("推送消息异常：", message, error);
+    }
   },
   /**
    * 同步请求
@@ -203,17 +210,23 @@ const signalChannel = {
     const self = this;
     return new Promise((resolve, reject) => {
       let done = false;
-      // 设置回调
+      // 注册回调
       self.callbackMapping.set(message.header.id, (response) => {
         resolve(response);
         done = true;
+        // 返回true不要继续执行回调
         return true;
       });
-      // 发送请求
-      self.channel.send(JSON.stringify(message));
+      // 发送消息
+      try {
+        self.channel.send(JSON.stringify(message));
+      } catch (error) {
+        console.error("请求消息异常：", message, error);
+      }
       // 设置超时
       setTimeout(() => {
         if (!done) {
+          self.callbackMapping.delete(message.header.id);
           reject("请求超时", message);
         }
       }, 5000);
@@ -223,7 +236,7 @@ const signalChannel = {
    * 关闭通道
    */
   close() {
-    let self = this;
+    const self = this;
     self.reconnection = false;
     self.channel.close();
     clearTimeout(self.heartbeatTimer);
@@ -244,11 +257,14 @@ const signalChannel = {
       case "client::reboot":
         self.defaultClientReboot(message);
         break;
+      case "client::shutdown":
+        self.defaultClientShutdown(message);
+        break;
       case "client::register":
         console.info("终端注册成功");
         break;
       case "platform::error":
-        console.error("信令异常", message);
+        self.callbackError(message);
         break;
     }
   },
@@ -262,13 +278,11 @@ const signalChannel = {
     self.taoyao.audio = { ...defaultAudioConfig, ...message.body.media.audio };
     self.taoyao.video = { ...defaultVideoConfig, ...message.body.media.video };
     self.taoyao.webrtc = message.body.webrtc;
-    self.taoyao.mediaServerList = message.body.media.mediaServerList;
     console.debug(
       "终端配置",
       self.taoyao.audio,
       self.taoyao.video,
-      self.taoyao.webrtc,
-      self.taoyao.mediaServerList
+      self.taoyao.webrtc
     );
   },
   /**
@@ -279,6 +293,15 @@ const signalChannel = {
   defaultClientReboot(message) {
     console.info("重启终端");
     location.reload();
+  },
+  /**
+   * 终端重启默认回调
+   *
+   * @param {*} message 消息
+   */
+  defaultClientShutdown(message) {
+    console.info("关闭终端");
+    window.close();
   },
 };
 
@@ -298,14 +321,14 @@ class Taoyao {
   username;
   // 信令密码
   password;
+  // 回调事件
+  callback;
   // 音频媒体配置
   audio;
   // 视频媒体配置
   video;
   // WebRTC配置
   webrtc;
-  // 媒体服务配置
-  mediaServerList;
   // 发送信令
   push;
   // 请求信令
@@ -382,8 +405,9 @@ class Taoyao {
    */
   async buildSignal(callback) {
     const self = this;
-    signalChannel.taoyao = self;
+    self.callback = callback;
     self.signalChannel = signalChannel;
+    signalChannel.taoyao = self;
     // 不能直接this.push = this.signalChannel.push这样导致this对象错误
     self.push = function (data, pushCallback) {
       self.signalChannel.push(data, pushCallback);
@@ -397,27 +421,59 @@ class Taoyao {
     );
   }
   /**
-   * 打开媒体通道
-   * TODO：共享 navigator.mediaDevices.getDisplayMedia();
+   * 错误回调
    */
-  async buildMedia(roomId) {
-    let self = this;
-    // 释放资源
-    self.closeMedia();
-    if (roomId) {
-      self.roomId = roomId;
+  callbackError(message, error) {
+    const self = this;
+    if (!self.callback) {
+      console.warn("没有注册回调：", message, error);
     }
+    // 错误回调
+    self.callback(
+      protocol.buildMessage("platform::error", { message }, -9999),
+      error
+    );
+  }
+  /**
+   * 创建房间
+   */
+  async create(room) {
+    const self = this;
+    const response = await self.request(
+      protocol.buildMessage("room::create", room)
+    );
+    return response.body;
+  }
+  async enter(roomId) {
+    const self = this;
+    if (!roomId) {
+      this.callbackError("无效房间");
+      return;
+    }
+    self.roomId = roomId;
     self.mediasoupDevice = new mediasoupClient.Device();
     const response = await self.request(
       protocol.buildMessage("media::router::rtp::capabilities", {
-        roomId: roomId,
+        roomId: self.roomId,
       })
     );
-    const routerRtpCapabilities = response.body;
-    self.mediasoupDevice.load({ routerRtpCapabilities });
-    self.produceMedia();
+    const routerRtpCapabilities = response.body.rtpCapabilities;
+    await self.mediasoupDevice.load({ routerRtpCapabilities });
+    await self.request(
+      protocol.buildMessage("room::enter", {
+        roomId: roomId,
+        rtpCapabilities: self.consume
+          ? self.mediasoupDevice.rtpCapabilities
+          : undefined,
+        sctpCapabilities:
+          self.consume && self.useDataChannel
+            ? self.mediasoupDevice.sctpCapabilities
+            : undefined,
+      })
+    );
   }
   /**
+   * TODO：共享 navigator.mediaDevices.getDisplayMedia();
    * 生产媒体
    * TODO：验证API试试修改媒体
    * audioTrack.getSettings
@@ -426,7 +482,14 @@ class Taoyao {
    */
   async produceMedia() {
     const self = this;
+    if (!self.roomId) {
+      this.callbackError("无效房间");
+      return;
+    }
+    // 检查设备
     self.checkDevice();
+    // 释放资源
+    self.closeMedia();
     // TODO：暂时不知道为什么？
     {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -491,15 +554,16 @@ class Taoyao {
         "produce",
         async ({ kind, appData, rtpParameters }, callback, errback) => {
           try {
-            const { id } = await self.request(
+            const { producerId } = await self.request(
               protocol.buildMessage("media::produce", {
                 kind,
+                roomId: self.roomId,
                 appData,
                 transportId: self.sendTransport.id,
                 rtpParameters,
               })
             );
-            callback({ id });
+            callback({ id: producerId });
           } catch (error) {
             errback(error);
           }
@@ -591,10 +655,11 @@ class Taoyao {
   }
   /**
    * 生产音频
+   * TODO：重复点击
    */
   async produceAudio() {
     const self = this;
-    if (this.produceAudio && this.mediasoupDevice.canProduce("audio")) {
+    if (self.audioProduce && self.mediasoupDevice.canProduce("audio")) {
       if (this.audioProducer) {
         return;
       }
@@ -631,13 +696,13 @@ class Taoyao {
           this.closeAudioProducer().catch(() => {});
         });
       } catch (error) {
-        console.error("打开麦克风异常", error);
+        self.callbackError("麦克风打开异常", error);
         if (track) {
           track.stop();
         }
       }
     } else {
-      console.warn("音频打开失败");
+      self.callbackError("麦克风打开失败");
     }
   }
   async closeAudioProducer() {
@@ -689,6 +754,7 @@ class Taoyao {
 
   /**
    * 生产视频
+   * TODO：重复点击
    */
   async produceVideo() {}
   /**
@@ -719,15 +785,40 @@ class Taoyao {
         }
       });
       if (!audioEnabled && self.audioProduce) {
-        throw new Error("没有音频媒体设备");
+        self.callbackError("没有音频媒体设备");
       }
       if (!videoEnabled && self.videoProduce) {
-        throw new Error("没有视频媒体设备");
+        self.callbackError("没有视频媒体设备");
       }
     } else {
-      throw new Error("没有媒体设备");
+      self.callbackError("没有媒体设备");
     }
   }
+
+  async restartIce() {
+    const self = this;
+    try {
+      if (self.sendTransport) {
+        const response = await self.request("media::ice::restart", {
+          roomId: self.roomId,
+          transportId: self.sendTransport.id,
+        });
+        const iceParameters = response.data.iceParameters;
+        await self.sendTransport.restartIce({ iceParameters });
+      }
+      if (self.recvTransport) {
+        const response = await self.request("media::ice::restart", {
+          roomId: self.roomId,
+          transportId: self.recvTransport.id,
+        });
+        const iceParameters = response.data.iceParameters;
+        await self.recvTransport.restartIce({ iceParameters });
+      }
+    } catch (error) {
+      self.callbackError("重启ICE失败", error);
+    }
+  }
+
   /**
    * 关闭媒体
    */

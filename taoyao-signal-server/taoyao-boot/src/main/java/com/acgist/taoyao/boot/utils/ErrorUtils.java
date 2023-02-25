@@ -1,7 +1,6 @@
 package com.acgist.taoyao.boot.utils;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -9,7 +8,6 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.validation.BindException;
 import org.springframework.validation.ObjectError;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver;
 
@@ -19,6 +17,8 @@ import com.acgist.taoyao.boot.model.MessageCodeException;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -65,7 +65,7 @@ public final class ErrorUtils {
 	 * @param clazz 异常类型
 	 */
 	public static final void register(MessageCode code, Class<?> clazz) {
-		log.info("注册状态编码异常映射：{}-{}", code, clazz);
+		log.debug("注册状态编码异常映射：{} - {}", code, clazz);
 		synchronized (CODE_MAPPING) {
 		    CODE_MAPPING.put(clazz, code);
         }
@@ -140,6 +140,11 @@ public final class ErrorUtils {
 				原始信息：{}
 				""", path, query, method, message, status, globalError);
 		}
+//		final Map<String, String> body = new HashMap<>();
+//		body.put("url", path);
+//		body.put("query", query);
+//		body.put("method", method);
+//		message.setBody(body);
 		return message;
 	}
 	
@@ -204,24 +209,26 @@ public final class ErrorUtils {
 	 * @return 异常信息
 	 */
 	public static final String message(MessageCode messageCode, Throwable throwable) {
-	    // 数据校验异常：ValidationException
-		if(
-			throwable instanceof BindException ||
-			throwable instanceof MethodArgumentNotValidException
-		) {
-			final BindException bindException = (BindException) throwable;
-			final List<ObjectError> allErrors = bindException.getAllErrors();
-			return allErrors.stream().map(ObjectError::getDefaultMessage).collect(Collectors.joining(","));
+		if(throwable instanceof BindException bindException) {
+			return bindException.getAllErrors().stream()
+			    .map(ObjectError::getDefaultMessage)
+			    .collect(Collectors.joining(" && "));
 		}
-		// 为了系统安全建议不要直接返回
+		if(throwable instanceof ConstraintViolationException violationException) {
+		    return violationException.getConstraintViolations().stream()
+		        .map(ConstraintViolation::getMessage)
+		        .collect(Collectors.joining(" && "));
+		}
 		final String message = throwable.getMessage();
-		if(StringUtils.isNotEmpty(message) && messageCode == MessageCode.CODE_9999) {
+		// 不是未知系统异常
+		if(StringUtils.isNotEmpty(message) && messageCode != MessageCode.CODE_9999) {
 			return message;
 		}
-		// 匹配含有中文
+		// 包含中文直接返回：自定义的错误
 		if(StringUtils.isNotEmpty(message) && message.matches(".*[\\u4e00-\\u9fa5]+.*")) {
 			return message;
 		}
+		// 其他情况不能直接返回异常信息
 		return messageCode.getMessage();
 	}
 	

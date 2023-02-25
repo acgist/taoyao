@@ -1,7 +1,5 @@
 package com.acgist.taoyao.signal.client.websocket;
 
-import java.util.Map;
-
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.ClientAdapter;
@@ -21,10 +19,9 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 public class WebSocketClient extends ClientAdapter<Session> {
 
-	public WebSocketClient(Session instance) {
-		super(instance);
-		final Map<String, Object> userProperties = instance.getUserProperties();
-		this.ip = (String) userProperties.get(Constant.IP);
+	public WebSocketClient(long timeout, Session instance) {
+		super(timeout, instance);
+		this.ip = (String) instance.getUserProperties().get(Constant.IP);
 	}
 	
 	@Override

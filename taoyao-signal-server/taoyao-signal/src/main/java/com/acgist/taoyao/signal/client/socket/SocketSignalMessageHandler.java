@@ -71,6 +71,7 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
 			this.channel.read(buffer, buffer, this);
 		} else {
 			log.debug("Socket信令消息轮询退出（通道已经关闭）");
+			this.close();
 		}
 	}
 
@@ -80,6 +81,7 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
 	private void close() {
 	    log.debug("Socket信令终端关闭：{}", this.channel);
 		CloseableUtils.close(this.channel);
+		this.clientManager.close(this.channel);
 	}
 	
 	@Override
@@ -104,7 +106,7 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
 				try {
 					this.protocolManager.execute(message.strip(), this.channel);
 				} catch (Exception e) {
-					log.error("处理Socket信令消息异常：{}", message, e);
+					log.error("处理Socket信令消息异常：{}-{}", this.clientManager.clients(this.channel), message, e);
 					this.clientManager.push(this.channel, this.platformErrorProtocol.build(e));
 				}
 			}

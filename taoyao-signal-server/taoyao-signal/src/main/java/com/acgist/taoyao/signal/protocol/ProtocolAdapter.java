@@ -1,6 +1,5 @@
 package com.acgist.taoyao.signal.protocol;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
@@ -9,18 +8,19 @@ import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.service.IdService;
-import com.acgist.taoyao.signal.MapBodyGetter;
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
-import com.acgist.taoyao.signal.media.MediaClientManager;
-import com.acgist.taoyao.signal.media.RoomManager;
+import com.acgist.taoyao.signal.terminal.media.RoomManager;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 信令适配器
  * 
  * @author acgist
  */
-public abstract class ProtocolAdapter implements Protocol, MapBodyGetter {
+@Slf4j
+public abstract class ProtocolAdapter implements Protocol {
 
 	@Autowired
 	protected IdService idService;
@@ -32,8 +32,6 @@ public abstract class ProtocolAdapter implements Protocol, MapBodyGetter {
 	protected TaoyaoProperties taoyaoProperties;
 	@Autowired
 	protected ApplicationContext applicationContext;
-	@Autowired
-	protected MediaClientManager mediaClientManager;
 	
 	/**
 	 * 信令名称
@@ -90,10 +88,10 @@ public abstract class ProtocolAdapter implements Protocol, MapBodyGetter {
 	}
 	
 	@Override
-	public Message build(String id, MessageCode code, String message, Object body) {
+	public Message build(Long id, MessageCode code, String message, Object body) {
 	    // 消息标识
-		if(StringUtils.isEmpty(id)) {
-			id = this.idService.buildIdToString();
+		if(id == null) {
+			id = this.idService.buildId();
 		}
 		// 消息头部
 		final Header header = Header.builder()
@@ -109,6 +107,19 @@ public abstract class ProtocolAdapter implements Protocol, MapBodyGetter {
 		// 设置消息主体
 		build.setBody(body);
 		return build;
+	}
+	
+	/**
+	 * @param args 参数
+	 */
+	protected void logNoAdapter(Object ... args) {
+	    final StringBuilder builder = new StringBuilder(this.name);
+	    builder.append("没有适配信令消息：");
+	    for (final Object object : args) {
+            builder.append(object).append(" ");
+        }
+	    builder.setLength(builder.length() - 1);
+	    log.debug(builder.toString());
 	}
 	
 }

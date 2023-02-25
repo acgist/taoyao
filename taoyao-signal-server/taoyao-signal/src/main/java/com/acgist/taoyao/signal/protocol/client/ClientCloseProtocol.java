@@ -2,15 +2,16 @@ package com.acgist.taoyao.signal.protocol.client;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
+import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
+import com.acgist.taoyao.signal.client.ClientType;
+import com.acgist.taoyao.signal.event.ClientCloseEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -23,29 +24,33 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Protocol
 @Description(
-    flow = { "终端->信令服务->终端", "终端->信令服务-[终端下线])终端" }
+    flow = {
+        "终端->信令服务->终端",
+        "终端->信令服务-[终端下线])终端"
+    }
 )
 public class ClientCloseProtocol extends ProtocolClientAdapter implements ApplicationListener<ClientCloseEvent> {
 
 	public static final String SIGNAL = "client::close";
 	
-    @Autowired
-    private ClientOfflineProtocol offlineProtocol;
+    private final ClientOfflineProtocol clientOfflineProtocol;
 	
-	public ClientCloseProtocol() {
+	public ClientCloseProtocol(ClientOfflineProtocol clientOfflineProtocol) {
 		super("终端关闭信令", SIGNAL);
+		this.clientOfflineProtocol = clientOfflineProtocol;
 	}
 	
+	@Async
 	@Override
 	public void onApplicationEvent(ClientCloseEvent event) {
 	    this.close(event.getClient());
 	}
 
 	@Override
-	public void execute(String clientId, Map<?, ?> body, Client client, Message message) {
+	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
 		// 响应消息
 		client.push(message.cloneWithoutBody());
-		// 不用发布事件：关闭连接后会发布事件
+		// 关闭连接后会发布事件
 		try {
 			client.close();
 		} catch (Exception e) {
@@ -68,7 +73,7 @@ public class ClientCloseProtocol extends ProtocolClientAdapter implements Applic
         // 房间释放
         this.roomManager.leave(client);
         // 广播下线事件
-        final Message message = this.offlineProtocol.build(
+        final Message message = this.clientOfflineProtocol.build(
             Map.of(Constant.CLIENT_ID, clientId)
         );
         this.clientManager.broadcast(clientId, message);

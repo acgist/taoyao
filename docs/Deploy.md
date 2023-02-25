@@ -246,7 +246,7 @@ git checkout taoyao
 cd ..
 npm install
 
-# 配置服务
+# 配置服务：服务名称必须和配置终端标识一致否则不能执行重启和关闭信令
 pm2 start npm --name "taoyao-client-media" -- run dev | prd
 pm2 save
 
@@ -255,7 +255,7 @@ pm2 ecosystem
 pm2 start | reload ecosystem.config.json
 pm2 save
 
-# 管理服务
+# 管理服务：服务名称必须和配置终端标识一致否则不能执行重启和关闭信令
 pm2 start | stop | restart taoyao-client-media
 ```
 
@@ -364,6 +364,9 @@ pm2 save
 # 管理服务
 pm2 start | stop | restart taoyao-client-web
 
+# 打包代码
+npm run build
+
 # Nginx配置
 vim /etc/nginx/taoyao-client-web.cnf
 
@@ -393,8 +396,6 @@ firewall-cmd --zone=public --add-port=8443/tcp --permanent
 firewall-cmd --zone=public --add-port=8888/tcp --permanent
 # 信令服务（Socket）：没有启用不用添加规则
 firewall-cmd --zone=public --add-port=9999/tcp --permanent
-# 媒体服务（控制）：只暴露给信令服务
-firewall-cmd --zone=public --add-rich-rule="rule family="ipv4" source address="192.168.1.0/24" port protocol="tcp" port="9443" accept" --permanent
 # 媒体服务（数据）
 firewall-cmd --zone=public --add-port=40000-49999/udp --permanent
 
@@ -405,7 +406,6 @@ firewall-cmd --list-ports
 #firewall-cmd --zone=public --remove-port=8443/tcp --permanent
 #firewall-cmd --zone=public --remove-port=8888/tcp --permanent
 #firewall-cmd --zone=public --remove-port=9999/tcp --permanent
-#firewall-cmd --zone=public --remove-rich-rule="rule family="ipv4" source address="192.168.1.0/24" port protocol="tcp" port="9443" accept" --permanent
 #firewall-cmd --zone=public --remove-port=40000-49999/udp --permanent
 ```
 

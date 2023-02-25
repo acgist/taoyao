@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.acgist.taoyao.boot.annotation.Manager;
 import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
+import com.acgist.taoyao.signal.event.ClientCloseEvent;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,19 +24,23 @@ import lombok.extern.slf4j.Slf4j;
 @Manager
 public class ClientManager {
 	
-	@Autowired
-	private TaoyaoProperties taoyaoProperties;
-	@Autowired
-	private ApplicationContext applicationContext;
+	private final TaoyaoProperties taoyaoProperties;
+	private final ApplicationContext applicationContext;
 	
 	/**
 	 * 终端列表
 	 */
-	private List<Client> clients = new CopyOnWriteArrayList<>();
-
+	private final List<Client> clients;
+	
+	public ClientManager(TaoyaoProperties taoyaoProperties, ApplicationContext applicationContext) {
+        this.taoyaoProperties = taoyaoProperties;
+        this.applicationContext = applicationContext;
+        this.clients = new CopyOnWriteArrayList<>();
+    }
+	
 	@Scheduled(cron = "${taoyao.scheduled.client:0 * * * * ?}")
 	public void scheduled() {
-		this.closeTimeout();
+	    this.closeTimeout();
 	}
 	
 	/**
@@ -75,12 +79,11 @@ public class ClientManager {
 	/**
 	 * 授权终端广播消息
 	 * 
-	 * TODO：类型
-	 * 
 	 * @param message 消息
+	 * @param clientTypes 终端类型
 	 */
-	public void broadcast(Message message) {
-		this.clients().forEach(v -> v.push(message));
+	public void broadcast(Message message, ClientType ... clientTypes) {
+		this.clients(clientTypes).forEach(v -> v.push(message));
 	}
 	
 	/**
@@ -88,9 +91,10 @@ public class ClientManager {
 	 * 
 	 * @param from 发送终端
 	 * @param message 消息
+	 * @param clientTypes 终端类型
 	 */
-	public void broadcast(String from, Message message) {
-		this.clients().stream()
+	public void broadcast(String from, Message message, ClientType ... clientTypes) {
+		this.clients(clientTypes).stream()
 		.filter(v -> !Objects.equals(from, v.clientId()))
 		.forEach(v -> v.push(message));
 	}
@@ -100,9 +104,10 @@ public class ClientManager {
 	 * 
 	 * @param from 发送终端
 	 * @param message 消息
+	 * @param clientTypes 终端类型
 	 */
-	public void broadcast(Client from, Message message) {
-		this.clients().stream()
+	public void broadcast(Client from, Message message, ClientType ... clientTypes) {
+		this.clients(clientTypes).stream()
 		.filter(v -> v.instance() != from)
 		.forEach(v -> v.push(message));
 	}
@@ -112,7 +117,7 @@ public class ClientManager {
 	 * 
 	 * @return 终端
 	 */
-	public Client client(AutoCloseable instance) {
+	public Client clients(AutoCloseable instance) {
 		return this.clients.stream()
 			.filter(v -> v.instance() == instance)
 			.findFirst()
@@ -122,20 +127,24 @@ public class ClientManager {
 	/**
 	 * @param clientId 终端标识
 	 * 
-	 * @return 授权终端列表
+	 * @return 授权终端
 	 */
-	public List<Client> clients(String clientId) {
+	public Client clients(String clientId) {
 		return this.clients().stream()
 			.filter(v -> Objects.equals(clientId, v.clientId()))
-			.toList();
+			.findFirst()
+			.orElse(null);
 	}
 	
 	/**
+	 * @param clientTypes 终端类型
+	 * 
 	 * @return 所有授权终端列表
 	 */
-	public List<Client> clients() {
+	public List<Client> clients(ClientType ... clientTypes) {
 		return this.clients.stream()
 			.filter(Client::authorized)
+			.filter(client -> ArrayUtils.isEmpty(clientTypes) || ArrayUtils.contains(clientTypes, client.clientType()))
 			.toList();
 	}
 	
@@ -145,26 +154,27 @@ public class ClientManager {
 	 * @return 终端状态
 	 */
 	public ClientStatus status(AutoCloseable instance) {
-		final Client client = this.client(instance);
+		final Client client = this.clients(instance);
 		return client == null ? null : client.status();
 	}
 	
 	/**
 	 * @param clientId 终端标识
 	 * 
-	 * @return 授权终端状态列表
+	 * @return 授权终端状态
 	 */
-	public List<ClientStatus> status(String clientId) {
-		return this.clients(clientId).stream()
-			.map(Client::status)
-			.toList();
+	public ClientStatus status(String clientId) {
+	    final Client client = this.clients(clientId);
+	    return client == null ? null : client.status();
 	}
 
 	/**
+	 * @param clientTypes 终端类型
+	 * 
 	 * @return 所有授权终端状态列表
 	 */
-	public List<ClientStatus> status() {
-		return this.clients().stream()
+	public List<ClientStatus> status(ClientType ... clientTypes) {
+		return this.clients(clientTypes).stream()
 			.map(Client::status)
 			.toList();
 	}
@@ -176,7 +186,7 @@ public class ClientManager {
 	 * @param message 消息
 	 */
 	public void push(AutoCloseable instance, Message message) {
-		final Client client = this.client(instance);
+		final Client client = this.clients(instance);
 		if(client == null) {
 			log.warn("推送消息终端无效：{}-{}", instance, message);
 			return;
@@ -190,7 +200,7 @@ public class ClientManager {
 	 * @param instance 终端实例
 	 */
 	public void close(AutoCloseable instance) {
-		final Client client = this.client(instance);
+		final Client client = this.clients(instance);
 		try {
 			if(client != null) {
 				client.close();

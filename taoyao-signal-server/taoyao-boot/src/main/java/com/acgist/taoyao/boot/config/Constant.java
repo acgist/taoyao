@@ -20,9 +20,29 @@ public interface Constant {
 	 */
 	String TO = "to";
 	/**
-	 * 发送方
+	 * 状态
 	 */
-	String FROM = "from";
+	String STATUS = "status";
+	/**
+	 * 配置
+	 */
+	String CONFIG = "config";
+	/**
+	 * 纬度
+	 */
+	String LATITUDE = "latitude";
+	/**
+	 * 经度
+	 */
+	String LONGITUDE = "longitude";
+	/**
+	 * 湿度
+	 */
+	String HUMIDITY = "humidity";
+	/**
+	 * 温度
+	 */
+	String TEMPERATURE = "temperature";
 	/**
 	 * 信号强度（0~100）
 	 */
@@ -32,9 +52,17 @@ public interface Constant {
 	 */
 	String BATTERY = "battery";
 	/**
+	 * 是否正在运行
+	 */
+	String RUNNING = "running";
+	/**
 	 * 是否正在充电
 	 */
 	String CHARGING = "charging";
+	/**
+	 * 是否正在录像
+	 */
+	String RECORDING = "recording";
 	/**
 	 * 地址
 	 */
@@ -76,6 +104,10 @@ public interface Constant {
 	 */
 	String NAME = "name";
 	/**
+	 * 类型
+	 */
+	String CLIENT_TYPE = "clientType";
+	/**
 	 * 脚本
 	 */
 	String SCRIPT = "script";
@@ -83,6 +115,10 @@ public interface Constant {
 	 * 结果
 	 */
 	String RESULT = "result";
+	/**
+	 * 消息
+	 */
+	String MESSAGE = "message";
 	/**
 	 * 请求
 	 */
@@ -96,6 +132,10 @@ public interface Constant {
 	 */
 	String PASSWORD = "password";
 	/**
+	 * 媒体类型
+	 */
+	String KIND = "kind";
+	/**
 	 * 媒体
 	 */
 	String MEDIA = "media";
@@ -108,12 +148,6 @@ public interface Constant {
 	 */
 	String DATETIME = "datetime";
 	/**
-	 * PeerId
-	 * 
-	 * @see #CLIENT_ID
-	 */
-	String PEER_ID = "peerId";
-	/**
 	 * 房间ID
 	 */
 	String ROOM_ID = "roomId";
@@ -122,9 +156,11 @@ public interface Constant {
 	 */
 	String MEDIA_ID = "mediaId";
 	/**
+	 * 媒体流ID
+	 */
+	String STREAM_ID = "streamId";
+	/**
 	 * 终端ID
-	 * 
-	 * @see #PEER_ID
 	 */
 	String CLIENT_ID = "clientId";
 	/**
@@ -171,5 +207,21 @@ public interface Constant {
 	 * SCTP参数
 	 */
 	String SCTP_PARAMETERS = "sctpParameters";
+	/**
+	 * RTP能力
+	 */
+	String RTP_CAPABILITIES = "rtpCapabilities";
+	/**
+	 * SCTP能力
+	 */
+	String SCTP_CAPABILITIES = "sctpCapabilities";
+	/**
+	 * 生产者
+	 */
+    String CONSUMING = "consuming";
+    /**
+     * 消费者
+     */
+    String PRODUCING = "producing";
 
 }

@@ -1,7 +1,5 @@
 package com.acgist.taoyao.interceptor;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.boot.interceptor.InterceptorAdapter;
 
@@ -17,10 +15,13 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class SlowInterceptor extends InterceptorAdapter {
 	
-	@Autowired
-	private TaoyaoProperties taoyaoProperties;
+	private final TaoyaoProperties taoyaoProperties;
 	
-	/**
+	public SlowInterceptor(TaoyaoProperties taoyaoProperties) {
+        this.taoyaoProperties = taoyaoProperties;
+    }
+
+    /**
 	 * 请求开始时间
 	 */
 	private final ThreadLocal<Long> local = new ThreadLocal<>();

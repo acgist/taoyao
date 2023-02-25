@@ -42,11 +42,11 @@ export default {
         username: "taoyao",
         password: "taoyao",
       },
-      localVisible: true,
+      localVisible: false,
     };
   },
   props: {
-    signalVisible: true,
+    signalVisible: false,
   },
   watch: {
     signalVisible() {

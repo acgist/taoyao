@@ -9,5 +9,5 @@
 :: Spring Boot : ${spring-boot.formatted-version}
 :: ${spring.application.name} : https://gitee.com/acgist/taoyao
 
-中庭地白树栖鸦，冷露无声湿桂花。
-今夜月明人尽望，不知秋思落谁家。
+去年今日此门中，人面桃花相映红。
+人面不知何处去，桃花依旧笑春风。

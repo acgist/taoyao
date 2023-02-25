@@ -6,27 +6,28 @@ const os = require("os");
 module.exports = {
   // 服务名称
   name: "taoyao-client-media",
-  // 服务版本
-  version: "1.0.0",
-  // 欢迎页面
-  welcome: `${__dirname}/index.html`,
-  // 日志级别
-  logLevel: "DEBUG",
-  // 录像目录
-  recordStoragePath: "/data/record",
-  // 信令服务
-  https: {
-    // 信令服务地址端口
-    listenIp: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-    listenPort: process.env.HTTPS_LISTEN_PORT || 9443,
-    // 信令服务安全配置
+  // 保存目录
+  storagePath: "/data/storage",
+  // 图片目录
+  storageImagePath: "/data/storage/image",
+  // 视频目录
+  storageVideoPath: "/data/storage/video",
+  // 信令配置
+  signal: {
+    // 服务版本
+    version: "1.0.0",
+    // 终端标识
+    clientId: "taoyao-client-media",
+    // 地址
+    host: "127.0.0.1",
+    // 端口
+    port: 8888,
+    // 协议
+    scheme: "wss",
+    // 信令用户
     username: "taoyao",
+    // 信令密码
     password: "taoyao",
-    // 信令服务证书配置
-    tls: {
-      cert: process.env.HTTPS_CERT_PUBLIC_KEY || `${__dirname}/certs/publicKey.pem`,
-      key: process.env.HTTPS_CERT_PRIVATE_KEY || `${__dirname}/certs/privateKey.pem`,
-    },
   },
   // 水印
   watermark: {
@@ -42,8 +43,7 @@ module.exports = {
     workerSize: Object.keys(os.cpus()).length,
     // Worker：https://mediasoup.org/documentation/v3/mediasoup/api/#WorkerSettings
     workerSettings: {
-      // 级别：debug | warn | error | none
-      logLevel: "warn",
+      // 记录标记
       logTags: [
         "bwe",
         "ice",
@@ -59,6 +59,8 @@ module.exports = {
         "message",
         "simulcast",
       ],
+      // 级别：debug | warn | error | none
+      logLevel: "warn",
       rtcMinPort: process.env.MEDIASOUP_MIN_PORT || 40000,
       rtcMaxPort: process.env.MEDIASOUP_MAX_PORT || 49999,
     },
@@ -120,14 +122,14 @@ module.exports = {
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
           port: 44444,
           // 公网地址
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP,
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
         },
         {
           protocol: "tcp",
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
           port: 44444,
           // 公网地址
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP,
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
         },
       ],
     },
@@ -137,7 +139,7 @@ module.exports = {
         {
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
           // 公网地址
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP,
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
         },
       ],
       initialAvailableOutgoingBitrate: 1000000,
@@ -150,7 +152,7 @@ module.exports = {
       listenIp: {
         ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
         // 公网地址
-        announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP,
+        announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
       },
       maxSctpMessageSize: 262144,
     },
