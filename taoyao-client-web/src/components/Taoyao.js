@@ -414,13 +414,13 @@ class Taoyao {
   }
 
   /**
-   * 打开信令通道
+   * 连接信令
    *
    * @param {*} callback
    *
    * @returns
    */
-  async buildSignal(callback) {
+  async connectSignal(callback) {
     const self = this;
     self.callback = callback;
     self.signalChannel = signalChannel;
@@ -450,22 +450,41 @@ class Taoyao {
       }
     }
     // 错误回调
+    const errorMessage = protocol.buildMessage("platform::error", { message }, -9999);
+    errorMessage.code = "-9999";
+    errorMessage.message = message;
     self.callback(
-      protocol.buildMessage("platform::error", { message }, -9999),
+      errorMessage,
       error
     );
+  }
+  async roomList() {
+    const response = await this.request(
+      protocol.buildMessage("room::list")
+    );
+    return response.body;
+  }
+  async mediaList() {
+    const response = await this.request(
+      protocol.buildMessage("client::list", { clientType: "MEDIA" })
+    );
+    return response.body;
   }
   /**
    * 创建房间
    */
-  async create(room) {
+  async createRoom(room) {
     const self = this;
+    if (!room) {
+      this.callbackError("无效房间");
+      return;
+    }
     const response = await self.request(
       protocol.buildMessage("room::create", room)
     );
     return response.body;
   }
-  async enter(roomId) {
+  async enterRoom(roomId) {
     const self = this;
     if (!roomId) {
       this.callbackError("无效房间");
