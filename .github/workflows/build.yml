@@ -35,9 +35,9 @@ jobs:
         cache: npm
         node-version:  16.x
     - run: |
-      cd ./taoyao-client-web
-      npm install
-      npm run build
+        cd ./taoyao-client-web
+        npm install
+        npm run build
   taoyao-client-media:
     name: Build taoyao client media
     strategy:
@@ -53,6 +53,6 @@ jobs:
         cache: npm
         node-version:  16.x
     - run: |
-      cd ./taoyao-client-media
-      npm install
+        cd ./taoyao-client-media
+        npm install
       
