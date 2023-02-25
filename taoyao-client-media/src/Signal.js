@@ -573,7 +573,7 @@ class Signal {
   }
 
   async mediaConsume(message, body) {
-    const { roomId, producerId, transportId, rtpCapabilities } = body;
+    const { roomId, clientId, streamId, producerId, transportId, rtpCapabilities } = body;
     const room = this.rooms.get(roomId);
     const producer = room.producers.get(producerId);
     const transport = room.transports.get(transportId);
@@ -590,6 +590,7 @@ class Signal {
       console.warn(
         "不能消费媒体：",
         roomId,
+        clientId,
         producerId,
         transportId,
         rtpCapabilities
@@ -613,6 +614,7 @@ class Signal {
             console.error(
               "创建消费者异常：",
               roomId,
+              clientId,
               producerId,
               transportId,
               rtpCapabilities,
@@ -620,6 +622,8 @@ class Signal {
             );
             return;
           }
+          consumer.clientId = clientId;
+          consumer.streamId = streamId;
           room.consumers.set(consumer.id, consumer);
           consumer.on("transportclose", () => {
             room.consumers.delete(consumer.id);
@@ -677,6 +681,8 @@ class Signal {
             kind: consumer.kind,
             type: consumer.type,
             roomId: roomId,
+            clientId: clientId,
+            streamId: streamId,
             producerId: producerId,
             consumerId: consumer.id,
             rtpParameters: consumer.rtpParameters,

@@ -49,21 +49,22 @@ export default {
      *
      * @return 是否继续执行
      */
-    callback(data, error) {
+    async callback(data, error) {
       let self = this;
-      if(data.header.signal === "platform::error") {
-        console.error("发生异常：", data, error);
-        return false;
-      }
       switch (data.header.signal) {
         case "client::config":
           self.roomVisible = true;
           break;
         case "client::register":
-          if(data.code === '3401') {
-            self.signalVisible = true;
-          }
+          self.signalVisible = data.code !== '0000';
           return true;
+        case "platform::error":
+          if(error) {
+            console.error("发生异常：", data, error);
+          } else {
+            console.warn("发生错误：", data);
+          }
+          break;
       }
       return false;
     },
