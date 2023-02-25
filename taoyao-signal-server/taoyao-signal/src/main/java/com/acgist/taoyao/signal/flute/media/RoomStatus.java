@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.terminal.media;
+package com.acgist.taoyao.signal.flute.media;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

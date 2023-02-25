@@ -10,7 +10,7 @@ import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
-import com.acgist.taoyao.signal.terminal.media.RoomManager;
+import com.acgist.taoyao.signal.flute.media.RoomManager;
 
 import lombok.extern.slf4j.Slf4j;
 

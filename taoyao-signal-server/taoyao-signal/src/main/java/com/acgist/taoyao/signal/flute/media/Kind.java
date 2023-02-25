@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.terminal.media;
+package com.acgist.taoyao.signal.flute.media;
 
 import com.acgist.taoyao.boot.model.MessageCodeException;
 

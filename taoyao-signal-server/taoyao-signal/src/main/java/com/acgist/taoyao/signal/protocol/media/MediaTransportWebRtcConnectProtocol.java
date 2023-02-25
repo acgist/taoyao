@@ -9,8 +9,8 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
+import com.acgist.taoyao.signal.flute.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
-import com.acgist.taoyao.signal.terminal.media.Room;
 
 import lombok.extern.slf4j.Slf4j;
 

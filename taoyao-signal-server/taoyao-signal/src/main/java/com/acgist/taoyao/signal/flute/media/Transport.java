@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.terminal.media;
+package com.acgist.taoyao.signal.flute.media;
 
 import java.io.Closeable;
 import java.util.Map;
