@@ -13,7 +13,8 @@
     "vue": "^3.2.44",
     "moment": "^2.29.4",
     "element-plus": "^2.2.32",
-    "mediasoup-client": "^3.6.82"
+    "mediasoup-client": "^3.6.82",
+    "@element-plus/icons": "^0.0.11"
   },
   "devDependencies": {
     "vite": "^4.0.0",

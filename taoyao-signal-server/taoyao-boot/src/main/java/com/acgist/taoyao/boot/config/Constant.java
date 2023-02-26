@@ -164,6 +164,10 @@ public interface Constant {
 	 */
 	String CLIENT_ID = "clientId";
 	/**
+	 * 来源终端ID
+	 */
+	String SOURCE_ID = "sourceId";
+	/**
 	 * 路由ID
 	 */
 	String ROUTER_ID = "routerId";

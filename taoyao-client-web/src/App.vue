@@ -35,7 +35,7 @@
     center
     width="30%"
     title="房间设置"
-    @open="init"
+    @open="loadList"
     :show-close="false"
     v-model="roomVisible"
   >
@@ -80,22 +80,27 @@
   </el-dialog>
 
   <!-- 菜单 -->
-  <div class="menu">
+  <div class="menus">
     <el-button type="primary" @click="signalVisible = true">连接信令</el-button>
     <el-button type="primary" @click="roomActive = 'enter'; roomVisible = true;">选择房间</el-button>
     <el-button type="primary" @click="roomActive = 'create';roomVisible = true;">创建房间</el-button>
+    <el-button>邀请终端</el-button>
     <el-button>退出房间</el-button>
     <el-button type="danger">关闭房间</el-button>
   </div>
 
   <!-- 终端 -->
-  <div class="client">
+  <div class="clients">
+    <LocalClient ref="local"></LocalClient>
+    <RemoteClient :ref="'remote-' + kv[0]" v-for="(kv, index) in remoteClients" :key="index"></RemoteClient>
   </div>
 </template>
 
 <script>
 import { ElMessage } from 'element-plus'
 import { Taoyao } from "./components/Taoyao.js";
+import LocalClient from './components/LocalClient.vue';
+import RemoteClient from './components/RemoteClient.vue';
 
 export default {
   name: "Taoyao",
@@ -114,7 +119,8 @@ export default {
       taoyao: {},
       roomActive: "enter",
       roomVisible: false,
-      signalVisible: true,
+      signalVisible: false,
+      remoteClients: new Map(),
     };
   },
   mounted() {
@@ -124,7 +130,14 @@ export default {
     `);
   },
   methods: {
-    async init() {
+    async connectSignal() {
+      let self = this;
+      self.taoyao = new Taoyao({ ...this.config });
+      self.remoteClients = self.taoyao.remoteClients;
+      await self.taoyao.connectSignal(self.callback, self.callbackMedia);
+      self.signalVisible = false;
+    },
+    async loadList() {
       this.rooms = await this.taoyao.roomList();
       this.medias = await this.taoyao.mediaList();
     },
@@ -137,12 +150,6 @@ export default {
       const room = await this.taoyao.createRoom(this.room);
       this.room = room;
       await this.enterRoom(room.roomId);
-    },
-    async connectSignal() {
-      let self = this;
-      self.taoyao = new Taoyao({ ...this.config });
-      await self.taoyao.connectSignal(self.callback);
-      self.signalVisible = false;
     },
     /**
      * 信令回调
@@ -172,10 +179,37 @@ export default {
             message: data.message,
             type: "error",
           });
-          break;
+          return true;
       }
       return false;
     },
+    /**
+     * 媒体回调
+     */
+    callbackMedia(type, track, consumer) {
+      const self = this;
+      return new Promise((resolve, reject) => {
+        if(type === 'local') {
+          self.$refs.local.media(track);
+        } else {
+          this.$refs['remote-' + consumer.sourceId][0].media(track, consumer);
+        }
+        resolve();
+      });
+    },
+  },
+  components: {
+    LocalClient,
+    RemoteClient
   },
 };
 </script>
+
+<style>
+.menus{width:100%;top:1rem;left:0;text-align:center;position:fixed;z-index:1;}
+.clients{width:100%;height:100%;top:0;left:0;position:fixed;}
+.client{float:left;width:50vw;height:50vh;border:1px solid #eee;}
+.client .buttons{width:100%;bottom:1rem;left:0;text-align:center;position:absolute;padding:0.8rem 0;background: rgba(0,0,0,0.6);text-align:center;}
+.client audio{display:none;}
+.client video{width:100%;height:100%;}
+</style>

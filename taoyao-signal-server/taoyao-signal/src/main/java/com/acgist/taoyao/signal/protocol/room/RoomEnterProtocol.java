@@ -45,8 +45,11 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
 
 	public static final String SIGNAL = "room::enter";
 	
-	public RoomEnterProtocol() {
+	private final RoomClientListProtocol roomClientListProtocol;
+	
+	public RoomEnterProtocol(RoomClientListProtocol roomClientListProtocol) {
 		super("进入房间信令", SIGNAL);
+		this.roomClientListProtocol = roomClientListProtocol;
 	}
 
 	@Override
@@ -71,6 +74,10 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
         ));
         room.broadcast(message);
         log.info("进入房间：{} - {}", clientId, room.getRoomId());
+        // 推送房间用户信息
+        final Message roomClientListMessage = this.roomClientListProtocol.build();
+        roomClientListMessage.setBody(room.clientStatus());
+        client.push(roomClientListMessage);
 	}
 
 }

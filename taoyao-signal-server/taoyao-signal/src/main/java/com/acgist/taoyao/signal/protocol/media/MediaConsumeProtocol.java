@@ -105,6 +105,7 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
         final String streamId = producer.getStreamId() + "->" + clientId;
         body.put(Constant.ROOM_ID, room.getRoomId());
         body.put(Constant.CLIENT_ID, clientId);
+        body.put(Constant.SOURCE_ID, producer.getProduceClient().getClientId());
         body.put(Constant.STREAM_ID, streamId);
         body.put(Constant.PRODUCER_ID, producer.getProducerId());
         body.put(Constant.TRANSPORT_ID, recvTransport.getTransportId());

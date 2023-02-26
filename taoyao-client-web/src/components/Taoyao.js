@@ -11,18 +11,14 @@ import {
 } from "./Config.js";
 
 // Used for simulcast webcam video.
-const WEBCAM_SIMULCAST_ENCODINGS =
-[
-	{ scaleResolutionDownBy: 4, maxBitrate: 500000, scalabilityMode: 'S1T2' },
-	{ scaleResolutionDownBy: 2, maxBitrate: 1000000, scalabilityMode: 'S1T2' },
-	{ scaleResolutionDownBy: 1, maxBitrate: 5000000, scalabilityMode: 'S1T2' }
+const WEBCAM_SIMULCAST_ENCODINGS = [
+  { scaleResolutionDownBy: 4, maxBitrate: 500000, scalabilityMode: "S1T2" },
+  { scaleResolutionDownBy: 2, maxBitrate: 1000000, scalabilityMode: "S1T2" },
+  { scaleResolutionDownBy: 1, maxBitrate: 5000000, scalabilityMode: "S1T2" },
 ];
 
 // Used for VP9 webcam video.
-const WEBCAM_KSVC_ENCODINGS =
-[
-	{ scalabilityMode: 'S3T3_KEY' }
-];
+const WEBCAM_KSVC_ENCODINGS = [{ scalabilityMode: "S3T3_KEY" }];
 
 /**
  * 信令通道
@@ -291,8 +287,14 @@ const signalChannel = {
       case "client::reboot":
         self.defaultClientReboot(message);
         break;
-      case "client::shutdown":
-        self.defaultClientShutdown(message);
+        case "client::shutdown":
+          self.defaultClientShutdown(message);
+          break;
+      case "room::enter":
+        self.defaultRoomEnter(message);
+        break;
+      case "room::client::list":
+        self.defaultRoomClientList(message);
         break;
       case "platform::error":
         self.callbackError(message);
@@ -334,6 +336,24 @@ const signalChannel = {
     console.info("关闭终端");
     window.close();
   },
+  defaultRoomEnter(message) {
+    const { roomId, clientId } = message.body;
+    if(clientId === this.taoyao.clientId) {
+      // 忽略自己
+    } else {
+      this.taoyao.remoteClients.set(clientId, roomId);
+    }
+  },
+  defaultRoomClientList(message) {
+    const self = this;
+    message.body.forEach(v => {
+      if(v.clientId === self.taoyao.clientId) {
+        // 忽略自己
+      } else {
+        self.taoyao.remoteClients.set(v.clientId, self.taoyao.roomId);
+      }
+    });
+  },
 };
 
 /**
@@ -354,6 +374,8 @@ class Taoyao {
   password;
   // 回调事件
   callback;
+  // 媒体回调
+  callbackMedia;
   // 音频媒体配置
   audio;
   // 视频媒体配置
@@ -364,10 +386,6 @@ class Taoyao {
   push;
   // 请求信令
   request;
-  // 本地终端
-  localClient;
-  // 远程终端
-  remoteClients = new Map();
   // 信令通道
   signalChannel;
   // 发送媒体通道
@@ -381,30 +399,31 @@ class Taoyao {
   // 是否生产
   produce;
   // 视频来源：file | camera | screen
-  videoSource = "screen";
+  videoSource = "camera";
+  // 强制使用TCP
+  forceTcp;
   // 强制使用VP9
   forceVP9;
   // 强制使用H264
   forceH264;
+  //
   useSimulcast;
+  // 是否生产数据
+  dataProduce;
   // 是否生产音频
   audioProduce;
   // 是否生成视频
   videoProduce;
-  // 强制使用TCP
-  forceTcp;
-  // 使用数据通道
-  useDataChannel;
+  // 数据生产者
+  dataProducer;
   // 音频生产者
   audioProducer;
   // 视频生产者
   videoProducer;
-  // 数据生产者
-  dataChannnelProducer;
-  // 媒体消费者
+  // 消费者：音频、视频、数据
   consumers = new Map();
-  // 数据消费者
-  dataConsumers = new Map();
+  // 远程终端
+  remoteClients = new Map();
 
   constructor({
     roomId,
@@ -418,7 +437,7 @@ class Taoyao {
     audioProduce = true,
     videoProduce = true,
     forceTcp = false,
-    useDataChannel = true,
+    dataProduce = true,
   }) {
     this.roomId = roomId;
     this.clientId = clientId;
@@ -428,22 +447,24 @@ class Taoyao {
     this.password = password;
     this.consume = consume;
     this.produce = produce;
+    this.dataProduce = produce && dataProduce;
     this.audioProduce = produce && audioProduce;
     this.videoProduce = produce && videoProduce;
     this.forceTcp = forceTcp;
-    this.useDataChannel = useDataChannel;
   }
 
   /**
    * 连接信令
    *
-   * @param {*} callback
+   * @param {*} callback 信令回调
+   * @param {*} callbackMedia 媒体回调
    *
    * @returns
    */
-  async connectSignal(callback) {
+  async connectSignal(callback, callbackMedia) {
     const self = this;
     self.callback = callback;
+    self.callbackMedia = callbackMedia;
     self.signalChannel = signalChannel;
     signalChannel.taoyao = self;
     // 不能直接this.push = this.signalChannel.push这样导致this对象错误
@@ -469,6 +490,7 @@ class Taoyao {
       } else {
         console.warn("没有注册回调：", message);
       }
+      return;
     }
     // 错误回调
     const errorMessage = protocol.buildMessage(
@@ -487,6 +509,12 @@ class Taoyao {
   async mediaList() {
     const response = await this.request(
       protocol.buildMessage("client::list", { clientType: "MEDIA" })
+    );
+    return response.body;
+  }
+  async clientList() {
+    const response = await this.request(
+      protocol.buildMessage("client::list", { roomId: self.roomId })
     );
     return response.body;
   }
@@ -526,7 +554,7 @@ class Taoyao {
           ? self.mediasoupDevice.rtpCapabilities
           : undefined,
         sctpCapabilities:
-          self.consume && self.useDataChannel
+          self.consume && self.dataProduce
             ? self.mediasoupDevice.sctpCapabilities
             : undefined,
       })
@@ -564,7 +592,7 @@ class Taoyao {
           forceTcp: self.forceTcp,
           producing: true,
           consuming: false,
-          sctpCapabilities: self.useDataChannel
+          sctpCapabilities: self.dataProduce
             ? self.mediasoupDevice.sctpCapabilities
             : undefined,
         })
@@ -661,7 +689,7 @@ class Taoyao {
           forceTcp: self.forceTcp,
           producing: false,
           consuming: true,
-          sctpCapabilities: self.useDataChannel
+          sctpCapabilities: self.dataProduce
             ? self.mediasoupDevice.sctpCapabilities
             : undefined,
         })
@@ -843,20 +871,24 @@ class Taoyao {
           track = stream.getVideoTracks()[0];
         } else if (self.videoSource === "screen") {
           const stream = await navigator.mediaDevices.getDisplayMedia({
+            // 如果需要共享声音
             audio: false,
             video: {
-              displaySurface: "monitor",
-              logicalSurface: true,
               cursor: true,
               width: { max: 1920 },
               height: { max: 1080 },
               frameRate: { max: 30 },
+              logicalSurface: true,
+              displaySurface: "monitor",
             },
           });
           track = stream.getVideoTracks()[0];
         } else {
           // TODO：异常
         }
+
+        self.callbackMedia("local", track);
+
         let codec;
         let encodings;
         const codecOptions = {
@@ -904,7 +936,7 @@ class Taoyao {
         // if (this._e2eKey && e2e.isSupported()) {
         //   e2e.setupSenderTransform(this.videoProducer.rtpSender);
         // }
-        
+
         this.videoProducer.on("transportclose", () => {
           this.videoProducer = null;
         });
@@ -921,6 +953,69 @@ class Taoyao {
       }
     } else {
       console.error("打开摄像头失败");
+    }
+  }
+
+  async closeVideoProducer() {
+    console.debug("disableWebcam()");
+    if (!this.videoProducer) {
+      return;
+    }
+    this.videoProducer.close();
+    try {
+      await this.request(
+        protocol.buildMessage("media::producer::close", {
+          producerId: this.videoProducer.id,
+        })
+      );
+    } catch (error) {
+      console.error(error);
+    }
+
+    this._webcamProducer = null;
+  }
+
+  async pauseVideoProducer() {
+    console.debug("关闭摄像头");
+    this.videoProducer.pause();
+    try {
+      await this.request(
+        protocol.buildMessage("media::producer::pause", {
+          producerId: this.videoProducer.id,
+        })
+      );
+    } catch (error) {
+      console.error("关闭摄像头异常", error);
+      // TODO：异常调用回调
+    }
+  }
+
+  async resumeVideoProducer() {
+    console.debug("恢复摄像头");
+    this.videoProducer.resume();
+    try {
+      await this.request(
+        protocol.buildMessage("media::producer::resume", {
+          producerId: this.videoProducer.id,
+        })
+      );
+    } catch (error) {
+      console.error("恢复摄像头异常", error);
+    }
+  }
+
+  async updateVideoConfig(config) {
+    console.debug("更新摄像头参数");
+    try {
+      this.videoProducer.track.stop();
+      // TODO：screen、参数配置
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+      });
+      const track = stream.getVideoTracks()[0];
+      await this.videoProducer.replaceTrack({ track });
+    } catch (error) {
+      console.error("changeWebcam() | failed: %o", error);
     }
   }
 
@@ -941,6 +1036,7 @@ class Taoyao {
       type,
       roomId,
       clientId,
+      sourceId,
       streamId,
       producerId,
       consumerId,
@@ -962,6 +1058,7 @@ class Taoyao {
         appData, // Trick.
       });
       consumer.clientId = clientId;
+      consumer.sourceId = sourceId;
       consumer.streamId = streamId;
       self.consumers.set(consumer.id, consumer);
       consumer.on("transportclose", () => {
@@ -991,18 +1088,10 @@ class Taoyao {
       //   )
       // );
       self.push(message);
-      console.log(consumer);
+      console.log("消费者", consumer);
 
-      const audioElem = document.createElement("video");
-      document.getElementsByTagName("body")[0].appendChild(audioElem);
-
-      const stream = new MediaStream();
-      stream.addTrack(consumer.track);
-      audioElem.srcObject = stream;
-      audioElem
-        .play()
-        .catch((error) => console.warn("audioElem.play() failed:%o", error));
-
+      self.callbackMedia("remote", consumer.track, consumer);
+      
       // If audio-only mode is enabled, pause it.
       if (consumer.kind === "video" && !self.videoProduce) {
         // this.pauseConsumer(consumer);
@@ -1010,6 +1099,26 @@ class Taoyao {
       }
     } catch (error) {
       self.callbackError("消费媒体异常", error);
+    }
+  }
+
+  async pauseConsumer(consumer) {
+    if (consumer.paused) return;
+    try {
+      await this._protoo.request("pauseConsumer", { consumerId: consumer.id });
+      consumer.pause();
+    } catch (error) {
+      logger.error("_pauseConsumer() | failed:%o", error);
+    }
+  }
+
+  async resumeConsumer(consumer) {
+    if (!consumer.paused) return;
+    try {
+      await this._protoo.request("resumeConsumer", { consumerId: consumer.id });
+      consumer.resume();
+    } catch (error) {
+      logger.error("_resumeConsumer() | failed:%o", error);
     }
   }
 

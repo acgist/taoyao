@@ -573,7 +573,7 @@ class Signal {
   }
 
   async mediaConsume(message, body) {
-    const { roomId, clientId, streamId, producerId, transportId, rtpCapabilities } = body;
+    const { roomId, clientId, sourceId, streamId, producerId, transportId, rtpCapabilities } = body;
     const room = this.rooms.get(roomId);
     const producer = room.producers.get(producerId);
     const transport = room.transports.get(transportId);
@@ -682,6 +682,7 @@ class Signal {
             type: consumer.type,
             roomId: roomId,
             clientId: clientId,
+            sourceId: sourceId,
             streamId: streamId,
             producerId: producerId,
             consumerId: consumer.id,
