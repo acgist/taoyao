@@ -71,7 +71,7 @@ public class MediaProduceProtocol extends ProtocolRoomAdapter {
         // 全部不收：全部广播
         room.broadcast(responseMessage);
         log.info("{}生产媒体：{} - {} - {}", clientId, kind, streamId, producerId);
-        this.publishEvent(new MediaProduceEvent(room, client, producer));
+        this.publishEvent(new MediaProduceEvent(room, producer));
     }
     
 }

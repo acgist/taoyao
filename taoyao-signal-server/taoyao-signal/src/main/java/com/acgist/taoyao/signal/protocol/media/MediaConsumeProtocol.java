@@ -47,12 +47,13 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
     @Async
     @Override
     public void onApplicationEvent(MediaProduceEvent event) {
-        // TODO：根据类型进行消费
         final Room room = event.getRoom();
-        final Client client = event.getClient();
         final Producer producer = event.getProducer();
-        room.getClients().keySet().stream()
-        .filter(v -> v != client)
+        final ClientWrapper clientWrapper = producer.getProduceClient();
+        final Client client = clientWrapper.getClient();
+        room.getClients().values().stream()
+        .filter(v -> v.getClient() != client)
+        .filter(v -> v.getSubscribeType().consume(producer))
         .forEach(v -> this.consume(room, v, producer));
     }
     
@@ -62,7 +63,7 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
         final Producer producer = room.producer(producerId);
         if(clientType == ClientType.WEB || clientType == ClientType.CAMERA) {
             // 请求消费
-            this.consume(room, client, producer);
+            this.consume(room, room.clientWrapper(client), producer);
         } else if(clientType == ClientType.MEDIA) {
             // 等待消费者准备完成
             final String kind = MapUtils.get(body, Constant.KIND);
@@ -79,8 +80,7 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
             }
             final Client consumeClient = consumeClientWrapper.getClient();
             consumers.put(consumerId, new Consumer(consumeClientWrapper, producer, kind, streamId, consumerId));
-            final Message response = consumeClient.request(message);
-            client.push(response);
+            consumeClient.push(message);
         } else {
             // TODO：log
         }
@@ -93,12 +93,15 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
      * @param consumeClient
      * @param producer
      */
-    private void consume(Room room, Client consumeClient, Producer producer) {
+    private void consume(Room room, ClientWrapper consumeClientWrapper, Producer producer) {
+        if(producer.getProduceClient().consume(producer)) {
+            log.debug("已经消费：{}", consumeClientWrapper.getClientId());
+            return;
+        }
         final Client mediaClient = room.getMediaClient();
-        final ClientWrapper consumeClientWrapper = room.clientWrapper(consumeClient);
         final Transport recvTransport = consumeClientWrapper.getRecvTransport();
         final Map<String, Object> body = new HashMap<>();
-        final String clientId = consumeClient.clientId();
+        final String clientId = consumeClientWrapper.getClientId();
         final String streamId = producer.getStreamId() + "->" + clientId;
         body.put(Constant.ROOM_ID, room.getRoomId());
         body.put(Constant.CLIENT_ID, clientId);

@@ -10,6 +10,20 @@ import {
   defaultRTCPeerConnectionConfig,
 } from "./Config.js";
 
+// Used for simulcast webcam video.
+const WEBCAM_SIMULCAST_ENCODINGS =
+[
+	{ scaleResolutionDownBy: 4, maxBitrate: 500000, scalabilityMode: 'S1T2' },
+	{ scaleResolutionDownBy: 2, maxBitrate: 1000000, scalabilityMode: 'S1T2' },
+	{ scaleResolutionDownBy: 1, maxBitrate: 5000000, scalabilityMode: 'S1T2' }
+];
+
+// Used for VP9 webcam video.
+const WEBCAM_KSVC_ENCODINGS =
+[
+	{ scalabilityMode: 'S3T3_KEY' }
+];
+
 /**
  * 信令通道
  */
@@ -366,6 +380,13 @@ class Taoyao {
   consume;
   // 是否生产
   produce;
+  // 视频来源：file | camera | screen
+  videoSource = "screen";
+  // 强制使用VP9
+  forceVP9;
+  // 强制使用H264
+  forceH264;
+  useSimulcast;
   // 是否生产音频
   audioProduce;
   // 是否生成视频
@@ -450,18 +471,17 @@ class Taoyao {
       }
     }
     // 错误回调
-    const errorMessage = protocol.buildMessage("platform::error", { message }, -9999);
+    const errorMessage = protocol.buildMessage(
+      "platform::error",
+      { message },
+      -9999
+    );
     errorMessage.code = "-9999";
     errorMessage.message = message;
-    self.callback(
-      errorMessage,
-      error
-    );
+    self.callback(errorMessage, error);
   }
   async roomList() {
-    const response = await this.request(
-      protocol.buildMessage("room::list")
-    );
+    const response = await this.request(protocol.buildMessage("room::list"));
     return response.body;
   }
   async mediaList() {
@@ -711,7 +731,11 @@ class Taoyao {
         const stream = await navigator.mediaDevices.getUserMedia({
           audio: true,
         });
-        track = stream.getAudioTracks()[0];
+        const tracks = stream.getAudioTracks();
+        if (tracks.length > 1) {
+          console.log("多个音频轨道");
+        }
+        track = tracks[0];
         this.audioProducer = await this.sendTransport.produce({
           track,
           codecOptions: {
@@ -797,7 +821,108 @@ class Taoyao {
    * 生产视频
    * TODO：重复点击
    */
-  async produceVideo() {}
+  async produceVideo() {
+    console.debug("打开摄像头");
+    const self = this;
+    if (self.videoProduce && self.mediasoupDevice.canProduce("video")) {
+      if (self.videoProducer) {
+        return;
+      }
+      let track;
+      try {
+        if (self.videoSource === "file") {
+          // TODO：实现文件分享
+          // const stream = await this._getExternalVideoStream();
+          // track = stream.getVideoTracks()[0].clone();
+        } else if (self.videoSource === "camera") {
+          console.debug("enableWebcam() | calling getUserMedia()");
+          // TODO：参数
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+          track = stream.getVideoTracks()[0];
+        } else if (self.videoSource === "screen") {
+          const stream = await navigator.mediaDevices.getDisplayMedia({
+            audio: false,
+            video: {
+              displaySurface: "monitor",
+              logicalSurface: true,
+              cursor: true,
+              width: { max: 1920 },
+              height: { max: 1080 },
+              frameRate: { max: 30 },
+            },
+          });
+          track = stream.getVideoTracks()[0];
+        } else {
+          // TODO：异常
+        }
+        let codec;
+        let encodings;
+        const codecOptions = {
+          videoGoogleStartBitrate: 1000,
+        };
+        if (self.forceH264) {
+          codec = self.mediasoupDevice.rtpCapabilities.codecs.find(
+            (c) => c.mimeType.toLowerCase() === "video/h264"
+          );
+          if (!codec) {
+            throw new Error(
+              "desired H264 codec+configuration is not supported"
+            );
+          }
+        } else if (self.forceVP9) {
+          codec = self.mediasoupDevice.rtpCapabilities.codecs.find(
+            (c) => c.mimeType.toLowerCase() === "video/vp9"
+          );
+          if (!codec) {
+            throw new Error("desired VP9 codec+configuration is not supported");
+          }
+        }
+        if (this.useSimulcast) {
+          // If VP9 is the only available video codec then use SVC.
+          const firstVideoCodec =
+            this.mediasoupDevice.rtpCapabilities.codecs.find(
+              (c) => c.kind === "video"
+            );
+          if (
+            (this.forceVP9 && codec) ||
+            firstVideoCodec.mimeType.toLowerCase() === "video/vp9"
+          ) {
+            encodings = WEBCAM_KSVC_ENCODINGS;
+          } else {
+            encodings = WEBCAM_SIMULCAST_ENCODINGS;
+          }
+        }
+        this.videoProducer = await this.sendTransport.produce({
+          codec,
+          track,
+          encodings,
+          codecOptions,
+        });
+
+        // if (this._e2eKey && e2e.isSupported()) {
+        //   e2e.setupSenderTransform(this.videoProducer.rtpSender);
+        // }
+        
+        this.videoProducer.on("transportclose", () => {
+          this.videoProducer = null;
+        });
+
+        this.videoProducer.on("trackended", () => {
+          console.warn("video producer trackended", this.audioProducer);
+          this.closeVideoProducer().catch(() => {});
+        });
+      } catch (error) {
+        self.callbackError("摄像头打开异常", error);
+        if (track) {
+          track.stop();
+        }
+      }
+    } else {
+      console.error("打开摄像头失败");
+    }
+  }
 
   /**
    * 消费媒体
@@ -866,18 +991,17 @@ class Taoyao {
       //   )
       // );
       self.push(message);
-      console.log(consumer)
+      console.log(consumer);
 
-
-      const audioElem = document.createElement('video');
-      document.getElementsByTagName('body')[0].appendChild(audioElem)
+      const audioElem = document.createElement("video");
+      document.getElementsByTagName("body")[0].appendChild(audioElem);
 
       const stream = new MediaStream();
-			stream.addTrack(consumer.track);
-			audioElem.srcObject = stream;
-			audioElem.play()
-				.catch((error) => logger.warn('audioElem.play() failed:%o', error));
-
+      stream.addTrack(consumer.track);
+      audioElem.srcObject = stream;
+      audioElem
+        .play()
+        .catch((error) => console.warn("audioElem.play() failed:%o", error));
 
       // If audio-only mode is enabled, pause it.
       if (consumer.kind === "video" && !self.videoProduce) {

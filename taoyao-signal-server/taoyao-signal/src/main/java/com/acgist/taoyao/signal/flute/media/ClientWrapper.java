@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Peer
+ * 终端包装器
  * 
  * @author acgist
  */
@@ -20,7 +20,6 @@ public class ClientWrapper {
 
     /**
      * 订阅类型
-     * 如果需要订阅指定终端需要调用媒体消费信令
      * 
      * @author acgist
      */
@@ -34,6 +33,24 @@ public class ClientWrapper {
         ALL_VIDEO,
         // 没有订阅任何媒体
         NONE;
+        
+        public static final SubscribeType of(String value) {
+            for (SubscribeType type : SubscribeType.values()) {
+                if(type.name().equalsIgnoreCase(value)) {
+                    return type;
+                }
+            }
+            return SubscribeType.ALL;
+        }
+        
+        public boolean consume(Producer producer) {
+            return switch (this) {
+            case NONE -> false;
+            case ALL_AUDIO -> producer.getKind() == Kind.AUDIO;
+            case ALL_VIDEO -> producer.getKind() == Kind.VIDEO;
+            default -> true;
+            };
+        }
         
     }
 
@@ -53,6 +70,12 @@ public class ClientWrapper {
 	 * 终端标识
 	 */
 	private final String clientId;
+	/**
+	 * 订阅类型
+	 * 指定订阅类型终端注册或者生成媒体后会自动进行媒体推流拉流
+	 * 没有订阅任何媒体时需要用户自己对媒体进行消费控制
+	 */
+	private SubscribeType subscribeType;
 	private Object rtpCapabilities;
 	private Object sctpCapabilities;
 	/**
@@ -96,6 +119,17 @@ public class ClientWrapper {
             .map(producer -> producer.getConsumers().size())
             .collect(Collectors.counting())
             .intValue();
+    }
+    
+    /**
+     * 是否已经消费
+     * 
+     * @param producer
+     * @return
+     */
+    public boolean consume(Producer producer) {
+        return this.producers.values().stream()
+            .anyMatch(v -> v.getConsumers().values().stream().anyMatch(c -> c.getProducer() == producer));
     }
     
 }

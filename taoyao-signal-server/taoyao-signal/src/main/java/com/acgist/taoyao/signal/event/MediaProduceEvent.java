@@ -1,6 +1,5 @@
 package com.acgist.taoyao.signal.event;
 
-import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.flute.media.Producer;
 import com.acgist.taoyao.signal.flute.media.Room;
 
@@ -18,12 +17,13 @@ public class MediaProduceEvent extends RoomEventAdapter {
 
     private static final long serialVersionUID = 1L;
     
-    private final Client client;
+    /**
+     * 生产者
+     */
     private final Producer producer;
     
-    public MediaProduceEvent(Room room, Client client, Producer producer) {
+    public MediaProduceEvent(Room room, Producer producer) {
         super(room);
-        this.client = client;
         this.producer = producer;
     }
 

@@ -14,6 +14,7 @@ import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.boot.utils.NetUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
+import com.acgist.taoyao.signal.event.MediaProduceEvent;
 import com.acgist.taoyao.signal.flute.media.ClientWrapper;
 import com.acgist.taoyao.signal.flute.media.Room;
 import com.acgist.taoyao.signal.flute.media.Transport;
@@ -74,6 +75,7 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
             }
             // 拷贝属性
             recvTransport.copy(responseBody);
+            this.produce(room, clientWrapper);
         }
         // 生产者
         final Boolean producing = MapUtils.getBoolean(body, Constant.PRODUCING);
@@ -110,6 +112,19 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
                 map.put(Constant.IP, rewriteIp);
             }
         });
+    }
+    
+    /**
+     * 生产数据
+     * 
+     * @param room
+     * @param clientWrapper
+     */
+    private void produce(Room room, ClientWrapper clientWrapper) {
+        room.getClients().values().stream()
+        .filter(v -> v != clientWrapper)
+        .flatMap(v -> v.getProducers().values().stream())
+        .forEach(producer -> this.publishEvent(new MediaProduceEvent(room, producer)));
     }
     
 }

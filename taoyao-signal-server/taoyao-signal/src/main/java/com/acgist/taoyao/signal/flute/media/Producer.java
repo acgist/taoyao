@@ -18,7 +18,7 @@ public class Producer {
     /**
      * 生产者终端
      */
-    private final ClientWrapper client;
+    private final ClientWrapper produceClient;
     /**
      * 媒体类型
      */
@@ -36,12 +36,12 @@ public class Producer {
      */
     private final Map<String, Consumer> consumers;
     
-    public Producer(ClientWrapper client, String kind, String streamId, String producerId) {
-        this.client = client;
+    public Producer(ClientWrapper produceClient, String kind, String streamId, String producerId) {
+        this.produceClient = produceClient;
         this.kind = Kind.of(kind);
         this.streamId = streamId;
         this.producerId = producerId;
         this.consumers = new ConcurrentHashMap<>();
     }
-
+    
 }

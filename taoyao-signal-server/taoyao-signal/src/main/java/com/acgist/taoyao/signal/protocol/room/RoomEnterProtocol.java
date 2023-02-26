@@ -12,6 +12,7 @@ import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.flute.media.ClientWrapper;
+import com.acgist.taoyao.signal.flute.media.ClientWrapper.SubscribeType;
 import com.acgist.taoyao.signal.flute.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
@@ -47,10 +48,11 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
 	public RoomEnterProtocol() {
 		super("进入房间信令", SIGNAL);
 	}
-	
+
 	@Override
 	public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         final String password = MapUtils.get(body, Constant.PASSWORD);
+        final String subscribeType = MapUtils.get(body, Constant.SUBSCRIBE_TYPE);
         final Object rtpCapabilities = MapUtils.get(body, Constant.RTP_CAPABILITIES);
         final Object sctpCapabilities = MapUtils.get(body, Constant.SCTP_CAPABILITIES);
         final String roomPassowrd = room.getPassword();
@@ -59,6 +61,7 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
         }
         // 进入房间
         final ClientWrapper clientWrapper = room.enter(client);
+        clientWrapper.setSubscribeType(SubscribeType.of(subscribeType));
         clientWrapper.setRtpCapabilities(rtpCapabilities);
         clientWrapper.setSctpCapabilities(sctpCapabilities);
         // 发送通知

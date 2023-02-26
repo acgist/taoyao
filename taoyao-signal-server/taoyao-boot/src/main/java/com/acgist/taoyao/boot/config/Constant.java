@@ -223,5 +223,9 @@ public interface Constant {
      * 消费者
      */
     String PRODUCING = "producing";
+    /**
+     * 订阅类型
+     */
+    String SUBSCRIBE_TYPE = "subscribeType";
 
 }

@@ -15,7 +15,7 @@ public class Consumer {
     /**
      * 消费者终端
      */
-    private final ClientWrapper client;
+    private final ClientWrapper consumeClient;
     /**
      * 生产者
      */
@@ -33,8 +33,8 @@ public class Consumer {
      */
     private final String consumerId;
     
-    public Consumer(ClientWrapper client, Producer producer, String kind, String streamId, String consumerId) {
-        this.client = client;
+    public Consumer(ClientWrapper consumeClient, Producer producer, String kind, String streamId, String consumerId) {
+        this.consumeClient = consumeClient;
         this.producer = producer;
         this.kind = Kind.of(kind);
         this.streamId = streamId;
