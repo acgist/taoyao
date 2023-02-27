@@ -39,16 +39,21 @@ public class ClientAlarmProtocol extends ProtocolClientAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+        final String alarmMessage = MapUtils.get(body, Constant.MESSAGE);
+        final String alarmDatetime = MapUtils.get(body, Constant.DATETIME);
         log.warn(
             """
-            终端发生告警：{}
-            {}
-            {}
+            终端告警：{}
+            终端类型：{}
+            告警描述：{}
+            告警时间：{}
             """,
             clientId,
-            MapUtils.get(body, Constant.MESSAGE),
-            MapUtils.get(body, Constant.DATETIME)
+            clientType,
+            alarmMessage,
+            alarmDatetime
         );
+        // 业务逻辑
     }
     
 }

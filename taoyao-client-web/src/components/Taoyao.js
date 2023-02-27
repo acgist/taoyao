@@ -1,7 +1,6 @@
 /**
  * 桃夭
  */
-import { TaoyaoClient } from "./TaoyaoClient.js";
 import * as mediasoupClient from "mediasoup-client";
 import {
   protocol,
@@ -30,9 +29,7 @@ const signalChannel = {
   channel: null,
   // 地址
   address: null,
-  // 回调
-  callback: null,
-  // 回调事件
+  // 请求回调
   callbackMapping: new Map(),
   // 心跳时间
   heartbeatTime: 30 * 1000,
@@ -156,15 +153,15 @@ const signalChannel = {
         }
         // 前置回调
         if (!done) {
-          await self.preCallback(message);
+          await self.taoyao.preCallback(message);
         }
         // 全局回调
         if (!done && self.callback) {
-          done = await self.callback(message);
+          done = await self.taoyao.callback(message);
         }
         // 后置回调
         if (!done) {
-          await self.postCallback(message);
+          await self.taoyao.postCallback(message);
         }
       };
     });
@@ -256,103 +253,6 @@ const signalChannel = {
     self.channel.close();
     clearTimeout(self.heartbeatTimer);
     clearTimeout(self.reconnectTimer);
-  },
-  /**
-   * 前置回调
-   *
-   * @param {*} message
-   */
-  async preCallback(message) {
-    const self = this;
-    switch (message.header.signal) {
-      case "client::config":
-        self.defaultClientConfig(message);
-        break;
-      case "client::register":
-        console.info("终端注册成功");
-        break;
-      case "media::consume":
-        await self.taoyao.consumeMedia(message);
-        break;
-    }
-  },
-  /**
-   * 后置回调
-   *
-   * @param {*} message 消息
-   */
-  async postCallback(message) {
-    const self = this;
-    switch (message.header.signal) {
-      case "client::reboot":
-        self.defaultClientReboot(message);
-        break;
-        case "client::shutdown":
-          self.defaultClientShutdown(message);
-          break;
-      case "room::enter":
-        self.defaultRoomEnter(message);
-        break;
-      case "room::client::list":
-        self.defaultRoomClientList(message);
-        break;
-      case "platform::error":
-        self.callbackError(message);
-        break;
-    }
-  },
-  /**
-   * 配置默认回调
-   *
-   * @param {*} message 消息
-   */
-  defaultClientConfig(message) {
-    const self = this;
-    self.taoyao.audio = { ...defaultAudioConfig, ...message.body.media.audio };
-    self.taoyao.video = { ...defaultVideoConfig, ...message.body.media.video };
-    self.taoyao.webrtc = message.body.webrtc;
-    console.debug(
-      "终端配置",
-      self.taoyao.audio,
-      self.taoyao.video,
-      self.taoyao.webrtc
-    );
-  },
-  /**
-   * 终端重启默认回调
-   *
-   * @param {*} message 消息
-   */
-  defaultClientReboot(message) {
-    console.info("重启终端");
-    location.reload();
-  },
-  /**
-   * 终端重启默认回调
-   *
-   * @param {*} message 消息
-   */
-  defaultClientShutdown(message) {
-    console.info("关闭终端");
-    window.close();
-  },
-  defaultRoomEnter(message) {
-    const { roomId, clientId } = message.body;
-    if(clientId === this.taoyao.clientId) {
-      // 忽略自己
-    } else {
-      this.taoyao.remoteClients.set(clientId, roomId);
-    }
-  },
-  defaultRoomClientList(message) {
-    const self = this;
-    message.body.forEach(v => {
-      if(v.clientId === self.taoyao.clientId) {
-        // 忽略自己
-      } else {
-        self.taoyao.remoteClients.set(v.clientId, self.taoyao.roomId);
-      }
-    });
   },
 };
 
@@ -478,6 +378,103 @@ class Taoyao {
       `wss://${self.host}:${self.port}/websocket.signal`,
       callback
     );
+  }
+  /**
+   * 前置回调
+   *
+   * @param {*} message
+   */
+  async preCallback(message) {
+    const self = this;
+    switch (message.header.signal) {
+      case "client::config":
+        self.defaultClientConfig(message);
+        break;
+      case "client::register":
+        console.info("终端注册成功");
+        break;
+      case "media::consume":
+        await self.consumeMedia(message);
+        break;
+    }
+  }
+  /**
+   * 后置回调
+   *
+   * @param {*} message 消息
+   */
+  async postCallback(message) {
+    const self = this;
+    switch (message.header.signal) {
+      case "client::reboot":
+        self.defaultClientReboot(message);
+        break;
+      case "client::shutdown":
+        self.defaultClientShutdown(message);
+        break;
+      case "room::enter":
+        self.defaultRoomEnter(message);
+        break;
+      case "room::client::list":
+        self.defaultRoomClientList(message);
+        break;
+      case "platform::error":
+        self.callbackError(message);
+        break;
+    }
+  }
+  /**
+   * 配置默认回调
+   *
+   * @param {*} message 消息
+   */
+  defaultClientConfig(message) {
+    const self = this;
+    self.audio = { ...defaultAudioConfig, ...message.body.media.audio };
+    self.video = { ...defaultVideoConfig, ...message.body.media.video };
+    self.webrtc = message.body.webrtc;
+    console.debug(
+      "终端配置",
+      self.audio,
+      self.video,
+      self.webrtc
+    );
+  }
+  /**
+   * 终端重启默认回调
+   *
+   * @param {*} message 消息
+   */
+  defaultClientReboot(message) {
+    console.info("重启终端");
+    location.reload();
+  }
+  /**
+   * 终端重启默认回调
+   *
+   * @param {*} message 消息
+   */
+  defaultClientShutdown(message) {
+    console.info("关闭终端");
+    window.close();
+  }
+  defaultRoomEnter(message) {
+    const { roomId, clientId } = message.body;
+    if (clientId === this.clientId) {
+      // 忽略自己
+    } else {
+      this.remoteClients.set(clientId, roomId);
+    }
+  }
+  defaultRoomClientList(message) {
+    const self = this;
+    message.body.forEach((v) => {
+      if (v.clientId === self.clientId) {
+        // 忽略自己
+      } else {
+        self.remoteClients.set(v.clientId, self.roomId);
+      }
+    });
   }
   /**
    * 错误回调
@@ -1091,7 +1088,7 @@ class Taoyao {
       console.log("消费者", consumer);
 
       self.callbackMedia("remote", consumer.track, consumer);
-      
+
       // If audio-only mode is enabled, pause it.
       if (consumer.kind === "video" && !self.videoProduce) {
         // this.pauseConsumer(consumer);

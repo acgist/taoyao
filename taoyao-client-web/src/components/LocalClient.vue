@@ -12,14 +12,15 @@
       <el-button title="拍照" :icon="Camera" circle />
       <el-button title="录像" :icon="VideoCamera" circle />
       <el-button title="媒体信息" :icon="InfoFilled" circle />
-      <el-select placeholder="视频质量">
-        <el-option
-          v-for="option in options"
-          :key="option.value"
-          :label="option.label"
-          :value="option.value"
-        />
-      </el-select>
+      <el-popover placement="top" :width="200" trigger="hover">
+        <template #reference>
+          <el-button>视频质量</el-button>
+        </template>
+        <el-table :data="options">
+          <el-table-column width="100" property="value" label="标识" />
+          <el-table-column width="100" property="label" label="名称" />
+        </el-table>
+      </el-popover>
     </div>
   </div>
 </template>

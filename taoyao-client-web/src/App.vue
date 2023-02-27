@@ -6,6 +6,7 @@
     width="30%"
     title="终端设置"
     :show-close="false"
+    v-if="taoyao === null"
     v-model="signalVisible"
   >
     <el-form ref="SignalSetting">
@@ -81,7 +82,7 @@
 
   <!-- 菜单 -->
   <div class="menus">
-    <el-button type="primary" @click="signalVisible = true">连接信令</el-button>
+    <el-button type="primary" :disabled="taoyao !== null" @click="signalVisible = true">连接信令</el-button>
     <el-button type="primary" @click="roomActive = 'enter'; roomVisible = true;">选择房间</el-button>
     <el-button type="primary" @click="roomActive = 'create';roomVisible = true;">创建房间</el-button>
     <el-button>邀请终端</el-button>
@@ -107,8 +108,8 @@ export default {
   data() {
     return {
       room: {},
-      rooms: [],
-      medias: [],
+      rooms: null,
+      medias: null,
       config: {
         clientId: "taoyao",
         host: "localhost",
@@ -116,7 +117,7 @@ export default {
         username: "taoyao",
         password: "taoyao",
       },
-      taoyao: {},
+      taoyao: null,
       roomActive: "enter",
       roomVisible: false,
       signalVisible: false,
@@ -131,11 +132,13 @@ export default {
   },
   methods: {
     async connectSignal() {
-      let self = this;
-      self.taoyao = new Taoyao({ ...this.config });
-      self.remoteClients = self.taoyao.remoteClients;
-      await self.taoyao.connectSignal(self.callback, self.callbackMedia);
-      self.signalVisible = false;
+      const me = this;
+      me.taoyao = new Taoyao({ ...this.config });
+      await me.taoyao.connectSignal(me.callback, me.callbackMedia);
+      me.signalVisible = false;
+      me.remoteClients = me.taoyao.remoteClients;
+      // 全局绑定
+      window.taoyao = me.taoyao;
     },
     async loadList() {
       this.rooms = await this.taoyao.roomList();
@@ -208,8 +211,8 @@ export default {
 <style>
 .menus{width:100%;top:1rem;left:0;text-align:center;position:fixed;z-index:1;}
 .clients{width:100%;height:100%;top:0;left:0;position:fixed;}
-.client{float:left;width:50vw;height:50vh;border:1px solid #eee;}
-.client .buttons{width:100%;bottom:1rem;left:0;text-align:center;position:absolute;padding:0.8rem 0;background: rgba(0,0,0,0.6);text-align:center;}
+.client{float:left;width:50vw;height:50vh;box-shadow:0 0 1px 0px rgba(0,0,0,0.4);}
+.client .buttons{width:100%;bottom:1rem;left:0;text-align:center;position:absolute;padding:0.8rem 0;background: rgba(0,0,0,0.4);text-align:center;}
 .client audio{display:none;}
 .client video{width:100%;height:100%;}
 </style>
