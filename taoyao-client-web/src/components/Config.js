@@ -1,45 +1,4 @@
 /**
- * 信令
- */
-const protocol = {
-  // 当前索引
-  index: 0,
-  // 最大索引
-  maxIndex: 1000,
-  /**
-   * @returns 索引
-   */
-  buildId() {
-    if (++this.index >= this.maxIndex) {
-      this.index = 0;
-    }
-    return Date.now() * 1000 + this.index;
-  },
-  /**
-   * @param {*} signal 信令标识
-   * @param {*} body 消息主体
-   * @param {*} id 消息标识
-   * @param {*} v 消息版本
-   *
-   * @returns 信令消息
-   */
-  buildMessage(signal, body = {}, id, v) {
-    if (!signal) {
-      throw new Error("信令标识缺失");
-    }
-    const message = {
-      header: {
-        v: v || "1.0.0",
-        id: id || this.buildId(),
-        signal: signal,
-      },
-      body: body,
-    };
-    return message;
-  },
-};
-
-/**
  * 音频默认配置
  */
 const defaultAudioConfig = {
@@ -97,8 +56,23 @@ const defaultRTCPeerConnectionConfig = {
   iceCandidatePoolSize: 8,
 };
 
+/**
+ * VP9
+ */
+const ksvcEncodings = [{ scalabilityMode: "S3T3_KEY" }];
+
+/**
+ * simulcast
+ */
+const simulcastEncodings = [
+  { scaleResolutionDownBy: 4, maxBitrate: 500000, scalabilityMode: "S1T2" },
+  { scaleResolutionDownBy: 2, maxBitrate: 1000000, scalabilityMode: "S1T2" },
+  { scaleResolutionDownBy: 1, maxBitrate: 5000000, scalabilityMode: "S1T2" },
+];
+
 export {
-  protocol,
+  ksvcEncodings,
+  simulcastEncodings,
   defaultAudioConfig,
   defaultVideoConfig,
   defaultRTCPeerConnectionConfig,

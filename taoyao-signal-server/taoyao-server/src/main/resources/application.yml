@@ -4,7 +4,8 @@ server:
     enabled: true
   ssl:
     key-alias: taoyao
-    key-store: classpath:taoyao.jks
+    key-store: classpath:server.p12
+    key-store-type: PKCS12
     key-store-password: 123456
     key-password: 123456
   tomcat:
@@ -55,8 +56,10 @@ taoyao:
   description: 桃夭WebRTC信令服务
   timeout: 5000
   id:
-    index: 0
     max-index: 999999
+    server-index: 0
+    min-client-index: 10000
+    max-client-index: 99999
   # 媒体配置
   media:
     # 默认音频

@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.flute.media;
+package com.acgist.taoyao.signal.party.media;
 
 import lombok.Getter;
 import lombok.Setter;

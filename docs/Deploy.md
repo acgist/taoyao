@@ -412,5 +412,41 @@ firewall-cmd --list-ports
 ## 证书
 
 ```
-keytool -genkeypair -keyalg RSA -dname "CN=localhost, OU=acgist, O=taoyao, L=GZ, ST=GD, C=CN" -alias taoyao -validity 3650 -ext ku:c=dig,keyE -ext eku=serverAuth -ext SAN=dns:localhost,ip:127.0.0.1 -keystore taoyao.jks -keypass 123456 -storepass 123456
+mkdir /data/certs
+cd /data/certs
+vim server.ext
+
+---
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth, clientAuth
+subjectAltName=@SubjectAlternativeName
+
+[ SubjectAlternativeName ]
+IP.1=127.0.0.1
+IP.2=192.168.1.100
+IP.3=192.168.1.110
+IP.4=192.168.8.100
+IP.5=192.168.8.110
+DNS.1=localhost
+DNS.2=acgist.com
+DNS.3=www.acgist.com
+DNS.4=taoyao.acgist.com
+---
+
+# CA
+openssl genrsa -out ca.key 2048
+openssl req -x509 -new -key ca.key -out ca.crt -days 3650
+openssl x509 -in ca.crt -subject -issuer -noout
+# subject= /C=cn/ST=gd/L=gz/O=acgist/OU=acgist/CN=acgist.com
+# issuer= /C=cn/ST=gd/L=gz/O=acgist/OU=acgist/CN=acgist.com
+
+# Server
+
+openssl genrsa -out server.key 2048
+openssl req -new -key server.key -out server.csr
+openssl x509 -req -in server.csr -out server.crt -CA ca.crt -CAkey ca.key -CAcreateserial -days 3650 -extfile server.ext
+openssl x509 -in server.crt -subject -issuer -noout
+# subject= /C=cn/ST=gd/L=gz/O=acgist/OU=taoyao/CN=taoyao.acgist.com
+# issuer= /C=cn/ST=gd/L=gz/O=acgist/OU=acgist/CN=acgist.com
+openssl pkcs12 -export -clcerts -in server.crt -inkey server.key -out server.p12 -name taoyao
 ```

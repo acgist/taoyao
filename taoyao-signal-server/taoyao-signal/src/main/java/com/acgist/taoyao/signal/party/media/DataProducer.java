@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.flute.media;
+package com.acgist.taoyao.signal.party.media;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -7,24 +7,20 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 生产者
+ * 数据生产者
  * 
  * @author acgist
  */
-@Getter
 @Setter
-public class Producer {
+@Getter
+public class DataProducer {
 
     /**
      * 生产者终端
      */
     private final ClientWrapper produceClient;
     /**
-     * 媒体类型
-     */
-    private final Kind kind;
-    /**
-     * 媒体流ID
+     * 数据流ID
      */
     private final String streamId;
     /**
@@ -34,14 +30,13 @@ public class Producer {
     /**
      * 消费者
      */
-    private final Map<String, Consumer> consumers;
+    private final Map<String, DataConsumer> dataConsumers;
     
-    public Producer(ClientWrapper produceClient, String kind, String streamId, String producerId) {
+    public DataProducer(ClientWrapper produceClient, String streamId, String producerId) {
         this.produceClient = produceClient;
-        this.kind = Kind.of(kind);
         this.streamId = streamId;
         this.producerId = producerId;
-        this.consumers = new ConcurrentHashMap<>();
+        this.dataConsumers = new ConcurrentHashMap<>();
     }
     
 }

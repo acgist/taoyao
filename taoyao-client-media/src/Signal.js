@@ -9,15 +9,23 @@ const protocol = {
   // 当前索引
   index: 0,
   // 最大索引
-  maxIndex: 1000,
+  maxIndex: 999,
+  // 终端索引
+  clientIndex: 99999,
   /**
    * @returns 索引
    */
   buildId() {
-    if (++this.index >= this.maxIndex) {
+    if (++this.index > this.maxIndex) {
       this.index = 0;
     }
-    return Date.now() * 1000 + this.index;
+    const date = new Date();
+    return 100000000000000 * date.getDate() +
+    1000000000000 * date.getHours() +
+    10000000000 * date.getMinutes() +
+    100000000 * date.getSeconds() +
+    1000 * this.clientIndex +
+    this.index;
   },
   /**
    * 生成信令消息
@@ -188,15 +196,15 @@ const signalChannel = {
     );
   },
   /**
-   * 推送消息
+   * 异步请求
    *
    * @param {*} message 消息
    */
-  push(message) {
+   push(message) {
     try {
       this.channel.send(JSON.stringify(message));
     } catch (error) {
-      console.error("推送消息异常：", message, error);
+      console.error("异步请求异常：", message, error);
     }
   },
   /**
@@ -375,6 +383,9 @@ class Signal {
       case "client::shutdown":
         this.clientShutdown(message, body);
         break;
+      case "client::register":
+        protocol.clientIndex = body.index;
+        break;
       case "media::ice::restart":
         this.mediaIceRestart(message, body);
         break;
@@ -400,15 +411,19 @@ class Signal {
   }
 
   /**
-   * 通知信令
+   * 异步请求
    *
    * @param {*} message 消息
    */
   push(message) {
-    signalChannel.push(message);
+    try {
+      signalChannel.channel.send(JSON.stringify(message));
+    } catch (error) {
+      console.error("异步请求异常：", message, error);
+    }
   }
 
-    /**
+  /**
    * 同步请求
    *
    * @param {*} message 消息
@@ -416,24 +431,24 @@ class Signal {
    * @returns Promise
    */
   async request(message) {
-    const self = this;
+    const me = this;
     return new Promise((resolve, reject) => {
       let done = false;
       // 注册回调
-      self.callbackMapping.set(message.header.id, (response) => {
+      me.callbackMapping.set(message.header.id, (response) => {
         resolve(response);
         done = true;
       });
       // 发送消息
       try {
-        self.channel.send(JSON.stringify(message));
+        signalChannel.channel.send(JSON.stringify(message));
       } catch (error) {
-        console.error("请求消息异常：", message, error);
+        reject("同步请求异常", error);
       }
       // 设置超时
       setTimeout(() => {
         if (!done) {
-          self.callbackMapping.delete(message.header.id);
+          me.callbackMapping.delete(message.header.id);
           reject("请求超时", message);
         }
       }, 5000);

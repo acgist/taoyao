@@ -49,7 +49,7 @@ public class ProtocolController {
                 "code": "状态编码",
                 "message": "状态描述",
                 "body": {
-                    // 消息主体
+                    ...
                 }
             }
             ```
@@ -57,10 +57,11 @@ public class ProtocolController {
             ### 符号解释
             
             ```
-            -[消息类型]> 异步请求 | 定向单播
+            -[消息类型]> 异步请求 | 单播
             =[消息类型]> 同步请求
             -[消息类型]) 全员广播：对所有的终端广播信令（排除自己）
             +[消息类型]) 全员广播：对所有的终端广播信令（包含自己）
+            ...：其他自定义的透传内容
             ```
             
             > 没有指定消息类型时表示和信令消息类型相同
@@ -79,13 +80,9 @@ public class ProtocolController {
                 return;
             }
             // 信令名称
-            builder.append("### ").append(name).append("（").append(signal).append("）").append(Constant.LINE).append(Constant.LINE);
-            // 描述信息
-            final String memo = annotation.memo().strip();
-            if(StringUtils.isNotEmpty(memo)) {
-                builder.append(memo).append(Constant.LINE).append(Constant.LINE);
-            }
-            builder.append("```").append(Constant.LINE);
+            builder.append("### ").append(name).append("（").append(signal).append("）")
+            .append(Constant.LINE).append(Constant.LINE)
+            .append("```").append(Constant.LINE);
             // 消息主体
             builder.append("# 消息主体").append(Constant.LINE);
             Stream.of(annotation.body()).forEach(line -> builder.append(line.strip()).append(Constant.LINE));
@@ -93,6 +90,11 @@ public class ProtocolController {
             builder.append("# 数据流向").append(Constant.LINE);
             Stream.of(annotation.flow()).forEach(line -> builder.append(line.strip()).append(Constant.LINE));
             builder.append("```").append(Constant.LINE).append(Constant.LINE);
+            // 描述信息
+            final String memo = annotation.memo().strip();
+            if(StringUtils.isNotEmpty(memo)) {
+                builder.append(memo).append(Constant.LINE).append(Constant.LINE);
+            }
         });
         return builder.toString();
     }

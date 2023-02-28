@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.flute.media;
+package com.acgist.taoyao.signal.party.media;
 
 import java.io.Closeable;
 import java.util.List;
@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 房间
+ * 房间和媒体路由一对一关联
  * 
  * @author acgist
  */

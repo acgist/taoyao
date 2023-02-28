@@ -16,7 +16,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-@Schema( title = "消息头部", description = "消息头部")
+@Schema(title = "消息头部", description = "消息头部")
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor

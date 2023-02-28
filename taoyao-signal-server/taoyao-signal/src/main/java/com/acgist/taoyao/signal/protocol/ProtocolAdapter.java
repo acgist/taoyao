@@ -1,5 +1,8 @@
 package com.acgist.taoyao.signal.protocol;
 
+import java.util.Map;
+
+import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 
@@ -10,7 +13,7 @@ import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
-import com.acgist.taoyao.signal.flute.media.RoomManager;
+import com.acgist.taoyao.signal.party.media.RoomManager;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -110,16 +113,33 @@ public abstract class ProtocolAdapter implements Protocol {
 	}
 	
 	/**
+	 * 精简消息主体
+	 * 
+	 * @param body 消息主体
+	 * @param keys 清理键
+	 */
+	protected void pure(Map<String, Object> body, String ... keys) {
+	    if(ArrayUtils.isEmpty(keys)) {
+	        return;
+	    }
+	    for (String key : keys) {
+            body.remove(key);
+        }
+	}
+	
+	/**
 	 * @param args 参数
 	 */
 	protected void logNoAdapter(Object ... args) {
-	    final StringBuilder builder = new StringBuilder(this.name);
-	    builder.append("没有适配信令消息：");
-	    for (final Object object : args) {
-            builder.append(object).append(" ");
-        }
-	    builder.setLength(builder.length() - 1);
-	    log.debug(builder.toString());
+	    if(log.isDebugEnabled()) {
+	        final StringBuilder builder = new StringBuilder(this.name);
+	        builder.append("没有适配信令消息：");
+	        for (final Object object : args) {
+	            builder.append(object).append(" ");
+	        }
+	        builder.setLength(builder.length() - 1);
+	        log.debug(builder.toString());
+	    }
 	}
 	
 }

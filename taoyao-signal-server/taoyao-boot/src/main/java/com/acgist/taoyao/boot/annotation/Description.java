@@ -27,7 +27,7 @@ public @interface Description {
     /**
      * @return 数据流向
      */
-    String[] flow() default { "终端->信令服务->终端" };
+    String[] flow() default { "终端=>信令服务->终端" };
 
     /**
      * @return 描述信息

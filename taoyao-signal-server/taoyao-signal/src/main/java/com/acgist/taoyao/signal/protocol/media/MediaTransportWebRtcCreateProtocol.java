@@ -15,9 +15,9 @@ import com.acgist.taoyao.boot.utils.NetUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.event.MediaProduceEvent;
-import com.acgist.taoyao.signal.flute.media.ClientWrapper;
-import com.acgist.taoyao.signal.flute.media.Room;
-import com.acgist.taoyao.signal.flute.media.Transport;
+import com.acgist.taoyao.signal.party.media.ClientWrapper;
+import com.acgist.taoyao.signal.party.media.Room;
+import com.acgist.taoyao.signal.party.media.Transport;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -59,7 +59,7 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         body.put(Constant.CLIENT_ID, clientId);
         final Message response = room.request(message);
-        final Map<String, Object> responseBody = response.mapBody();
+        final Map<String, Object> responseBody = response.body();
         final String transportId = MapUtils.get(responseBody, Constant.TRANSPORT_ID);
         // 重写地址
         this.rewriteIp(client.ip(), responseBody);

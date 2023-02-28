@@ -83,7 +83,7 @@
   <!-- 菜单 -->
   <div class="menus">
     <el-button type="primary" :disabled="taoyao !== null" @click="signalVisible = true">连接信令</el-button>
-    <el-button type="primary" @click="roomActive = 'enter'; roomVisible = true;">选择房间</el-button>
+    <el-button type="primary" @click="roomActive = 'enter';roomVisible = true;">选择房间</el-button>
     <el-button type="primary" @click="roomActive = 'create';roomVisible = true;">创建房间</el-button>
     <el-button>邀请终端</el-button>
     <el-button>退出房间</el-button>
@@ -212,7 +212,7 @@ export default {
 .menus{width:100%;top:1rem;left:0;text-align:center;position:fixed;z-index:1;}
 .clients{width:100%;height:100%;top:0;left:0;position:fixed;}
 .client{float:left;width:50vw;height:50vh;box-shadow:0 0 1px 0px rgba(0,0,0,0.4);}
-.client .buttons{width:100%;bottom:1rem;left:0;text-align:center;position:absolute;padding:0.8rem 0;background: rgba(0,0,0,0.4);text-align:center;}
+.client .buttons{width:100%;bottom:1rem;left:0;text-align:center;position:absolute;padding:0.8rem 0;background:rgba(0,0,0,0.4);}
 .client audio{display:none;}
 .client video{width:100%;height:100%;}
 </style>

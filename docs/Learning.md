@@ -26,6 +26,7 @@ https://www.cnblogs.com/ssyfj/p/14843082.html
 
 ## 更多资料
 
+https://zhuanlan.zhihu.com/p/466172240
 http://koca.szkingdom.com/forum/t/topic/218
 http://www.manoner.com/post/音视频基础/WebRTC核心组件和协议栈/
 https://blog.csdn.net/ababab12345/article/details/115585378

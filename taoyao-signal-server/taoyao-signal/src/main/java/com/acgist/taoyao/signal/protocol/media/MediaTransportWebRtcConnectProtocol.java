@@ -9,7 +9,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.flute.media.Room;
+import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ public class MediaTransportWebRtcConnectProtocol extends ProtocolRoomAdapter {
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         if(clientType == ClientType.WEB || clientType == ClientType.CAMERA) {
             final Message response = room.request(message);
-            final Map<String, Object> responseBody = response.mapBody();
+            final Map<String, Object> responseBody = response.body();
             client.push(response);
             final String transportId = MapUtils.get(responseBody, Constant.TRANSPORT_ID);
             log.info("{} 连接WebRTC信令通道：{}", clientId, transportId);

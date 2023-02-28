@@ -18,7 +18,7 @@ public enum ClientType {
     OTHER("其他终端");
     
     /**
-     * 名称
+     * 终端名称
      */
     private final String name;
 

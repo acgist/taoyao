@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.flute.media;
+package com.acgist.taoyao.signal.party.media;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,7 +19,7 @@ import lombok.Setter;
 public class ClientWrapper {
 
     /**
-     * 订阅类型
+     * 媒体订阅类型
      * 
      * @author acgist
      */
@@ -71,7 +71,7 @@ public class ClientWrapper {
 	 */
 	private final String clientId;
 	/**
-	 * 订阅类型
+	 * 媒体订阅类型
 	 * 指定订阅类型终端注册或者生成媒体后会自动进行媒体推流拉流
 	 * 没有订阅任何媒体时需要用户自己对媒体进行消费控制
 	 */

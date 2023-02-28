@@ -34,4 +34,10 @@ class IdServiceTest {
 		this.idService.buildId();
 	}
 	
+	@Test
+	@CostedTest(count = 100000, thread = 10)
+	void testUuidCosted() {
+	    this.idService.buildUuid();
+	}
+	
 }

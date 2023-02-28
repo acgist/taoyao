@@ -44,7 +44,7 @@ async function buildMediasoupWorkers() {
       JSON.stringify(config.mediasoup.webRtcServerOptions)
     );
     for (const listenInfo of webRtcServerOptions.listenInfos) {
-      listenInfo.port = listenInfo.port + mediasoupWorkers.length - 1;
+      listenInfo.port = listenInfo.port + mediasoupWorkers.length;
     }
     const webRtcServer = await worker.createWebRtcServer(webRtcServerOptions);
     worker.appData.webRtcServer = webRtcServer;

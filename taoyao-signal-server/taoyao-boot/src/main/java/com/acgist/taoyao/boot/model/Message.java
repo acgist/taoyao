@@ -6,6 +6,7 @@ import java.util.Map;
 import org.apache.commons.lang3.StringUtils;
 
 import com.acgist.taoyao.boot.utils.JSONUtils;
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
@@ -26,6 +27,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIncludeProperties(value = { "code", "message", "header", "body" })
 public class Message implements Cloneable, Serializable {
 
 	private static final long serialVersionUID = 1L;
@@ -183,7 +185,7 @@ public class Message implements Cloneable, Serializable {
 	 * @return Map消息主体
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-    public Map<String, Object> mapBody() {
+    public Map<String, Object> body() {
         if(this.body instanceof Map map) {
             return map;
         } else if(this.body == null) {

@@ -40,7 +40,6 @@ import lombok.extern.slf4j.Slf4j;
         "temperature": 温度,
         "signal": 信号强度（0~100）,
         "battery": 电池电量（0~100）,
-        "running": 是否正在运行（true|false）,
         "charging": 是否正在充电（true|false）,
         "recording": 是否正在录像（true|false）,
         "status": {更多状态},
@@ -87,7 +86,9 @@ public class ClientRegisterProtocol extends ProtocolClientAdapter {
 		}
 		final ClientType clientType = ClientType.of(MapUtils.get(body, Constant.CLIENT_TYPE));
 		// 推送消息
-		client.push(message.cloneWithoutBody());
+		final Message registerResponse = message.cloneWithoutBody();
+		registerResponse.setBody(Map.of(Constant.INDEX, this.idService.buildClientIndex()));
+		client.push(registerResponse);
         // 下发配置
 		client.push(this.clientConfigProtocol.build(clientType));
         // 终端状态

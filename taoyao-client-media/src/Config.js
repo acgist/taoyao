@@ -117,20 +117,20 @@ module.exports = {
     // WebRtcServer：https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcServerOptions
     webRtcServerOptions: {
       listenInfos: [
+        // UDP
         {
           protocol: "udp",
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
           port: 44444,
-          // 公网地址
           announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
         },
-        {
-          protocol: "tcp",
-          ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-          port: 44444,
-          // 公网地址
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
-        },
+        // TCP
+        // {
+        //   protocol: "tcp",
+        //   ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
+        //   port: 44444,
+        //   announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
+        // },
       ],
     },
     // WebRtcTransport：https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcTransportOptions
@@ -138,7 +138,6 @@ module.exports = {
       listenIps: [
         {
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-          // 公网地址
           announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
         },
       ],
@@ -151,7 +150,6 @@ module.exports = {
     plainTransportOptions: {
       listenIp: {
         ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-        // 公网地址
         announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
       },
       maxSctpMessageSize: 262144,

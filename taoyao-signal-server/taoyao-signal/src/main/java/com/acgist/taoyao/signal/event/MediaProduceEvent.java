@@ -1,7 +1,7 @@
 package com.acgist.taoyao.signal.event;
 
-import com.acgist.taoyao.signal.flute.media.Producer;
-import com.acgist.taoyao.signal.flute.media.Room;
+import com.acgist.taoyao.signal.party.media.Producer;
+import com.acgist.taoyao.signal.party.media.Room;
 
 import lombok.Getter;
 import lombok.Setter;

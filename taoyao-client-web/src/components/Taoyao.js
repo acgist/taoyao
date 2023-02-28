@@ -3,21 +3,61 @@
  */
 import * as mediasoupClient from "mediasoup-client";
 import {
-  protocol,
+  ksvcEncodings,
+  simulcastEncodings,
   defaultAudioConfig,
   defaultVideoConfig,
   defaultRTCPeerConnectionConfig,
 } from "./Config.js";
 
-// Used for simulcast webcam video.
-const WEBCAM_SIMULCAST_ENCODINGS = [
-  { scaleResolutionDownBy: 4, maxBitrate: 500000, scalabilityMode: "S1T2" },
-  { scaleResolutionDownBy: 2, maxBitrate: 1000000, scalabilityMode: "S1T2" },
-  { scaleResolutionDownBy: 1, maxBitrate: 5000000, scalabilityMode: "S1T2" },
-];
-
-// Used for VP9 webcam video.
-const WEBCAM_KSVC_ENCODINGS = [{ scalabilityMode: "S3T3_KEY" }];
+/**
+ * 信令
+ */
+const protocol = {
+  // 当前索引
+  index: 0,
+  // 最大索引
+  maxIndex: 999,
+  // 终端索引
+  clientIndex: 99999,
+  /**
+   * @returns 索引
+   */
+  buildId() {
+    if (++this.index > this.maxIndex) {
+      this.index = 0;
+    }
+    const date = new Date();
+    return 100000000000000 * date.getDate() +
+    1000000000000 * date.getHours() +
+    10000000000 * date.getMinutes() +
+    100000000 * date.getSeconds() +
+    1000 * this.clientIndex +
+    this.index;
+  },
+  /**
+   * @param {*} signal 信令标识
+   * @param {*} body 消息主体
+   * @param {*} id 消息标识
+   * @param {*} v 消息版本
+   *
+   * @returns 信令消息
+   */
+  buildMessage(signal, body = {}, id, v) {
+    if (!signal) {
+      throw new Error("信令标识缺失");
+    }
+    const message = {
+      header: {
+        v: v || "1.0.0",
+        id: id || this.buildId(),
+        signal: signal,
+      },
+      body: body,
+    };
+    return message;
+  },
+};
 
 /**
  * 信令通道
@@ -29,8 +69,6 @@ const signalChannel = {
   channel: null,
   // 地址
   address: null,
-  // 请求回调
-  callbackMapping: new Map(),
   // 心跳时间
   heartbeatTime: 30 * 1000,
   // 心跳定时器
@@ -76,12 +114,11 @@ const signalChannel = {
    * 连接
    *
    * @param {*} address 地址
-   * @param {*} callback 回调
    * @param {*} reconnection 是否重连
    *
    * @returns Promise
    */
-  async connect(address, callback, reconnection = true) {
+  async connect(address, reconnection = true) {
     const self = this;
     if (self.channel && self.channel.readyState === WebSocket.OPEN) {
       return new Promise((resolve, reject) => {
@@ -89,7 +126,6 @@ const signalChannel = {
       });
     }
     self.address = address;
-    self.callback = callback;
     self.reconnection = reconnection;
     return new Promise((resolve, reject) => {
       console.debug("连接信令通道：", self.address);
@@ -132,36 +168,12 @@ const signalChannel = {
         }
         // 不要失败回调
       };
-      /**
-       * 回调策略：
-       * 1. 如果注册请求回调，同时执行结果返回true不再执行后面所有回调。
-       * 2. 执行前置回调
-       * 3. 如果注册全局回调，同时执行结果返回true不再执行后面所有回调。
-       * 3. 执行后置回调
-       */
       self.channel.onmessage = async function (e) {
         console.debug("信令通道消息：", e.data);
-        let done = false;
-        const message = JSON.parse(e.data);
-        // 请求回调
-        if (self.callbackMapping.has(message.header.id)) {
-          try {
-            done = self.callbackMapping.get(message.header.id)(message);
-          } finally {
-            self.callbackMapping.delete(message.header.id);
-          }
-        }
-        // 前置回调
-        if (!done) {
-          await self.taoyao.preCallback(message);
-        }
-        // 全局回调
-        if (!done && self.callback) {
-          done = await self.taoyao.callback(message);
-        }
-        // 后置回调
-        if (!done) {
-          await self.taoyao.postCallback(message);
+        try {
+          self.taoyao.on(JSON.parse(e.data));
+        } catch (error) {
+          console.error("处理信令消息异常：", message, error);
         }
       };
     });
@@ -184,7 +196,7 @@ const signalChannel = {
     // 定时重连
     self.reconnectTimer = setTimeout(function () {
       console.info("信令通道重连：", self.address);
-      self.connect(self.address, self.callback, self.reconnection);
+      self.connect(self.address, self.reconnection);
       self.lockReconnect = false;
     }, self.connectionTimeout);
     self.connectionTimeout = Math.min(
@@ -196,53 +208,14 @@ const signalChannel = {
    * 异步请求
    *
    * @param {*} message 消息
-   * @param {*} callback 回调
    */
-  push(message, callback) {
-    const self = this;
-    // 注册回调
-    if (callback) {
-      self.callbackMapping.set(message.header.id, callback);
-    }
+   push(message, callback) {
     // 发送消息
     try {
-      self.channel.send(JSON.stringify(message));
+      signalChannel.channel.send(JSON.stringify(message));
     } catch (error) {
-      console.error("推送消息异常：", message, error);
+      console.error("异步请求异常：", message, error);
     }
-  },
-  /**
-   * 同步请求
-   *
-   * @param {*} message 消息
-   *
-   * @returns Promise
-   */
-  async request(message) {
-    const self = this;
-    return new Promise((resolve, reject) => {
-      let done = false;
-      // 注册回调
-      self.callbackMapping.set(message.header.id, (response) => {
-        resolve(response);
-        done = true;
-        // 返回true不要继续执行回调
-        return true;
-      });
-      // 发送消息
-      try {
-        self.channel.send(JSON.stringify(message));
-      } catch (error) {
-        console.error("请求消息异常：", message, error);
-      }
-      // 设置超时
-      setTimeout(() => {
-        if (!done) {
-          self.callbackMapping.delete(message.header.id);
-          reject("请求超时", message);
-        }
-      }, 5000);
-    });
   },
   /**
    * 关闭通道
@@ -276,16 +249,14 @@ class Taoyao {
   callback;
   // 媒体回调
   callbackMedia;
+  // 请求回调
+  callbackMapping = new Map();
   // 音频媒体配置
   audio;
   // 视频媒体配置
   video;
   // WebRTC配置
   webrtc;
-  // 发送信令
-  push;
-  // 请求信令
-  request;
   // 信令通道
   signalChannel;
   // 发送媒体通道
@@ -306,7 +277,7 @@ class Taoyao {
   forceVP9;
   // 强制使用H264
   forceH264;
-  //
+  // 同时上送多种质量媒体
   useSimulcast;
   // 是否生产数据
   dataProduce;
@@ -367,17 +338,89 @@ class Taoyao {
     self.callbackMedia = callbackMedia;
     self.signalChannel = signalChannel;
     signalChannel.taoyao = self;
-    // 不能直接this.push = this.signalChannel.push这样导致this对象错误
-    self.push = function (data, pushCallback) {
-      self.signalChannel.push(data, pushCallback);
-    };
-    self.request = async function (data) {
-      return await self.signalChannel.request(data);
-    };
-    return self.signalChannel.connect(
-      `wss://${self.host}:${self.port}/websocket.signal`,
-      callback
-    );
+    return self.signalChannel.connect(`wss://${self.host}:${self.port}/websocket.signal`);
+  }
+  /**
+   * 异步请求
+   *
+   * @param {*} message 消息
+   * @param {*} callback 回调
+   */
+  push(message, callback) {
+    const me = this;
+    // 请求回调
+    if (callback) {
+      me.callbackMapping.set(message.header.id, callback);
+    }
+    // 发送消息
+    try {
+      signalChannel.channel.send(JSON.stringify(message));
+    } catch (error) {
+      console.error("异步请求异常：", message, error);
+    }
+  }
+  /**
+   * 同步请求
+   *
+   * @param {*} message 消息
+   *
+   * @returns Promise
+   */
+  async request(message) {
+    const me = this;
+    return new Promise((resolve, reject) => {
+      let done = false;
+      // 请求回调
+      me.callbackMapping.set(message.header.id, (response) => {
+        resolve(response);
+        done = true;
+        return true;
+      });
+      // 发送消息
+      try {
+        signalChannel.channel.send(JSON.stringify(message));
+      } catch (error) {
+        reject("同步请求异常", error);
+      }
+      // 设置超时
+      setTimeout(() => {
+        if (!done) {
+          me.callbackMapping.delete(message.header.id);
+          reject("请求超时", message);
+        }
+      }, 5000);
+    });
+  }
+  /**
+   * 回调策略：
+   * 1. 如果注册请求回调，同时执行结果返回true不再执行后面所有回调。
+   * 2. 执行前置回调
+   * 3. 如果注册全局回调，同时执行结果返回true不再执行后面所有回调。
+   * 4. 执行后置回调
+   */
+  async on(message) {
+    const me = this;
+    let done = false;
+    // 请求回调
+    if (me.callbackMapping.has(message.header.id)) {
+      try {
+        done = me.callbackMapping.get(message.header.id)(message);
+      } finally {
+        me.callbackMapping.delete(message.header.id);
+      }
+    }
+    // 前置回调
+    if (!done) {
+      await me.preCallback(message);
+    }
+    // 全局回调
+    if (!done && me.callback) {
+      done = await me.callback(message);
+    }
+    // 后置回调
+    if (!done) {
+      await me.postCallback(message);
+    }
   }
   /**
    * 前置回调
@@ -391,7 +434,7 @@ class Taoyao {
         self.defaultClientConfig(message);
         break;
       case "client::register":
-        console.info("终端注册成功");
+        protocol.clientIndex = message.body.index;
         break;
       case "media::consume":
         await self.consumeMedia(message);
@@ -918,9 +961,9 @@ class Taoyao {
             (this.forceVP9 && codec) ||
             firstVideoCodec.mimeType.toLowerCase() === "video/vp9"
           ) {
-            encodings = WEBCAM_KSVC_ENCODINGS;
+            encodings = ksvcEncodings;
           } else {
-            encodings = WEBCAM_SIMULCAST_ENCODINGS;
+            encodings = simulcastEncodings;
           }
         }
         this.videoProducer = await this.sendTransport.produce({

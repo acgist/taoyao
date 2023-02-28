@@ -25,7 +25,6 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
         "temperature": 温度,
         "signal": 信号强度（0~100）,
         "battery": 电池电量（0~100）,
-        "running": 是否正在运行（true|false）,
         "charging": 是否正在充电（true|false）,
         "recording": 是否正在录像（true|false）,
         "status": {更多状态},

@@ -3,7 +3,7 @@ package com.acgist.taoyao.signal.event;
 import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.flute.media.Room;
+import com.acgist.taoyao.signal.party.media.Room;
 
 import lombok.Getter;
 
