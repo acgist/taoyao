@@ -10,8 +10,11 @@
     v-model="signalVisible"
   >
     <el-form ref="SignalSetting">
+      <el-form-item label="终端标识">
+        <el-input v-model="config.clientId" placeholder="终端标识" />
+      </el-form-item>
       <el-form-item label="终端名称">
-        <el-input v-model="config.clientId" placeholder="终端名称" />
+        <el-input v-model="config.name" placeholder="终端名称" />
       </el-form-item>
       <el-form-item label="信令地址">
         <el-input v-model="config.host" placeholder="信令地址" />
@@ -112,6 +115,7 @@ export default {
       medias: null,
       config: {
         clientId: "taoyao",
+        name: "taoyao",
         host: "localhost",
         port: 8888,
         username: "taoyao",

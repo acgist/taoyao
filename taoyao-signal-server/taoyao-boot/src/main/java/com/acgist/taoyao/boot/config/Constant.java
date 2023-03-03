@@ -52,6 +52,10 @@ public interface Constant {
      */
     String BATTERY = "battery";
     /**
+     * 是否发生告警
+     */
+    String ALARMING = "alarming";
+    /**
      * 是否正在充电
      */
     String CHARGING = "charging";

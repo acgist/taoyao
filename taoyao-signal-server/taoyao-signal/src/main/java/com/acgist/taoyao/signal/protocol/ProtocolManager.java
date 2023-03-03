@@ -81,7 +81,6 @@ public class ProtocolManager {
 	 * @param instance 终端实例
 	 */
 	public void execute(String content, AutoCloseable instance) {
-		log.debug("执行信令消息：{}", content);
 		final Client client = this.clientManager.clients(instance);
 		if(client == null) {
 			log.warn("信令终端无效：{}-{}", instance, content);
@@ -116,6 +115,9 @@ public class ProtocolManager {
 			log.warn("不支持的信令协议：{}", content);
 			client.push(this.platformErrorProtocol.build("不支持的信令协议：" + signal));
 			return;
+		}
+		if(log.isDebugEnabled()) {
+		    log.debug("执行信令消息：{} - {}", client.clientId(), content);
 		}
 		if(protocol instanceof ClientRegisterProtocol) {
 			protocol.execute(client, message);

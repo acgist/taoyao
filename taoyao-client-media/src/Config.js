@@ -18,6 +18,8 @@ module.exports = {
     version: "1.0.0",
     // 终端标识
     clientId: "taoyao-client-media",
+    // 终端名称
+    name: "桃夭媒体服务",
     // 地址
     host: "127.0.0.1",
     // 端口

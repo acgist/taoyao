@@ -16,7 +16,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class ClientWrapper {
+public class ClientWrapper implements AutoCloseable {
 
     /**
      * 媒体订阅类型
@@ -130,6 +130,10 @@ public class ClientWrapper {
     public boolean consume(Producer producer) {
         return this.producers.values().stream()
             .anyMatch(v -> v.getConsumers().values().stream().anyMatch(c -> c.getProducer() == producer));
+    }
+
+    @Override
+    public void close() throws Exception {
     }
     
 }

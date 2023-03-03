@@ -23,6 +23,8 @@ import lombok.Setter;
 @ConfigurationProperties(prefix = "taoyao.webrtc")
 public class WebrtcProperties {
 
+    @Schema(title = "是否加密", description = "是否加密")
+    private Boolean encrypt;
 	@Schema(title = "STUN服务器", description = "STUN服务器")
 	private WebrtcStunProperties[] stun;
 	@Schema(title = "TURN服务器", description = "TURN服务器")

@@ -41,6 +41,20 @@ const defaultVideoConfig = {
 };
 
 /**
+ * VP9默认配置
+ */
+const defaultKsvcEncodings = [{ scalabilityMode: "S3T3_KEY" }];
+
+/**
+ * simulcast默认配置
+ */
+const defaultSimulcastEncodings = [
+  { scaleResolutionDownBy: 4, maxBitrate: 500000, scalabilityMode: "S1T2" },
+  { scaleResolutionDownBy: 2, maxBitrate: 1000000, scalabilityMode: "S1T2" },
+  { scaleResolutionDownBy: 1, maxBitrate: 5000000, scalabilityMode: "S1T2" },
+];
+
+/**
  * RTCPeerConnection默认配置
  */
 const defaultRTCPeerConnectionConfig = {
@@ -56,24 +70,10 @@ const defaultRTCPeerConnectionConfig = {
   iceCandidatePoolSize: 8,
 };
 
-/**
- * VP9
- */
-const ksvcEncodings = [{ scalabilityMode: "S3T3_KEY" }];
-
-/**
- * simulcast
- */
-const simulcastEncodings = [
-  { scaleResolutionDownBy: 4, maxBitrate: 500000, scalabilityMode: "S1T2" },
-  { scaleResolutionDownBy: 2, maxBitrate: 1000000, scalabilityMode: "S1T2" },
-  { scaleResolutionDownBy: 1, maxBitrate: 5000000, scalabilityMode: "S1T2" },
-];
-
 export {
-  ksvcEncodings,
-  simulcastEncodings,
   defaultAudioConfig,
   defaultVideoConfig,
+  defaultKsvcEncodings,
+  defaultSimulcastEncodings,
   defaultRTCPeerConnectionConfig,
 };

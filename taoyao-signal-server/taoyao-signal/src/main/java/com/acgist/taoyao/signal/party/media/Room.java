@@ -87,14 +87,21 @@ public class Room implements Closeable {
 	
 	/**
 	 * 终端离开
+	 * 立即释放所有资源
 	 * 
 	 * @param client 终端
 	 */
 	public void leave(Client client) {
 		synchronized (this.clients) {
-			if(this.clients.remove(client) != null) {
+		    final ClientWrapper wrapper = this.clients.remove(client);
+			if(wrapper != null) {
+			    try {
+                    wrapper.close();
+                } catch (Exception e) {
+                    log.error("终端关闭异常", e);
+                }
 				this.roomStatus.setClientSize(this.roomStatus.getClientSize() - 1);
-				// TODO：资源释放
+				// TODO：leave事件
 			}
 		}
 	}

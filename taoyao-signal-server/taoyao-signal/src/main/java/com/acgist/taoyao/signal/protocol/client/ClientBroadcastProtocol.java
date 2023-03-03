@@ -20,16 +20,16 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
  */
 @Protocol
 @Description(
+    memo = "没有指定终端类型时广播所有类型终端",
     body = {
         """
         {
             "clientType": "终端类型（可选）"
             ...
-        }    
+        }
         """
     },
-    flow = "终端->信令服务-)终端",
-    memo = "没有指定终端类型时广播所有类型终端"
+    flow = "终端->信令服务-)终端"
 )
 public class ClientBroadcastProtocol extends ProtocolClientAdapter {
 

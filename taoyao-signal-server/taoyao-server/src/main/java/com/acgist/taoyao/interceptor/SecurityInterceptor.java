@@ -58,8 +58,8 @@ public class SecurityInterceptor extends InterceptorAdapter {
 		if(this.permit(request) || this.authorization(request)) {
 			return true;
 		}
-		if(log.isInfoEnabled()) {
-			log.info("授权失败：{}", request.getRequestURL());
+		if(log.isDebugEnabled()) {
+			log.debug("授权失败：{}", request.getRequestURL());
 		}
 		response.setStatus(HttpStatus.UNAUTHORIZED.value());
 		response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic Realm=\"" + this.securityProperties.getRealm() + "\"");

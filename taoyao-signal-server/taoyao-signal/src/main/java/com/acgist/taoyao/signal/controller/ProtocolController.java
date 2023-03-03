@@ -3,7 +3,9 @@ package com.acgist.taoyao.signal.controller;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -74,27 +76,39 @@ public class ProtocolController {
             final Protocol protocol = e.getValue();
             final String name = protocol.name();
             final String signal = protocol.signal();
-            final Description annotation = protocol.getClass().getDeclaredAnnotation(Description.class);
-            if(annotation == null) {
-                log.info("信令没有注解：{}-{}", key, name);
+            final Class<?> clazz;
+            final Description description;
+            if(AopUtils.isAopProxy(e) || AopUtils.isCglibProxy(protocol) || AopUtils.isJdkDynamicProxy(protocol)) {
+                // 代理获取
+                clazz = AopUtils.getTargetClass(protocol);
+                description = AnnotationUtils.findAnnotation(clazz, Description.class);
+            } else {
+                // 直接获取
+                clazz = protocol.getClass();
+                description = AnnotationUtils.findAnnotation(clazz, Description.class);
+            }
+            if(description == null) {
+                log.info("信令没有注解：{} - {}", key, name);
                 return;
             }
             // 信令名称
-            builder.append("### ").append(name).append("（").append(signal).append("）")
-            .append(Constant.LINE).append(Constant.LINE)
-            .append("```").append(Constant.LINE);
-            // 消息主体
-            builder.append("# 消息主体").append(Constant.LINE);
-            Stream.of(annotation.body()).forEach(line -> builder.append(line.strip()).append(Constant.LINE));
-            // 数据流向
-            builder.append("# 数据流向").append(Constant.LINE);
-            Stream.of(annotation.flow()).forEach(line -> builder.append(line.strip()).append(Constant.LINE));
-            builder.append("```").append(Constant.LINE).append(Constant.LINE);
+            builder.append("### ").append(name)
+            .append("（").append(signal).append("）")
+            .append(Constant.LINE).append(Constant.LINE);
             // 描述信息
-            final String memo = annotation.memo().strip();
+            final String memo = description.memo().strip();
             if(StringUtils.isNotEmpty(memo)) {
                 builder.append(memo).append(Constant.LINE).append(Constant.LINE);
             }
+            // 消息主体
+            builder
+            .append("```").append(Constant.LINE)
+            .append("# 消息主体").append(Constant.LINE);
+            Stream.of(description.body()).forEach(line -> builder.append(line.strip()).append(Constant.LINE));
+            // 数据流向
+            builder.append("# 数据流向").append(Constant.LINE);
+            Stream.of(description.flow()).forEach(line -> builder.append(line.strip()).append(Constant.LINE));
+            builder.append("```").append(Constant.LINE).append(Constant.LINE);
         });
         return builder.toString();
     }

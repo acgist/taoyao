@@ -17,9 +17,11 @@ server:
       port-header: X-Forwarded-Port
       protocol-header: X-Forwarded-Proto
       remote-ip-header: X-Forwarded-For
+# 服务前缀
 # servlet:
 #   context-path: /taoyao
 spring:
+# 快速启动
 # main:
 #   lazy-initialization: true
   profiles:
@@ -54,10 +56,13 @@ taoyao:
   name: 桃夭信令服务
   version: 1.0.0
   description: 桃夭WebRTC信令服务
+  # 全局超时时间
   timeout: 5000
   id:
+    # 服务端
     max-index: 999999
     server-index: 0
+    # 终端
     min-client-index: 10000
     max-client-index: 99999
   # 媒体配置
@@ -117,6 +122,8 @@ taoyao:
     buffer-size: 2048
   # WebRTC配置
   webrtc:
+    # 是否加密
+    encrypt: false
     # STUN服务
     stun:
       - host: 192.168.1.110
@@ -146,7 +153,7 @@ taoyao:
     password: taoyao
   # 定时任务
   scheduled:
-    media: 0 * * * * ?
+    # 清理无效终端连接
     client: 0 * * * * ?
   # 地址重写
   ip-rewrite:

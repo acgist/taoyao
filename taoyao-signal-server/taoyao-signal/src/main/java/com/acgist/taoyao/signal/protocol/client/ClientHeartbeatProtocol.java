@@ -25,6 +25,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
         "temperature": 温度,
         "signal": 信号强度（0~100）,
         "battery": 电池电量（0~100）,
+        "alarming": 是否发生告警（true|false）,
         "charging": 是否正在充电（true|false）,
         "recording": 是否正在录像（true|false）,
         "status": {更多状态},
@@ -43,9 +44,7 @@ public class ClientHeartbeatProtocol extends ProtocolClientAdapter {
 	
 	@Override
 	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-		// 响应心跳
 		client.push(message.cloneWithoutBody());
-		// 设置状态
 		final ClientStatus status = client.status();
 		status.copy(body);
 	}

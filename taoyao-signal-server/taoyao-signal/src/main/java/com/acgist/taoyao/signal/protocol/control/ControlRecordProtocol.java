@@ -16,11 +16,11 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
  */
 @Protocol
 @Description(
+    memo = "状态通过心跳回传",
     flow = {
         "信令服务->终端",
         "终端->信令服务->终端"
-    },
-    memo = "状态通过心跳回传"
+    }
 )
 public class ControlRecordProtocol extends ProtocolControlAdapter {
 

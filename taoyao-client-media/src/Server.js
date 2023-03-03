@@ -2,7 +2,7 @@
 
 const config = require("./Config");
 const mediasoup = require("mediasoup");
-const { Signal, signalChannel } = require("./Signal");
+const { Taoyao, signalChannel } = require("./Taoyao");
 
 // 线程名称
 process.title = config.name;
@@ -11,8 +11,8 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 // Mediasoup Worker列表
 const mediasoupWorkers = [];
-// 信令服务
-const signal = new Signal(mediasoupWorkers);
+// 桃夭
+const taoyao = new Taoyao(mediasoupWorkers);
 
 /**
  * 创建Mediasoup Worker列表
@@ -56,12 +56,8 @@ async function buildMediasoupWorkers() {
  * 连接信令服务
  */
 async function connectSignalServer() {
-  await signalChannel.connect(
-    `wss://${config.signal.host}:${config.signal.port}/websocket.signal`,
-    function (message) {
-      signal.on(message);
-    }
-  );
+  signalChannel.taoyao = taoyao;
+  await signalChannel.connect(`wss://${config.signal.host}:${config.signal.port}/websocket.signal`);
 }
 
 /**

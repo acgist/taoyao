@@ -7,23 +7,24 @@ import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
-import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.event.ClientCloseEvent;
+import com.acgist.taoyao.signal.event.ClientOfflineEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 终端关闭信令
+ * 关闭终端信令
  * 
  * @author acgist
  */
 @Slf4j
 @Protocol
 @Description(
+    memo = "同时释放所有资源，所以如果终端意外掉线重连，需要终端实现音视频重连逻辑。",
     flow = {
         "终端->信令服务->终端",
         "终端->信令服务-[终端下线])终端"
@@ -33,11 +34,8 @@ public class ClientCloseProtocol extends ProtocolClientAdapter implements Applic
 
 	public static final String SIGNAL = "client::close";
 	
-    private final ClientOfflineProtocol clientOfflineProtocol;
-	
-	public ClientCloseProtocol(ClientOfflineProtocol clientOfflineProtocol) {
-		super("终端关闭信令", SIGNAL);
-		this.clientOfflineProtocol = clientOfflineProtocol;
+	public ClientCloseProtocol() {
+		super("关闭终端信令", SIGNAL);
 	}
 	
 	@Async
@@ -48,13 +46,12 @@ public class ClientCloseProtocol extends ProtocolClientAdapter implements Applic
 
 	@Override
 	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-		// 响应消息
 		client.push(message.cloneWithoutBody());
-		// 关闭连接后会发布事件
 		try {
+		    // 关闭连接后会发布事件
 			client.close();
 		} catch (Exception e) {
-			log.error("关闭终端异常", e);
+			log.error("关闭终端异常：{}", clientId, e);
 		}
 	}
 	
@@ -63,24 +60,17 @@ public class ClientCloseProtocol extends ProtocolClientAdapter implements Applic
 	 * 
 	 * @param client 终端
 	 */
-	public void close(Client client) {
-        if(!client.authorized()) {
+	private void close(Client client) {
+        if(client == null || !client.authorized()) {
             // 没有授权终端
             return;
         }
         final String clientId = client.clientId();
         log.info("关闭终端：{}", clientId);
-        // 房间释放
+        // 释放房间终端
         this.roomManager.leave(client);
-        // 广播下线事件
-        final Message message = this.clientOfflineProtocol.build(
-            Map.of(Constant.CLIENT_ID, clientId)
-        );
-        this.clientManager.broadcast(clientId, message);
-        // TODO：释放连接
-        // TODO：释放房间
-        // TODO：退出帐号
-        // TODO：注意释放：是否考虑没有message（非正常的关闭）不要立即释放
+        // 终端下线事件
+        this.publishEvent(new ClientOfflineEvent(client));
 	}
 
 }

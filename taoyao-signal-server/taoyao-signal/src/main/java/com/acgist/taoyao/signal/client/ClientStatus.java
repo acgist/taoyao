@@ -25,7 +25,7 @@ public class ClientStatus {
     private String ip;
     @Schema(title = "终端名称", description = "终端名称")
     private String name;
-    @Schema(title = "终端标识", description = "终端标识")
+    @Schema(title = "终端ID", description = "终端ID")
     private String clientId;
     @Schema(title = "终端类型", description = "终端类型")
     private ClientType clientType;
@@ -41,6 +41,8 @@ public class ClientStatus {
 	private Integer signal;
 	@Schema(title = "电池电量（0~100）", description = "电池电量（0~100）")
 	private Integer battery;
+	@Schema(title = "是否发生告警", description = "是否发生告警")
+	private Boolean alarming;
 	@Schema(title = "是否正在充电", description = "是否正在充电")
 	private Boolean charging;
 	@Schema(title = "是否正在录像", description = "是否正在录像")
@@ -64,11 +66,12 @@ public class ClientStatus {
         this.setTemperature(MapUtils.get(body, Constant.TEMPERATURE));
         this.setSignal(MapUtils.get(body, Constant.SIGNAL));
         this.setBattery(MapUtils.get(body, Constant.BATTERY));
-        this.setCharging(MapUtils.get(body, Constant.CHARGING));
-        this.setRecording(MapUtils.get(body, Constant.RECORDING));
-        this.setLastHeartbeat(LocalDateTime.now());
+        this.setAlarming(MapUtils.getBoolean(body, Constant.ALARMING));
+        this.setCharging(MapUtils.getBoolean(body, Constant.CHARGING));
+        this.setRecording(MapUtils.getBoolean(body, Constant.RECORDING));
         this.status(MapUtils.get(body, Constant.STATUS));
         this.config(MapUtils.get(body, Constant.CONFIG));
+        this.setLastHeartbeat(LocalDateTime.now());
 	}
 	
 	/**

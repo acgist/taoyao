@@ -1,12 +1,9 @@
-/**
- * 桃夭
- */
 import * as mediasoupClient from "mediasoup-client";
 import {
-  ksvcEncodings,
-  simulcastEncodings,
   defaultAudioConfig,
   defaultVideoConfig,
+  defaultKsvcEncodings,
+  defaultSimulcastEncodings,
   defaultRTCPeerConnectionConfig,
 } from "./Config.js";
 
@@ -28,17 +25,19 @@ const protocol = {
       this.index = 0;
     }
     const date = new Date();
-    return 100000000000000 * date.getDate() +
-    1000000000000 * date.getHours() +
-    10000000000 * date.getMinutes() +
-    100000000 * date.getSeconds() +
-    1000 * this.clientIndex +
-    this.index;
+    return (
+      100000000000000 * date.getDate() +
+      1000000000000 * date.getHours() +
+      10000000000 * date.getMinutes() +
+      100000000 * date.getSeconds() +
+      1000 * this.clientIndex +
+      this.index
+    );
   },
   /**
    * @param {*} signal 信令标识
    * @param {*} body 消息主体
-   * @param {*} id 消息标识
+   * @param {*} id 消息ID
    * @param {*} v 消息版本
    *
    * @returns 信令消息
@@ -80,7 +79,7 @@ const signalChannel = {
   // 防止重复重连
   lockReconnect: false,
   // 当前重连时间
-  connectionTimeout: 5 * 1000,
+  reconnectionTimeout: 5 * 1000,
   // 最小重连时间
   minReconnectionDelay: 5 * 1000,
   // 最大重连时间
@@ -89,26 +88,24 @@ const signalChannel = {
    * 心跳
    */
   heartbeat() {
-    const self = this;
-    if (self.heartbeatTimer) {
-      clearTimeout(self.heartbeatTimer);
+    const me = this;
+    if (me.heartbeatTimer) {
+      clearTimeout(me.heartbeatTimer);
     }
-    self.heartbeatTimer = setTimeout(async function () {
-      if (self.channel && self.channel.readyState === WebSocket.OPEN) {
+    me.heartbeatTimer = setTimeout(async function () {
+      if (me.channel && me.channel.readyState === WebSocket.OPEN) {
         const battery = await navigator.getBattery();
-        // TODO：信号强度
-        self.push(
+        me.push(
           protocol.buildMessage("client::heartbeat", {
-            signal: 100,
             battery: battery.level * 100,
             charging: battery.charging,
           })
         );
-        self.heartbeat();
+        me.heartbeat();
       } else {
-        console.warn("发送心跳失败：", self.address);
+        console.warn("心跳失败：", me.address);
       }
-    }, self.heartbeatTime);
+    }, me.heartbeatTime);
   },
   /**
    * 连接
@@ -119,61 +116,58 @@ const signalChannel = {
    * @returns Promise
    */
   async connect(address, reconnection = true) {
-    const self = this;
-    if (self.channel && self.channel.readyState === WebSocket.OPEN) {
+    const me = this;
+    if (me.channel && me.channel.readyState === WebSocket.OPEN) {
       return new Promise((resolve, reject) => {
-        resolve(self.channel);
+        resolve(me.channel);
       });
     }
-    self.address = address;
-    self.reconnection = reconnection;
+    me.address = address;
+    me.reconnection = reconnection;
     return new Promise((resolve, reject) => {
-      console.debug("连接信令通道：", self.address);
-      self.channel = new WebSocket(self.address);
-      self.channel.onopen = async function () {
-        console.debug("打开信令通道：", self.address);
-        // 注册终端
-        // TODO：信号强度
+      console.debug("连接信令通道：", me.address);
+      me.channel = new WebSocket(me.address);
+      me.channel.onopen = async function () {
+        console.debug("打开信令通道：", me.address);
         const battery = await navigator.getBattery();
-        self.push(
+        me.push(
           protocol.buildMessage("client::register", {
-            name: "桃夭Web",
-            clientId: self.taoyao.clientId,
+            clientId: me.taoyao.clientId,
+            name: me.taoyao.name,
             clientType: "WEB",
-            signal: 100,
             battery: battery.level * 100,
             charging: battery.charging,
-            username: self.taoyao.username,
-            password: self.taoyao.password,
+            username: me.taoyao.username,
+            password: me.taoyao.password,
           })
         );
-        // 重置时间
-        self.connectionTimeout = self.minReconnectionDelay;
-        // 开始心跳
-        self.heartbeat();
-        // 成功回调
-        resolve(self.channel);
+        me.reconnectionTimeout = me.minReconnectionDelay;
+        me.taoyao.connect = true;
+        me.heartbeat();
+        resolve(me.channel);
       };
-      self.channel.onclose = async function () {
-        console.warn("信令通道关闭：", self.channel);
-        if (self.reconnection) {
-          self.reconnect();
+      me.channel.onclose = async function () {
+        console.warn("信令通道关闭：", me.channel);
+        me.taoyao.connect = false;
+        if (me.reconnection) {
+          me.reconnect();
         }
         // 不要失败回调
       };
-      self.channel.onerror = async function (e) {
-        console.error("信令通道异常：", self.channel, e);
-        if (self.reconnection) {
-          self.reconnect();
+      me.channel.onerror = async function (e) {
+        console.error("信令通道异常：", me.channel, e);
+        me.taoyao.connect = false;
+        if (me.reconnection) {
+          me.reconnect();
         }
         // 不要失败回调
       };
-      self.channel.onmessage = async function (e) {
-        console.debug("信令通道消息：", e.data);
+      me.channel.onmessage = async function (e) {
         try {
-          self.taoyao.on(JSON.parse(e.data));
+          console.debug("信令通道消息：", e.data);
+          me.taoyao.on(JSON.parse(e.data));
         } catch (error) {
-          console.error("处理信令消息异常：", message, error);
+          console.error("处理信令消息异常：", e, error);
         }
       };
     });
@@ -182,26 +176,26 @@ const signalChannel = {
    * 重连
    */
   reconnect() {
-    const self = this;
+    const me = this;
     if (
-      self.lockReconnect ||
-      (self.channel && self.channel.readyState === WebSocket.OPEN)
+      me.lockReconnect ||
+      (me.channel && me.channel.readyState === WebSocket.OPEN)
     ) {
       return;
     }
-    self.lockReconnect = true;
-    if (self.reconnectTimer) {
-      clearTimeout(self.reconnectTimer);
+    me.lockReconnect = true;
+    if (me.reconnectTimer) {
+      clearTimeout(me.reconnectTimer);
     }
     // 定时重连
-    self.reconnectTimer = setTimeout(function () {
-      console.info("信令通道重连：", self.address);
-      self.connect(self.address, self.reconnection);
-      self.lockReconnect = false;
-    }, self.connectionTimeout);
-    self.connectionTimeout = Math.min(
-      self.connectionTimeout + self.minReconnectionDelay,
-      self.maxReconnectionDelay
+    me.reconnectTimer = setTimeout(function () {
+      console.info("重连信令通道：", me.address);
+      me.connect(me.address, me.reconnection);
+      me.lockReconnect = false;
+    }, me.reconnectionTimeout);
+    me.reconnectionTimeout = Math.min(
+      me.reconnectionTimeout + me.minReconnectionDelay,
+      me.maxReconnectionDelay
     );
   },
   /**
@@ -209,8 +203,7 @@ const signalChannel = {
    *
    * @param {*} message 消息
    */
-   push(message, callback) {
-    // 发送消息
+  push(message) {
     try {
       signalChannel.channel.send(JSON.stringify(message));
     } catch (error) {
@@ -221,11 +214,11 @@ const signalChannel = {
    * 关闭通道
    */
   close() {
-    const self = this;
-    self.reconnection = false;
-    self.channel.close();
-    clearTimeout(self.heartbeatTimer);
-    clearTimeout(self.reconnectTimer);
+    const me = this;
+    clearTimeout(me.heartbeatTimer);
+    clearTimeout(me.reconnectTimer);
+    me.reconnection = false;
+    me.channel.close();
   },
 };
 
@@ -233,10 +226,14 @@ const signalChannel = {
  * 桃夭
  */
 class Taoyao {
+  // 信令连接
+  connect = false;
   // 房间标识
   roomId;
   // 终端标识
   clientId;
+  // 终端名称
+  name;
   // 信令地址
   host;
   // 信令端口
@@ -299,6 +296,7 @@ class Taoyao {
   constructor({
     roomId,
     clientId,
+    name,
     host,
     port,
     username,
@@ -312,6 +310,7 @@ class Taoyao {
   }) {
     this.roomId = roomId;
     this.clientId = clientId;
+    this.name = name;
     this.host = host;
     this.port = port;
     this.username = username;
@@ -338,7 +337,9 @@ class Taoyao {
     self.callbackMedia = callbackMedia;
     self.signalChannel = signalChannel;
     signalChannel.taoyao = self;
-    return self.signalChannel.connect(`wss://${self.host}:${self.port}/websocket.signal`);
+    return self.signalChannel.connect(
+      `wss://${self.host}:${self.port}/websocket.signal`
+    );
   }
   /**
    * 异步请求
@@ -476,12 +477,7 @@ class Taoyao {
     self.audio = { ...defaultAudioConfig, ...message.body.media.audio };
     self.video = { ...defaultVideoConfig, ...message.body.media.video };
     self.webrtc = message.body.webrtc;
-    console.debug(
-      "终端配置",
-      self.audio,
-      self.video,
-      self.webrtc
-    );
+    console.debug("终端配置", self.audio, self.video, self.webrtc);
   }
   /**
    * 终端重启默认回调
@@ -961,9 +957,9 @@ class Taoyao {
             (this.forceVP9 && codec) ||
             firstVideoCodec.mimeType.toLowerCase() === "video/vp9"
           ) {
-            encodings = ksvcEncodings;
+            encodings = defaultKsvcEncodings;
           } else {
-            encodings = simulcastEncodings;
+            encodings = defaultSimulcastEncodings;
           }
         }
         this.videoProducer = await this.sendTransport.produce({

@@ -368,14 +368,14 @@ pm2 start | stop | restart taoyao-client-web
 npm run build
 
 # Nginx配置
-vim /etc/nginx/taoyao-client-web.cnf
+vim /etc/nginx/conf.d/taoyao.cnf
 
 ---
 server {
     listen      8443 http2;
     server_name localhost;
 
-    access_log  /var/log/nginx/taoyao-client-web.access.log main buffer=32k flush=10s;
+    access_log  /var/log/nginx/taoyao.access.log main buffer=32k flush=10s;
 
     location / {
         root  /data/taoyao/taoyao-client-web/dist;

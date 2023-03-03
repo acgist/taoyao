@@ -8,6 +8,7 @@ import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.client.ClientStatus;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
@@ -53,6 +54,8 @@ public class ClientAlarmProtocol extends ProtocolClientAdapter {
             alarmMessage,
             alarmDatetime
         );
+        final ClientStatus status = client.status();
+        status.setAlarming(Boolean.TRUE);
         // 业务逻辑
     }
     

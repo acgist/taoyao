@@ -4,6 +4,9 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.context.ApplicationListener;
+import org.springframework.scheduling.annotation.Async;
+
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.Constant;
@@ -14,6 +17,7 @@ import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.boot.utils.DateUtils.DateTimeStyle;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
+import com.acgist.taoyao.signal.event.ClientConfigEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**
@@ -30,9 +34,9 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
         "datetime": "日期时间（yyyyMMddHHmmss）"
     }
     """,
-    flow = "终端-[终端注册]>信令服务->终端"
+    flow = "终端=[终端注册]>信令服务->终端"
 )
-public class ClientConfigProtocol extends ProtocolClientAdapter {
+public class ClientConfigProtocol extends ProtocolClientAdapter implements ApplicationListener<ClientConfigEvent> {
 
 	public static final String SIGNAL = "client::config";
 	
@@ -45,6 +49,14 @@ public class ClientConfigProtocol extends ProtocolClientAdapter {
 		this.webrtcProperties = webrtcProperties;
 	}
 
+	@Async
+	@Override
+    public void onApplicationEvent(ClientConfigEvent event) {
+	    final Client client = event.getClient();
+	    final ClientType clientType = client.clientType();
+	    client.push(this.build(clientType));
+    }
+	
 	@Override
 	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
 	    client.push(this.build(clientType));
