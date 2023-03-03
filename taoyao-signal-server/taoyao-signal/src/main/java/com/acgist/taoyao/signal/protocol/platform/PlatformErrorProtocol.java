@@ -1,5 +1,7 @@
 package com.acgist.taoyao.signal.protocol.platform;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
@@ -21,7 +23,7 @@ public class PlatformErrorProtocol extends ProtocolClientAdapter {
 	public static final String SIGNAL = "platform::error";
 	
 	/**
-	 * 请求ID缓存
+	 * 绑定线程请求ID
 	 */
 	private ThreadLocal<Long> idLocal = new InheritableThreadLocal<>();
 	
@@ -56,10 +58,14 @@ public class PlatformErrorProtocol extends ProtocolClientAdapter {
 	 */
 	public Message build(Exception e) {
 	    final Message message = super.build();
-	    if(e instanceof MessageCodeException code) {
-	        message.setCode(code.getCode(), code.getMessage());
+	    final String exceptionMessage = e.getMessage();
+	    if(e instanceof MessageCodeException messageCodeException) {
+	        // 自定义的异常
+	        message.setCode(messageCodeException.getCode(), messageCodeException.getMessage());
+	    } else if(StringUtils.isNotEmpty(exceptionMessage) && exceptionMessage.length() <= Byte.MAX_VALUE) {
+	        // 少量信息返回异常信息
+	        message.setMessage(exceptionMessage);
 	    }
-	    message.setBody(e.getMessage());
 	    return message;
 	}
 	

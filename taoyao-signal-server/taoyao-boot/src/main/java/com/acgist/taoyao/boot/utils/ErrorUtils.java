@@ -224,8 +224,8 @@ public final class ErrorUtils {
 		if(StringUtils.isNotEmpty(message) && messageCode != MessageCode.CODE_9999) {
 			return message;
 		}
-		// 包含中文直接返回：自定义的错误
-		if(StringUtils.isNotEmpty(message) && message.matches(".*[\\u4e00-\\u9fa5]+.*")) {
+		// 少量信息返回异常信息
+		if(StringUtils.isNotEmpty(message) && message.length() <= Byte.MAX_VALUE) {
 			return message;
 		}
 		// 其他情况不能直接返回异常信息

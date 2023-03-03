@@ -22,7 +22,10 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Description(
-    flow = "终端->信令服务+)终端"
+    flow = {
+        "信令服务+)终端",
+        "终端->信令服务+)终端"
+    }
 )
 public class PlatformShutdownProtocol extends ProtocolClientAdapter implements ControlProtocol {
 
@@ -38,23 +41,24 @@ public class PlatformShutdownProtocol extends ProtocolClientAdapter implements C
 	@Override
 	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
 		log.info("关闭平台：{}", clientId);
-		this.clientManager.broadcast(message);
-		this.shutdown();
-	}
-	
-	/**
-	 * 执行命令信令
-	 */
-	public void execute() {
-	    log.info("关闭平台");
-	    this.clientManager.broadcast(this.build());
-	    this.shutdown();
+		this.shutdown(message);
 	}
 	
 	/**
 	 * 关闭平台
 	 */
-	private void shutdown() {
+	public void execute() {
+	    log.info("关闭平台");
+	    this.shutdown(this.build());
+	}
+	
+	/**
+	 * 关闭平台
+	 * 
+	 * @param message 消息
+	 */
+	private void shutdown(Message message) {
+	    this.clientManager.broadcast(message);
         if(this.applicationContext instanceof ConfigurableApplicationContext context) {
             // API关闭
             if(context.isActive()) {

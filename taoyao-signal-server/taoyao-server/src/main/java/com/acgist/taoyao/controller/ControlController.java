@@ -11,10 +11,6 @@ import com.acgist.taoyao.signal.protocol.control.ControlBellProtocol;
 import com.acgist.taoyao.signal.protocol.control.ControlPhotographProtocol;
 import com.acgist.taoyao.signal.protocol.control.ControlPtzProtocol;
 import com.acgist.taoyao.signal.protocol.control.ControlRecordProtocol;
-import com.acgist.taoyao.signal.protocol.platform.PlatformRebootProtocol;
-import com.acgist.taoyao.signal.protocol.platform.PlatformShutdownProtocol;
-import com.acgist.taoyao.signal.protocol.system.SystemRebootProtocol;
-import com.acgist.taoyao.signal.protocol.system.SystemShutdownProtocol;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,26 +29,18 @@ public class ControlController {
     
     private final ControlPtzProtocol controlPtzProtocol;
     private final ControlBellProtocol controlBellProtocol;
-    private final SystemRebootProtocol systemRebootProtocol;
     private final ControlRecordProtocol controlRecordProtocol;
-    private final SystemShutdownProtocol systemShutdownProtocol;
-    private final PlatformRebootProtocol platformRebootProtocol;
-    private final PlatformShutdownProtocol platformShutdownProtocol;
     private final ControlPhotographProtocol controlPhotographProtocol;
     
     public ControlController(
-        ControlPtzProtocol controlPtzProtocol, ControlBellProtocol controlBellProtocol,
-        SystemRebootProtocol systemRebootProtocol, ControlRecordProtocol controlRecordProtocol,
-        SystemShutdownProtocol systemShutdownProtocol, PlatformRebootProtocol platformRebootProtocol,
-        PlatformShutdownProtocol platformShutdownProtocol, ControlPhotographProtocol controlPhotographProtocol
+        ControlPtzProtocol controlPtzProtocol,
+        ControlBellProtocol controlBellProtocol,
+        ControlRecordProtocol controlRecordProtocol,
+        ControlPhotographProtocol controlPhotographProtocol
     ) {
         this.controlPtzProtocol = controlPtzProtocol;
         this.controlBellProtocol = controlBellProtocol;
-        this.systemRebootProtocol = systemRebootProtocol;
         this.controlRecordProtocol = controlRecordProtocol;
-        this.systemShutdownProtocol = systemShutdownProtocol;
-        this.platformRebootProtocol = platformRebootProtocol;
-        this.platformShutdownProtocol = platformShutdownProtocol;
         this.controlPhotographProtocol = controlPhotographProtocol;
     }
 
@@ -85,34 +73,6 @@ public class ControlController {
     @GetMapping("/photograph/{clientId}")
     public Message photograph(@PathVariable String clientId) {
         this.controlPhotographProtocol.execute(clientId);
-        return Message.success();
-    }
-    
-    @Operation(summary = "重启系统", description = "重启系统")
-    @GetMapping("/system/reboot")
-    public Message systemReboot() {
-        this.systemRebootProtocol.execute();
-        return Message.success();
-    }
-    
-    @Operation(summary = "关闭系统", description = "关闭系统")
-    @GetMapping("/system/shutdown")
-    public Message systemShutdown() {
-        this.systemShutdownProtocol.execute();
-        return Message.success();
-    }
-    
-    @Operation(summary = "重启平台", description = "重启平台")
-    @GetMapping("/platform/reboot")
-    public Message platformReboot() {
-        this.platformRebootProtocol.execute();
-        return Message.success();
-    }
-    
-    @Operation(summary = "关闭平台", description = "关闭平台")
-    @GetMapping("/platform/shutdown")
-    public Message platformShutdown() {
-        this.platformShutdownProtocol.execute();
         return Message.success();
     }
     

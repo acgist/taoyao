@@ -90,13 +90,13 @@ public class ProtocolManager {
 		final Message message = JSONUtils.toJava(content, Message.class);
 		if(message == null) {
 			log.warn("信令消息格式错误（解析失败）：{}", content);
-			client.push(this.platformErrorProtocol.build("信令消息格式错误（解析失败）"));
+			client.push(this.platformErrorProtocol.build(MessageCode.CODE_1002, "信令消息格式错误（解析失败）"));
 			return;
 		}
 		final Header header = message.getHeader();
 		if(header == null) {
 			log.warn("信令消息格式错误（没有头部）：{}", content);
-			client.push(this.platformErrorProtocol.build("信令消息格式错误（没有头部）"));
+			client.push(this.platformErrorProtocol.build(MessageCode.CODE_1002, "信令消息格式错误（没有头部）"));
 			return;
 		}
 		final String v = header.getV();
@@ -106,14 +106,14 @@ public class ProtocolManager {
 		this.platformErrorProtocol.set(id);
 		if(v == null || id == null || signal == null) {
 			log.warn("信令消息格式错误（缺失头部关键参数）：{}", content);
-			client.push(this.platformErrorProtocol.build("信令消息格式错误（缺失头部关键参数）"));
+			client.push(this.platformErrorProtocol.build(MessageCode.CODE_1002, "信令消息格式错误（缺失头部关键参数）"));
 			return;
 		}
 		// 开始处理协议
 		final Protocol protocol = this.protocolMapping.get(signal);
 		if(protocol == null) {
 			log.warn("不支持的信令协议：{}", content);
-			client.push(this.platformErrorProtocol.build("不支持的信令协议：" + signal));
+			client.push(this.platformErrorProtocol.build(MessageCode.CODE_3415, "不支持的信令协议：" + signal));
 			return;
 		}
 		if(log.isDebugEnabled()) {
