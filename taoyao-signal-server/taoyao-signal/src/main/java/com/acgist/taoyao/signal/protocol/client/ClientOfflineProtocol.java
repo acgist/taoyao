@@ -19,10 +19,10 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 @Protocol
 @Description(
     body = """
-        {
-            "clientId": "下线终端标识"
-        }
-        """,
+    {
+        "clientId": "下线终端ID"
+    }
+    """,
     flow = "终端-[终端关闭]>信令服务-)终端"
 )
 public class ClientOfflineProtocol extends ProtocolClientAdapter implements ApplicationListener<ClientOfflineEvent> {

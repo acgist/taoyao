@@ -102,5 +102,21 @@ public final class MapUtils {
         }
         return Boolean.valueOf(object.toString());
     }
+
+    /**
+     * @param <T> 参数泛型
+     * 
+     * @param body 消息主体
+     * @param key 参数名称
+     * 
+     * @return 参数值
+     */
+    @SuppressWarnings("unchecked")
+    public static final <T> T remove(Map<?, ?> body, String key) {
+        if(body == null) {
+            return null;
+        }
+        return (T) body.remove(key);
+    }
     
 }

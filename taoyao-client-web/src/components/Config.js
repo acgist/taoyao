@@ -8,10 +8,10 @@ const defaultAudioConfig = {
   volume: 0.5,
   // 延迟大小（单位毫秒）：500毫秒以内较好
   latency: 0.4,
-  // 采样数：16
-  sampleSize: 16,
+  // 采样数：8|16|32
+  sampleSize: { min: 8, ideal: 16, max: 32 },
   // 采样率：8000|16000|32000|48000
-  sampleRate: 48000,
+  sampleRate: { min: 8000, ideal: 32000, max: 48000 },
   // 声道数量：1|2
   channelCount: 1,
   // 是否开启自动增益：true|false
@@ -35,7 +35,7 @@ const defaultVideoConfig = {
   // 高度
   height: { min: 480, ideal: 720, max: 2160 },
   // 帧率
-  frameRate: 24,
+  frameRate: { min: 15, ideal: 24, max: 45 },
   // 选摄像头：user|left|right|environment
   facingMode: "environment",
 };

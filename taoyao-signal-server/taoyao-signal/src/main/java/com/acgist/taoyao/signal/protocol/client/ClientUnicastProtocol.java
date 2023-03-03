@@ -2,32 +2,35 @@ package com.acgist.taoyao.signal.protocol.client;
 
 import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
-
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 终端单播信令
  * 
  * @author acgist
  */
-@Slf4j
 @Protocol
 @Description(
-    body = """
+    body = {
+        """
         {
-            "to": "接收终端标识",
-            ...自定义的主体
+            "to": "接收终端ID",
+            ...
         }
         """,
+        """
+        {
+            ...
+        }
+        """
+    },
     flow = "终端->信令服务->终端"
 )
 public class ClientUnicastProtocol extends ProtocolClientAdapter {
@@ -40,12 +43,8 @@ public class ClientUnicastProtocol extends ProtocolClientAdapter {
 
 	@Override
 	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-		final String to = (String) body.remove(Constant.TO);
-		if(StringUtils.isNotEmpty(to)) {
-			this.clientManager.unicast(to, message);
-		} else {
-			log.warn("终端单播消息没有接收终端标识：{}", to);
-		}
+	    final String to = MapUtils.remove(body, Constant.TO);
+		this.clientManager.unicast(to, message);
 	}
 	
 }

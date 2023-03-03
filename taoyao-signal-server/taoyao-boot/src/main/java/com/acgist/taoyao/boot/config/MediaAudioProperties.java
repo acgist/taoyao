@@ -30,7 +30,7 @@ public class MediaAudioProperties {
 	
 	@Schema(title = "格式", description = "格式", example = "G722|PCMA|PCMU|OPUS")
 	private Format format;
-	@Schema(title = "采样数", description = "采样数", example = "16")
+	@Schema(title = "采样数", description = "采样数", example = "8|16|32")
 	private Integer sampleSize;
 	@Schema(title = "采样率", description = "采样率", example = "8000|16000|32000|48000")
 	private Integer sampleRate;

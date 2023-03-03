@@ -67,6 +67,24 @@ taoyao:
     max-client-index: 99999
   # 媒体配置
   media:
+    # 宽度
+    min-width: 720
+    max-width: 4096
+    # 高度
+    min-height: 480
+    max-height: 2160
+    # 码率
+    min-bitrate: 800
+    max-bitrate: 1600
+    # 帧率
+    min-frame-rate: 15
+    max-frame-rate: 45
+    # 采样数
+    min-sample-size: 8
+    max-sample-size: 32
+    # 采样率
+    min-sample-rate: 8000
+    max-sample-rate: 48000
     # 默认音频
     audio:
       format: OPUS
@@ -82,7 +100,7 @@ taoyao:
     ud-video:
       format: H264
       bitrate: 1600
-      frame-rate: 30
+      frame-rate: 45
       resolution: 4096*2160
     # 2K：QD=QHD=2K
     qd-video:
@@ -106,7 +124,7 @@ taoyao:
     sd-video:
       format: H264
       bitrate: 800
-      frame-rate: 16
+      frame-rate: 15
       resolution: 720*480
   # Socket信令
   socket:

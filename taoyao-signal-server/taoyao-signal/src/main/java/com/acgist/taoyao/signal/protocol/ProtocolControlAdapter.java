@@ -22,7 +22,7 @@ public class ProtocolControlAdapter extends ProtocolClientAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-        final String to = MapUtils.get(body, Constant.TO);
+        final String to = MapUtils.remove(body, Constant.TO);
         final Client targetClient = this.clientManager.clients(to);
         if(targetClient == null) {
             throw MessageCodeException.of("目标终端无效：" + to);

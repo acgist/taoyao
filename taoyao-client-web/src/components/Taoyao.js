@@ -249,9 +249,11 @@ class Taoyao {
   // 请求回调
   callbackMapping = new Map();
   // 音频媒体配置
-  audio;
+  audio = defaultAudioConfig;
   // 视频媒体配置
-  video;
+  video = defaultVideoConfig;
+  // 媒体配置
+  media;
   // WebRTC配置
   webrtc;
   // 信令通道
@@ -473,11 +475,17 @@ class Taoyao {
    * @param {*} message 消息
    */
   defaultClientConfig(message) {
-    const self = this;
-    self.audio = { ...defaultAudioConfig, ...message.body.media.audio };
-    self.video = { ...defaultVideoConfig, ...message.body.media.video };
-    self.webrtc = message.body.webrtc;
-    console.debug("终端配置", self.audio, self.video, self.webrtc);
+    const me = this;
+    const { media, webrtc } = message.body;
+    const { audio, video} = media;
+    me.audio.sampleSize = { min: media.minSampleSize, ideal: audio.sampleSize, max: media.maxSampleSize };
+    me.audio.sampleRate = { min: media.minSampleRate, ideal: audio.sampleRate, max: media.maxSampleRate };
+    me.video.width = { min: media.minWidth, ideal: video.width, max: media.maxWidth };
+    me.video.height = { min: media.minHeight, ideal: video.height, max: media.maxHeight };
+    me.video.frameRate = { min: media.minFrameRate, ideal: video.frameRate, max: media.maxFrameRate };
+    me.media = media;
+    me.webrtc = webrtc;
+    console.debug("终端配置：", me.audio, me.video, me.media, me.webrtc);
   }
   /**
    * 终端重启默认回调
@@ -597,12 +605,7 @@ class Taoyao {
     );
   }
   /**
-   * TODO：共享 navigator.mediaDevices.getDisplayMedia();
    * 生产媒体
-   * TODO：验证API试试修改媒体
-   * audioTrack.getSettings
-   * audioTrack.getCapabilities
-   * audioTrack.applyCapabilities
    */
   async produceMedia() {
     const self = this;
@@ -614,12 +617,15 @@ class Taoyao {
     self.checkDevice();
     // 释放资源
     self.closeMedia();
-    // TODO：暂时不知道为什么？
+    /**
+     * 解决浏览器的自动播放策略问题
+     */
     {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const audioTrack = stream.getAudioTracks()[0];
-      audioTrack.enabled = false;
-      setTimeout(() => audioTrack.stop(), 120000);
+      stream.getAudioTracks().forEach(audioTrack => {
+        audioTrack.enabled = false;
+        setTimeout(() => audioTrack.stop(), 30000);
+      });
     }
     if (self.produce) {
       const response = await self.request(
@@ -791,15 +797,16 @@ class Taoyao {
       let track;
       try {
         console.debug("打开麦克风");
-        // TODO：设置配置
         const stream = await navigator.mediaDevices.getUserMedia({
-          audio: true,
+          audio: self.audio,
         });
         const tracks = stream.getAudioTracks();
         if (tracks.length > 1) {
           console.log("多个音频轨道");
         }
         track = tracks[0];
+        // TODO：验证修改API audioTrack.applyCapabilities
+        console.debug("音频信息：", track.getSettings(), track.getCapabilities());
         this.audioProducer = await this.sendTransport.produce({
           track,
           codecOptions: {
@@ -905,6 +912,8 @@ class Taoyao {
             video: true,
           });
           track = stream.getVideoTracks()[0];
+          // TODO：验证修改API videoTrack.applyCapabilities
+          console.debug("视频信息：", track.getSettings(), track.getCapabilities());
         } else if (self.videoSource === "screen") {
           const stream = await navigator.mediaDevices.getDisplayMedia({
             // 如果需要共享声音

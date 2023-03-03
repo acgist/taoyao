@@ -34,7 +34,7 @@ import lombok.extern.slf4j.Slf4j;
         "username": "信令用户",
         "password": "信令密码",
         "name": "终端名称",
-        "clientId": "终端标识",
+        "clientId": "终端ID",
         "clientType": "终端类型",
         "latitude": 纬度,
         "longitude": 经度,
@@ -45,6 +45,7 @@ import lombok.extern.slf4j.Slf4j;
         "alarming": 是否发生告警（true|false）,
         "charging": 是否正在充电（true|false）,
         "recording": 是否正在录像（true|false）,
+        "lastHeartbeat": "最后心跳时间",
         "status": {更多状态},
         "config": {更多配置}
     }
@@ -101,7 +102,7 @@ public class ClientRegisterProtocol extends ProtocolClientAdapter {
 	}
 	
 	/**
-	 * @param clientId 终端标识
+	 * @param clientId 终端ID
 	 * @param clientType 终端类型
 	 * @param client 终端
 	 * @param body 消息主体

@@ -17,6 +17,11 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
 @Protocol
 @Description(
     memo = "状态通过心跳回传",
+    body = """
+    {
+        "to": "目标终端ID"
+    }
+    """,
     flow = {
         "信令服务->终端",
         "终端->信令服务->终端"

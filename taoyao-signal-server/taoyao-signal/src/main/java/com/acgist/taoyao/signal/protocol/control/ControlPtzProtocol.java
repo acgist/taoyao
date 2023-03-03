@@ -17,10 +17,11 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
 @Protocol
 @Description(
     body = """
-        {
-            "type": "PTZ类型（PAN|TILT|ZOOM）",
-            "value": PTZ参数
-        }
+    {
+        "to": "目标终端ID",
+        "type": "PTZ类型（PAN|TILT|ZOOM）",
+        "value": PTZ参数
+    }
     """,
     flow = {
         "信令服务->终端",

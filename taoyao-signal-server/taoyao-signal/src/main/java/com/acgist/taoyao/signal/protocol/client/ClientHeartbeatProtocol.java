@@ -28,6 +28,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
         "alarming": 是否发生告警（true|false）,
         "charging": 是否正在充电（true|false）,
         "recording": 是否正在录像（true|false）,
+        "lastHeartbeat": "最后心跳时间",
         "status": {更多状态},
         "config": {更多配置}
     }

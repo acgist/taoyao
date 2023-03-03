@@ -84,22 +84,6 @@ public interface Constant {
      */
     String IDEAL = "ideal";
     /**
-     * 最小宽度
-     */
-    Integer MIN_WIDTH = 720;
-    /**
-     * 最大宽度
-     */
-    Integer MAX_WIDTH = 4096;
-    /**
-     * 最小高度
-     */
-    Integer MIN_HEIGHT = 480;
-    /**
-     * 最大高度
-     */
-    Integer MAX_HEIGHT = 2160;
-    /**
      * 脚本
      */
     String SCRIPT = "script";

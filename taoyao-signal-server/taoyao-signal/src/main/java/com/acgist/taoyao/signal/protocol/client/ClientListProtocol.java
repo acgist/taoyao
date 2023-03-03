@@ -21,15 +21,18 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 @Protocol
 @Description(
     memo = "没有选择终端类型时返回所有类型终端状态列表",
-    body = """
+    body = {
+        """
         {
             "clientType": "终端类型（可选）"
         }
+        """,
+        """
         [
             {
                 "ip": "终端IP",
                 "name": "终端名称",
-                "clientId": "终端标识",
+                "clientId": "终端ID",
                 "clientType": "终端类型",
                 "latitude": 纬度,
                 "longitude": 经度,
@@ -40,12 +43,14 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
                 "alarming": 是否发生告警（true|false）,
                 "charging": 是否正在充电（true|false）,
                 "recording": 是否正在录像（true|false）,
+                "lastHeartbeat": "最后心跳时间",
                 "status": {更多状态},
                 "config": {更多配置}
             },
             ...
         ]
-        """,
+        """
+    },
     flow = "终端->信令服务->终端"
 )
 public class ClientListProtocol extends ProtocolClientAdapter {

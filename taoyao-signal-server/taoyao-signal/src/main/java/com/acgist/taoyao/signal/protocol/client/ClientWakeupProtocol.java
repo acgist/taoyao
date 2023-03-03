@@ -22,7 +22,7 @@ public class ClientWakeupProtocol extends ProtocolClientAdapter {
     }
     
     /**
-     * @param clientId 终端标识
+     * @param clientId 终端ID
      */
     public void execute(String clientId) {
         this.clientManager.unicast(clientId, this.build());
