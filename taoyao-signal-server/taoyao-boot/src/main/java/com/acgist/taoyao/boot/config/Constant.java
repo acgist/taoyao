@@ -144,10 +144,6 @@ public interface Constant {
      */
     String ROOM_ID = "roomId";
     /**
-     * 媒体服务ID
-     */
-    String MEDIA_ID = "mediaId";
-    /**
      * 媒体流ID
      */
     String STREAM_ID = "streamId";
@@ -179,6 +175,10 @@ public interface Constant {
      * 数据消费者ID
      */
     String DATA_CONSUMER_ID = "dataConsumerId";
+    /**
+     * 媒体服务ID
+     */
+    String MEDIA_CLIENT_ID = "mediaClientId";
     /**
      * ICE服务
      */

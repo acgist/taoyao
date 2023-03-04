@@ -19,16 +19,17 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 @Description(
     body = """
     {
+        "roomId": "房间ID",
         ...
     }
     """,
-    flow = "终端->信令服务->终端"
+    flow = "终端->信令服务-)终端"
 )
 public class RoomBroadcastProtocol extends ProtocolRoomAdapter {
 
     public static final String SIGNAL = "room::broadcast";
     
-    protected RoomBroadcastProtocol() {
+    public RoomBroadcastProtocol() {
         super("房间广播信令", SIGNAL);
     }
     

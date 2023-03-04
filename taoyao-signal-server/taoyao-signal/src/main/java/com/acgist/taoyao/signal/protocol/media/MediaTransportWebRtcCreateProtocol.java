@@ -51,7 +51,7 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
 
     public static final String SIGNAL = "media::transport::webrtc::create";
     
-    protected MediaTransportWebRtcCreateProtocol() {
+    public MediaTransportWebRtcCreateProtocol() {
         super("创建WebRTC通道信令", SIGNAL);
     }
 

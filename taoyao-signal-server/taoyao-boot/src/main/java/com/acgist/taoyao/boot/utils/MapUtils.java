@@ -1,5 +1,6 @@
 package com.acgist.taoyao.boot.utils;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 /**
@@ -61,8 +62,35 @@ public final class MapUtils {
             return null;
         } else if(object instanceof Long value) {
             return value;
+        } else if(object instanceof Integer value) {
+            return value.longValue();
+        } else if(object instanceof Double value) {
+            return value.longValue();
         }
-        return Long.valueOf(object.toString());
+        return new BigDecimal(object.toString()).longValue();
+    }
+    
+    /**
+     * @param body 消息主体
+     * @param key 参数名称
+     * 
+     * @return 参数值
+     */
+    public static final Double getDouble(Map<?, ?> body, String key) {
+        if(body == null) {
+            return null;
+        }
+        final Object object = body.get(key);
+        if(object == null) {
+            return null;
+        } else if(object instanceof Long value) {
+            return value.doubleValue();
+        } else if(object instanceof Integer value) {
+            return value.doubleValue();
+        } else if(object instanceof Double value) {
+            return value;
+        }
+        return new BigDecimal(object.toString()).doubleValue();
     }
     
     /**
@@ -78,10 +106,14 @@ public final class MapUtils {
         final Object object = body.get(key);
         if(object == null) {
             return null;
+        } else if(object instanceof Long value) {
+            return value.intValue();
         } else if(object instanceof Integer value) {
             return value;
+        } else if(object instanceof Double value) {
+            return value.intValue();
         }
-        return Integer.valueOf(object.toString());
+        return new BigDecimal(object.toString()).intValue();
     }
     
     /**

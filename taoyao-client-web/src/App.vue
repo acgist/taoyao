@@ -59,7 +59,7 @@
         </el-tab-pane>
         <el-tab-pane label="创建房间" name="create">
           <el-form-item label="媒体服务">
-            <el-select v-model="room.mediaId" placeholder="媒体服务标识">
+            <el-select v-model="room.mediaClientId" placeholder="媒体服务标识">
               <el-option
                 v-for="value in medias"
                 :key="value.clientId"
@@ -79,7 +79,7 @@
     </el-form>
     <template #footer>
       <el-button type="primary" @click="enterRoom" v-if="roomActive === 'enter'">进入</el-button>
-      <el-button type="primary" @click="createRoom" v-if="roomActive === 'create'">创建</el-button>
+      <el-button type="primary" @click="roomCreate" v-if="roomActive === 'create'">创建</el-button>
     </template>
   </el-dialog>
 
@@ -90,7 +90,7 @@
     <el-button type="primary" @click="roomActive = 'create';roomVisible = true;">创建房间</el-button>
     <el-button>邀请终端</el-button>
     <el-button>退出房间</el-button>
-    <el-button type="danger">关闭房间</el-button>
+    <el-button @click="closeRoom()" type="danger">关闭房间</el-button>
   </div>
 
   <!-- 终端 -->
@@ -149,14 +149,17 @@ export default {
       this.medias = await this.taoyao.mediaList();
     },
     async enterRoom() {
-      await this.taoyao.enterRoom(this.room.roomId);
+      await this.taoyao.enterRoom(this.room.roomId, this.room.password);
       await this.taoyao.produceMedia();
       this.roomVisible = false;
     },
-    async createRoom() {
-      const room = await this.taoyao.createRoom(this.room);
-      this.room = room;
-      await this.enterRoom(room.roomId);
+    async roomCreate() {
+      const room = await this.taoyao.roomCreate(this.room);
+      this.room.roomId = room.roomId;
+      await this.enterRoom();
+    },
+    async closeRoom() {
+      this.taoyao.closeRoom();
     },
     /**
      * 信令回调

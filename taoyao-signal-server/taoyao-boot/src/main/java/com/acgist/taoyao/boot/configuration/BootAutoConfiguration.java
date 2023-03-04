@@ -162,11 +162,11 @@ public class BootAutoConfiguration {
     public void init() {
         final Runtime runtime = Runtime.getRuntime();
         final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
+        final String maxMemory = FileUtils.formatSize(runtime.maxMemory());
         final String freeMemory = FileUtils.formatSize(runtime.freeMemory());
         final String totalMemory = FileUtils.formatSize(runtime.totalMemory());
-        final String maxMemory = FileUtils.formatSize(runtime.maxMemory());
-        log.info("操作系统名称：{}", System.getProperty("os.name"));
         log.info("操作系统架构：{}", System.getProperty("os.arch"));
+        log.info("操作系统名称：{}", System.getProperty("os.name"));
         log.info("操作系统版本：{}", System.getProperty("os.version"));
         log.info("可用的处理器数量：{}", runtime.availableProcessors());
         log.info("Java版本：{}", System.getProperty("java.version"));
@@ -175,9 +175,9 @@ public class BootAutoConfiguration {
         log.info("ClassPath：{}", System.getProperty("java.class.path"));
         log.info("虚拟机名称：{}", System.getProperty("java.vm.name"));
         log.info("虚拟机参数：{}", runtimeMXBean.getInputArguments().stream().collect(Collectors.joining(" ")));
+        log.info("虚拟机最大内存：{}", maxMemory);
         log.info("虚拟机空闲内存：{}", freeMemory);
         log.info("虚拟机已用内存：{}", totalMemory);
-        log.info("虚拟机最大内存：{}", maxMemory);
         log.info("工作目录：{}", System.getProperty("user.dir"));
         log.info("用户目录：{}", System.getProperty("user.home"));
         log.info("临时目录：{}", System.getProperty("java.io.tmpdir"));

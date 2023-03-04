@@ -159,7 +159,7 @@ const signalChannel = {
           console.debug("信令通道消息：", content);
           me.taoyao.on(JSON.parse(content));
         } catch (error) {
-          console.error("处理信令消息异常：", data, error);
+          console.error("处理信令消息异常：", data.toString(), error);
         }
       });
     });
@@ -322,15 +322,18 @@ class Room {
   /**
    * 关闭资源
    */
-  close() {
-    const self = this;
-    if (self.close) {
+  closeAll() {
+    const me = this;
+    if (me.close) {
       return;
     }
-    self.close = true;
-    if (self.mediasoupRouter) {
-      self.mediasoupRouter.close();
-    }
+    me.close = true;
+    // me.producers.forEach(v => v.close());
+    // me.consumers.forEach(v => v.close());
+    // me.dataProducers.forEach(v => v.close());
+    // me.dataConsumers.forEach(v => v.close());
+    me.transports.forEach(v => v.close());
+    me.mediasoupRouter.close();
   }
 }
 
@@ -403,6 +406,9 @@ class Taoyao {
         break;
       case "room::create":
         this.roomCreate(message, body);
+        break;
+      case "room::close":
+        this.roomClose(message, body);
         break;
     }
   }
@@ -812,8 +818,9 @@ class Taoyao {
       );
     });
     await transport.enableTraceEvent(["bwe"]);
+    // await transport.enableTraceEvent([ 'probation', 'bwe' ]);
     transport.on("trace", (trace) => {
-      console.debug("transport trace event：", trace, trace.type, transport.id);
+      console.debug("transport trace event：", transport.id, trace.type, trace);
     });
     // 可配置的事件
     // transport.on("routerclose", fn());
@@ -843,29 +850,41 @@ class Taoyao {
   }
 
   /**
+   * 关闭房间信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  async roomClose(message, body) {
+    const roomId = body.roomId;
+    const room = this.rooms.get(roomId);
+    if(!room) {
+      console.warn("房间无效：", roomId);
+      return;
+    }
+    console.info("关闭房间：", roomId);
+    room.closeAll();
+    this.rooms.delete(roomId);
+  }
+
+  /**
    * 创建房间信令
    *
    * @param {*} message 消息
    * @param {*} body 消息主体
-   *
-   * @returns 房间
    */
   async roomCreate(message, body) {
+    const me = this;
     const roomId = body.roomId;
-    let room = this.rooms.get(roomId);
+    let room = me.rooms.get(roomId);
     if (room) {
-      this.push(message);
-      return room;
+      console.debug("创建房间已经存在：", room);
+      me.push(message);
+      return;
     }
-    const mediasoupWorker = this.nextMediasoupWorker();
+    const mediasoupWorker = me.nextMediasoupWorker();
     const { mediaCodecs } = config.mediasoup.routerOptions;
     const mediasoupRouter = await mediasoupWorker.createRouter({ mediaCodecs });
-    mediasoupRouter.observer.on("close", () => {
-      // TODO：通知房间关闭
-    });
-    // 可配置的事件
-    // mediasoupRouter.on("workerclose", () => {});
-    // mediasoupRouter.observer.on("newtransport", fn(transport));
     // TODO：下面两个监控改为配置启用
     const audioLevelObserver = await mediasoupRouter.createAudioLevelObserver({
       maxEntries: 1,
@@ -883,10 +902,22 @@ class Taoyao {
       audioLevelObserver,
       activeSpeakerObserver,
     });
-    this.rooms.set(roomId, room);
+    me.rooms.set(roomId, room);
     console.info("创建房间", roomId);
-    this.push(message);
-    return room;
+    me.push(message);
+    // 监听事件
+    mediasoupRouter.observer.on("close", () => {
+      console.info("房间路由关闭：", roomId, mediasoupRouter);
+      room.closeAll();
+      me.rooms.delete(roomId);
+      me.push(
+        protocol.buildMessage("room::close", {
+          roomId: roomId
+        })
+      );
+    });
+    // mediasoupRouter.on("workerclose", () => {});
+    // mediasoupRouter.observer.on("newtransport", fn(transport));
   }
 }
 

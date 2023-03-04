@@ -62,7 +62,7 @@ public class PlatformShutdownProtocol extends ProtocolClientAdapter implements C
         if(this.applicationContext instanceof ConfigurableApplicationContext context) {
             // API关闭
             if(context.isActive()) {
-                // 如果需要完整广播可以设置延时
+                // 如果需要广播完成可以设置延时
                 context.close();
             } else {
                 // 其他情况

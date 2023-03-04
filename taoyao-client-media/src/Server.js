@@ -18,7 +18,7 @@ const taoyao = new Taoyao(mediasoupWorkers);
  * 创建Mediasoup Worker列表
  */
 async function buildMediasoupWorkers() {
-  // 可配置的事件
+  // 监听事件
   // mediasoup.observer.on("newworker", fn(worker));
   const { workerSize } = config.mediasoup;
   console.info("创建Mediasoup Worker数量：", workerSize);
@@ -29,16 +29,6 @@ async function buildMediasoupWorkers() {
       rtcMinPort: Number(config.mediasoup.workerSettings.rtcMinPort),
       rtcMaxPort: Number(config.mediasoup.workerSettings.rtcMaxPort),
     });
-    worker.on("died", (error) => {
-      console.warn("Mediasoup Worker停止服务：", worker.pid, error);
-      setTimeout(() => process.exit(1), 2000);
-    });
-    worker.observer.on("close", () => {
-      console.warn("Mediasoup Worker关闭服务：", worker.pid);
-    });
-    // 可配置的事件
-    // worker.observer.on("newrouter", fn(router));
-    // worker.observer.on("newwebrtcserver", fn(router));
     // 配置WebRTC服务
     const webRtcServerOptions = JSON.parse(
       JSON.stringify(config.mediasoup.webRtcServerOptions)
@@ -49,6 +39,16 @@ async function buildMediasoupWorkers() {
     const webRtcServer = await worker.createWebRtcServer(webRtcServerOptions);
     worker.appData.webRtcServer = webRtcServer;
     mediasoupWorkers.push(worker);
+    // 监听事件
+    worker.on("died", (error) => {
+      console.warn("Mediasoup Worker停止服务：", worker.pid, error);
+      setTimeout(() => process.exit(1), 2000);
+    });
+    worker.observer.on("close", () => {
+      console.warn("Mediasoup Worker关闭服务：", worker.pid);
+    });
+    // worker.observer.on("newrouter", fn(router));
+    // worker.observer.on("newwebrtcserver", fn(router));
   }
 }
 

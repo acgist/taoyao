@@ -60,12 +60,12 @@ public class ClientStatus {
 	 * @param body 消息主体
 	 */
 	public void copy(Map<String, Object> body) {
-        this.setLatitude(MapUtils.get(body, Constant.LATITUDE));
-        this.setLongitude(MapUtils.get(body, Constant.LONGITUDE));
-        this.setHumidity(MapUtils.get(body, Constant.HUMIDITY));
-        this.setTemperature(MapUtils.get(body, Constant.TEMPERATURE));
-        this.setSignal(MapUtils.get(body, Constant.SIGNAL));
-        this.setBattery(MapUtils.get(body, Constant.BATTERY));
+        this.setLatitude(MapUtils.getDouble(body, Constant.LATITUDE));
+        this.setLongitude(MapUtils.getDouble(body, Constant.LONGITUDE));
+        this.setHumidity(MapUtils.getDouble(body, Constant.HUMIDITY));
+        this.setTemperature(MapUtils.getDouble(body, Constant.TEMPERATURE));
+        this.setSignal(MapUtils.getInteger(body, Constant.SIGNAL));
+        this.setBattery(MapUtils.getInteger(body, Constant.BATTERY));
         this.setAlarming(MapUtils.getBoolean(body, Constant.ALARMING));
         this.setCharging(MapUtils.getBoolean(body, Constant.CHARGING));
         this.setRecording(MapUtils.getBoolean(body, Constant.RECORDING));

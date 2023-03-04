@@ -2,6 +2,8 @@ package com.acgist.taoyao.signal.protocol.room;
 
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
+
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.Constant;
@@ -12,8 +14,8 @@ import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.party.media.ClientWrapper;
-import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.party.media.ClientWrapper.SubscribeType;
+import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +41,7 @@ import lombok.extern.slf4j.Slf4j;
         }
         """
     },
-    flow = "终端->服务端-)终端"
+    flow = "终端->信令服务-)终端"
 )
 public class RoomEnterProtocol extends ProtocolRoomAdapter {
 
@@ -59,7 +61,7 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
         final Object rtpCapabilities = MapUtils.get(body, Constant.RTP_CAPABILITIES);
         final Object sctpCapabilities = MapUtils.get(body, Constant.SCTP_CAPABILITIES);
         final String roomPassowrd = room.getPassword();
-        if(roomPassowrd != null && !roomPassowrd.equals(password)) {
+        if(StringUtils.isNotEmpty(roomPassowrd) && !roomPassowrd.equals(password)) {
             throw MessageCodeException.of(MessageCode.CODE_3401, "密码错误");
         }
         // 进入房间
@@ -74,7 +76,7 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
         ));
         room.broadcast(message);
         log.info("进入房间：{} - {}", clientId, room.getRoomId());
-        // 推送房间用户信息
+        // 推送房间用户信息：TODO event
         final Message roomClientListMessage = this.roomClientListProtocol.build();
         roomClientListMessage.setBody(room.clientStatus());
         client.push(roomClientListMessage);

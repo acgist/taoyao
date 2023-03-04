@@ -196,7 +196,7 @@ public class Room implements Closeable {
 	@Override
 	public void close() {
 		log.info("关闭房间：{}", this.roomId);
-		// TODO
+		// TODO：关闭房间
 	}
 	
 }

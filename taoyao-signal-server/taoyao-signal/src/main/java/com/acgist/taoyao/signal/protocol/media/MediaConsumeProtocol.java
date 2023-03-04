@@ -40,7 +40,7 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
 
     public static final String SIGNAL = "media::consume";
     
-    protected MediaConsumeProtocol() {
+    public MediaConsumeProtocol() {
         super("消费媒体信令", SIGNAL);
     }
     

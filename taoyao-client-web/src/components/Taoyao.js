@@ -394,6 +394,7 @@ class Taoyao {
       }, 5000);
     });
   }
+  /************************ 回调 ************************/
   /**
    * 回调策略：
    * 1. 如果注册请求回调，同时执行结果返回true不再执行后面所有回调。
@@ -450,25 +451,32 @@ class Taoyao {
    * @param {*} message 消息
    */
   async postCallback(message) {
-    const self = this;
+    const me = this;
     switch (message.header.signal) {
+      case "room::client::list":
+        me.defaultRoomClientList(message);
+        break;
       case "client::reboot":
-        self.defaultClientReboot(message);
+        me.defaultClientReboot(message);
         break;
       case "client::shutdown":
-        self.defaultClientShutdown(message);
+        me.defaultClientShutdown(message);
+        break;
+      case "room::close":
+        me.defaultRoomClose(message);
         break;
       case "room::enter":
-        self.defaultRoomEnter(message);
-        break;
-      case "room::client::list":
-        self.defaultRoomClientList(message);
+        me.defaultRoomEnter(message);
         break;
       case "platform::error":
-        self.callbackError(message);
+        me.callbackError(message);
+        break;
+      default:
+        console.warn("不支持的信令：", message);
         break;
     }
   }
+  /************************ 信令 ************************/
   /**
    * 配置默认回调
    *
@@ -505,6 +513,53 @@ class Taoyao {
     console.info("关闭终端");
     window.close();
   }
+  /**
+   * 房间终端列表信令
+   * 
+   * @param {*} message 消息
+   */
+  defaultRoomClientList(message) {
+    const me = this;
+    message.body.forEach(v => {
+      if (v.clientId === me.clientId) {
+        // 忽略自己
+      } else {
+        me.remoteClients.set(v.clientId, me.roomId);
+      }
+    });
+  }
+  /**
+   * 关闭房间信令
+   * 
+   * @param {*} message 消息
+   */
+  defaultRoomClose(message) {
+    const me = this;
+    const { roomId } = message.body;
+    if(me.roomId !== roomId) {
+      return;
+    }
+    console.info("关闭房间：", roomId);
+    me.close();
+  }
+  /**
+   * 创建房间信令
+   * 
+   * @param {*} room 房间
+   * 
+   * @returns 房间
+   */
+  async roomCreate(room) {
+    const me = this;
+    if (!room) {
+      me.callbackError("无效房间");
+      return;
+    }
+    const response = await me.request(
+      protocol.buildMessage("room::create", room)
+    );
+    return response.body;
+  }
   defaultRoomEnter(message) {
     const { roomId, clientId } = message.body;
     if (clientId === this.clientId) {
@@ -512,16 +567,6 @@ class Taoyao {
     } else {
       this.remoteClients.set(clientId, roomId);
     }
-  }
-  defaultRoomClientList(message) {
-    const self = this;
-    message.body.forEach((v) => {
-      if (v.clientId === self.clientId) {
-        // 忽略自己
-      } else {
-        self.remoteClients.set(v.clientId, self.roomId);
-      }
-    });
   }
   /**
    * 错误回调
@@ -562,21 +607,7 @@ class Taoyao {
     );
     return response.body;
   }
-  /**
-   * 创建房间
-   */
-  async createRoom(room) {
-    const self = this;
-    if (!room) {
-      this.callbackError("无效房间");
-      return;
-    }
-    const response = await self.request(
-      protocol.buildMessage("room::create", room)
-    );
-    return response.body;
-  }
-  async enterRoom(roomId) {
+  async enterRoom(roomId, password) {
     const self = this;
     if (!roomId) {
       this.callbackError("无效房间");
@@ -586,7 +617,7 @@ class Taoyao {
     self.mediasoupDevice = new mediasoupClient.Device();
     const response = await self.request(
       protocol.buildMessage("media::router::rtp::capabilities", {
-        roomId: self.roomId,
+        roomId: self.roomId
       })
     );
     const routerRtpCapabilities = response.body.rtpCapabilities;
@@ -594,6 +625,7 @@ class Taoyao {
     await self.request(
       protocol.buildMessage("room::enter", {
         roomId: roomId,
+        password: password,
         rtpCapabilities: self.consume
           ? self.mediasoupDevice.rtpCapabilities
           : undefined,
@@ -604,6 +636,17 @@ class Taoyao {
       })
     );
   }
+  async closeRoom() {
+    const me = this;
+    if(!me.roomId) {
+      console.warn("房间无效：", me.roomId);
+      return;
+    }
+    me.push(protocol.buildMessage("room::close", {
+      roomId: me.roomId
+    }));
+  }
+  /************************ 媒体 ************************/
   /**
    * 生产媒体
    */

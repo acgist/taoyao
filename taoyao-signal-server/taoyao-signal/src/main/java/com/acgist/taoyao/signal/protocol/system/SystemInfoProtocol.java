@@ -24,7 +24,29 @@ import lombok.Setter;
  * @author acgist
  */
 @Protocol
-@Description
+@Description(
+    body = """
+    {
+        "diskspace": [
+            {
+                "path": "存储路径",
+                "free": 存储空闲,
+                "total": 存储总量
+            },
+            ...
+        ],
+        "maxMemory": 最大能用内存,
+        "freeMemory": 空闲内存,
+        "totalMemory": 已用内存,
+        "osArch": "系统架构",
+        "osName": "系统名称",
+        "osVersion": "系统版本",
+        "javaVmName": "虚拟机名称",
+        "javaVersion": "虚拟机版本",
+        "cpuProcessors": CPU核心数量
+    }
+    """
+)
 public class SystemInfoProtocol extends ProtocolClientAdapter {
 
     public static final String SIGNAL = "system::info";
@@ -38,10 +60,10 @@ public class SystemInfoProtocol extends ProtocolClientAdapter {
         final Map<String, Object> info = new HashMap<>();
         // 硬盘
         final List<Diskspace> diskspace = new ArrayList<>();
-//      File.listRoots(); -> 不全
-//      FileSystems.getDefault().getFileStores(); -> 重复
+//      File.listRoots();
+//      FileSystems.getDefault().getFileStores();
         Stream.of(File.listRoots()).forEach(v -> {
-            diskspace.add(new Diskspace(v.getPath(), v.getTotalSpace(), v.getFreeSpace()));
+            diskspace.add(new Diskspace(v.getPath(), v.getFreeSpace(), v.getTotalSpace()));
         });
         info.put("diskspace", diskspace);
         // 内存
@@ -53,8 +75,8 @@ public class SystemInfoProtocol extends ProtocolClientAdapter {
         info.put("freeMemoryGracefully", FileUtils.formatSize(runtime.freeMemory()));
         info.put("totalMemoryGracefully", FileUtils.formatSize(runtime.totalMemory()));
         // 其他
-        info.put("osName", System.getProperty("os.name"));
         info.put("osArch", System.getProperty("os.arch"));
+        info.put("osName", System.getProperty("os.name"));
         info.put("osVersion", System.getProperty("os.version"));
         info.put("javaVmName", System.getProperty("java.vm.name"));
         info.put("javaVersion", System.getProperty("java.version"));
@@ -72,28 +94,28 @@ public class SystemInfoProtocol extends ProtocolClientAdapter {
          */
         private final String path;
         /**
-         * 总量
-         */
-        private final Long total;
-        /**
          * 空闲
          */
         private final Long free;
         /**
          * 总量
          */
-        private final String totalGracefully;
+        private final Long total;
         /**
          * 空闲
          */
         private final String freeGracefully;
+        /**
+         * 总量
+         */
+        private final String totalGracefully;
         
-        public Diskspace(String path, Long total, Long free) {
+        public Diskspace(String path, Long free, Long total) {
             this.path = path;
-            this.total = total;
             this.free = free;
-            this.totalGracefully = FileUtils.formatSize(total);
+            this.total = total;
             this.freeGracefully = FileUtils.formatSize(free);
+            this.totalGracefully = FileUtils.formatSize(total);
         }
         
     }

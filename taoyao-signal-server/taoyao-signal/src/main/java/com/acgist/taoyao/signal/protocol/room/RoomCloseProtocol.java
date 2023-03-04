@@ -4,6 +4,7 @@ import java.util.Map;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
+import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
@@ -17,6 +18,11 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
  */
 @Protocol
 @Description(
+    body = """
+    {
+        "roomId": "房间ID"
+    }
+    """,
     flow = "终端->信令服务->媒体服务->信令服务+)终端"
 )
 public class RoomCloseProtocol extends ProtocolRoomAdapter {
@@ -29,9 +35,15 @@ public class RoomCloseProtocol extends ProtocolRoomAdapter {
 
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        room.close();
-        this.clientManager.broadcast(message);
-        // TODO：释放房间
+        if(clientType == ClientType.WEB) {
+            mediaClient.push(this.build(Map.of(Constant.ROOM_ID, room.getRoomId())));
+        } else if(clientType == ClientType.MEDIA) {
+            room.close();
+            room.broadcast(message);
+            // TODO：移除
+        } else {
+            this.logNoAdapter(clientType);
+        }
     }
     
 }

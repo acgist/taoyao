@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
         }
         """
     },
-    flow = "终端->服务端->终端"
+    flow = "终端->信令服务->终端"
 )
 public class PlatformScriptProtocol extends ProtocolClientAdapter {
 
