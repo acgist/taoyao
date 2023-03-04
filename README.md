@@ -42,25 +42,6 @@
 
 将下级信令服务的终端全部使用代理终端注册到上级信令服务，上级信令服务代理终端处理信令时直接路由到下级路由服务，这样一级一级路由直到发送给真正的终端为止。
 
-## 媒体
-
-* [mediasoup官网](https://mediasoup.org/)
-* [mediasoup源码](https://github.com/versatica/mediasoup)
-* [mediasoup文档](https://mediasoup.org/documentation/v3/mediasoup)
-* [mediasoup接口](https://mediasoup.org/documentation/v3/mediasoup/api)
-
-## Web终端
-
-* [mediasoup-client源码](https://github.com/versatica/mediasoup-client)
-* [mediasoup-client文档](https://mediasoup.org/documentation/v3/mediasoup-client)
-* [mediasoup-client接口](https://mediasoup.org/documentation/v3/mediasoup-client/api)
-
-## C++终端
-
-* [libmediasoupclient源码](https://github.com/versatica/libmediasoupclient)
-* [libmediasoupclient文档](https://mediasoup.org/documentation/v3/libmediasoupclient)
-* [libmediasoupclient接口](https://mediasoup.org/documentation/v3/libmediasoupclient/api)
-
 ## TODO
 
 * 录制（Recorder）

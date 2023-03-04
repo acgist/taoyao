@@ -2,6 +2,13 @@
 
 只要负责媒体处理，不要添加任何业务逻辑，所有业务逻辑都由[taoyao-signal-server](../taoyao-signal-server)处理。
 
+## 媒体
+
+* [mediasoup官网](https://mediasoup.org/)
+* [mediasoup源码](https://github.com/versatica/mediasoup)
+* [mediasoup文档](https://mediasoup.org/documentation/v3/mediasoup)
+* [mediasoup接口](https://mediasoup.org/documentation/v3/mediasoup/api)
+
 ## 使用
 
 ```
