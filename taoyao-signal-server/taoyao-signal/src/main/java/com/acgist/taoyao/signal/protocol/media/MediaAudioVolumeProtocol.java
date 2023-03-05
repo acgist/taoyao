@@ -11,7 +11,7 @@ import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**
- * 当前讲话终端信令
+ * 终端音量信令
  * 
  * @author acgist
  */
@@ -19,18 +19,24 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 @Description(
     body = """
     {
-        "volume": 音量,
-        "clientId": "终端ID"
+        "roomId": "房间ID",
+        "volumes" : [
+            {
+                "volume": 音量,
+                "clientId": "终端ID"
+            },
+            ...
+        ]
     }
     """,
     flow = "媒体服务->信令服务->终端"
 )
-public class MediaAudioActiveSpeakerProtocol extends ProtocolRoomAdapter {
+public class MediaAudioVolumeProtocol extends ProtocolRoomAdapter {
 
-	public static final String SIGNAL = "media::audio::active::speaker";
+	public static final String SIGNAL = "media::audio::volume";
 	
-	public MediaAudioActiveSpeakerProtocol() {
-		super("当前讲话终端信令", SIGNAL);
+	public MediaAudioVolumeProtocol() {
+		super("终端音量信令", SIGNAL);
 	}
 
 	@Override

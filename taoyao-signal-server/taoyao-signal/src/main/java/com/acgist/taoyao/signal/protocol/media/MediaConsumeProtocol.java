@@ -94,6 +94,7 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
      * @param producer
      */
     private void consume(Room room, ClientWrapper consumeClientWrapper, Producer producer) {
+        // TODO：掉线删除
         if(producer.getProduceClient().consume(producer)) {
             log.debug("已经消费：{}", consumeClientWrapper.getClientId());
             return;

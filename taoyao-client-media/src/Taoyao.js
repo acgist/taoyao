@@ -265,39 +265,40 @@ class Room {
     this.handleAudioLevelObserver();
     this.handleActiveSpeakerObserver();
   }
-
   /**
    * 音量监控
    */
   handleAudioLevelObserver() {
-    const self = this;
-    self.audioLevelObserver.on("volumes", (volumes) => {
+    const me = this;
+    // 静音
+    me.audioLevelObserver.on("silence", () => {
+      signalChannel.push(
+        protocol.buildMessage("media::audio::volume", {
+          roomId: me.roomId,
+        })
+      );
+    });
+    // 音量
+    me.audioLevelObserver.on("volumes", (volumes) => {
+      const volumeArray = [];
       for (const value of volumes) {
         const { producer, volume } = value;
-        signalChannel.push(
-          protocol.buildMessage("media::audio::active::speaker", {
-            volume: volume,
-            roomId: self.roomId,
-            clientId: producer.clientId,
-          })
-        );
+        volumeArray.push({ volume: volume, clientId: producer.clientId });
       }
-    });
-    self.audioLevelObserver.on("silence", () => {
       signalChannel.push(
-        protocol.buildMessage("media::audio::active::speaker", {
-          roomId: self.roomId,
+        protocol.buildMessage("media::audio::volume", {
+          roomId: me.roomId,
+          volumes: volumeArray
         })
       );
     });
   }
-
   /**
    * 采样监控
    */
   handleActiveSpeakerObserver() {
-    const self = this;
-    self.activeSpeakerObserver.on("dominantspeaker", (dominantSpeaker) => {
+    const me = this;
+    me.activeSpeakerObserver.on("dominantspeaker", (dominantSpeaker) => {
       console.debug(
         "dominantspeaker：",
         dominantSpeaker.producer.id,
@@ -305,7 +306,6 @@ class Room {
       );
     });
   }
-
   /**
    * 使用情况
    */

@@ -245,6 +245,15 @@ class RemoteClient {
     this.clientId = clientId;
   }
 
+  /**
+   * 设置音量
+   * 
+   * @param {*} volume 音量
+   */
+  setVolume(volume) {
+    this.volume = ((volume + 127) / 127 * 100) + "%";
+  }
+
 }
 
 /**
@@ -482,8 +491,8 @@ class Taoyao extends RemoteClient {
       case "client::shutdown":
         me.defaultClientShutdown(message);
         break;
-      case "media::audio::active::speaker":
-        me.defaultMediaAudioActiveSpeaker(message);
+      case "media::audio::volume":
+        me.defaultMediaAudioVolume(message);
         break;
       case "room::client::list":
         me.defaultRoomClientList(message);
@@ -546,24 +555,31 @@ class Taoyao extends RemoteClient {
     window.close();
   }
   /**
-   * 当前讲话终端信令
+   * 终端音量信令
    * 
    * @param {*} message 消息
    */
-  defaultMediaAudioActiveSpeaker(message) {
+  defaultMediaAudioVolume(message) {
     const me = this;
-    const { volume, clientId } = message.body;
-    if(!clientId) {
+    const { roomId, volumes } = message.body;
+    // 静音
+    if(!volumes || !volumes.length) {
       me.volume = 0;
       me.remoteClients.forEach(v => v.volume = 0);
-    } if(me.clientId === clientId) {
-      me.volume = ((volume + 127) / 127 * 100) + "%";
-    } else {
-      const remoteClient = me.remoteClients.get(clientId);
-      if(remoteClient) {
-        remoteClient.volume = ((volume + 127) / 127 * 100) + "%";
-      }
+      return;
     }
+    // 声音
+    volumes.forEach(v => {
+      const { volume, clientId } = v;
+      if(me.clientId === clientId) {
+        me.setVolume(volume);
+      } else {
+        const remoteClient = me.remoteClients.get(clientId);
+        if(remoteClient) {
+          remoteClient.setVolume(volume);
+        }
+      }
+    });
   }
   /**
    * 消费媒体信令
@@ -633,12 +649,12 @@ class Taoyao extends RemoteClient {
       //   )
       // );
       self.push(message);
-      console.log("消费者", consumer);
+      console.debug("远程媒体：", consumer);
       const remoteClient = self.remoteClients.get(consumer.sourceId);
-      if(remoteClient) {
+      if(remoteClient && remoteClient.proxy && remoteClient.proxy.media) {
         remoteClient.proxy.media(consumer.track, consumer);
       } else {
-        console.warn("远程终端无效：", consumer);
+        console.warn("远程终端没有实现服务代理：", remoteClient);
       }
       // If audio-only mode is enabled, pause it.
       if (consumer.kind === "video" && !self.videoProduce) {
@@ -1131,7 +1147,11 @@ class Taoyao extends RemoteClient {
         } else {
           // TODO：异常
         }
-        self.proxy.media(track);
+        if(self.proxy && self.proxy.media) {
+          self.proxy.media(track);
+        } else {
+          console.warn("终端没有实现服务代理：", self);
+        }
         let codec;
         let encodings;
         const codecOptions = {

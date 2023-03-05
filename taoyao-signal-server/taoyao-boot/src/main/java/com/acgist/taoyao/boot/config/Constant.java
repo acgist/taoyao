@@ -132,6 +132,10 @@ public interface Constant {
      */
     String WEBRTC = "webrtc";
     /**
+     * 音量
+     */
+    String VOLUMES = "volumes";
+    /**
      * 日期时间
      */
     String DATETIME = "datetime";
