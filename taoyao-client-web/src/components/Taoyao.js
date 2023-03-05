@@ -503,6 +503,9 @@ class Taoyao extends RemoteClient {
       case "room::enter":
         me.defaultRoomEnter(message);
         break;
+      case "room::leave":
+        me.defaultRoomLeave(message);
+        break;
       case "platform::error":
         me.callbackError(message);
         break;
@@ -779,6 +782,18 @@ class Taoyao extends RemoteClient {
     } else {
       me.remoteClients.set(clientId, new RemoteClient(status));
     }
+  }
+  /**
+   * 离开房间信令
+   * 
+   * @param {*} message 
+   */
+  defaultRoomLeave(message) {
+    const me = this;
+    const { clientId } = message.body;
+    me.remoteClients.delete(clientId);
+    console.info("终端离开：", clientId);
+    // TODO：资源释放
   }
   /**
    * 错误回调

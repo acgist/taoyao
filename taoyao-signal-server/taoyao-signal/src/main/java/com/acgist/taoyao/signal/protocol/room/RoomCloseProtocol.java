@@ -40,7 +40,6 @@ public class RoomCloseProtocol extends ProtocolRoomAdapter {
         } else if(clientType == ClientType.MEDIA) {
             room.close();
             room.broadcast(message);
-            // TODO：移除
         } else {
             this.logNoAdapter(clientType);
         }

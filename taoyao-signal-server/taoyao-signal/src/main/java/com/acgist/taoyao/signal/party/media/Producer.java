@@ -44,4 +44,17 @@ public class Producer {
         this.consumers = new ConcurrentHashMap<>();
     }
     
+    /**
+     * 删除消费者
+     * 
+     * @param consumer 消费者
+     */
+    public void remove(ClientWrapper consumer) {
+        this.consumers.entrySet().stream()
+        .filter(v -> v.getValue().getConsumeClient() == consumer)
+        .map(Map.Entry::getKey)
+        .forEach(this.consumers::remove);
+        // TODO：资源释放
+    }
+    
 }

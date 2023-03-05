@@ -96,10 +96,18 @@ public class ClientWrapper implements AutoCloseable {
 	 * 生产者
 	 */
 	private final Map<String, Producer> producers;
+    /**
+     * 消费者
+     */
+    private final Map<String, Consumer> consumers;
 	/**
 	 * 数据通道生产者
 	 */
 	private final Map<String, DataProducer> dataProducers;
+	/**
+	 * 数据通道消费者
+	 */
+	private final Map<String, DataProducer> dataConsumers;
 	
     public ClientWrapper(Room room, Client client) {
         this.room = room;
@@ -107,7 +115,9 @@ public class ClientWrapper implements AutoCloseable {
         this.roomId = room.getRoomId();
         this.clientId = client.clientId();
         this.producers = new ConcurrentHashMap<>();
+        this.consumers = new ConcurrentHashMap<>();
         this.dataProducers = new ConcurrentHashMap<>();
+        this.dataConsumers = new ConcurrentHashMap<>();
     }
 	
     /**
@@ -128,18 +138,32 @@ public class ClientWrapper implements AutoCloseable {
     }
     
     /**
-     * 是否已经消费
+     * @param producer 生产者
      * 
-     * @param producer
-     * @return
+     * @return 是否已经消费
      */
     public boolean consume(Producer producer) {
-        return this.producers.values().stream()
-            .anyMatch(v -> v.getConsumers().values().stream().anyMatch(c -> c.getProducer() == producer));
+        return this.consumers.values().stream()
+            .anyMatch(v -> v.getProducer() == producer);
     }
-
+    
+    /**
+     * 删除消费者
+     * 
+     * @param wrapper 消费者终端保证期
+     */
+    public void remove(ClientWrapper wrapper) {
+        this.consumers.entrySet().stream()
+        .filter(v -> v.getValue().getConsumeClient() == wrapper)
+        .map(Map.Entry::getKey)
+        .forEach(this.consumers::remove);
+        // TODO：资源释放
+        this.producers.values().forEach(v -> v.remove(wrapper));
+    }
+    
     @Override
     public void close() throws Exception {
+        // TODO：释放资源
     }
     
 }

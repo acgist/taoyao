@@ -6,9 +6,12 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
+import org.springframework.context.ApplicationContext;
+
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientStatus;
+import com.acgist.taoyao.signal.event.RoomLeaveEvent;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -37,11 +40,19 @@ public class Room implements Closeable {
 	/**
 	 * 状态
 	 */
-	private RoomStatus roomStatus;
+	private final RoomStatus roomStatus;
 	/**
 	 * 媒体服务
 	 */
 	private Client mediaClient;
+	/**
+	 * 房间管理
+	 */
+	private final RoomManager roomManager;
+	/**
+	 * 系统上下文
+	 */
+	private final ApplicationContext applicationContext;
 	/**
 	 * 终端
 	 */
@@ -50,9 +61,11 @@ public class Room implements Closeable {
 	/**
 	 * @param mediaClient 媒体服务
 	 */
-	public Room(Client mediaClient) {
+	public Room(Client mediaClient, RoomManager roomManager, ApplicationContext applicationContext) {
 	    this.roomStatus = new RoomStatus();
 	    this.mediaClient = mediaClient;
+	    this.roomManager = roomManager;
+	    this.applicationContext = applicationContext;
 	    this.clients = new ConcurrentHashMap<>();
 	}
 	
@@ -96,13 +109,18 @@ public class Room implements Closeable {
 		synchronized (this.clients) {
 		    final ClientWrapper wrapper = this.clients.remove(client);
 			if(wrapper != null) {
+			    this.roomStatus.setClientSize(this.roomStatus.getClientSize() - 1);
+			    // 删除消费者
+			    this.clients.values().stream()
+			    .filter(v -> v != wrapper)
+			    .forEach(v -> v.remove(wrapper));
+			    // TODO：删除数据消费者
+			    this.applicationContext.publishEvent(new RoomLeaveEvent(this, client));
 			    try {
                     wrapper.close();
                 } catch (Exception e) {
                     log.error("终端关闭异常", e);
                 }
-				this.roomStatus.setClientSize(this.roomStatus.getClientSize() - 1);
-				// TODO：leave事件
 			}
 		}
 	}
@@ -198,6 +216,8 @@ public class Room implements Closeable {
 	public void close() {
 		log.info("关闭房间：{}", this.roomId);
 		// TODO：关闭房间
+		// TODO:媒体服务
+		this.roomManager.remove(this);
 	}
 	
 }

@@ -65,7 +65,7 @@
       <el-button type="primary" :disabled="!taoyao" @click="roomActive = 'enter';roomVisible = true;">选择房间</el-button>
       <el-button type="primary" :disabled="!taoyao" @click="roomActive = 'create';roomVisible = true;">创建房间</el-button>
       <el-button :disabled="!taoyao || !room.roomId">邀请终端</el-button>
-      <el-button :disabled="!taoyao || !room.roomId">退出房间</el-button>
+      <el-button :disabled="!taoyao || !room.roomId">离开房间</el-button>
       <el-button :disabled="!taoyao || !room.roomId" @click="roomClose()" type="danger">关闭房间</el-button>
     </div>
 

@@ -13,7 +13,7 @@ import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.event.RoomClientListEvent;
+import com.acgist.taoyao.signal.event.RoomEnterEvent;
 import com.acgist.taoyao.signal.party.media.ClientWrapper;
 import com.acgist.taoyao.signal.party.media.ClientWrapper.SubscribeType;
 import com.acgist.taoyao.signal.party.media.Room;
@@ -90,8 +90,8 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
             Constant.STATUS, client.status()
         ));
         room.broadcast(message);
-        // 房间终端列表事件
-        this.publishEvent(new RoomClientListEvent(room, client));
+        // 进入房间事件
+        this.publishEvent(new RoomEnterEvent(room, client));
     }
 
 }

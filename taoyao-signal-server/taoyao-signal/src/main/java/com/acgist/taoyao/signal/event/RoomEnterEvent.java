@@ -7,13 +7,13 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 房间终端列表事件
+ * 进入房间事件
  * 
  * @author acgist
  */
 @Getter
 @Setter
-public class RoomClientListEvent extends RoomEventAdapter {
+public class RoomEnterEvent extends RoomEventAdapter {
 
     private static final long serialVersionUID = 1L;
     
@@ -22,7 +22,7 @@ public class RoomClientListEvent extends RoomEventAdapter {
      */
     private final Client client;
     
-    public RoomClientListEvent(Room room, Client client) {
+    public RoomEnterEvent(Room room, Client client) {
         super(room);
         this.client = client;
     }

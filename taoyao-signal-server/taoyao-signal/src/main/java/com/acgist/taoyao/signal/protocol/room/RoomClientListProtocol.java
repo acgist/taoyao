@@ -10,7 +10,7 @@ import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.event.RoomClientListEvent;
+import com.acgist.taoyao.signal.event.RoomEnterEvent;
 import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
@@ -53,7 +53,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
     },
     flow = "终端=>信令服务->终端"
 )
-public class RoomClientListProtocol extends ProtocolRoomAdapter implements ApplicationListener<RoomClientListEvent> {
+public class RoomClientListProtocol extends ProtocolRoomAdapter implements ApplicationListener<RoomEnterEvent> {
 
     public static final String SIGNAL = "room::client::list";
     
@@ -63,7 +63,7 @@ public class RoomClientListProtocol extends ProtocolRoomAdapter implements Appli
 
     @Async
     @Override
-    public void onApplicationEvent(RoomClientListEvent event) {
+    public void onApplicationEvent(RoomEnterEvent event) {
         final Room room = event.getRoom();
         final Client client = event.getClient();
         client.push(this.build(room.clientStatus()));

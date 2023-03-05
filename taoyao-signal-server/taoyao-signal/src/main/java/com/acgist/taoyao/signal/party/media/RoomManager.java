@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.springframework.context.ApplicationContext;
+
 import com.acgist.taoyao.boot.annotation.Manager;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
@@ -26,15 +28,17 @@ public class RoomManager {
 
 	private final IdService idService;
 	private final ClientManager clientManager;
+	private final ApplicationContext applicationContext;
 	
 	/**
 	 * 房间列表
 	 */
 	private final List<Room> rooms;
 	
-	public RoomManager(IdService idService, ClientManager clientManager) {
+	public RoomManager(IdService idService, ClientManager clientManager, ApplicationContext applicationContext) {
         this.idService = idService;
         this.clientManager = clientManager;
+        this.applicationContext = applicationContext;
         this.rooms = new CopyOnWriteArrayList<>();
     }
 
@@ -117,7 +121,7 @@ public class RoomManager {
 		}
 		final String roomId = this.idService.buildUuid();
 		// 房间
-		final Room room = new Room(mediaClient);
+		final Room room = new Room(mediaClient, this, this.applicationContext);
 		room.setRoomId(roomId);
 		room.setPassword(password);
 		// 状态
@@ -133,22 +137,6 @@ public class RoomManager {
 		this.rooms.add(room);
 		return room;
 	}
-	
-	/**
-	 * 关闭房间
-	 * 
-	 * @param roomId 房间标识
-	 */
-	public void close(String roomId) {
-		final Room room = this.room(roomId);
-		if(room == null) {
-			log.warn("关闭房间无效：{}", roomId);
-			return;
-		}
-		if(this.rooms.remove(room)) {
-			// TODO:媒体服务
-		}
-	}
 
 	/**
 	 * 离开房间
@@ -157,6 +145,15 @@ public class RoomManager {
 	 */
 	public void leave(Client client) {
 		this.rooms.forEach(v -> v.leave(client));
+	}
+	
+	/**
+	 * 删除房间
+	 * 
+	 * @param room 房间
+	 */
+	public void remove(Room room) {
+	    this.rooms.remove(room);
 	}
 	
 }
