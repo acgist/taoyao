@@ -234,6 +234,8 @@ class RemoteClient {
   clientId;
   // 音量
   volume = 0;
+  // 代理对象
+  proxy;
 
   constructor({
     name,
@@ -263,8 +265,6 @@ class Taoyao extends RemoteClient {
   roomId;
   // 回调事件
   callback;
-  // 媒体回调
-  callbackMedia;
   // 请求回调
   callbackMapping = new Map();
   // 音频媒体配置
@@ -348,15 +348,13 @@ class Taoyao extends RemoteClient {
   /**
    * 连接信令
    *
-   * @param {*} callback 信令回调
-   * @param {*} callbackMedia 媒体回调
+   * @param {*} callback 回调事件
    *
    * @returns
    */
-  async connectSignal(callback, callbackMedia) {
+  async connectSignal(callback) {
     const self = this;
     self.callback = callback;
-    self.callbackMedia = callbackMedia;
     self.signalChannel = signalChannel;
     signalChannel.taoyao = self;
     return self.signalChannel.connect(
@@ -636,9 +634,12 @@ class Taoyao extends RemoteClient {
       // );
       self.push(message);
       console.log("消费者", consumer);
-
-      self.callbackMedia("remote", consumer.track, consumer);
-
+      const remoteClient = self.remoteClients.get(consumer.sourceId);
+      if(remoteClient) {
+        remoteClient.proxy.media(consumer.track, consumer);
+      } else {
+        console.warn("远程终端无效：", consumer);
+      }
       // If audio-only mode is enabled, pause it.
       if (consumer.kind === "video" && !self.videoProduce) {
         // this.pauseConsumer(consumer);
@@ -1108,7 +1109,7 @@ class Taoyao extends RemoteClient {
           console.debug("enableWebcam() | calling getUserMedia()");
           // TODO：参数
           const stream = await navigator.mediaDevices.getUserMedia({
-            video: true,
+            video: self.videoConfig,
           });
           track = stream.getVideoTracks()[0];
           // TODO：验证修改API videoTrack.applyCapabilities
@@ -1130,9 +1131,7 @@ class Taoyao extends RemoteClient {
         } else {
           // TODO：异常
         }
-
-        self.callbackMedia("local", track);
-
+        self.proxy.media(track);
         let codec;
         let encodings;
         const codecOptions = {

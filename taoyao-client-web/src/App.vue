@@ -96,8 +96,10 @@
 
     <!-- 终端 -->
     <div class="clients">
-      <LocalClient ref="local" :client="taoyao" :taoyao="taoyao"></LocalClient>
-      <RemoteClient :ref="'remote-' + kv[0]" v-for="(kv, index) in remoteClients" :key="index" :client="kv[1]" :taoyao="taoyao"></RemoteClient>
+      <!-- 本地终端 -->
+      <LocalClient ref="local-client" v-if="this.taoyao" :client="taoyao" :taoyao="taoyao"></LocalClient>
+      <!-- 远程终端 -->
+      <RemoteClient :ref="'remote-client-' + kv[0]" v-for="(kv, index) in remoteClients" :key="index" :client="kv[1]" :taoyao="taoyao"></RemoteClient>
     </div>
   </div>
 </template>
@@ -140,7 +142,7 @@ export default {
     async connectSignal() {
       const me = this;
       me.taoyao = new Taoyao({ ...this.config });
-      await me.taoyao.connectSignal(me.callback, me.callbackMedia);
+      await me.taoyao.connectSignal(me.callback);
       me.signalVisible = false;
       me.remoteClients = me.taoyao.remoteClients;
       // 全局绑定
@@ -196,26 +198,6 @@ export default {
           return true;
       }
       return false;
-    },
-    /**
-     * 媒体回调
-     * 
-     * @param {*} type 类型
-     * @param {*} track 媒体Track
-     * @param {*} consumer 消费者
-     */
-    callbackMedia(type, track, consumer) {
-      const me = this;
-      return new Promise((resolve, reject) => {
-        if(type === 'local') {
-          me.$refs.local.media(track);
-        } else if(type === 'remote') {
-          me.$refs['remote-' + consumer.sourceId][0].media(track, consumer);
-        } else {
-          // 其他
-        }
-        resolve();
-      });
     },
   },
   components: {

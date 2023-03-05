@@ -58,6 +58,7 @@ export default {
   mounted() {
     this.audio = this.$refs.audio;
     this.video = this.$refs.video;
+    this.client.proxy = this;
   },
   props: {
     "client": {
