@@ -94,10 +94,12 @@ public class ClientWrapper implements AutoCloseable {
 	private Transport recvTransport;
 	/**
 	 * 生产者
+	 * 生产者里面的消费者是其他终端消费当前终端的消费者
 	 */
 	private final Map<String, Producer> producers;
     /**
      * 消费者
+     * 当前终端消费其他终端的消费者
      */
     private final Map<String, Consumer> consumers;
 	/**
@@ -154,7 +156,7 @@ public class ClientWrapper implements AutoCloseable {
      */
     public void remove(ClientWrapper wrapper) {
         this.consumers.entrySet().stream()
-        .filter(v -> v.getValue().getConsumeClient() == wrapper)
+        .filter(v -> v.getValue().getProducer().getProduceClient() == wrapper)
         .map(Map.Entry::getKey)
         .forEach(this.consumers::remove);
         // TODO：资源释放

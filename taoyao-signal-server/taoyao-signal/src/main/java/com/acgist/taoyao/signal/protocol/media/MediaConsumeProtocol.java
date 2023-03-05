@@ -117,9 +117,13 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
         if(consumeClientWrapper.consume(producer)) {
             // TODO：回调媒体服务准备完成
             if(log.isDebugEnabled()) {
-                log.debug("已经消费：{}", consumeClientWrapper.getClientId(), producer.getStreamId());
+                log.debug("已经消费媒体：{} - {}", consumeClientWrapper.getClientId(), producer.getStreamId());
             }
             return;
+        } else {
+            if(log.isDebugEnabled()) {
+                log.debug("消费媒体：{} - {}", consumeClientWrapper.getClientId(), producer.getStreamId());
+            }
         }
         final String clientId = consumeClientWrapper.getClientId();
         final String streamId = producer.getStreamId() + "->" + clientId;
