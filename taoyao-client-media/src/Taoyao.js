@@ -211,6 +211,7 @@ const signalChannel = {
     clearTimeout(me.reconnectTimer);
     me.reconnection = false;
     me.channel.close();
+    me.taoyao.connect = false;
   },
 };
 
@@ -228,9 +229,9 @@ class Room {
   webRtcServer = null;
   // 路由
   mediasoupRouter = null;
-  // 音频监控
+  // 音量监控
   audioLevelObserver = null;
-  // 音频监控
+  // 采样监控
   activeSpeakerObserver = null;
   // 消费者复制数量
   consumerReplicas = 0;
@@ -266,24 +267,22 @@ class Room {
   }
 
   /**
-   * 声音监控
+   * 音量监控
    */
   handleAudioLevelObserver() {
     const self = this;
-    // 声音
     self.audioLevelObserver.on("volumes", (volumes) => {
       for (const value of volumes) {
         const { producer, volume } = value;
         signalChannel.push(
           protocol.buildMessage("media::audio::active::speaker", {
+            volume: volume,
             roomId: self.roomId,
             clientId: producer.clientId,
-            volume: volume,
           })
         );
       }
     });
-    // 静音
     self.audioLevelObserver.on("silence", () => {
       signalChannel.push(
         protocol.buildMessage("media::audio::active::speaker", {
@@ -294,7 +293,7 @@ class Room {
   }
 
   /**
-   * 说话监控
+   * 采样监控
    */
   handleActiveSpeakerObserver() {
     const self = this;
@@ -332,6 +331,8 @@ class Room {
     // me.consumers.forEach(v => v.close());
     // me.dataProducers.forEach(v => v.close());
     // me.dataConsumers.forEach(v => v.close());
+    me.audioLevelObserver.close();
+    me.activeSpeakerObserver.close();
     me.transports.forEach(v => v.close());
     me.mediasoupRouter.close();
   }
@@ -403,6 +404,9 @@ class Taoyao {
         break;
       case "media::transport::webrtc::create":
         this.mediaTransportWebrtcCreate(message, body);
+        break;
+      case "platform::error":
+        this.platformError(message, body);
         break;
       case "room::create":
         this.roomCreate(message, body);
@@ -737,7 +741,7 @@ class Taoyao {
   }
 
   /**
-   * 路由RTP能力信令
+   * 路由RTP协商信令
    *
    * @param {*} message 消息
    * @param {*} body 消息主体
@@ -848,7 +852,18 @@ class Taoyao {
       } catch (error) {}
     }
   }
-
+  /**
+   * 平台异常信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  platformError(message, body) {
+    const { code } = message;
+    if(code === "3401") {
+      signalChannel.close();
+    }
+  }
   /**
    * 关闭房间信令
    * 
@@ -885,16 +900,18 @@ class Taoyao {
     const mediasoupWorker = me.nextMediasoupWorker();
     const { mediaCodecs } = config.mediasoup.routerOptions;
     const mediasoupRouter = await mediasoupWorker.createRouter({ mediaCodecs });
-    // TODO：下面两个监控改为配置启用
+    // 音量监控
     const audioLevelObserver = await mediasoupRouter.createAudioLevelObserver({
-      maxEntries: 1,
-      threshold: -80,
       interval: 2000,
+      // 范围：-127~0
+      threshold: -80,
+      // 采样数量
+      maxEntries: 2,
     });
-    const activeSpeakerObserver =
-      await mediasoupRouter.createActiveSpeakerObserver({
-        interval: 500,
-      });
+    // 采样监控
+    const activeSpeakerObserver = await mediasoupRouter.createActiveSpeakerObserver({
+      interval: 500,
+    });
     room = new Room({
       roomId,
       webRtcServer: mediasoupWorker.appData.webRtcServer,

@@ -196,7 +196,7 @@ public interface Constant {
      */
     String RTP_PARAMETERS = "rtpParameters";
     /**
-     * RTP能力
+     * RTP协商
      */
     String RTP_CAPABILITIES = "rtpCapabilities";
     /**
@@ -208,7 +208,7 @@ public interface Constant {
      */
     String SCTP_PARAMETERS = "sctpParameters";
     /**
-     * SCTP能力
+     * SCTP协商
      */
     String SCTP_CAPABILITIES = "sctpCapabilities";
     /**

@@ -3,7 +3,8 @@
   <div class="client">
     <audio ref="audio"></audio>
     <video ref="video"></video>
-    <div class="buttons">
+    <p class="title">{{ client?.name || "" }}</p>
+    <div class="buttons" :style="{'--volume': client?.volume}">
       <el-button type="danger" title="打开麦克风" :icon="Mute" circle />
       <el-button type="primary" title="关闭麦克风" :icon="Microphone" circle />
       <el-button type="danger" title="打开摄像头" :icon="VideoPause" circle />
@@ -54,7 +55,6 @@ export default {
   },
   data() {
     return {
-      taoyao: null,
       audio: null,
       video: null,
       audioStream: null,
@@ -94,6 +94,14 @@ export default {
     this.audio = this.$refs.audio;
     this.video = this.$refs.video;
   },
+  props: {
+    "client": {
+      type: Object
+    },
+    "taoyao": {
+      type: Object
+    }
+  },
   methods: {
     media(track) {
       if (track.kind === "video") {
@@ -112,3 +120,6 @@ export default {
   },
 };
 </script>
+<style scoped>
+.client .buttons:after{width:var(--volume);}
+</style>

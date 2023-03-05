@@ -11,7 +11,7 @@ import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**
- * 路由RTP能力信令
+ * 路由RTP协商信令
  * 
  * @author acgist
  */
@@ -37,7 +37,7 @@ public class MediaRouterRtpCapabilitiesProtocol extends ProtocolRoomAdapter {
 	public static final String SIGNAL = "media::router::rtp::capabilities";
 	
 	public MediaRouterRtpCapabilitiesProtocol() {
-		super("路由RTP能力信令", SIGNAL);
+		super("路由RTP协商信令", SIGNAL);
 	}
 
 	@Override
@@ -45,7 +45,7 @@ public class MediaRouterRtpCapabilitiesProtocol extends ProtocolRoomAdapter {
 	    if(clientType == ClientType.WEB || clientType == ClientType.CAMERA) {
 	        client.push(room.request(message));
 	    } else {
-	        // 忽略其他情况
+	        this.logNoAdapter(clientType);
 	    }
 	}
 

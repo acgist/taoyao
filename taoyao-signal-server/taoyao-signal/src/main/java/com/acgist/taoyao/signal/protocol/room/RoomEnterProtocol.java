@@ -13,25 +13,24 @@ import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
+import com.acgist.taoyao.signal.event.RoomClientListEvent;
 import com.acgist.taoyao.signal.party.media.ClientWrapper;
 import com.acgist.taoyao.signal.party.media.ClientWrapper.SubscribeType;
 import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
-
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * 进入房间信令
  * 
  * @author acgist
  */
-@Slf4j
 @Protocol
 @Description(
     body = {
         """
         {
-            "roomId": "房间标识"
+            "roomId": "房间ID",
+            "password": "房间密码（选填）"
         }
         """,
         """
@@ -47,39 +46,52 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
 
 	public static final String SIGNAL = "room::enter";
 	
-	private final RoomClientListProtocol roomClientListProtocol;
-	
-	public RoomEnterProtocol(RoomClientListProtocol roomClientListProtocol) {
+	public RoomEnterProtocol() {
 		super("进入房间信令", SIGNAL);
-		this.roomClientListProtocol = roomClientListProtocol;
 	}
 
 	@Override
 	public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
+	    if(clientType == ClientType.WEB || clientType == ClientType.CAMERA) {
+	        this.enter(clientId, room, client, message, body);
+	    } else {
+	        this.logNoAdapter(clientType);
+	    }
+	}
+
+	/**
+	 * 终端进入
+	 * 
+	 * @param clientId 终端ID
+	 * @param room 房间
+	 * @param client 终端
+	 * @param message 消息
+	 * @param body 消息主体
+	 */
+    private void enter(String clientId, Room room, Client client, Message message, Map<String, Object> body) {
         final String password = MapUtils.get(body, Constant.PASSWORD);
-        final String subscribeType = MapUtils.get(body, Constant.SUBSCRIBE_TYPE);
-        final Object rtpCapabilities = MapUtils.get(body, Constant.RTP_CAPABILITIES);
-        final Object sctpCapabilities = MapUtils.get(body, Constant.SCTP_CAPABILITIES);
         final String roomPassowrd = room.getPassword();
         if(StringUtils.isNotEmpty(roomPassowrd) && !roomPassowrd.equals(password)) {
             throw MessageCodeException.of(MessageCode.CODE_3401, "密码错误");
         }
+        final String subscribeType = MapUtils.get(body, Constant.SUBSCRIBE_TYPE);
+        final Object rtpCapabilities = MapUtils.get(body, Constant.RTP_CAPABILITIES);
+        final Object sctpCapabilities = MapUtils.get(body, Constant.SCTP_CAPABILITIES);
         // 进入房间
         final ClientWrapper clientWrapper = room.enter(client);
+        // 配置参数
         clientWrapper.setSubscribeType(SubscribeType.of(subscribeType));
         clientWrapper.setRtpCapabilities(rtpCapabilities);
         clientWrapper.setSctpCapabilities(sctpCapabilities);
         // 发送通知
         message.setBody(Map.of(
             Constant.ROOM_ID, room.getRoomId(),
-            Constant.CLIENT_ID, clientId
+            Constant.CLIENT_ID, clientId,
+            Constant.STATUS, client.status()
         ));
         room.broadcast(message);
-        log.info("进入房间：{} - {}", clientId, room.getRoomId());
-        // 推送房间用户信息：TODO event
-        final Message roomClientListMessage = this.roomClientListProtocol.build();
-        roomClientListMessage.setBody(room.clientStatus());
-        client.push(roomClientListMessage);
-	}
+        // 房间终端列表事件
+        this.publishEvent(new RoomClientListEvent(room, client));
+    }
 
 }

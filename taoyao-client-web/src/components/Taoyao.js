@@ -219,21 +219,38 @@ const signalChannel = {
     clearTimeout(me.reconnectTimer);
     me.reconnection = false;
     me.channel.close();
+    me.taoyao.connect = false;
   },
 };
 
 /**
- * 桃夭
+ * 远程终端
  */
-class Taoyao {
-  // 信令连接
-  connect = false;
-  // 房间标识
-  roomId;
-  // 终端标识
-  clientId;
+class RemoteClient {
+  
   // 终端名称
   name;
+  // 终端标识
+  clientId;
+  // 音量
+  volume = 0;
+
+  constructor({
+    name,
+    clientId,
+  }) {
+    this.name = name;
+    this.clientId = clientId;
+  }
+
+}
+
+/**
+ * 桃夭
+ */
+class Taoyao extends RemoteClient {
+  // 信令连接
+  connect = false;
   // 信令地址
   host;
   // 信令端口
@@ -242,6 +259,8 @@ class Taoyao {
   username;
   // 信令密码
   password;
+  // 房间标识
+  roomId;
   // 回调事件
   callback;
   // 媒体回调
@@ -249,13 +268,13 @@ class Taoyao {
   // 请求回调
   callbackMapping = new Map();
   // 音频媒体配置
-  audio = defaultAudioConfig;
+  audioConfig = defaultAudioConfig;
   // 视频媒体配置
-  video = defaultVideoConfig;
+  videoConfig = defaultVideoConfig;
   // 媒体配置
-  media;
+  mediaConfig;
   // WebRTC配置
-  webrtc;
+  webrtcConfig;
   // 信令通道
   signalChannel;
   // 发送媒体通道
@@ -296,13 +315,13 @@ class Taoyao {
   remoteClients = new Map();
 
   constructor({
-    roomId,
-    clientId,
     name,
+    clientId,
     host,
     port,
     username,
     password,
+    roomId,
     consume = true,
     produce = true,
     audioProduce = true,
@@ -310,13 +329,14 @@ class Taoyao {
     forceTcp = false,
     dataProduce = true,
   }) {
-    this.roomId = roomId;
-    this.clientId = clientId;
+    super({ name, clientId });
     this.name = name;
+    this.clientId = clientId;
     this.host = host;
     this.port = port;
     this.username = username;
     this.password = password;
+    this.roomId = roomId;
     this.consume = consume;
     this.produce = produce;
     this.dataProduce = produce && dataProduce;
@@ -401,6 +421,8 @@ class Taoyao {
    * 2. 执行前置回调
    * 3. 如果注册全局回调，同时执行结果返回true不再执行后面所有回调。
    * 4. 执行后置回调
+   * 
+   * @param {*} message 消息
    */
   async on(message) {
     const me = this;
@@ -429,19 +451,22 @@ class Taoyao {
   /**
    * 前置回调
    *
-   * @param {*} message
+   * @param {*} message 消息
    */
   async preCallback(message) {
-    const self = this;
+    const me = this;
     switch (message.header.signal) {
       case "client::config":
-        self.defaultClientConfig(message);
+        me.defaultClientConfig(message);
         break;
       case "client::register":
-        protocol.clientIndex = message.body.index;
+        me.defaultClientRegister(message);
         break;
       case "media::consume":
-        await self.consumeMedia(message);
+        await me.defaultMediaConsume(message);
+        break;
+      case "platform::error":
+        me.defaultPlatformError(message);
         break;
     }
   }
@@ -453,14 +478,17 @@ class Taoyao {
   async postCallback(message) {
     const me = this;
     switch (message.header.signal) {
-      case "room::client::list":
-        me.defaultRoomClientList(message);
-        break;
       case "client::reboot":
         me.defaultClientReboot(message);
         break;
       case "client::shutdown":
         me.defaultClientShutdown(message);
+        break;
+      case "media::audio::active::speaker":
+        me.defaultMediaAudioActiveSpeaker(message);
+        break;
+      case "room::client::list":
+        me.defaultRoomClientList(message);
         break;
       case "room::close":
         me.defaultRoomClose(message);
@@ -471,32 +499,29 @@ class Taoyao {
       case "platform::error":
         me.callbackError(message);
         break;
-      default:
-        console.warn("不支持的信令：", message);
-        break;
     }
   }
   /************************ 信令 ************************/
   /**
-   * 配置默认回调
+   * 终端配置信令
    *
    * @param {*} message 消息
    */
   defaultClientConfig(message) {
     const me = this;
     const { media, webrtc } = message.body;
-    const { audio, video} = media;
-    me.audio.sampleSize = { min: media.minSampleSize, ideal: audio.sampleSize, max: media.maxSampleSize };
-    me.audio.sampleRate = { min: media.minSampleRate, ideal: audio.sampleRate, max: media.maxSampleRate };
-    me.video.width = { min: media.minWidth, ideal: video.width, max: media.maxWidth };
-    me.video.height = { min: media.minHeight, ideal: video.height, max: media.maxHeight };
-    me.video.frameRate = { min: media.minFrameRate, ideal: video.frameRate, max: media.maxFrameRate };
-    me.media = media;
-    me.webrtc = webrtc;
-    console.debug("终端配置：", me.audio, me.video, me.media, me.webrtc);
+    const { audio, video } = media;
+    me.audioConfig.sampleSize = { min: media.minSampleSize, ideal: audio.sampleSize, max: media.maxSampleSize };
+    me.audioConfig.sampleRate = { min: media.minSampleRate, ideal: audio.sampleRate, max: media.maxSampleRate };
+    me.videoConfig.width = { min: media.minWidth, ideal: video.width, max: media.maxWidth };
+    me.videoConfig.height = { min: media.minHeight, ideal: video.height, max: media.maxHeight };
+    me.videoConfig.frameRate = { min: media.minFrameRate, ideal: video.frameRate, max: media.maxFrameRate };
+    me.mediaConfig = media;
+    me.webrtcConfig = webrtc;
+    console.debug("终端配置：", me.audioConfig, me.videoConfig, me.mediaConfig, me.webrtcConfig);
   }
   /**
-   * 终端重启默认回调
+   * 重启终端信令
    *
    * @param {*} message 消息
    */
@@ -505,13 +530,134 @@ class Taoyao {
     location.reload();
   }
   /**
-   * 终端重启默认回调
+   * 终端注册信令
+   * 
+   * @param {*} message 消息
+   */
+   defaultClientRegister(message) {
+    const { index } = message.body;
+    protocol.clientIndex = index;
+  }
+  /**
+   * 关闭终端信令
    *
    * @param {*} message 消息
    */
   defaultClientShutdown(message) {
     console.info("关闭终端");
     window.close();
+  }
+  /**
+   * 当前讲话终端信令
+   * 
+   * @param {*} message 消息
+   */
+  defaultMediaAudioActiveSpeaker(message) {
+    const me = this;
+    const { volume, clientId } = message.body;
+    if(!clientId) {
+      me.volume = 0;
+      me.remoteClients.forEach(v => v.volume = 0);
+    } if(me.clientId === clientId) {
+      me.volume = ((volume + 127) / 127 * 100) + "%";
+    } else {
+      const remoteClient = me.remoteClients.get(clientId);
+      if(remoteClient) {
+        remoteClient.volume = ((volume + 127) / 127 * 100) + "%";
+      }
+    }
+  }
+  /**
+   * 消费媒体信令
+   *
+   * @param {*} message 消息
+   */
+   async defaultMediaConsume(message) {
+    const self = this;
+    if (!self.consume) {
+      console.log("没有消费媒体");
+      return;
+    }
+    const {
+      kind,
+      type,
+      roomId,
+      clientId,
+      sourceId,
+      streamId,
+      producerId,
+      consumerId,
+      rtpParameters,
+      appData,
+      producerPaused,
+    } = message.body;
+    try {
+      const consumer = await self.recvTransport.consume({
+        id: consumerId,
+        kind,
+        producerId,
+        rtpParameters,
+        // NOTE: Force streamId to be same in mic and webcam and different
+        // in screen sharing so libwebrtc will just try to sync mic and
+        // webcam streams from the same remote peer.
+        //streamId: `${peerId}-${appData.share ? "share" : "mic-webcam"}`,
+        streamId: `${clientId}-${appData.share ? "share" : "mic-webcam"}`,
+        appData, // Trick.
+      });
+      consumer.clientId = clientId;
+      consumer.sourceId = sourceId;
+      consumer.streamId = streamId;
+      self.consumers.set(consumer.id, consumer);
+      consumer.on("transportclose", () => {
+        self.consumers.delete(consumer.id);
+      });
+      const { spatialLayers, temporalLayers } =
+        mediasoupClient.parseScalabilityMode(
+          consumer.rtpParameters.encodings[0].scalabilityMode
+        );
+      // store.dispatch(
+      //   stateActions.addConsumer(
+      //     {
+      //       id: consumer.id,
+      //       type: type,
+      //       locallyPaused: false,
+      //       remotelyPaused: producerPaused,
+      //       rtpParameters: consumer.rtpParameters,
+      //       spatialLayers: spatialLayers,
+      //       temporalLayers: temporalLayers,
+      //       preferredSpatialLayer: spatialLayers - 1,
+      //       preferredTemporalLayer: temporalLayers - 1,
+      //       priority: 1,
+      //       codec: consumer.rtpParameters.codecs[0].mimeType.split("/")[1],
+      //       track: consumer.track,
+      //     },
+      //     peerId
+      //   )
+      // );
+      self.push(message);
+      console.log("消费者", consumer);
+
+      self.callbackMedia("remote", consumer.track, consumer);
+
+      // If audio-only mode is enabled, pause it.
+      if (consumer.kind === "video" && !self.videoProduce) {
+        // this.pauseConsumer(consumer);
+        // TODO：实现
+      }
+    } catch (error) {
+      self.callbackError("消费媒体异常", error);
+    }
+  }
+  /**
+   * 平台异常信令
+   * 
+   * @param {*} message 消息
+   */
+  defaultPlatformError(message) {
+    const { code } = message;
+    if(code === "3401") {
+      signalChannel.close();
+    }
   }
   /**
    * 房间终端列表信令
@@ -524,9 +670,22 @@ class Taoyao {
       if (v.clientId === me.clientId) {
         // 忽略自己
       } else {
-        me.remoteClients.set(v.clientId, me.roomId);
+        me.remoteClients.set(v.clientId, new RemoteClient(v));
       }
     });
+  }
+  /**
+   * 关闭房间信令
+   */
+   async roomClose() {
+    const me = this;
+    if(!me.roomId) {
+      console.warn("房间无效：", me.roomId);
+      return;
+    }
+    me.push(protocol.buildMessage("room::close", {
+      roomId: me.roomId
+    }));
   }
   /**
    * 关闭房间信令
@@ -560,12 +719,48 @@ class Taoyao {
     );
     return response.body;
   }
+  /**
+   * 进入房间信令
+   * 
+   * @param {*} roomId 房间ID
+   * @param {*} password 房间密码
+   */
+  async roomEnter(roomId, password) {
+    const me = this;
+    if (!roomId) {
+      this.callbackError("无效房间");
+      return;
+    }
+    me.roomId = roomId;
+    me.mediasoupDevice = new mediasoupClient.Device();
+    const response = await me.request(
+      protocol.buildMessage("media::router::rtp::capabilities", {
+        roomId: me.roomId
+      })
+    );
+    const routerRtpCapabilities = response.body.rtpCapabilities;
+    await me.mediasoupDevice.load({ routerRtpCapabilities });
+    await me.request(
+      protocol.buildMessage("room::enter", {
+        roomId: roomId,
+        password: password,
+        rtpCapabilities: me.consume ? me.mediasoupDevice.rtpCapabilities : undefined,
+        sctpCapabilities: me.consume && me.dataProduce ? me.mediasoupDevice.sctpCapabilities : undefined,
+      })
+    );
+  }
+  /**
+   * 进入房间信令
+   * 
+   * @param {*} message 消息
+   */
   defaultRoomEnter(message) {
-    const { roomId, clientId } = message.body;
-    if (clientId === this.clientId) {
+    const me = this;
+    const { roomId, clientId, status } = message.body;
+    if (clientId === me.clientId) {
       // 忽略自己
     } else {
-      this.remoteClients.set(clientId, roomId);
+      me.remoteClients.set(clientId, new RemoteClient(status));
     }
   }
   /**
@@ -606,45 +801,6 @@ class Taoyao {
       protocol.buildMessage("client::list", { roomId: self.roomId })
     );
     return response.body;
-  }
-  async enterRoom(roomId, password) {
-    const self = this;
-    if (!roomId) {
-      this.callbackError("无效房间");
-      return;
-    }
-    self.roomId = roomId;
-    self.mediasoupDevice = new mediasoupClient.Device();
-    const response = await self.request(
-      protocol.buildMessage("media::router::rtp::capabilities", {
-        roomId: self.roomId
-      })
-    );
-    const routerRtpCapabilities = response.body.rtpCapabilities;
-    await self.mediasoupDevice.load({ routerRtpCapabilities });
-    await self.request(
-      protocol.buildMessage("room::enter", {
-        roomId: roomId,
-        password: password,
-        rtpCapabilities: self.consume
-          ? self.mediasoupDevice.rtpCapabilities
-          : undefined,
-        sctpCapabilities:
-          self.consume && self.dataProduce
-            ? self.mediasoupDevice.sctpCapabilities
-            : undefined,
-      })
-    );
-  }
-  async closeRoom() {
-    const me = this;
-    if(!me.roomId) {
-      console.warn("房间无效：", me.roomId);
-      return;
-    }
-    me.push(protocol.buildMessage("room::close", {
-      roomId: me.roomId
-    }));
   }
   /************************ 媒体 ************************/
   /**
@@ -841,7 +997,7 @@ class Taoyao {
       try {
         console.debug("打开麦克风");
         const stream = await navigator.mediaDevices.getUserMedia({
-          audio: self.audio,
+          audio: self.audioConfig,
         });
         const tracks = stream.getAudioTracks();
         if (tracks.length > 1) {
@@ -1104,89 +1260,6 @@ class Taoyao {
       await this.videoProducer.replaceTrack({ track });
     } catch (error) {
       console.error("changeWebcam() | failed: %o", error);
-    }
-  }
-
-  /**
-   * 消费媒体
-   *
-   * @param {*} message
-   * @returns
-   */
-  async consumeMedia(message) {
-    const self = this;
-    if (!self.consume) {
-      console.log("没有消费媒体");
-      return;
-    }
-    const {
-      kind,
-      type,
-      roomId,
-      clientId,
-      sourceId,
-      streamId,
-      producerId,
-      consumerId,
-      rtpParameters,
-      appData,
-      producerPaused,
-    } = message.body;
-    try {
-      const consumer = await self.recvTransport.consume({
-        id: consumerId,
-        kind,
-        producerId,
-        rtpParameters,
-        // NOTE: Force streamId to be same in mic and webcam and different
-        // in screen sharing so libwebrtc will just try to sync mic and
-        // webcam streams from the same remote peer.
-        //streamId: `${peerId}-${appData.share ? "share" : "mic-webcam"}`,
-        streamId: `${clientId}-${appData.share ? "share" : "mic-webcam"}`,
-        appData, // Trick.
-      });
-      consumer.clientId = clientId;
-      consumer.sourceId = sourceId;
-      consumer.streamId = streamId;
-      self.consumers.set(consumer.id, consumer);
-      consumer.on("transportclose", () => {
-        self.consumers.delete(consumer.id);
-      });
-      const { spatialLayers, temporalLayers } =
-        mediasoupClient.parseScalabilityMode(
-          consumer.rtpParameters.encodings[0].scalabilityMode
-        );
-      // store.dispatch(
-      //   stateActions.addConsumer(
-      //     {
-      //       id: consumer.id,
-      //       type: type,
-      //       locallyPaused: false,
-      //       remotelyPaused: producerPaused,
-      //       rtpParameters: consumer.rtpParameters,
-      //       spatialLayers: spatialLayers,
-      //       temporalLayers: temporalLayers,
-      //       preferredSpatialLayer: spatialLayers - 1,
-      //       preferredTemporalLayer: temporalLayers - 1,
-      //       priority: 1,
-      //       codec: consumer.rtpParameters.codecs[0].mimeType.split("/")[1],
-      //       track: consumer.track,
-      //     },
-      //     peerId
-      //   )
-      // );
-      self.push(message);
-      console.log("消费者", consumer);
-
-      self.callbackMedia("remote", consumer.track, consumer);
-
-      // If audio-only mode is enabled, pause it.
-      if (consumer.kind === "video" && !self.videoProduce) {
-        // this.pauseConsumer(consumer);
-        // TODO：实现
-      }
-    } catch (error) {
-      self.callbackError("消费媒体异常", error);
     }
   }
 

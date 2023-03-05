@@ -76,7 +76,13 @@ public class ClientWrapper implements AutoCloseable {
 	 * 没有订阅任何媒体时需要用户自己对媒体进行消费控制
 	 */
 	private SubscribeType subscribeType;
+	/**
+	 * RTP协商
+	 */
 	private Object rtpCapabilities;
+	/**
+	 * SCTP协商
+	 */
 	private Object sctpCapabilities;
 	/**
 	 * 发送通道

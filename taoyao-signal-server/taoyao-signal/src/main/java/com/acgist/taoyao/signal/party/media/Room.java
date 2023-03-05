@@ -78,6 +78,7 @@ public class Room implements Closeable {
 			if(clientWrapper != null) {
 				return clientWrapper;
 			}
+			log.info("终端进入房间：{} - {}", this.roomId, client.clientId());
 			clientWrapper = new ClientWrapper(this, client);
 			this.clients.put(client, clientWrapper);
 			this.roomStatus.setClientSize(this.roomStatus.getClientSize() + 1);

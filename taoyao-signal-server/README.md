@@ -13,7 +13,3 @@
 
 [信令格式](https://localhost:8888/protocol/list)
 
-## TODO
-
-标识 -> ID
-所有字段获取 -> get

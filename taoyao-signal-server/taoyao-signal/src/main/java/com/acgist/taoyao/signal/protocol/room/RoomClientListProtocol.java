@@ -2,11 +2,15 @@ package com.acgist.taoyao.signal.protocol.room;
 
 import java.util.Map;
 
+import org.springframework.context.ApplicationListener;
+import org.springframework.scheduling.annotation.Async;
+
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
+import com.acgist.taoyao.signal.event.RoomClientListEvent;
 import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
@@ -49,12 +53,20 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
     },
     flow = "终端=>信令服务->终端"
 )
-public class RoomClientListProtocol extends ProtocolRoomAdapter {
+public class RoomClientListProtocol extends ProtocolRoomAdapter implements ApplicationListener<RoomClientListEvent> {
 
     public static final String SIGNAL = "room::client::list";
     
     public RoomClientListProtocol() {
         super("房间终端列表信令", SIGNAL);
+    }
+
+    @Async
+    @Override
+    public void onApplicationEvent(RoomClientListEvent event) {
+        final Room room = event.getRoom();
+        final Client client = event.getClient();
+        client.push(this.build(room.clientStatus()));
     }
     
     @Override

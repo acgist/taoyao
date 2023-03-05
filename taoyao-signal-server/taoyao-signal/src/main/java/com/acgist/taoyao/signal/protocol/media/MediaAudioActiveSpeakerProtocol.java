@@ -2,6 +2,7 @@ package com.acgist.taoyao.signal.protocol.media;
 
 import java.util.Map;
 
+import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
@@ -15,6 +16,15 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
  * @author acgist
  */
 @Protocol
+@Description(
+    body = """
+    {
+        "volume": 音量,
+        "clientId": "终端ID"
+    }
+    """,
+    flow = "媒体服务->信令服务->终端"
+)
 public class MediaAudioActiveSpeakerProtocol extends ProtocolRoomAdapter {
 
 	public static final String SIGNAL = "media::audio::active::speaker";
@@ -28,7 +38,7 @@ public class MediaAudioActiveSpeakerProtocol extends ProtocolRoomAdapter {
 	    if(clientType == ClientType.MEDIA) {
 	        room.broadcast(message);
 	    } else {
-	        // 忽略其他情况
+	        this.logNoAdapter(clientType);
 	    }
 	}
 
