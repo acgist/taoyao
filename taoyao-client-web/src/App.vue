@@ -2,15 +2,8 @@
 <template>
   <div id="taoyao">
     <!-- 信令 -->
-    <el-dialog
-      center
-      width="30%"
-      title="终端设置"
-      :show-close="false"
-      v-if="taoyao === null"
-      v-model="signalVisible"
-    >
-      <el-form ref="SignalSetting">
+    <el-dialog center width="30%" title="终端设置" :show-close="false" v-model="signalVisible">
+      <el-form ref="SignalSetting" :model="config">
         <el-form-item label="终端标识">
           <el-input v-model="config.clientId" placeholder="终端标识" />
         </el-form-item>
@@ -34,39 +27,21 @@
         <el-button type="primary" @click="connectSignal">连接信令</el-button>
       </template>
     </el-dialog>
-
     <!-- 房间 -->
-    <el-dialog
-      center
-      width="30%"
-      title="房间设置"
-      @open="loadList"
-      :show-close="false"
-      v-model="roomVisible"
-    >
+    <el-dialog center width="30%" title="房间设置" :show-close="false" v-model="roomVisible" @open="loadList">
       <el-form ref="RoomSetting" :model="room">
         <el-tabs v-model="roomActive">
           <el-tab-pane label="进入房间" name="enter">
             <el-form-item label="房间标识">
               <el-select v-model="room.roomId" placeholder="房间标识">
-                <el-option
-                  v-for="value in rooms"
-                  :key="value.roomId"
-                  :label="value.name || value.roomId"
-                  :value="value.roomId"
-                />
+                <el-option v-for="value in rooms" :key="value.roomId" :label="value.name || value.roomId" :value="value.roomId" />
               </el-select>
             </el-form-item>
           </el-tab-pane>
           <el-tab-pane label="创建房间" name="create">
             <el-form-item label="媒体服务">
               <el-select v-model="room.mediaClientId" placeholder="媒体服务标识">
-                <el-option
-                  v-for="value in medias"
-                  :key="value.clientId"
-                  :label="value.name || value.clientId"
-                  :value="value.clientId"
-                />
+                <el-option v-for="value in medias" :key="value.clientId" :label="value.name || value.clientId" :value="value.clientId" />
               </el-select>
             </el-form-item>
             <el-form-item label="房间名称">
@@ -97,9 +72,9 @@
     <!-- 终端 -->
     <div class="clients">
       <!-- 本地终端 -->
-      <LocalClient ref="local-client" v-if="this.taoyao" :client="taoyao" :taoyao="taoyao"></LocalClient>
+      <LocalClient v-if="taoyao" ref="local-client" :client="taoyao" :taoyao="taoyao"></LocalClient>
       <!-- 远程终端 -->
-      <RemoteClient :ref="'remote-client-' + kv[0]" v-for="(kv, index) in remoteClients" :key="index" :client="kv[1]" :taoyao="taoyao"></RemoteClient>
+      <RemoteClient v-for="(kv, index) in remoteClients" :key="index" :ref="'remote-client-' + kv[0]" :client="kv[1]" :taoyao="taoyao"></RemoteClient>
     </div>
   </div>
 </template>
