@@ -10,6 +10,12 @@ import java.lang.annotation.Target;
 /**
  * 信令描述
  * 
+ * -[消息类型]> 异步请求 | 单播
+ * =[消息类型]> 同步请求
+ * -[消息类型]) 全员广播：对所有的终端广播信令（排除自己）
+ * +[消息类型]) 全员广播：对所有的终端广播信令（包含自己）
+ * ...：其他自定义的透传内容
+ * 
  * @author acgist
  */
 @Target(ElementType.TYPE)
@@ -24,6 +30,9 @@ public @interface Description {
     String[] body() default { "{}" };
     
     /**
+     * 同步：需要等待服务端数据时使用
+     * 异步：不用等待服务端数据时使用（服务端能主动通知类型消息都能使用异步）
+     * 
      * @return 数据流向
      */
     String[] flow() default { "终端->信令服务->终端" };

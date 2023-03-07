@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 终端包装器
+ * 终端包装器：Peer
  * 
  * @author acgist
  */
@@ -43,7 +43,7 @@ public class ClientWrapper implements AutoCloseable {
             return SubscribeType.ALL;
         }
         
-        public boolean consume(Producer producer) {
+        public boolean canConsume(Producer producer) {
             return switch (this) {
             case NONE -> false;
             case ALL_AUDIO -> producer.getKind() == Kind.AUDIO;
@@ -94,7 +94,7 @@ public class ClientWrapper implements AutoCloseable {
 	private Transport recvTransport;
 	/**
 	 * 生产者
-	 * 生产者里面的消费者是其他终端消费当前终端的消费者
+	 * 其他终端消费当前终端的消费者
 	 */
 	private final Map<String, Producer> producers;
     /**
@@ -144,28 +144,19 @@ public class ClientWrapper implements AutoCloseable {
      * 
      * @return 是否已经消费
      */
-    public boolean consume(Producer producer) {
+    public boolean consumed(Producer producer) {
         return this.consumers.values().stream()
             .anyMatch(v -> v.getProducer() == producer);
     }
     
-    /**
-     * 删除消费者
-     * 
-     * @param wrapper 消费者终端保证期
-     */
-    public void remove(ClientWrapper wrapper) {
-        this.consumers.entrySet().stream()
-        .filter(v -> v.getValue().getProducer().getProduceClient() == wrapper)
-        .map(Map.Entry::getKey)
-        .forEach(this.consumers::remove);
-        // TODO：资源释放
-        this.producers.values().forEach(v -> v.remove(wrapper));
-    }
-    
     @Override
     public void close() throws Exception {
-        // TODO：释放资源
+        // TODO：释放资源：通道、消费者、生产者
+        this.consumers.forEach((k, v) -> v.close());
+        this.producers.forEach((k, v) -> v.close());
+        // TODO：实现
+        this.recvTransport.close();
+        this.sendTransport.close();
     }
     
 }

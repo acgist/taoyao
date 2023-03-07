@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
 @Protocol
 @Description(
     memo = """
-    消费媒体：主动消费、终端生成媒体、终端创建WebRTC消费通道
+    消费媒体：主动消费、终端生产媒体、终端创建WebRTC消费通道
     终端生产媒体当前房间所有终端根据订阅类型自动消费媒体
     终端创建WebRTC消费通道根据订阅类型自动消费当前房间已有媒体
     """,
@@ -58,19 +58,19 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
         if(event.getProducer() != null) {
             // 生产媒体：其他终端消费
             final Producer producer = event.getProducer();
-            final ClientWrapper produceClientWrapper = producer.getProduceClient();
+            final ClientWrapper produceClientWrapper = producer.getProducerClient();
             room.getClients().values().stream()
             .filter(v -> v != produceClientWrapper)
-            .filter(v -> v.getSubscribeType().consume(producer))
-            .forEach(v -> this.consume(room, v, producer));
+            .filter(v -> v.getSubscribeType().canConsume(producer))
+            .forEach(v -> this.consume(room, v, producer, this.build()));
         } else if(event.getClientWrapper() != null) {
             // 创建WebRTC消费通道：消费其他终端
             final ClientWrapper consumeClientWrapper = event.getClientWrapper();
             room.getClients().values().stream()
             .filter(v -> v != consumeClientWrapper)
             .flatMap(v -> v.getProducers().values().stream())
-            .filter(v -> consumeClientWrapper.getSubscribeType().consume(v))
-            .forEach(producer -> this.consume(room, consumeClientWrapper, producer));
+            .filter(v -> consumeClientWrapper.getSubscribeType().canConsume(v))
+            .forEach(producer -> this.consume(room, consumeClientWrapper, producer, this.build()));
         } else {
             throw MessageCodeException.of("消费媒体失败");
         }
@@ -80,26 +80,25 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         final String producerId = MapUtils.get(body, Constant.PRODUCER_ID);
         final Producer producer = room.producer(producerId);
-        if(clientType == ClientType.WEB || clientType == ClientType.CAMERA) {
-            // 请求消费媒体
-            this.consume(room, room.clientWrapper(client), producer);
-        } else if(clientType == ClientType.MEDIA) {
-            // 通知终端准备：准备完成再次请求消费媒体结束媒体服务等待
+        if(clientType.mediaClient()) {
+            // 主动请求消费 || 消费通道准备就绪
+            this.consume(room, room.clientWrapper(client), producer, message);
+        } else if(clientType.mediaServer()) {
+            // 媒体通道准备就绪
             final String kind = MapUtils.get(body, Constant.KIND);
             final String streamId = MapUtils.get(body, Constant.STREAM_ID);
             final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);
-            final String consumeClientId = MapUtils.get(body, Constant.CLIENT_ID);
-            final ClientWrapper consumeClientWrapper = room.clientWrapper(consumeClientId);
-            final Map<String, Consumer> consumers = consumeClientWrapper.getConsumers();    
+            final String consumerClientId = MapUtils.get(body, Constant.CLIENT_ID);
+            final ClientWrapper consumerClientWrapper = room.clientWrapper(consumerClientId);
+            final Map<String, Consumer> consumers = consumerClientWrapper.getConsumers();    
             final Map<String, Consumer> producerConsumers = producer.getConsumers();
-            final Consumer consumer = new Consumer(consumeClientWrapper, producer, kind, streamId, consumerId);
+            final Consumer consumer = new Consumer(kind, streamId, consumerId, room, producer, consumerClientWrapper);
             final Consumer oldConsumer = consumers.put(producerId, consumer);
             final Consumer oldProducerConsumer = producerConsumers.put(consumerId, consumer);
             if(oldConsumer != null || oldProducerConsumer != null) {
                 log.warn("消费者已经存在：{}", consumerId);
-                // TODO：关闭旧的？
             }
-            final Client consumeClient = consumeClientWrapper.getClient();
+            final Client consumeClient = consumerClientWrapper.getClient();
             consumeClient.push(message);
         } else {
             this.logNoAdapter(clientType);
@@ -110,36 +109,39 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
      * 消费媒体
      * 
      * @param room 房间
-     * @param consumeClientWrapper 消费者终端包装器
+     * @param consumerClientWrapper 消费者终端包装器
      * @param producer 生产者
+     * @param message 消息
      */
-    private void consume(Room room, ClientWrapper consumeClientWrapper, Producer producer) {
-        if(consumeClientWrapper.consume(producer)) {
-            // TODO：回调媒体服务准备完成
-            if(log.isDebugEnabled()) {
-                log.debug("已经消费媒体：{} - {}", consumeClientWrapper.getClientId(), producer.getStreamId());
-            }
-            return;
-        } else {
-            if(log.isDebugEnabled()) {
-                log.debug("消费媒体：{} - {}", consumeClientWrapper.getClientId(), producer.getStreamId());
-            }
-        }
-        final String clientId = consumeClientWrapper.getClientId();
-        final String streamId = producer.getStreamId() + "->" + clientId;
+    private void consume(Room room, ClientWrapper consumerClientWrapper, Producer producer, Message message) {
         final Client mediaClient = room.getMediaClient();
-        final Transport recvTransport = consumeClientWrapper.getRecvTransport();
-        final ClientWrapper produceClientWrapper = producer.getProduceClient();
-        final Map<String, Object> body = new HashMap<>();
-        body.put(Constant.ROOM_ID, room.getRoomId());
-        body.put(Constant.CLIENT_ID, clientId);
-        body.put(Constant.SOURCE_ID, produceClientWrapper.getClientId());
-        body.put(Constant.STREAM_ID, streamId);
-        body.put(Constant.PRODUCER_ID, producer.getProducerId());
-        body.put(Constant.TRANSPORT_ID, recvTransport.getTransportId());
-        body.put(Constant.RTP_CAPABILITIES, consumeClientWrapper.getRtpCapabilities());
-        body.put(Constant.SCTP_CAPABILITIES, consumeClientWrapper.getSctpCapabilities());
-        mediaClient.push(this.build(body));
+        if(consumerClientWrapper.consumed(producer)) {
+            // 消费通道准备就绪
+            if(log.isDebugEnabled()) {
+                log.debug("消费通道准备就绪：{} - {}", consumerClientWrapper.getClientId(), producer.getStreamId());
+            }
+            mediaClient.push(message);
+        } else {
+            // 主动消费媒体
+            if(log.isDebugEnabled()) {
+                log.debug("消费媒体：{} - {}", consumerClientWrapper.getClientId(), producer.getStreamId());
+            }
+            final String clientId = consumerClientWrapper.getClientId();
+            final String streamId = producer.getStreamId() + "->" + clientId;
+            final Transport recvTransport = consumerClientWrapper.getRecvTransport();
+            final ClientWrapper produceClientWrapper = producer.getProducerClient();
+            final Map<String, Object> body = new HashMap<>();
+            body.put(Constant.ROOM_ID, room.getRoomId());
+            body.put(Constant.CLIENT_ID, clientId);
+            body.put(Constant.SOURCE_ID, produceClientWrapper.getClientId());
+            body.put(Constant.STREAM_ID, streamId);
+            body.put(Constant.PRODUCER_ID, producer.getProducerId());
+            body.put(Constant.TRANSPORT_ID, recvTransport.getTransportId());
+            body.put(Constant.RTP_CAPABILITIES, consumerClientWrapper.getRtpCapabilities());
+            body.put(Constant.SCTP_CAPABILITIES, consumerClientWrapper.getSctpCapabilities());
+            message.setBody(body);
+            mediaClient.push(message);
+        }
     }
 
 }

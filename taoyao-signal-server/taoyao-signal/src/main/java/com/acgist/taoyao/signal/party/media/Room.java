@@ -6,11 +6,10 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.springframework.context.ApplicationContext;
-
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientStatus;
+import com.acgist.taoyao.signal.event.EventPublisher;
 import com.acgist.taoyao.signal.event.RoomLeaveEvent;
 
 import lombok.Getter;
@@ -28,6 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 public class Room implements Closeable {
 	
+    /**
+     * 是否关闭
+     */
+    private volatile boolean close = false;
 	/**
 	 * 房间标识
 	 */
@@ -50,10 +53,6 @@ public class Room implements Closeable {
 	 */
 	private final RoomManager roomManager;
 	/**
-	 * 系统上下文
-	 */
-	private final ApplicationContext applicationContext;
-	/**
 	 * 终端
 	 */
 	private final Map<Client, ClientWrapper> clients;
@@ -61,11 +60,10 @@ public class Room implements Closeable {
 	/**
 	 * @param mediaClient 媒体服务
 	 */
-	public Room(Client mediaClient, RoomManager roomManager, ApplicationContext applicationContext) {
+	public Room(Client mediaClient, RoomManager roomManager) {
 	    this.roomStatus = new RoomStatus();
 	    this.mediaClient = mediaClient;
 	    this.roomManager = roomManager;
-	    this.applicationContext = applicationContext;
 	    this.clients = new ConcurrentHashMap<>();
 	}
 	
@@ -101,7 +99,6 @@ public class Room implements Closeable {
 	
 	/**
 	 * 终端离开
-	 * 立即释放所有资源
 	 * 
 	 * @param client 终端
 	 */
@@ -109,18 +106,13 @@ public class Room implements Closeable {
 		synchronized (this.clients) {
 		    final ClientWrapper wrapper = this.clients.remove(client);
 			if(wrapper != null) {
-			    this.roomStatus.setClientSize(this.roomStatus.getClientSize() - 1);
-			    // 删除消费者
-			    this.clients.values().stream()
-			    .filter(v -> v != wrapper)
-			    .forEach(v -> v.remove(wrapper));
-			    // TODO：删除数据消费者
-			    this.applicationContext.publishEvent(new RoomLeaveEvent(this, client));
 			    try {
                     wrapper.close();
                 } catch (Exception e) {
-                    log.error("终端关闭异常", e);
+                    log.error("关闭终端代理异常：{}", wrapper.getClientId(), e);
                 }
+			    this.roomStatus.setClientSize(this.roomStatus.getClientSize() - 1);
+			    EventPublisher.publishEvent(new RoomLeaveEvent(this, client));
 			}
 		}
 	}
@@ -145,6 +137,17 @@ public class Room implements Closeable {
         return this.mediaClient.request(message);
     }
 	
+    /**
+     * 广播消息
+     * 所有终端以及媒体服务
+     * 
+     * @param message 消息
+     */
+    public void broadcastAll(Message message) {
+        this.broadcast(message);
+        this.mediaClient.push(message);
+    }
+    
 	/**
 	 * 广播消息
 	 * 
@@ -200,9 +203,9 @@ public class Room implements Closeable {
 	}
 	
 	/**
+	 * @param producerId 生产者ID
 	 * 
-	 * @param producerId
-	 * @return
+	 * @return 生产者
 	 */
 	public Producer producer(String producerId) {
 	    return this.clients.values().stream()
@@ -212,11 +215,28 @@ public class Room implements Closeable {
 	        .orElse(null);
 	}
 	
+	/**
+	 * @param consumerId 消费者ID
+	 * 
+	 * @return 消费者
+	 */
+	public Consumer consumer(String consumerId) {
+	    return this.clients.values().stream()
+	        .map(wrapper -> wrapper.getConsumers().get(consumerId))
+	        .filter(Objects::nonNull)
+	        .findFirst()
+	        .orElse(null);
+	}
+	
 	@Override
 	public void close() {
+	    if(this.close) {
+	        return;
+	    }
+	    this.close = true;
 		log.info("关闭房间：{}", this.roomId);
 		// TODO：关闭房间
-		// TODO:媒体服务
+		// TODO：媒体服务：直接没提服务关闭所有资源（通道、生产者、消费者）
 		this.roomManager.remove(this);
 	}
 	

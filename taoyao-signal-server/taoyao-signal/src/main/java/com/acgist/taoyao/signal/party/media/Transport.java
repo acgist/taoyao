@@ -39,9 +39,21 @@ public class Transport implements Closeable {
      * 通道标识
      */
     private final String transportId;
+    /**
+     * ICE协商
+     */
     private Object iceCandidates;
+    /**
+     * ICE参数
+     */
     private Object iceParameters;
+    /**
+     * DTLS参数
+     */
     private Object dtlsParameters;
+    /**
+     * SCTP参数
+     */
     private Object sctpParameters;
     
     public Transport(String transportId, Room room, Client client) {
@@ -66,6 +78,7 @@ public class Transport implements Closeable {
     
     @Override
     public void close() {
+        // TODO：发送事件
     }
 
 }

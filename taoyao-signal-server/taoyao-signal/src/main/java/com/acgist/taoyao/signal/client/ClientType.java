@@ -25,6 +25,41 @@ public enum ClientType {
     private ClientType(String name) {
         this.name = name;
     }
+    
+    /**
+     * @return 是否是Web
+     */
+    public boolean web() {
+        return this == WEB;
+    }
+    
+    /**
+     * @return 是否是媒体服务
+     */
+    public boolean media() {
+        return this == MEDIA;
+    }
+    
+    /**
+     * @return 是否是摄像头
+     */
+    public boolean camera() {
+        return this == CAMERA;
+    }
+    
+    /**
+     * @return 是否是媒体终端
+     */
+    public boolean mediaClient() {
+        return this == WEB || this == CAMERA;
+    }
+    
+    /**
+     * @return 是否是媒体服务
+     */
+    public boolean mediaServer() {
+        return this == MEDIA;
+    }
 
     /**
      * @param value 类型

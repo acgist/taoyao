@@ -73,7 +73,7 @@ public class ClientConfigProtocol extends ProtocolClientAdapter implements Appli
 		// 日期时间
 		config.put(Constant.DATETIME, DateUtils.format(LocalDateTime.now(), DateTimeStyle.YYYYMMDDHH24MMSS));
 		// Web、摄像头：媒体配置
-		if(clientType == ClientType.WEB || clientType == ClientType.CAMERA) {
+		if(clientType.mediaClient()) {
 		    config.put(Constant.MEDIA, this.mediaProperties);
 		    config.put(Constant.WEBRTC, this.webrtcProperties);
 		} else {

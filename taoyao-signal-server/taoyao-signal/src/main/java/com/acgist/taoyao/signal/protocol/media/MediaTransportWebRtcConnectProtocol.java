@@ -38,7 +38,7 @@ public class MediaTransportWebRtcConnectProtocol extends ProtocolRoomAdapter {
 
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        if(clientType == ClientType.WEB || clientType == ClientType.CAMERA) {
+        if(clientType.mediaClient()) {
             final Message response = room.request(message);
             final Map<String, Object> responseBody = response.body();
             client.push(response);

@@ -41,7 +41,7 @@ public class MediaAudioVolumeProtocol extends ProtocolRoomAdapter {
 
 	@Override
 	public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-	    if(clientType == ClientType.MEDIA) {
+	    if(clientType.mediaServer()) {
 	        room.broadcast(message);
 	    } else {
 	        this.logNoAdapter(clientType);

@@ -23,7 +23,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
         "roomId": "房间ID"
     }
     """,
-    flow = "终端->信令服务->媒体服务->信令服务+)终端"
+    flow = "终端->信令服务+)终端"
 )
 public class RoomCloseProtocol extends ProtocolRoomAdapter {
 
@@ -35,9 +35,10 @@ public class RoomCloseProtocol extends ProtocolRoomAdapter {
 
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        if(clientType == ClientType.WEB) {
+        // TODO：改为星型
+        if(clientType.web()) {
             mediaClient.push(this.build(Map.of(Constant.ROOM_ID, room.getRoomId())));
-        } else if(clientType == ClientType.MEDIA) {
+        } else if(clientType.mediaServer()) {
             room.close();
             room.broadcast(message);
         } else {

@@ -5,8 +5,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-import org.springframework.context.ApplicationContext;
-
 import com.acgist.taoyao.boot.annotation.Manager;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
@@ -28,17 +26,15 @@ public class RoomManager {
 
 	private final IdService idService;
 	private final ClientManager clientManager;
-	private final ApplicationContext applicationContext;
 	
 	/**
 	 * 房间列表
 	 */
 	private final List<Room> rooms;
 	
-	public RoomManager(IdService idService, ClientManager clientManager, ApplicationContext applicationContext) {
+	public RoomManager(IdService idService, ClientManager clientManager) {
         this.idService = idService;
         this.clientManager = clientManager;
-        this.applicationContext = applicationContext;
         this.rooms = new CopyOnWriteArrayList<>();
     }
 
@@ -121,7 +117,7 @@ public class RoomManager {
 		}
 		final String roomId = this.idService.buildUuid();
 		// 房间
-		final Room room = new Room(mediaClient, this, this.applicationContext);
+		final Room room = new Room(mediaClient, this);
 		room.setRoomId(roomId);
 		room.setPassword(password);
 		// 状态

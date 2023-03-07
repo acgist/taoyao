@@ -1,24 +1,30 @@
 package com.acgist.taoyao.signal.party.media;
 
+import java.io.Closeable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.acgist.taoyao.signal.event.EventPublisher;
+import com.acgist.taoyao.signal.event.ProducerCloseEvent;
+
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 生产者
  * 
  * @author acgist
  */
+@Slf4j
 @Getter
 @Setter
-public class Producer {
-
+public class Producer implements Closeable {
+    
     /**
-     * 生产者终端
+     * 是否关闭
      */
-    private final ClientWrapper produceClient;
+    private volatile boolean close = false;
     /**
      * 媒体类型
      */
@@ -32,29 +38,47 @@ public class Producer {
      */
     private final String producerId;
     /**
+     * 房间
+     */
+    private final Room room;
+    /**
+     * 生产者终端
+     */
+    private final ClientWrapper producerClient;
+    /**
      * 消费者
+     * 其他终端消费当前终端的消费者
      */
     private final Map<String, Consumer> consumers;
     
-    public Producer(ClientWrapper produceClient, String kind, String streamId, String producerId) {
-        this.produceClient = produceClient;
+    public Producer(String kind, String streamId, String producerId, Room room, ClientWrapper produceClient) {
         this.kind = Kind.of(kind);
         this.streamId = streamId;
         this.producerId = producerId;
+        this.room = room;
+        this.producerClient = produceClient;
         this.consumers = new ConcurrentHashMap<>();
     }
-    
+
     /**
      * 删除消费者
      * 
-     * @param consumer 消费者
+     * @param consumerId 消费者ID
      */
-    public void remove(ClientWrapper consumer) {
-        this.consumers.entrySet().stream()
-        .filter(v -> v.getValue().getConsumeClient() == consumer)
-        .map(Map.Entry::getKey)
-        .forEach(this.consumers::remove);
-        // TODO：资源释放
+    public void remove(String consumerId) {
+        this.consumers.remove(consumerId);
+    }
+    
+    @Override
+    public void close() {
+        if(this.close) {
+            return;
+        }
+        this.close = true;
+        log.info("关闭生产者：{}", this.producerId);
+        this.consumers.forEach((k, v) -> v.close());
+        this.producerClient.getProducers().remove(this.producerId);
+        EventPublisher.publishEvent(new ProducerCloseEvent(this.producerId, this.room));
     }
     
 }

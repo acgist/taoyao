@@ -42,7 +42,7 @@ public class MediaRouterRtpCapabilitiesProtocol extends ProtocolRoomAdapter {
 
 	@Override
 	public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-	    if(clientType == ClientType.WEB || clientType == ClientType.CAMERA) {
+	    if(clientType.mediaClient()) {
 	        client.push(room.request(message));
 	    } else {
 	        this.logNoAdapter(clientType);
