@@ -8,12 +8,14 @@ import com.acgist.taoyao.signal.client.Client;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 终端包装器：Peer
  * 
  * @author acgist
  */
+@Slf4j
 @Getter
 @Setter
 public class ClientWrapper implements AutoCloseable {
@@ -109,7 +111,7 @@ public class ClientWrapper implements AutoCloseable {
 	/**
 	 * 数据通道消费者
 	 */
-	private final Map<String, DataProducer> dataConsumers;
+	private final Map<String, DataConsumer> dataConsumers;
 	
     public ClientWrapper(Room room, Client client) {
         this.room = room;
@@ -157,6 +159,28 @@ public class ClientWrapper implements AutoCloseable {
         // TODO：实现
         this.recvTransport.close();
         this.sendTransport.close();
+    }
+
+    /**
+     * 记录日志
+     */
+    public void log() {
+        log.debug("""
+            当前终端：{}
+            消费者数量：{}
+            生产者数量：{}
+            数据消费者数量：{}
+            数据生产者数量：{}""",
+            this.clientId,
+            this.consumers.size(),
+            this.producers.size(),
+            this.dataConsumers.size(),
+            this.dataProducers.size()
+        );
+        this.consumers.values().forEach(Consumer::log);
+        this.producers.values().forEach(Producer::log);
+        this.dataConsumers.values().forEach(DataConsumer::log);
+        this.dataProducers.values().forEach(DataProducer::log);
     }
     
 }

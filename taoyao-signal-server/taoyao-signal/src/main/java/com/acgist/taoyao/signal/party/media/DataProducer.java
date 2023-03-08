@@ -5,12 +5,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 数据生产者
  * 
  * @author acgist
  */
+@Slf4j
 @Setter
 @Getter
 public class DataProducer {
@@ -37,6 +39,14 @@ public class DataProducer {
         this.streamId = streamId;
         this.producerId = producerId;
         this.dataConsumers = new ConcurrentHashMap<>();
+    }
+    
+    /**
+     * 记录日志
+     */
+    public void log() {
+        log.debug("当前数据生产者：{} - {}", this.producerId, this.streamId);
+        this.dataConsumers.values().forEach(DataConsumer::log);
     }
     
 }

@@ -239,5 +239,18 @@ public class Room implements Closeable {
 		// TODO：媒体服务：直接没提服务关闭所有资源（通道、生产者、消费者）
 		this.roomManager.remove(this);
 	}
+
+	/**
+	 * 记录日志
+	 */
+	public void log() {
+	    log.info("""
+	        当前房间：{}
+	        终端数量：{}""",
+	        this.roomId,
+	        this.clients.size()
+	    );
+	    this.clients.values().forEach(ClientWrapper::log);
+	}
 	
 }

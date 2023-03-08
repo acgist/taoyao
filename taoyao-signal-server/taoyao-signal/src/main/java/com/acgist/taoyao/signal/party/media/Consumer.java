@@ -69,4 +69,11 @@ public class Consumer implements Closeable {
         EventPublisher.publishEvent(new MediaConsumerCloseEvent(this.consumerId, this.room));
     }
     
+    /**
+     * 记录日志
+     */
+    public void log() {
+        log.debug("当前消费者：{} - {} - {}", this.consumerId, this.kind, this.streamId);
+    }
+    
 }

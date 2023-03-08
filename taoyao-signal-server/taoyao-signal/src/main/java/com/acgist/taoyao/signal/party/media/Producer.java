@@ -81,4 +81,12 @@ public class Producer implements Closeable {
         EventPublisher.publishEvent(new MediaProducerCloseEvent(this.producerId, this.room));
     }
     
+    /**
+     * 记录日志
+     */
+    public void log() {
+        log.debug("当前生产者：{} - {} - {}", this.producerId, this.kind, this.streamId);
+        this.consumers.values().forEach(Consumer::log);
+    }
+    
 }

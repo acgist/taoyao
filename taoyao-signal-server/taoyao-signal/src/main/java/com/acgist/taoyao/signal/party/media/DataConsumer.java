@@ -2,12 +2,14 @@ package com.acgist.taoyao.signal.party.media;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 数据消费者
  * 
  * @author acgist
  */
+@Slf4j
 @Getter
 @Setter
 public class DataConsumer {
@@ -34,6 +36,13 @@ public class DataConsumer {
         this.producer = producer;
         this.streamId = streamId;
         this.consumerId = consumerId;
+    }
+    
+    /**
+     * 记录日志
+     */
+    public void log() {
+        log.debug("当前数据消费者：{} - {}", this.consumerId, this.streamId);
     }
     
 }

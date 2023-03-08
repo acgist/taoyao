@@ -38,7 +38,6 @@ public class RoomManager {
         this.rooms = new CopyOnWriteArrayList<>();
     }
 
-	
 	/**
 	 * @param roomId 房间标识
 	 * 
@@ -150,6 +149,17 @@ public class RoomManager {
 	 */
 	public void remove(Room room) {
 	    this.rooms.remove(room);
+	}
+	
+	/**
+	 * 记录日志
+	 */
+	public void log() {
+	    log.info("""
+	        当前房间数量：{}""",
+	        this.rooms.size()
+	    );
+	    this.rooms.forEach(Room::log);
 	}
 	
 }

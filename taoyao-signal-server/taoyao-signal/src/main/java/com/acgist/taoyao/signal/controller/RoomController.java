@@ -35,6 +35,13 @@ public class RoomController {
         this.roomManager = roomManager;
     }
 
+    @Operation(summary = "房间信息", description = "房间信息")
+    @GetMapping("/log")
+	public Message log() {
+	    this.roomManager.log();
+	    return Message.success();
+	}
+	
     @Operation(summary = "房间列表", description = "房间列表")
 	@GetMapping("/list")
 	@ApiResponse(content = @Content(schema = @Schema(implementation = RoomStatus.class)))
