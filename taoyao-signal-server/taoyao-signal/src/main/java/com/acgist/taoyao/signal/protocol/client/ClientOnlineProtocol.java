@@ -6,7 +6,7 @@ import org.springframework.scheduling.annotation.Async;
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.event.ClientOnlineEvent;
+import com.acgist.taoyao.signal.event.client.ClientOnlineEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**

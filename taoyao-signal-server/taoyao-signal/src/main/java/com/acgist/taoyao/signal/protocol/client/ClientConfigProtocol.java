@@ -17,7 +17,7 @@ import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.boot.utils.DateUtils.DateTimeStyle;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.event.ClientConfigEvent;
+import com.acgist.taoyao.signal.event.client.ClientConfigEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**

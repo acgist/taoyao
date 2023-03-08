@@ -9,7 +9,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.event.MediaProduceEvent;
+import com.acgist.taoyao.signal.event.media.MediaConsumeEvent;
 import com.acgist.taoyao.signal.party.media.ClientWrapper;
 import com.acgist.taoyao.signal.party.media.Producer;
 import com.acgist.taoyao.signal.party.media.Room;
@@ -71,7 +71,7 @@ public class MediaProduceProtocol extends ProtocolRoomAdapter {
         // 全部不收：全部广播
         room.broadcast(responseMessage);
         log.info("{}生产媒体：{} - {} - {}", clientId, kind, streamId, producerId);
-        this.publishEvent(new MediaProduceEvent(room, producer));
+        this.publishEvent(new MediaConsumeEvent(room, producer));
     }
     
 }

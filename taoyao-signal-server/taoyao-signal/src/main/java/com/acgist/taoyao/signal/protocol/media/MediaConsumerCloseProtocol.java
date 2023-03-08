@@ -3,6 +3,7 @@ package com.acgist.taoyao.signal.protocol.media;
 import java.util.Map;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
@@ -11,7 +12,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.event.ConsumerCloseEvent;
+import com.acgist.taoyao.signal.event.media.MediaConsumerCloseEvent;
 import com.acgist.taoyao.signal.party.media.Consumer;
 import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
@@ -20,6 +21,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 关闭消费者信令
+ * 注意：正常情况不会存在关闭消费者的情况，所以一般不用处理关闭消费者信令。
  * 
  * @author acgist
  */
@@ -28,12 +30,13 @@ import lombok.extern.slf4j.Slf4j;
 @Description(
     body = """
     {
+        "roomId": "房间ID"
         "consumerId": "消费者ID"
     }
     """,
     flow = "终端->信令服务+)终端"
 )
-public class MediaConsumerCloseProtocol extends ProtocolRoomAdapter implements ApplicationListener<ConsumerCloseEvent> {
+public class MediaConsumerCloseProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaConsumerCloseEvent> {
 
     public static final String SIGNAL = "media::consumer::close";
     
@@ -41,14 +44,15 @@ public class MediaConsumerCloseProtocol extends ProtocolRoomAdapter implements A
         super("关闭消费者信令", SIGNAL);
     }
     
+    @Async
     @Override
-    public void onApplicationEvent(ConsumerCloseEvent event) {
+    public void onApplicationEvent(MediaConsumerCloseEvent event) {
         final Room room = event.getRoom();
         final Map<String, Object> body = Map.of(
             Constant.ROOM_ID, room.getRoomId(),
             Constant.CONSUMER_ID, event.getConsumerId()
         );
-        this.close(room, this.build(body));
+        room.broadcastAll(this.build(body));
     }
     
     @Override
@@ -60,16 +64,6 @@ public class MediaConsumerCloseProtocol extends ProtocolRoomAdapter implements A
         } else {
             consumer.close();
         }
-    }
-
-    /**
-     * 关闭消费者
-     * 
-     * @param room 房间
-     * @param message 消息
-     */
-    private void close(Room room, Message message) {
-        room.broadcastAll(message);
     }
 
 }

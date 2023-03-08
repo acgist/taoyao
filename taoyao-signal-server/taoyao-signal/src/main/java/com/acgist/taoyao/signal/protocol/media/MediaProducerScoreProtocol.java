@@ -29,7 +29,11 @@ public class MediaProducerScoreProtocol extends ProtocolRoomAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        room.broadcast(message);
+        if(clientType.mediaServer()) {
+            room.broadcast(message);
+        } else {
+            this.logNoAdapter(clientType);
+        }
     }
     
 }

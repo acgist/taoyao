@@ -13,7 +13,7 @@ import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.event.RoomEnterEvent;
+import com.acgist.taoyao.signal.event.room.RoomEnterEvent;
 import com.acgist.taoyao.signal.party.media.ClientWrapper;
 import com.acgist.taoyao.signal.party.media.ClientWrapper.SubscribeType;
 import com.acgist.taoyao.signal.party.media.Room;

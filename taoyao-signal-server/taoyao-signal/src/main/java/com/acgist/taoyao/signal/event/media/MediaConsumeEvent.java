@@ -1,5 +1,6 @@
-package com.acgist.taoyao.signal.event;
+package com.acgist.taoyao.signal.event.media;
 
+import com.acgist.taoyao.signal.event.RoomEventAdapter;
 import com.acgist.taoyao.signal.party.media.ClientWrapper;
 import com.acgist.taoyao.signal.party.media.Producer;
 import com.acgist.taoyao.signal.party.media.Room;
@@ -8,13 +9,13 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 生产媒体事件
+ * 消费媒体事件
  * 
  * @author acgist
  */
 @Getter
 @Setter
-public class MediaProduceEvent extends RoomEventAdapter {
+public class MediaConsumeEvent extends RoomEventAdapter {
 
     private static final long serialVersionUID = 1L;
     
@@ -27,13 +28,13 @@ public class MediaProduceEvent extends RoomEventAdapter {
      */
     private final ClientWrapper clientWrapper;
     
-    public MediaProduceEvent(Room room, Producer producer) {
+    public MediaConsumeEvent(Room room, Producer producer) {
         super(room);
         this.producer = producer;
         this.clientWrapper = null;
     }
     
-    public MediaProduceEvent(Room room, ClientWrapper clientWrapper) {
+    public MediaConsumeEvent(Room room, ClientWrapper clientWrapper) {
         super(room);
         this.producer = null;
         this.clientWrapper = clientWrapper;

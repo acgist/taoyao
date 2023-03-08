@@ -8,7 +8,7 @@ import org.springframework.scheduling.annotation.Async;
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.Constant;
-import com.acgist.taoyao.signal.event.ClientOfflineEvent;
+import com.acgist.taoyao.signal.event.client.ClientOfflineEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**

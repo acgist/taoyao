@@ -1,22 +1,23 @@
-package com.acgist.taoyao.signal.event;
+package com.acgist.taoyao.signal.event.client;
 
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.event.ClientEventAdapter;
 
 import lombok.Getter;
 import lombok.Setter;
 
 /**
- * 终端下线事件
+ * 终端配置事件
  * 
  * @author acgist
  */
 @Getter
 @Setter
-public class ClientOfflineEvent extends ClientEventAdapter {
+public class ClientConfigEvent extends ClientEventAdapter {
 
     private static final long serialVersionUID = 1L;
     
-    public ClientOfflineEvent(Client client) {
+    public ClientConfigEvent(Client client) {
         super(client);
     }
     

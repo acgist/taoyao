@@ -13,9 +13,9 @@ import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientStatus;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.event.ClientConfigEvent;
-import com.acgist.taoyao.signal.event.ClientOnlineEvent;
-import com.acgist.taoyao.signal.event.MediaClientRegisterEvent;
+import com.acgist.taoyao.signal.event.client.ClientConfigEvent;
+import com.acgist.taoyao.signal.event.client.ClientOnlineEvent;
+import com.acgist.taoyao.signal.event.room.RoomCreateEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 import com.acgist.taoyao.signal.service.SecurityService;
 
@@ -95,9 +95,9 @@ public class ClientRegisterProtocol extends ProtocolClientAdapter {
 		this.publishEvent(new ClientConfigEvent(client));
         // 终端上线事件
         this.publishEvent(new ClientOnlineEvent(client));
-        // 媒体服务注册事件
+        // 媒体服务注册：创建房间事件
         if(clientType.mediaServer()) {
-            this.publishEvent(new MediaClientRegisterEvent(client));
+            this.publishEvent(new RoomCreateEvent(client));
         }
 	}
 	

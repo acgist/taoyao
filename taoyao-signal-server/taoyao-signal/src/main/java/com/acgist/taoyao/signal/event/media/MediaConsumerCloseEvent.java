@@ -1,5 +1,6 @@
-package com.acgist.taoyao.signal.event;
+package com.acgist.taoyao.signal.event.media;
 
+import com.acgist.taoyao.signal.event.RoomEventAdapter;
 import com.acgist.taoyao.signal.party.media.Room;
 
 import lombok.Getter;
@@ -12,7 +13,7 @@ import lombok.Setter;
  */
 @Getter
 @Setter
-public class ConsumerCloseEvent extends RoomEventAdapter {
+public class MediaConsumerCloseEvent extends RoomEventAdapter {
 
     private static final long serialVersionUID = 1L;
     
@@ -21,7 +22,7 @@ public class ConsumerCloseEvent extends RoomEventAdapter {
      */
     private final String consumerId;
     
-    public ConsumerCloseEvent(String consumerId, Room room) {
+    public MediaConsumerCloseEvent(String consumerId, Room room) {
         super(room);
         this.consumerId = consumerId;
     }

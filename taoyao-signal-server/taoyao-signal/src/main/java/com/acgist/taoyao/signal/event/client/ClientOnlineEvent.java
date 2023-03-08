@@ -1,6 +1,7 @@
-package com.acgist.taoyao.signal.event;
+package com.acgist.taoyao.signal.event.client;
 
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.event.ClientEventAdapter;
 
 import lombok.Getter;
 import lombok.Setter;

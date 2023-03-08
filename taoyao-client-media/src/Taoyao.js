@@ -393,6 +393,9 @@ class Taoyao {
       case "media::consume":
         this.mediaConsume(message, body);
         break;
+      case "media::consumer::close":
+        me.mediaConsumerClose(message, body);
+        break;
       case "media::produce":
         this.mediaProduce(message, body);
         break;
@@ -470,7 +473,7 @@ class Taoyao {
       const usage = await worker.getResourceUsage();
       console.info("Worker使用情况：", worker.pid, usage);
     }
-    console.info("路由数量：", this.mediasoupWorkers.length);
+    console.info("工作线程数量：", this.mediasoupWorkers.length);
     console.info("房间数量：", this.rooms.size);
     Array.from(this.rooms.values()).forEach((room) => room.usage());
   }
@@ -656,15 +659,16 @@ class Taoyao {
           consumer.streamId = streamId;
           room.consumers.set(consumer.id, consumer);
           consumer.on("transportclose", () => {
-            room.consumers.delete(consumer.id);
+            console.info("通道关闭同时关闭消费者：", consumer.id);
+            // 信令服务统一调度关闭
+            // consumer.close();
+            // room.consumers.delete(consumer.id);
           });
           consumer.on("producerclose", () => {
-            room.consumers.delete(consumer.id);
-            this.push(
-              protocol.buildMessage("media::consumer::close", {
-                consumerId: consumer.id,
-              })
-            );
+            console.info("生产者关闭同时关闭消费者：", consumer.id);
+            // 信令服务统一调度关闭
+            // consumer.close();
+            // room.consumers.delete(consumer.id);
           });
           consumer.on("producerpause", () => {
             this.push(
@@ -683,8 +687,9 @@ class Taoyao {
           consumer.on("score", (score) => {
             this.push(
               protocol.buildMessage("media::consumer::score", {
+                score: score,
+                roomId: roomId,
                 consumerId: consumer.id,
-                score,
               })
             );
           });
@@ -705,10 +710,18 @@ class Taoyao {
               trace
             );
           });
+          consumer.observer.on("close", () => {
+            this.push(
+              protocol.buildMessage("media::consumer::close", {
+                roomId: roomId,
+                consumerId: consumer.id
+              })
+            );
+          });
           // TODO：改为同步
+          //await this.request("media::consume", {
           this.push(
             protocol.buildMessage("media::consume", {
-              //await this.request("media::consume", {
               kind: consumer.kind,
               type: consumer.type,
               roomId: roomId,
@@ -725,8 +738,9 @@ class Taoyao {
           await consumer.resume();
           this.push(
             protocol.buildMessage("media::consumer::score", {
-              consumerId: consumer.id,
               score: consumer.score,
+              roomId: roomId,
+              consumerId: consumer.id,
             })
           );
         })()
@@ -737,6 +751,25 @@ class Taoyao {
       await Promise.all(promises);
     } catch (error) {
       console.warn("_createConsumer() | failed:%o", error);
+    }
+  }
+
+  /**
+   * 关闭消费者信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  mediaConsumerClose(message, body) {
+    const { roomId, consumerId } = body;
+    const room = this.rooms.get(roomId);
+    const consumer = room.consumers.get(consumerId);
+    if(consumer) {
+      console.info("关闭消费者：", consumerId);
+      consumer.close();
+      room.consumers.delete(consumerId);
+    } else {
+      console.debug("关闭消费者无效：", consumerId);
     }
   }
 

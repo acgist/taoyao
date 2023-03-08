@@ -5,7 +5,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.acgist.taoyao.signal.event.EventPublisher;
-import com.acgist.taoyao.signal.event.ProducerCloseEvent;
+import com.acgist.taoyao.signal.event.media.MediaProducerCloseEvent;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -78,7 +78,7 @@ public class Producer implements Closeable {
         log.info("关闭生产者：{}", this.producerId);
         this.consumers.forEach((k, v) -> v.close());
         this.producerClient.getProducers().remove(this.producerId);
-        EventPublisher.publishEvent(new ProducerCloseEvent(this.producerId, this.room));
+        EventPublisher.publishEvent(new MediaProducerCloseEvent(this.producerId, this.room));
     }
     
 }

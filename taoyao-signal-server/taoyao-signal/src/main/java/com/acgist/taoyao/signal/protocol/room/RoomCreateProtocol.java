@@ -12,7 +12,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.event.MediaClientRegisterEvent;
+import com.acgist.taoyao.signal.event.room.RoomCreateEvent;
 import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
@@ -41,7 +41,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
     },
     flow = "终端->信令服务->媒体服务->信令服务+)终端"
 )
-public class RoomCreateProtocol extends ProtocolClientAdapter implements ApplicationListener<MediaClientRegisterEvent> {
+public class RoomCreateProtocol extends ProtocolClientAdapter implements ApplicationListener<RoomCreateEvent> {
 
 	public static final String SIGNAL = "room::create";
 	
@@ -51,7 +51,7 @@ public class RoomCreateProtocol extends ProtocolClientAdapter implements Applica
 
 	@Async
 	@Override
-	public void onApplicationEvent(MediaClientRegisterEvent event) {
+	public void onApplicationEvent(RoomCreateEvent event) {
 	    this.roomManager.recreate(event.getClient(), this.build());
 	}
 

@@ -11,7 +11,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import com.acgist.taoyao.boot.annotation.Manager;
 import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.event.ClientCloseEvent;
+import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
 
 import lombok.extern.slf4j.Slf4j;
 

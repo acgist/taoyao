@@ -10,8 +10,8 @@ import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.event.ClientCloseEvent;
-import com.acgist.taoyao.signal.event.ClientOfflineEvent;
+import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
+import com.acgist.taoyao.signal.event.client.ClientOfflineEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 import lombok.extern.slf4j.Slf4j;

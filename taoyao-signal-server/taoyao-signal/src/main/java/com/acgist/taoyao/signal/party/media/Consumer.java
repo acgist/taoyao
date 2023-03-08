@@ -2,8 +2,8 @@ package com.acgist.taoyao.signal.party.media;
 
 import java.io.Closeable;
 
-import com.acgist.taoyao.signal.event.ConsumerCloseEvent;
 import com.acgist.taoyao.signal.event.EventPublisher;
+import com.acgist.taoyao.signal.event.media.MediaConsumerCloseEvent;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -66,7 +66,7 @@ public class Consumer implements Closeable {
         log.info("关闭消费者：{}", this.consumerId);
         this.getProducer().remove(this.consumerId);
         this.consumerClient.getConsumers().remove(this.consumerId);
-        EventPublisher.publishEvent(new ConsumerCloseEvent(this.consumerId, this.room));
+        EventPublisher.publishEvent(new MediaConsumerCloseEvent(this.consumerId, this.room));
     }
     
 }

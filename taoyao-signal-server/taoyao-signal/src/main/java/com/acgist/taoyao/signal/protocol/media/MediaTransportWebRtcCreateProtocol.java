@@ -14,7 +14,7 @@ import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.boot.utils.NetUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.event.MediaProduceEvent;
+import com.acgist.taoyao.signal.event.media.MediaConsumeEvent;
 import com.acgist.taoyao.signal.party.media.ClientWrapper;
 import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.party.media.Transport;
@@ -75,7 +75,7 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
             }
             // 拷贝属性
             recvTransport.copy(responseBody);
-            this.publishEvent(new MediaProduceEvent(room, clientWrapper));
+            this.publishEvent(new MediaConsumeEvent(room, clientWrapper));
         }
         // 生产者
         final Boolean producing = MapUtils.getBoolean(body, Constant.PRODUCING);

@@ -10,7 +10,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientStatus;
 import com.acgist.taoyao.signal.event.EventPublisher;
-import com.acgist.taoyao.signal.event.RoomLeaveEvent;
+import com.acgist.taoyao.signal.event.room.RoomLeaveEvent;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -236,6 +236,22 @@ class RemoteClient {
   volume = 0;
   // 代理对象
   proxy;
+  // 数据可用
+  dataActive = false;
+  // 音频可用
+  audioActive = false;
+  // 视频可用
+  videoActive = false;
+  // 数据消费者
+  dataConsumer;
+  // 音频消费者
+  audioConsumer;
+  // 视频消费者
+  videoConsumer;
+  // 音频Track
+  audioTrack;
+  // 视频Track
+  videoTrack;
 
   constructor({
     name,
@@ -292,10 +308,6 @@ class Taoyao extends RemoteClient {
   recvTransport;
   // 媒体设备
   mediasoupDevice;
-  // 是否消费
-  consume;
-  // 是否生产
-  produce;
   // 视频来源：file | camera | screen
   videoSource = "camera";
   // 强制使用TCP
@@ -306,6 +318,12 @@ class Taoyao extends RemoteClient {
   forceH264;
   // 同时上送多种质量媒体
   useSimulcast;
+  // 是否消费数据
+  dataConsume;
+  // 是否消费音频
+  audioConsume;
+  // 是否消费视频
+  videoConsume;
   // 是否生产数据
   dataProduce;
   // 是否生产音频
@@ -331,12 +349,13 @@ class Taoyao extends RemoteClient {
     username,
     password,
     roomId,
-    consume = true,
-    produce = true,
+    dataConsume = true,
+    audioConsume = true,
+    videoConsume = true,
+    dataProduce = true,
     audioProduce = true,
     videoProduce = true,
     forceTcp = false,
-    dataProduce = true,
   }) {
     super({ name, clientId });
     this.name = name;
@@ -346,11 +365,12 @@ class Taoyao extends RemoteClient {
     this.username = username;
     this.password = password;
     this.roomId = roomId;
-    this.consume = consume;
-    this.produce = produce;
-    this.dataProduce = produce && dataProduce;
-    this.audioProduce = produce && audioProduce;
-    this.videoProduce = produce && videoProduce;
+    this.dataConsume = dataConsume;
+    this.audioConsume = audioConsume;
+    this.videoConsume = videoConsume;
+    this.dataProduce = dataProduce;
+    this.audioProduce = audioProduce;
+    this.videoProduce = videoProduce;
     this.forceTcp = forceTcp;
   }
 
@@ -494,6 +514,9 @@ class Taoyao extends RemoteClient {
       case "media::audio::volume":
         me.defaultMediaAudioVolume(message);
         break;
+      case "media::consumer::close":
+        me.defaultMediaConsumerClose(message);
+        break;
       case "room::client::list":
         me.defaultRoomClientList(message);
         break;
@@ -585,14 +608,43 @@ class Taoyao extends RemoteClient {
     });
   }
   /**
+   * 关闭消费者信令
+   * 
+   * @param {*} consumerId 消费者ID
+   */
+  mediaConsumerClose(consumerId) {
+    const me = this;
+    me.push(protocol.buildMessage("media::consumer::close", {
+      roomId: me.roomId,
+      consumerId: consumerId
+    }));
+  }
+  /**
+   * 关闭消费者信令
+   * 
+   * @param {*} message 消息
+   */
+  defaultMediaConsumerClose(message) {
+    const me = this;
+    const { roomId, consumerId } = message.body;
+    const consumer = me.consumers.get(consumerId);
+    if(consumer) {
+      console.info("关闭消费者：", consumerId);
+      consumer.close();
+      me.consumers.delete(consumerId);
+    } else {
+      console.debug("关闭消费者无效：", consumerId);
+    }
+  }
+  /**
    * 消费媒体信令
    *
    * @param {*} message 消息
    */
    async defaultMediaConsume(message) {
     const self = this;
-    if (!self.consume) {
-      console.log("没有消费媒体");
+    if (!self.audioConsume && !self.videoConsume) {
+      console.debug("没有消费媒体");
       return;
     }
     const {
@@ -655,6 +707,19 @@ class Taoyao extends RemoteClient {
       console.debug("远程媒体：", consumer);
       const remoteClient = self.remoteClients.get(consumer.sourceId);
       if(remoteClient && remoteClient.proxy && remoteClient.proxy.media) {
+        const track = consumer.track;
+        // TODO：旧的媒体？
+        if(track.kind === 'audio') {
+          remoteClient.audioActive = true;
+          remoteClient.audioTrack = track;
+          remoteClient.audioConsumer = consumer;
+        } else if(track.kind === 'video') {
+          remoteClient.audioActive = false;
+          remoteClient.videoTrack = track;
+          remoteClient.videoconsumer = consumer;
+        } else {
+          console.warn("不支持的媒体：", track);
+        }
         remoteClient.proxy.media(consumer.track, consumer);
       } else {
         console.warn("远程终端没有实现服务代理：", remoteClient);
@@ -858,7 +923,7 @@ class Taoyao extends RemoteClient {
         setTimeout(() => audioTrack.stop(), 30000);
       });
     }
-    if (self.produce) {
+    if (self.audioProduce || self.videoProduce) {
       const response = await self.request(
         protocol.buildMessage("media::transport::webrtc::create", {
           roomId: self.roomId,
@@ -954,7 +1019,7 @@ class Taoyao extends RemoteClient {
         }
       );
     }
-    if (this.consume) {
+    if (self.audioConsume || self.videoConsume) {
       const self = this;
       const response = await self.request(
         protocol.buildMessage("media::transport::webrtc::create", {
@@ -1163,6 +1228,7 @@ class Taoyao extends RemoteClient {
           // TODO：异常
         }
         if(self.proxy && self.proxy.media) {
+          self.videoTrack = track;
           self.proxy.media(track);
         } else {
           console.warn("终端没有实现服务代理：", self);
@@ -1323,7 +1389,6 @@ class Taoyao extends RemoteClient {
   async checkDevice() {
     const self = this;
     if (
-      self.produce &&
       navigator.mediaDevices &&
       navigator.mediaDevices.getUserMedia &&
       navigator.mediaDevices.enumerateDevices

@@ -14,7 +14,7 @@ import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.event.MediaProduceEvent;
+import com.acgist.taoyao.signal.event.media.MediaConsumeEvent;
 import com.acgist.taoyao.signal.party.media.ClientWrapper;
 import com.acgist.taoyao.signal.party.media.Consumer;
 import com.acgist.taoyao.signal.party.media.Producer;
@@ -43,7 +43,7 @@ import lombok.extern.slf4j.Slf4j;
         "终端->信令服务->媒体服务=>信令服务->终端->信令服务->媒体服务"
     }
 )
-public class MediaConsumeProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaProduceEvent> {
+public class MediaConsumeProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaConsumeEvent> {
 
     public static final String SIGNAL = "media::consume";
     
@@ -53,7 +53,7 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
     
     @Async
     @Override
-    public void onApplicationEvent(MediaProduceEvent event) {
+    public void onApplicationEvent(MediaConsumeEvent event) {
         final Room room = event.getRoom();
         if(event.getProducer() != null) {
             // 生产媒体：其他终端消费
@@ -116,6 +116,7 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
     private void consume(Room room, ClientWrapper consumerClientWrapper, Producer producer, Message message) {
         final Client mediaClient = room.getMediaClient();
         if(consumerClientWrapper.consumed(producer)) {
+            // TODO：没有清理干净
             // 消费通道准备就绪
             if(log.isDebugEnabled()) {
                 log.debug("消费通道准备就绪：{} - {}", consumerClientWrapper.getClientId(), producer.getStreamId());
