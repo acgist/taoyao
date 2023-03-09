@@ -20,6 +20,10 @@ public interface Constant {
      */
     String IP = "ip";
     /**
+     * 动作
+     */
+    String ACTIVE = "active";
+    /**
      * 状态对象
      */
     String STATUS = "status";

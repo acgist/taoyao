@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.acgist.taoyao.boot.config.MediaProperties;
 import com.acgist.taoyao.boot.config.WebrtcProperties;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.signal.config.camera.CameraProperties;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,10 +26,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class ConfigController {
     
 	private final MediaProperties mediaProperties;
+	private final CameraProperties cameraProperties;
 	private final WebrtcProperties webrtcProperties;
 	
-	public ConfigController(MediaProperties mediaProperties, WebrtcProperties webrtcProperties) {
+	public ConfigController(MediaProperties mediaProperties, CameraProperties cameraProperties, WebrtcProperties webrtcProperties) {
         this.mediaProperties = mediaProperties;
+        this.cameraProperties = cameraProperties;
         this.webrtcProperties = webrtcProperties;
     }
 
@@ -38,6 +41,13 @@ public class ConfigController {
 	public Message media() {
 		return Message.success(this.mediaProperties);
 	}
+    
+    @Operation(summary = "摄像头配置", description = "摄像头配置")
+    @GetMapping("/camera")
+    @ApiResponse(content = @Content(schema = @Schema(implementation = CameraProperties.class)))
+    private Message camera() {
+        return Message.success(this.cameraProperties);
+    }
 	
 	@Operation(summary = "WebRTC配置", description = "WebRTC配置")
 	@GetMapping("/webrtc")

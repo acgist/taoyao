@@ -43,5 +43,22 @@ public class ProtocolControlAdapter extends ProtocolClientAdapter {
      */
     public void execute(String clientId, ClientType clientType, Client client, Client targetClient, Message message, Map<String, Object> body) {
     }
+    
+    /**
+     * 请求终端执行控制信令
+     * 
+     * @param clientId 终端ID
+     * @param request 请求
+     * 
+     * @return 响应
+     */
+    protected Message request(String clientId, Message request) {
+        final Client client = this.clientManager.clients(clientId);
+        if(client == null) {
+            return Message.fail("无效终端：" + clientId);
+        } else {
+            return client.request(request);
+        }
+    }
 
 }

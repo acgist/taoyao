@@ -158,6 +158,35 @@ taoyao:
         port: 3478
         username: taoyao
         password: taoyao
+  # 摄像头配置
+  camera:
+    # 混音
+    audio-mixer: false
+    # 变声
+    audio-changer: false
+    # 降噪
+    audio-denoise: true
+    # 存储目录
+    storage-path: /data/taoyao/storage
+    # 图片存储目录
+    storage-image-path: /data/taoyao/storage/image
+    # 视频存储目录
+    storage-video-path: /data/taoyao/storage/video
+    # AI识别
+    ai:
+      enabled: false
+      type: PERSON
+    # 美颜
+    beauty:
+      enabled: false
+      level: 10
+    # 水印
+    watermark:
+      enabled: false
+      text: taoyao
+      posx: 10
+      posy: 10
+      opacity: 0.8
   # 安全配置
   security:
     enabled: true

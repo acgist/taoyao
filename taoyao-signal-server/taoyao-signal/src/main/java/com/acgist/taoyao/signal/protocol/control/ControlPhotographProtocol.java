@@ -36,14 +36,16 @@ public class ControlPhotographProtocol extends ProtocolControlAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Client client, Client targetClient, Message message, Map<String, Object> body) {
-        targetClient.push(message);
+        client.push(targetClient.request(message));
     }
     
     /**
      * @param clientId 终端标识
+     * 
+     * @return 执行结果
      */
-    public void execute(String clientId) {
-        this.clientManager.unicast(clientId, this.build());
+    public Message execute(String clientId) {
+        return this.request(clientId, this.build());
     }
     
 }

@@ -1,17 +1,15 @@
 const os = require("os");
 
+// 桃夭媒体服务地址
+defaultTaoyaoHost = "192.168.1.110";
+// defaultTaoyaoHost = "192.168.8.110";
+
 /**
  * 配置
  */
 module.exports = {
   // 服务名称
   name: "taoyao-client-media",
-  // 保存目录
-  storagePath: "/data/storage",
-  // 图片目录
-  storageImagePath: "/data/storage/image",
-  // 视频目录
-  storageVideoPath: "/data/storage/video",
   // 信令配置
   signal: {
     // 服务版本
@@ -32,14 +30,6 @@ module.exports = {
     username: "taoyao",
     // 信令密码
     password: "taoyao",
-  },
-  // 水印
-  watermark: {
-    enabled: false,
-    text: "taoyao",
-    posx: 0,
-    posy: 0,
-    opacity: 1,
   },
   // Mediasoup
   mediasoup: {
@@ -126,14 +116,14 @@ module.exports = {
           protocol: "udp",
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
           port: 44444,
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
         },
         // TCP
         // {
         //   protocol: "tcp",
         //   ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
         //   port: 44444,
-        //   announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
+        //   announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
         // },
       ],
     },
@@ -142,7 +132,7 @@ module.exports = {
       listenIps: [
         {
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
         },
       ],
       initialAvailableOutgoingBitrate: 1000000,
@@ -154,7 +144,7 @@ module.exports = {
     plainTransportOptions: {
       listenIp: {
         ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-        announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "192.168.1.110",
+        announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
       },
       maxSctpMessageSize: 262144,
     },
