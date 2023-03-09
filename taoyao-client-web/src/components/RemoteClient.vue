@@ -5,10 +5,10 @@
     <video ref="video"></video>
     <p class="title">{{ client?.name || "" }}</p>
     <div class="buttons" :style="{'--volume': client?.volume}">
-      <el-button v-show="!client.audioActive" type="danger" title="打开麦克风" :icon="Mute" circle />
-      <el-button v-show="client.audioActive" type="primary" title="关闭麦克风" :icon="Microphone" circle />
-      <el-button v-show="!client.videoActive" type="danger" title="打开摄像头" :icon="VideoPause" circle />
-      <el-button v-show="client.videoActive" type="primary" title="关闭摄像头" :icon="VideoPlay" circle />
+      <el-button v-show="!client.audioActive" type="primary" title="打开麦克风" :icon="Microphone" circle />
+      <el-button v-show="client.audioActive" type="danger" title="关闭麦克风" :icon="Mute" circle />
+      <el-button v-show="!client.videoActive" type="primary" title="打开摄像头" :icon="VideoPlay" circle />
+      <el-button v-show="client.videoActive" type="danger" title="关闭摄像头" :icon="VideoPause" circle />
       <el-button title="拍照" :icon="Camera" circle />
       <el-button title="录像" :icon="VideoCamera" circle />
       <el-button title="媒体信息" :icon="InfoFilled" circle />

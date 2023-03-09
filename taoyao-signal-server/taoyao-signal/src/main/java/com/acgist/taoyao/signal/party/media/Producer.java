@@ -75,7 +75,7 @@ public class Producer implements Closeable {
             return;
         }
         this.close = true;
-        log.info("关闭生产者：{}", this.producerId);
+        log.info("关闭生产者：{} - {}", this.streamId, this.producerId);
         this.consumers.forEach((k, v) -> v.close());
         this.producerClient.getProducers().remove(this.producerId);
         EventPublisher.publishEvent(new MediaProducerCloseEvent(this.producerId, this.room));

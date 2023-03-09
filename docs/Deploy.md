@@ -4,11 +4,13 @@
 
 ```
 CentOS：CentOS Linux release 7.9.2009 (Core)
-Java >= 17
-Maven >= 3.6.0
-gcc/g++ >= 4.9
+pm2 >= 5.2.0
+git >= 1.8.0
+Java >= 17.0.0
+Maven >= 3.8.0
+gcc/g++ >= 10.0.0
 node version >= v16.0.0
-python version >= 3.6 with PIP
+python version >= 3.8.0 with PIP
 ```
 
 ## 设置Yum源
@@ -121,8 +123,12 @@ ln -sf /data/nodejs/node-v16.19.0-linux-x64/bin/pm2 /usr/local/bin/
 
 # 日志
 pm2 install pm2-logrotate
-pm2 set pm2-logrotate-ext:retain 14
-pm2 set pm2-logrotate-ext:max_size 256M
+pm2 set pm2-logrotate:retain 14
+pm2 set pm2-logrotate:compress true
+pm2 set pm2-logrotate:max_size 256M
+
+# 查看配置
+pm2 conf
 
 # 自启
 pm2 startup
@@ -142,7 +148,8 @@ tar -zxvf openjdk-17.0.2_linux-x64_bin.tar.gz
 vim ~/.bash_profile
 
 ---
-PATH=$PATH:/data/java/jdk-17.0.2/bin
+JAVA_HOME=/data/java/jdk-17.0.2
+PATH=$PATH:$JAVA_HOME/bin
 ---
 
 . ~/.bash_profile
@@ -165,7 +172,8 @@ tar -zxvf apache-maven-3.8.6-bin.tar.gz
 vim ~/.bash_profile
 
 ---
-PATH=$PATH:/data/maven/apache-maven-3.8.6/bin
+MAVEN_HOME=/data/maven/apache-maven-3.8.6
+PATH=$PATH:$MAVEN_HOME/bin
 ---
 
 . ~/.bash_profile
@@ -291,27 +299,7 @@ mvn clean package -D skipTests
 cp taoyao-server/target/taoyao-server-1.0.0/bin/deploy.sh ./
 
 # 配置服务
-vim /usr/lib/systemd/system/taoyao-signal-server.service
-
----
-[Unit]
-Description=taoyao signal server
-After=network.target
-Wants=network.target
-
-[Service]
-User=root
-Type=forking
-KillMode=process
-ExecStart=/data/taoyao/taoyao-signal-server/deploy/bin/startup.sh
-ExecReload=/bin/kill -HUP $MAINPID
-ExecStop=/bin/kill -QUIT $MAINPID
-Restart=always
-RestartSec=5s
-
-[Install]
-WantedBy=multi-user.target
----
+cp /data/taoyao/docs/etc/taoyao-signal-server.service /usr/lib/systemd/system/taoyao-signal-server.service
 
 # 配置自启
 systemctl daemon-reload
@@ -368,21 +356,7 @@ pm2 start | stop | restart taoyao-client-web
 npm run build
 
 # Nginx配置
-vim /etc/nginx/conf.d/taoyao.cnf
-
----
-server {
-    listen      8443 http2;
-    server_name localhost;
-
-    access_log  /var/log/nginx/taoyao.access.log main buffer=32k flush=10s;
-
-    location / {
-        root  /data/taoyao/taoyao-client-web/dist;
-        index index.html;
-    }
-}
----
+cp /data/taoyao/docs/etc/nginx /etc/nginx/nginx.conf
 
 nginx -s reload
 ```

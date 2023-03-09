@@ -367,55 +367,57 @@ class Taoyao {
    * @param {*} message 消息
    */
   on(message) {
+    const me = this;
     // 请求回调
-    if (this.callbackMapping.has(message.header.id)) {
+    if (me.callbackMapping.has(message.header.id)) {
       try {
-        this.callbackMapping.get(message.header.id)(message);
+        me.callbackMapping.get(message.header.id)(message);
       } finally {
-        this.callbackMapping.delete(message.header.id);
+        me.callbackMapping.delete(message.header.id);
       }
       return;
     }
+    // 执行信令
     const body = message.body;
     switch (message.header.signal) {
       case "client::reboot":
-        this.clientReboot(message, body);
+        me.clientReboot(message, body);
         break;
       case "client::shutdown":
-        this.clientShutdown(message, body);
+        me.clientShutdown(message, body);
         break;
       case "client::register":
         protocol.clientIndex = body.index;
         break;
       case "media::ice::restart":
-        this.mediaIceRestart(message, body);
+        me.mediaIceRestart(message, body);
         break;
       case "media::consume":
-        this.mediaConsume(message, body);
+        me.mediaConsume(message, body);
         break;
       case "media::consumer::close":
         me.mediaConsumerClose(message, body);
         break;
       case "media::produce":
-        this.mediaProduce(message, body);
+        me.mediaProduce(message, body);
         break;
       case "media::router::rtp::capabilities":
-        this.mediaRouterRtpCapabilities(message, body);
+        me.mediaRouterRtpCapabilities(message, body);
         break;
       case "media::transport::webrtc::connect":
-        this.mediaTransportWebrtcConnect(message, body);
+        me.mediaTransportWebrtcConnect(message, body);
         break;
       case "media::transport::webrtc::create":
-        this.mediaTransportWebrtcCreate(message, body);
+        me.mediaTransportWebrtcCreate(message, body);
         break;
       case "platform::error":
-        this.platformError(message, body);
+        me.platformError(message, body);
         break;
       case "room::create":
-        this.roomCreate(message, body);
+        me.roomCreate(message, body);
         break;
       case "room::close":
-        this.roomClose(message, body);
+        me.roomClose(message, body);
         break;
     }
   }
@@ -718,9 +720,8 @@ class Taoyao {
               })
             );
           });
-          // TODO：改为同步
-          //await this.request("media::consume", {
-          this.push(
+          // 等待终端准备就绪
+          this.request(
             protocol.buildMessage("media::consume", {
               kind: consumer.kind,
               type: consumer.type,

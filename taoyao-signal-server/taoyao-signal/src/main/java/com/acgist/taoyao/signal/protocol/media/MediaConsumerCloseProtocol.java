@@ -60,7 +60,7 @@ public class MediaConsumerCloseProtocol extends ProtocolRoomAdapter implements A
         final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);
         final Consumer consumer = room.consumer(consumerId);
         if(consumer == null) {
-            log.warn("关闭消费者无效：{}", consumerId);
+            log.debug("关闭消费者无效：{}", consumerId);
         } else {
             consumer.close();
         }

@@ -714,7 +714,7 @@ class Taoyao extends RemoteClient {
           remoteClient.audioTrack = track;
           remoteClient.audioConsumer = consumer;
         } else if(track.kind === 'video') {
-          remoteClient.audioActive = false;
+          remoteClient.videoActive = true;
           remoteClient.videoTrack = track;
           remoteClient.videoconsumer = consumer;
         } else {
@@ -829,8 +829,8 @@ class Taoyao extends RemoteClient {
       protocol.buildMessage("room::enter", {
         roomId: roomId,
         password: password,
-        rtpCapabilities: me.consume ? me.mediasoupDevice.rtpCapabilities : undefined,
-        sctpCapabilities: me.consume && me.dataProduce ? me.mediasoupDevice.sctpCapabilities : undefined,
+        rtpCapabilities: (me.audioConsume || me.videoConsume || me.audioProduce || me.videoProduce) ? me.mediasoupDevice.rtpCapabilities : undefined,
+        sctpCapabilities: (me.dataConsume || me.dataProduce) ? me.mediasoupDevice.sctpCapabilities : undefined,
       })
     );
   }
@@ -1113,7 +1113,8 @@ class Taoyao extends RemoteClient {
           // codec : this._mediasoupDevice.rtpCapabilities.codecs
           // 	.find((codec) => codec.mimeType.toLowerCase() === 'audio/pcma')
         });
-
+        self.audioActive = true;
+        self.track = track;
         // TODO：加密解密
         // if (this._e2eKey && e2e.isSupported()) {
         //   e2e.setupSenderTransform(this._micProducer.rtpSender);
@@ -1233,6 +1234,8 @@ class Taoyao extends RemoteClient {
         } else {
           console.warn("终端没有实现服务代理：", self);
         }
+        self.videoActive = true;
+        self.track = track;
         let codec;
         let encodings;
         const codecOptions = {

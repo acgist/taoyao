@@ -115,26 +115,21 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
      */
     private void consume(Room room, ClientWrapper consumerClientWrapper, Producer producer, Message message) {
         final Client mediaClient = room.getMediaClient();
+        final String consumerClientId = consumerClientWrapper.getClientId();
+        final String streamId = producer.getStreamId() + "->" + consumerClientId;
+        final ClientWrapper producerClientWrapper = producer.getProducerClient();
+        final String producerClientId = producerClientWrapper.getClientId();
         if(consumerClientWrapper.consumed(producer)) {
-            // TODO：没有清理干净
-            // 消费通道准备就绪
-            if(log.isDebugEnabled()) {
-                log.debug("消费通道准备就绪：{} - {}", consumerClientWrapper.getClientId(), producer.getStreamId());
-            }
+            // 消费通道就绪
             mediaClient.push(message);
+            log.info("{}消费通道就绪：{}", consumerClientId, streamId);
         } else {
             // 主动消费媒体
-            if(log.isDebugEnabled()) {
-                log.debug("消费媒体：{} - {}", consumerClientWrapper.getClientId(), producer.getStreamId());
-            }
-            final String clientId = consumerClientWrapper.getClientId();
-            final String streamId = producer.getStreamId() + "->" + clientId;
             final Transport recvTransport = consumerClientWrapper.getRecvTransport();
-            final ClientWrapper produceClientWrapper = producer.getProducerClient();
             final Map<String, Object> body = new HashMap<>();
             body.put(Constant.ROOM_ID, room.getRoomId());
-            body.put(Constant.CLIENT_ID, clientId);
-            body.put(Constant.SOURCE_ID, produceClientWrapper.getClientId());
+            body.put(Constant.CLIENT_ID, consumerClientId);
+            body.put(Constant.SOURCE_ID, producerClientId);
             body.put(Constant.STREAM_ID, streamId);
             body.put(Constant.PRODUCER_ID, producer.getProducerId());
             body.put(Constant.TRANSPORT_ID, recvTransport.getTransportId());
@@ -142,6 +137,7 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
             body.put(Constant.SCTP_CAPABILITIES, consumerClientWrapper.getSctpCapabilities());
             message.setBody(body);
             mediaClient.push(message);
+            log.info("{}主动消费媒体：{} - {}", consumerClientId, producerClientId, streamId);
         }
     }
 

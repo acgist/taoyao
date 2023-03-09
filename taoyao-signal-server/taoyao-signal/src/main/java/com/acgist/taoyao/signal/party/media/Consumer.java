@@ -63,7 +63,7 @@ public class Consumer implements Closeable {
             return;
         }
         this.close = true;
-        log.info("关闭消费者：{}", this.consumerId);
+        log.info("关闭消费者：{} - {}", this.streamId, this.consumerId);
         this.getProducer().remove(this.consumerId);
         this.consumerClient.getConsumers().remove(this.consumerId);
         EventPublisher.publishEvent(new MediaConsumerCloseEvent(this.consumerId, this.room));
