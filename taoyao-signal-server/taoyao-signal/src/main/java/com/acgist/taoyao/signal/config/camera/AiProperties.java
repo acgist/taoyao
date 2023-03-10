@@ -28,10 +28,9 @@ public class AiProperties {
     }
     
     @Schema(title = "是否开启", description = "是否开启")
-    @NotNull(message = "没有指定操作")
+    @NotNull(message = "没有指定操作状态")
     private Boolean enabled;
     @Schema(title = "识别类型", description = "识别类型")
-    @NotNull(message = "无效识别类型")
     private Type type;
     
 }

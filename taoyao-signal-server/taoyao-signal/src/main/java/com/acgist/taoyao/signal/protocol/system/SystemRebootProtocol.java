@@ -8,7 +8,6 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.ScriptUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.protocol.ControlProtocol;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
         "终端->信令服务+)终端"
     }
 )
-public class SystemRebootProtocol extends ProtocolClientAdapter implements ControlProtocol {
+public class SystemRebootProtocol extends ProtocolClientAdapter {
 
 	public static final String SIGNAL = "system::reboot";
 	

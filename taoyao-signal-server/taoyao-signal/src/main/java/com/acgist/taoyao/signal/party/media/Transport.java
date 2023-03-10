@@ -78,7 +78,7 @@ public class Transport implements Closeable {
     
     @Override
     public void close() {
-        // TODO：发送事件
+        // TODO：实现
     }
 
 }

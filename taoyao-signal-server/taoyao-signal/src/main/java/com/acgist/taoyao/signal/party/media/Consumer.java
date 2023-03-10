@@ -1,7 +1,5 @@
 package com.acgist.taoyao.signal.party.media;
 
-import java.io.Closeable;
-
 import com.acgist.taoyao.signal.event.EventPublisher;
 import com.acgist.taoyao.signal.event.media.MediaConsumerCloseEvent;
 
@@ -17,12 +15,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @Setter
-public class Consumer implements Closeable {
+public class Consumer extends OperatorAdapter {
 
-    /**
-     * 是否关闭
-     */
-    private volatile boolean close = false;
     /**
      * 媒体类型
      */
@@ -59,14 +53,18 @@ public class Consumer implements Closeable {
 
     @Override
     public void close() {
-        if(this.close) {
+        if(this.markClose()) {
             return;
         }
-        this.close = true;
         log.info("关闭消费者：{} - {}", this.streamId, this.consumerId);
+        EventPublisher.publishEvent(new MediaConsumerCloseEvent(this.consumerId, this.room));
+    }
+    
+    @Override
+    public void remove() {
         this.getProducer().remove(this.consumerId);
         this.consumerClient.getConsumers().remove(this.consumerId);
-        EventPublisher.publishEvent(new MediaConsumerCloseEvent(this.consumerId, this.room));
+        log.info("移除消费者：{} - {}", this.streamId, this.consumerId);
     }
     
     /**

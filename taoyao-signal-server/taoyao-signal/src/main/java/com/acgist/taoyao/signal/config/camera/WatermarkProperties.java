@@ -1,6 +1,7 @@
 package com.acgist.taoyao.signal.config.camera;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,6 +16,7 @@ import lombok.Setter;
 public class WatermarkProperties {
 
     @Schema(title = "是否开启", description = "是否开启")
+    @NotNull(message = "没有指定操作状态")
     private Boolean enabled;
     @Schema(title = "水印内容", description = "水印内容")
     private String text;

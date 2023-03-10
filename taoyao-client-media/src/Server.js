@@ -39,16 +39,31 @@ async function buildMediasoupWorkers() {
     const webRtcServer = await worker.createWebRtcServer(webRtcServerOptions);
     worker.appData.webRtcServer = webRtcServer;
     mediasoupWorkers.push(worker);
-    // 监听事件
     worker.on("died", (error) => {
-      console.warn("Mediasoup Worker停止服务：", worker.pid, error);
+      console.warn("worker died：", worker.pid, error);
       setTimeout(() => process.exit(1), 2000);
     });
     worker.observer.on("close", () => {
-      console.warn("Mediasoup Worker关闭服务：", worker.pid);
+      console.info("worker close：", worker.pid);
     });
-    // worker.observer.on("newrouter", fn(router));
-    // worker.observer.on("newwebrtcserver", fn(router));
+    // worker.observer.on("newrouter", (router) => {
+    //   console.info("worker newrouter：", worker.pid, router.id);
+    // });
+    // worker.observer.on("newwebrtcserver", (webRtcServer) => {
+    //   console.info("worker newwebrtcserver：", worker.pid, webRtcServer.id);
+    // });
+    // webRtcServer.on("workerclose", () => {
+    //   console.info("webRtcServer workerclose：", worker.pid, webRtcServer.id);
+    // });
+    // webRtcServer.observer.on("close", () => {
+    //   console.info("webRtcServer close：", worker.pid, webRtcServer.id);
+    // });
+    // webRtcServer.observer.on("webrtctransporthandled", (webRtcTransport) => {
+    //   console.info("webRtcServer webrtctransporthandled：", worker.pid, webRtcServer.id, webRtcTransport.id);
+    // });
+    // webRtcServer.observer.on("webrtctransportunhandled", (webRtcTransport) => {
+    //   console.info("webRtcServer webrtctransportunhandled：", worker.pid, webRtcServer.id, webRtcTransport.id);
+    // });
   }
 }
 

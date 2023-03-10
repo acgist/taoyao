@@ -22,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Socket信令
  * 
+ * TODO：加密
+ * 
  * @author acgist
  */
 @Slf4j

@@ -20,7 +20,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
     body = """
     {
         "to": "目标终端ID",
-        "active": 是否响铃（true|false）
+        "enabled": 是否响铃（true|false）
     }
     """,
     flow = {
@@ -43,12 +43,12 @@ public class ControlBellProtocol extends ProtocolControlAdapter {
 
     /**
      * @param clientId 终端ID
-     * @param active 操作
+     * @param enabled 状态
      * 
      * @return 执行结果
      */
-    public Message execute(String clientId, Boolean active) {
-        return this.request(clientId, this.build(Map.of(Constant.ACTIVE, active)));
+    public Message execute(String clientId, Boolean enabled) {
+        return this.request(clientId, this.build(Map.of(Constant.ENABLED, enabled)));
     }
     
 }

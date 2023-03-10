@@ -14,7 +14,7 @@ import com.acgist.taoyao.signal.client.ClientType;
  * 
  * @author acgist
  */
-public class ProtocolControlAdapter extends ProtocolClientAdapter {
+public abstract class ProtocolControlAdapter extends ProtocolClientAdapter {
 
     protected ProtocolControlAdapter(String name, String signal) {
         super(name, signal);

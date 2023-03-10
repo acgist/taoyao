@@ -2,7 +2,6 @@ package com.acgist.taoyao.signal.protocol.client;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
-import com.acgist.taoyao.signal.protocol.ControlProtocol;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 
 /**
@@ -14,7 +13,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 @Description(
     flow = "信令服务->终端"
 )
-public class ClientShutdownProtocol extends ProtocolClientAdapter implements ControlProtocol {
+public class ClientShutdownProtocol extends ProtocolClientAdapter {
 
     public static final String SIGNAL = "client::shutdown";
     

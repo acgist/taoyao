@@ -152,7 +152,7 @@ public class ClientWrapper implements AutoCloseable {
     }
     
     @Override
-    public void close() throws Exception {
+    public void close() {
         // TODO：释放资源：通道、消费者、生产者
         this.consumers.forEach((k, v) -> v.close());
         this.producers.forEach((k, v) -> v.close());

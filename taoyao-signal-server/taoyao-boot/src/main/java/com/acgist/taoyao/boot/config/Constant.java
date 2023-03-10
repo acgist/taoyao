@@ -20,10 +20,6 @@ public interface Constant {
      */
     String IP = "ip";
     /**
-     * 动作
-     */
-    String ACTIVE = "active";
-    /**
      * 状态对象
      */
     String STATUS = "status";
@@ -219,6 +215,10 @@ public interface Constant {
      * SCTP协商
      */
     String SCTP_CAPABILITIES = "sctpCapabilities";
+    /**
+     * 状态
+     */
+    String ENABLED = "enabled";
     /**
      * 是否是消费者
      */

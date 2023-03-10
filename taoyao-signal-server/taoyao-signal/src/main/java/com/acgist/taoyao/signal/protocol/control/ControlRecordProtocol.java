@@ -20,7 +20,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
     body = """
     {
         "to": "目标终端ID",
-        "active": 是否录像（true|false）
+        "enabled": 是否录像（true|false）
     }
     """,
     flow = {
@@ -42,13 +42,13 @@ public class ControlRecordProtocol extends ProtocolControlAdapter {
     }
     
     /**
-     * @param clientId 终端标识
-     * @param active 操作
+     * @param clientId 终端ID
+     * @param enabled 状态
      * 
      * @return 执行结果
      */
-    public Message execute(String clientId, Boolean active) {
-        return this.request(clientId, this.build(Map.of(Constant.ACTIVE, active)));
+    public Message execute(String clientId, Boolean enabled) {
+        return this.request(clientId, this.build(Map.of(Constant.ENABLED, enabled)));
     }
 
 }

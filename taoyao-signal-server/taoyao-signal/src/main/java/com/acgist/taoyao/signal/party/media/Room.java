@@ -1,6 +1,5 @@
 package com.acgist.taoyao.signal.party.media;
 
-import java.io.Closeable;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -10,6 +9,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientStatus;
 import com.acgist.taoyao.signal.event.EventPublisher;
+import com.acgist.taoyao.signal.event.room.RoomCloseEvent;
 import com.acgist.taoyao.signal.event.room.RoomLeaveEvent;
 
 import lombok.Getter;
@@ -25,12 +25,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @Setter
-public class Room implements Closeable {
+public class Room extends OperatorAdapter {
 	
-    /**
-     * 是否关闭
-     */
-    private volatile boolean close = false;
 	/**
 	 * 房间标识
 	 */
@@ -230,14 +226,18 @@ public class Room implements Closeable {
 	
 	@Override
 	public void close() {
-	    if(this.close) {
+	    if(this.markClose()) {
 	        return;
 	    }
-	    this.close = true;
 		log.info("关闭房间：{}", this.roomId);
-		// TODO：关闭房间
-		// TODO：媒体服务：直接没提服务关闭所有资源（通道、生产者、消费者）
-		this.roomManager.remove(this);
+		this.clients.values().forEach(ClientWrapper::close);
+		EventPublisher.publishEvent(new RoomCloseEvent(this));
+	}
+	
+	@Override
+	public void remove() {
+        log.info("移除房间：{}", this.roomId);
+        this.roomManager.remove(this);
 	}
 
 	/**

@@ -17,15 +17,12 @@ import com.acgist.taoyao.signal.party.media.Consumer;
 import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * 关闭消费者信令
  * 注意：正常情况不会存在关闭消费者的情况，所以一般不用处理关闭消费者信令。
  * 
  * @author acgist
  */
-@Slf4j
 @Protocol
 @Description(
     body = """
@@ -34,7 +31,10 @@ import lombok.extern.slf4j.Slf4j;
         "consumerId": "消费者ID"
     }
     """,
-    flow = "终端->信令服务+)终端"
+    flow = {
+        "媒体服务->信令服务-)终端",
+        "终端->信令服务->媒体服务->信令服务+)终端"
+    }
 )
 public class MediaConsumerCloseProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaConsumerCloseEvent> {
 
@@ -48,21 +48,25 @@ public class MediaConsumerCloseProtocol extends ProtocolRoomAdapter implements A
     @Override
     public void onApplicationEvent(MediaConsumerCloseEvent event) {
         final Room room = event.getRoom();
+        final Client mediaClient = event.getMediaClient();
         final Map<String, Object> body = Map.of(
             Constant.ROOM_ID, room.getRoomId(),
             Constant.CONSUMER_ID, event.getConsumerId()
         );
-        room.broadcastAll(this.build(body));
+        mediaClient.push(this.build(body));
     }
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);
         final Consumer consumer = room.consumer(consumerId);
-        if(consumer == null) {
-            log.debug("关闭消费者无效：{}", consumerId);
-        } else {
+        if(clientType.mediaClient()) {
             consumer.close();
+        } else if(clientType.mediaServer()) {
+            consumer.remove();
+            room.broadcast(message);
+        } else {
+            this.logNoAdapter(clientType);
         }
     }
 
