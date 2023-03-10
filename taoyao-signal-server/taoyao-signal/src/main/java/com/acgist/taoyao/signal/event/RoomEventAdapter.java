@@ -42,5 +42,5 @@ public class RoomEventAdapter extends ApplicationEventAdapter {
     public Client getMediaClient() {
         return this.room.getMediaClient();
     }
-
+    
 }

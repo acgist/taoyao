@@ -15,8 +15,8 @@ import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.event.room.RoomEnterEvent;
 import com.acgist.taoyao.signal.party.media.ClientWrapper;
-import com.acgist.taoyao.signal.party.media.ClientWrapper.SubscribeType;
 import com.acgist.taoyao.signal.party.media.Room;
+import com.acgist.taoyao.signal.party.media.SubscribeType;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**
@@ -51,6 +51,27 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
 	}
 
 	@Override
+    public boolean authenticate(Message message) {
+	    final Map<String, Object> body = message.body();
+	    final String roomId = MapUtils.get(body, Constant.ROOM_ID);
+        final String password = MapUtils.get(body, Constant.PASSWORD);
+        final Room room = this.roomManager.room(roomId);
+        if(room == null) {
+            throw MessageCodeException.of("无效房间：" + roomId);
+        }
+        final String roomPassowrd = room.getPassword();
+        if(StringUtils.isEmpty(roomPassowrd) || roomPassowrd.equals(password)) {
+            return true;
+        }
+        throw MessageCodeException.of(MessageCode.CODE_3401, "密码错误");
+    }
+	
+	@Override
+    public boolean authenticate(Room room, Client client) {
+	    return true;
+    }
+	
+	@Override
 	public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
 	    if(clientType.mediaClient()) {
 	        this.enter(clientId, room, client, message, body);
@@ -69,11 +90,6 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
 	 * @param body 消息主体
 	 */
     private void enter(String clientId, Room room, Client client, Message message, Map<String, Object> body) {
-        final String password = MapUtils.get(body, Constant.PASSWORD);
-        final String roomPassowrd = room.getPassword();
-        if(StringUtils.isNotEmpty(roomPassowrd) && !roomPassowrd.equals(password)) {
-            throw MessageCodeException.of(MessageCode.CODE_3401, "密码错误");
-        }
         final String subscribeType = MapUtils.get(body, Constant.SUBSCRIBE_TYPE);
         final Object rtpCapabilities = MapUtils.get(body, Constant.RTP_CAPABILITIES);
         final Object sctpCapabilities = MapUtils.get(body, Constant.SCTP_CAPABILITIES);

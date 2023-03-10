@@ -7,10 +7,15 @@ import java.nio.channels.AsynchronousSocketChannel;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import com.acgist.taoyao.boot.config.Constant;
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+
+import com.acgist.taoyao.boot.config.SocketProperties;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.signal.client.ClientAdapter;
+import com.acgist.taoyao.signal.utils.CipherUtils;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -26,20 +31,15 @@ import lombok.extern.slf4j.Slf4j;
 @Setter
 public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
 
-	/**
-	 * 换行符号
-	 */
-	private final byte[] line;
-	/**
-	 * 换行符号长度
-	 */
-	private final int lineLength;
-	
-	public SocketClient(Long timeout, AsynchronousSocketChannel instance) {
-		super(timeout, instance);
+    /**
+     * 加密工具
+     */
+    private final Cipher cipher;
+    
+	public SocketClient(SocketProperties socketProperties, AsynchronousSocketChannel instance) {
+		super(socketProperties.getTimeout(), instance);
 		this.ip = this.clientIp(instance);
-		this.line = Constant.LINE.getBytes();
-		this.lineLength = this.line.length;
+		this.cipher = CipherUtils.buildCipher(Cipher.ENCRYPT_MODE, socketProperties.getEncrypt(), socketProperties.getEncryptKey());
 	}
 
 	@Override
@@ -47,10 +47,12 @@ public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
 	    synchronized (this.instance) {
 	        try {
 				if(this.instance.isOpen()) {
-					final byte[] bytes = message.toString().getBytes();
-					final ByteBuffer buffer = ByteBuffer.allocateDirect(bytes.length + this.lineLength);
+				    // 加密
+					final byte[] bytes = this.encrypt(message);
+					// 发送
+					final ByteBuffer buffer = ByteBuffer.allocateDirect(Short.BYTES + bytes.length);
+					buffer.putShort((short) bytes.length);
 					buffer.put(bytes);
-					buffer.put(this.line);
 					buffer.flip();
 					final Future<Integer> future = this.instance.write(buffer);
 					future.get(this.timeout, TimeUnit.MILLISECONDS);
@@ -74,6 +76,23 @@ public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
         } catch (IOException e) {
             throw MessageCodeException.of(e, "无效终端（IP）：" + instance);
         }
+	}
+	
+	/**
+	 * @param message 消息
+	 * 
+	 * @return 加密消息
+	 */
+	private byte[] encrypt(Message message) {
+	    final byte[] bytes = message.toString().getBytes();
+        if(this.cipher != null) {
+            try {
+                return this.cipher.doFinal(bytes);
+            } catch (IllegalBlockSizeException | BadPaddingException e) {
+                log.error("加密异常：{}", message);
+            }
+        }
+        return bytes;
 	}
 	
 }

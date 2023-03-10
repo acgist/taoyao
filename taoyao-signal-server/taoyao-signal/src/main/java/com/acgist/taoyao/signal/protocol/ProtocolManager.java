@@ -60,9 +60,12 @@ public class ProtocolManager {
 			if(this.protocolMapping.containsKey(signal)) {
 				throw MessageCodeException.of("存在重复信令协议：" + signal);
 			}
-			log.info("注册信令协议：{} - {} - {}", String.format("%-36s", signal), String.format("%-36s", key), name);
+			if(log.isDebugEnabled()) {
+			    log.debug("注册信令协议：{} - {} - {}", String.format("%-36s", signal), String.format("%-36s", key), name);
+			}
 			this.protocolMapping.put(signal, value);
 		});
+	    log.info("当前注册信令数量：{}", this.protocolMapping.size());
 	}
 	
 	/**

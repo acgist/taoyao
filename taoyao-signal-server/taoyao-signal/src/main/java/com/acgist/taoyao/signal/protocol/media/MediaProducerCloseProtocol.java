@@ -30,10 +30,10 @@ import lombok.extern.slf4j.Slf4j;
     body = """
     {
         "roomId": "房间ID"
-        "consumerId": "消费者ID"
+        "consumerId": "生产者ID"
     }
     """,
-    flow = "终端->信令服务+)终端"
+    flow = "终端->信令服务->媒体服务->信令服务+)终端"
 )
 public class MediaProducerCloseProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaProducerCloseEvent> {
 
@@ -47,11 +47,12 @@ public class MediaProducerCloseProtocol extends ProtocolRoomAdapter implements A
     @Override
     public void onApplicationEvent(MediaProducerCloseEvent event) {
         final Room room = event.getRoom();
+        final Client mediaClient = event.getMediaClient();
         final Map<String, Object> body = Map.of(
             Constant.ROOM_ID, room.getRoomId(),
             Constant.PRODUCER_ID, event.getProducerId()
         );
-        room.broadcastAll(this.build(body));
+        mediaClient.push(this.build(body));
     }
     
     @Override
@@ -59,9 +60,16 @@ public class MediaProducerCloseProtocol extends ProtocolRoomAdapter implements A
         final String producerId = MapUtils.get(body, Constant.PRODUCER_ID);
         final Producer producer = room.producer(producerId);
         if(producer == null) {
-            log.warn("关闭生产者无效：{}", producerId);
-        } else {
+            log.debug("生产者无效：{} - {}", producerId, clientType);
+            return;
+        }
+        if(clientType.mediaClient()) {
             producer.close();
+        } else if(clientType.mediaServer()) {
+            producer.remove();
+            room.broadcast(message);
+        } else {
+            this.logNoAdapter(clientType);
         }
     }
 

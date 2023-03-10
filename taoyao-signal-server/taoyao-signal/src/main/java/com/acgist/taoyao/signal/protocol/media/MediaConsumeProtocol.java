@@ -90,12 +90,14 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
             final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);
             final String consumerClientId = MapUtils.get(body, Constant.CLIENT_ID);
             final ClientWrapper consumerClientWrapper = room.clientWrapper(consumerClientId);
-            final Map<String, Consumer> consumers = consumerClientWrapper.getConsumers();    
+            final Map<String, Consumer> roomConsumers = room.getConsumers();
+            final Map<String, Consumer> clientConsumers = consumerClientWrapper.getConsumers();   
             final Map<String, Consumer> producerConsumers = producer.getConsumers();
             final Consumer consumer = new Consumer(kind, streamId, consumerId, room, producer, consumerClientWrapper);
-            final Consumer oldConsumer = consumers.put(producerId, consumer);
+            final Consumer oldRoomConsumer = roomConsumers.put(consumerId, consumer);
+            final Consumer oldClientConsumer = clientConsumers.put(consumerId, consumer);
             final Consumer oldProducerConsumer = producerConsumers.put(consumerId, consumer);
-            if(oldConsumer != null || oldProducerConsumer != null) {
+            if(oldRoomConsumer != null || oldClientConsumer != null || oldProducerConsumer != null) {
                 log.warn("消费者已经存在：{}", consumerId);
             }
             final Client consumeClient = consumerClientWrapper.getClient();

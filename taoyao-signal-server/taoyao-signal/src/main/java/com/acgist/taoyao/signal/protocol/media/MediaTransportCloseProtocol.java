@@ -12,53 +12,61 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.event.media.MediaConsumerPauseEvent;
-import com.acgist.taoyao.signal.party.media.Consumer;
+import com.acgist.taoyao.signal.event.media.TransportCloseEvent;
 import com.acgist.taoyao.signal.party.media.Room;
+import com.acgist.taoyao.signal.party.media.Transport;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * 暂停消费者信令
+ * 关闭通道信令
  * 
  * @author acgist
  */
+@Slf4j
 @Protocol
 @Description(
     body = """
     {
         "roomId": "房间ID"
-        "consumerId": "消费者ID"
+        "transportId": "通道ID"
     }
     """,
-    flow = "终端->信令服务->媒体服务->信令服务->终端"
+    flow = "终端->信令服务->媒体服务->信令服务+)终端"
 )
-public class MediaConsumerPauseProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaConsumerPauseEvent> {
+public class MediaTransportCloseProtocol extends ProtocolRoomAdapter implements ApplicationListener<TransportCloseEvent> {
 
-    public static final String SIGNAL = "media::consumer::pause";
+    public static final String SIGNAL = "media::transport::close";
     
-    public MediaConsumerPauseProtocol() {
-        super("暂停消费者信令", SIGNAL);
+    public MediaTransportCloseProtocol() {
+        super("关闭通道信令", SIGNAL);
     }
     
     @Async
     @Override
-    public void onApplicationEvent(MediaConsumerPauseEvent event) {
+    public void onApplicationEvent(TransportCloseEvent event) {
         final Room room = event.getRoom();
         final Client mediaClient = event.getMediaClient();
         final Map<String, Object> body = Map.of(
             Constant.ROOM_ID, room.getRoomId(),
-            Constant.CONSUMER_ID, event.getConsumerId()
+            Constant.TRANSPORT_ID, event.getTransportId()
         );
         mediaClient.push(this.build(body));
     }
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
+        final String transportId = MapUtils.get(body, Constant.TRANSPORT_ID);
+        final Transport transport = room.transport(transportId);
+        if(transport == null) {
+            log.debug("通道无效：{} - {}", transportId, clientType);
+            return;
+        }
         if(clientType.mediaClient()) {
-            final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);
-            final Consumer consumer = room.consumer(consumerId);
-            consumer.pause();
+            transport.close();
         } else if(clientType.mediaServer()) {
+            transport.remove();
             room.broadcast(message);
         } else {
             this.logNoAdapter(clientType);

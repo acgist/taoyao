@@ -47,31 +47,35 @@ public class MediaProduceProtocol extends ProtocolRoomAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        // TODO；类型判断？
-        final String kind = MapUtils.get(body, Constant.KIND);
-        final String streamId = kind + "::" + clientId;
-        body.put(Constant.CLIENT_ID, clientId);
-        body.put(Constant.STREAM_ID, streamId);
-        final Message response = room.request(message);
-        final Map<String, Object> responseBody = response.body();
-        final String producerId = MapUtils.get(responseBody, Constant.PRODUCER_ID);
-        final ClientWrapper clientWrapper = room.clientWrapper(client);
-        final Map<String, Producer> producers = clientWrapper.getProducers();
-        final Producer producer = producers.computeIfAbsent(producerId, key -> new Producer(kind, streamId, producerId, room, clientWrapper));
-        final Message responseMessage = response.cloneWithoutBody();
-        responseMessage.setBody(Map.of(
-            Constant.KIND, kind,
-            Constant.STREAM_ID, streamId,
-            Constant.PRODUCER_ID, producerId
-        ));
-        // 根据不同类型进行推送：
-        // 自动推送：不用广播
-        // 音频全收：广播视频
-        // 视频全收：广播音频
-        // 全部不收：全部广播
-        room.broadcast(responseMessage);
-        log.info("{}生产媒体：{} - {}", clientId, streamId, producerId);
-        this.publishEvent(new MediaConsumeEvent(room, producer));
+        if(clientType.mediaClient()) {
+            final String kind = MapUtils.get(body, Constant.KIND);
+            final String streamId = kind + "::" + clientId;
+            body.put(Constant.CLIENT_ID, clientId);
+            body.put(Constant.STREAM_ID, streamId);
+            final Message response = room.request(message);
+            final Map<String, Object> responseBody = response.body();
+            final String producerId = MapUtils.get(responseBody, Constant.PRODUCER_ID);
+            final ClientWrapper producerClientWrapper = room.clientWrapper(client);
+            final Map<String, Producer> roomProducers = room.getProducers();
+            final Map<String, Producer> clientProducers = producerClientWrapper.getProducers();
+            final Producer producer = new Producer(kind, streamId, producerId, room, producerClientWrapper);
+            final Producer oldRoomProducer = roomProducers.put(producerId, producer);
+            final Producer oldClientProducer = clientProducers.put(producerId, producer);
+            if(oldRoomProducer != null || oldClientProducer != null) {
+                log.warn("生产者已经存在：{}", producerId);
+            }
+            final Message responseMessage = response.cloneWithoutBody();
+            responseMessage.setBody(Map.of(
+                Constant.KIND, kind,
+                Constant.STREAM_ID, streamId,
+                Constant.PRODUCER_ID, producerId
+                ));
+            room.broadcast(responseMessage);
+            log.info("{}生产媒体：{} - {}", clientId, streamId, producerId);
+            this.publishEvent(new MediaConsumeEvent(room, producer));
+        } else {
+            this.logNoAdapter(clientType);
+        }
     }
     
 }

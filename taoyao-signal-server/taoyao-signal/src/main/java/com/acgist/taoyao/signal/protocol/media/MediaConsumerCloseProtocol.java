@@ -17,12 +17,14 @@ import com.acgist.taoyao.signal.party.media.Consumer;
 import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 关闭消费者信令
- * 注意：正常情况不会存在关闭消费者的情况，所以一般不用处理关闭消费者信令。
  * 
  * @author acgist
  */
+@Slf4j
 @Protocol
 @Description(
     body = """
@@ -60,6 +62,10 @@ public class MediaConsumerCloseProtocol extends ProtocolRoomAdapter implements A
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);
         final Consumer consumer = room.consumer(consumerId);
+        if(consumer == null) {
+            log.debug("消费者无效：{} - {}", consumerId, clientType);
+            return;
+        }
         if(clientType.mediaClient()) {
             consumer.close();
         } else if(clientType.mediaServer()) {

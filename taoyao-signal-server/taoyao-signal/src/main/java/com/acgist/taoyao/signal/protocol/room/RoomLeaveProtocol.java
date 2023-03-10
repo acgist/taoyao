@@ -43,24 +43,19 @@ public class RoomLeaveProtocol extends ProtocolRoomAdapter implements Applicatio
     @Async
     @Override
     public void onApplicationEvent(RoomLeaveEvent event) {
-        this.leave(event.getRoom(), event.getClient());
+        final Room room = event.getRoom();
+        final Client client = event.getClient();
+        final Map<String, String> body = Map.of(Constant.CLIENT_ID, client.clientId());
+        room.broadcast(client, this.build(body));
     }
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        // 离开房间后会发布事件
-        room.leave(client);
-    }
-
-    /**
-     * 离开房间
-     * 
-     * @param room 房间
-     * @param client 终端
-     */
-    private void leave(Room room, Client client) {
-        final Message leaveMessage = this.build(Map.of(Constant.CLIENT_ID, client.clientId()));
-        room.broadcast(client, leaveMessage);
+        if(clientType.mediaClient()) {
+            room.leave(client);
+        } else {
+            this.logNoAdapter(clientType);
+        }
     }
 
 }

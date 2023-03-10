@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.acgist.taoyao.boot.annotation.Description;
-import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.signal.protocol.Protocol;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -38,6 +37,7 @@ public class ProtocolController {
     @Operation(summary = "信令列表", description = "信令列表Markdown")
     @GetMapping("/list")
     public String list() {
+        final String newLine = System.lineSeparator();
         final StringBuilder builder = new StringBuilder("""
             ## 信令格式
             
@@ -94,21 +94,21 @@ public class ProtocolController {
             // 信令名称
             builder.append("### ").append(name)
             .append("（").append(signal).append("）")
-            .append(Constant.LINE).append(Constant.LINE);
+            .append(newLine).append(newLine);
             // 描述信息
             final String memo = description.memo().strip();
             if(StringUtils.isNotEmpty(memo)) {
-                builder.append(memo).append(Constant.LINE).append(Constant.LINE);
+                builder.append(memo).append(newLine).append(newLine);
             }
             // 消息主体
             builder
-            .append("```").append(Constant.LINE)
-            .append("# 消息主体").append(Constant.LINE);
-            Stream.of(description.body()).forEach(line -> builder.append(line.strip()).append(Constant.LINE));
+            .append("```").append(newLine)
+            .append("# 消息主体").append(newLine);
+            Stream.of(description.body()).forEach(line -> builder.append(line.strip()).append(newLine));
             // 数据流向
-            builder.append("# 数据流向").append(Constant.LINE);
-            Stream.of(description.flow()).forEach(line -> builder.append(line.strip()).append(Constant.LINE));
-            builder.append("```").append(Constant.LINE).append(Constant.LINE);
+            builder.append("# 数据流向").append(newLine);
+            Stream.of(description.flow()).forEach(line -> builder.append(line.strip()).append(newLine));
+            builder.append("```").append(newLine).append(newLine);
         });
         return builder.toString();
     }

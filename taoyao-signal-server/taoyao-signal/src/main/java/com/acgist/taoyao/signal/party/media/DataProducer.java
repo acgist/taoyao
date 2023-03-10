@@ -3,6 +3,9 @@ package com.acgist.taoyao.signal.party.media;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.acgist.taoyao.signal.event.EventPublisher;
+import com.acgist.taoyao.signal.event.media.MediaDataProducerCloseEvent;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -15,12 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Setter
 @Getter
-public class DataProducer {
+public class DataProducer extends OperatorAdapter {
 
-    /**
-     * 生产者终端
-     */
-    private final ClientWrapper produceClient;
     /**
      * 数据流ID
      */
@@ -30,20 +29,45 @@ public class DataProducer {
      */
     private final String producerId;
     /**
+     * 房间
+     */
+    private final Room room;
+    /**
+     * 生产者终端
+     */
+    private final ClientWrapper producerClient;
+    /**
      * 消费者
+     * 其他终端消费当前终端的消费者
      */
     private final Map<String, DataConsumer> dataConsumers;
     
-    public DataProducer(ClientWrapper produceClient, String streamId, String producerId) {
-        this.produceClient = produceClient;
+    public DataProducer(String streamId, String producerId, Room room, ClientWrapper producerClient) {
         this.streamId = streamId;
         this.producerId = producerId;
+        this.room = room;
+        this.producerClient = producerClient;
         this.dataConsumers = new ConcurrentHashMap<>();
     }
     
-    /**
-     * 记录日志
-     */
+    @Override
+    public void close() {
+        if(this.markClose()) {
+            return;
+        }
+        log.info("关闭数据生产者：{} - {}", this.streamId, this.producerId);
+        this.dataConsumers.values().forEach(DataConsumer::close);
+        EventPublisher.publishEvent(new MediaDataProducerCloseEvent(this.producerId, this.room));
+    }
+    
+    @Override
+    public void remove() {
+        log.info("移除数据生产者：{} - {}", this.streamId, this.producerId);
+        this.room.getDataProducers().remove(this.producerId);
+        this.producerClient.getDataProducers().remove(this.producerId);
+    }
+    
+    @Override
     public void log() {
         log.debug("当前数据生产者：{} - {}", this.producerId, this.streamId);
         this.dataConsumers.values().forEach(DataConsumer::log);

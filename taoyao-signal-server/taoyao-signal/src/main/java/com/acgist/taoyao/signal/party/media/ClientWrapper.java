@@ -21,42 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ClientWrapper implements AutoCloseable {
 
     /**
-     * 媒体订阅类型
-     * 
-     * @author acgist
-     */
-    public enum SubscribeType {
-        
-        // 订阅所有媒体
-        ALL,
-        // 订阅所有音频媒体
-        ALL_AUDIO,
-        // 订阅所有视频媒体
-        ALL_VIDEO,
-        // 没有订阅任何媒体
-        NONE;
-        
-        public static final SubscribeType of(String value) {
-            for (SubscribeType type : SubscribeType.values()) {
-                if(type.name().equalsIgnoreCase(value)) {
-                    return type;
-                }
-            }
-            return SubscribeType.ALL;
-        }
-        
-        public boolean canConsume(Producer producer) {
-            return switch (this) {
-            case NONE -> false;
-            case ALL_AUDIO -> producer.getKind() == Kind.AUDIO;
-            case ALL_VIDEO -> producer.getKind() == Kind.VIDEO;
-            default -> true;
-            };
-        }
-        
-    }
-
-    /**
      * 房间
      */
     private final Room room;
@@ -105,11 +69,13 @@ public class ClientWrapper implements AutoCloseable {
      */
     private final Map<String, Consumer> consumers;
 	/**
-	 * 数据通道生产者
+	 * 数据生产者
+	 * 其他终端消费当前终端的消费者
 	 */
 	private final Map<String, DataProducer> dataProducers;
 	/**
-	 * 数据通道消费者
+	 * 数据消费者
+	 * 当前终端消费其他终端的消费者
 	 */
 	private final Map<String, DataConsumer> dataConsumers;
 	
@@ -153,19 +119,24 @@ public class ClientWrapper implements AutoCloseable {
     
     @Override
     public void close() {
-        // TODO：释放资源：通道、消费者、生产者
-        this.consumers.forEach((k, v) -> v.close());
-        this.producers.forEach((k, v) -> v.close());
-        // TODO：实现
-        this.recvTransport.close();
-        this.sendTransport.close();
+        // 注意：不要关闭终端
+        this.consumers.values().forEach(Consumer::close);
+        this.producers.values().forEach(Producer::close);
+        this.dataConsumers.values().forEach(DataConsumer::close);
+        this.dataProducers.values().forEach(DataProducer::close);
+        if(this.recvTransport != null) {
+            this.recvTransport.close();
+        }
+        if(this.sendTransport != null) {
+            this.sendTransport.close();
+        }
     }
 
     /**
      * 记录日志
      */
     public void log() {
-        log.debug("""
+        log.info("""
             当前终端：{}
             消费者数量：{}
             生产者数量：{}

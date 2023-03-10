@@ -39,6 +39,11 @@ public class MediaRouterRtpCapabilitiesProtocol extends ProtocolRoomAdapter {
 	public MediaRouterRtpCapabilitiesProtocol() {
 		super("路由RTP协商信令", SIGNAL);
 	}
+	
+	@Override
+    protected boolean authenticate(Room room, Client client) {
+	    return true;
+    }
 
 	@Override
 	public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {

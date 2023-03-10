@@ -97,15 +97,15 @@ g++ -v
 
 ```
 # 下载
-mkdir -p /data/nodejs
-cd /data/nodejs
+mkdir -p /data/dev/nodejs
+cd /data/dev/nodejs
 wget https://nodejs.org/dist/v16.19.0/node-v16.19.0-linux-x64.tar.xz
 xz -d node-v16.19.0-linux-x64.tar.xz
 tar -xf node-v16.19.0-linux-x64.tar
 
 # 连接
-ln -sf /data/nodejs/node-v16.19.0-linux-x64/bin/npm /usr/local/bin/
-ln -sf /data/nodejs/node-v16.19.0-linux-x64/bin/node /usr/local/bin/
+ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/npm /usr/local/bin/
+ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/node /usr/local/bin/
 
 # 验证
 npm -v
@@ -119,7 +119,7 @@ node -v
 npm install -g pm2
 
 # 连接
-ln -sf /data/nodejs/node-v16.19.0-linux-x64/bin/pm2 /usr/local/bin/
+ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/pm2 /usr/local/bin/
 
 # 日志
 pm2 install pm2-logrotate
@@ -139,8 +139,8 @@ pm2 save
 
 ```
 # 下载
-mkdir -p /data/java
-cd /data/java
+mkdir -p /data/dev/java
+cd /data/dev/java
 wget https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz
 tar -zxvf openjdk-17.0.2_linux-x64_bin.tar.gz
 
@@ -148,12 +148,12 @@ tar -zxvf openjdk-17.0.2_linux-x64_bin.tar.gz
 vim ~/.bash_profile
 
 ---
-JAVA_HOME=/data/java/jdk-17.0.2
+JAVA_HOME=/data/dev/java/jdk-17.0.2
 PATH=$PATH:$JAVA_HOME/bin
 ---
 
 . ~/.bash_profile
-ln -sf /data/java/jdk-17.0.2/bin/java /usr/local/bin/java
+ln -sf /data/dev/java/jdk-17.0.2/bin/java /usr/local/bin/java
 
 # 验证
 java -version
@@ -163,8 +163,8 @@ java -version
 
 ```
 # 下载
-mkdir -p /data/maven
-cd /data/maven
+mkdir -p /data/dev/maven
+cd /data/dev/maven
 wget https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
 tar -zxvf apache-maven-3.8.6-bin.tar.gz
 
@@ -172,7 +172,7 @@ tar -zxvf apache-maven-3.8.6-bin.tar.gz
 vim ~/.bash_profile
 
 ---
-MAVEN_HOME=/data/maven/apache-maven-3.8.6
+MAVEN_HOME=/data/dev/maven/apache-maven-3.8.6
 PATH=$PATH:$MAVEN_HOME/bin
 ---
 
@@ -191,8 +191,8 @@ yum install libffi-devel
 yum install openssl-devel
 
 # 下载
-mkdir -p /data/python
-cd /data/python
+mkdir -p /data/dev/python
+cd /data/dev/python
 #wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tar.xz
 wget https://mirrors.huaweicloud.com/python/3.8.16/Python-3.8.16.tar.xz
 xz -d Python-3.8.16.tar.xz

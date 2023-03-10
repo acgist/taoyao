@@ -42,11 +42,11 @@ public final class SocketSignalAcceptHandler implements CompletionHandler<Asynch
 	public void completed(AsynchronousSocketChannel channel, AsynchronousServerSocketChannel server) {
 		try {
 			channel.setOption(StandardSocketOptions.SO_KEEPALIVE, Boolean.TRUE);
-			this.clientManager.open(new SocketClient(this.socketProperties.getTimeout(), channel));
+			this.clientManager.open(new SocketClient(this.socketProperties, channel));
 			final SocketSignalMessageHandler messageHandler = new SocketSignalMessageHandler(
-				this.socketProperties.getBufferSize(),
 				this.clientManager,
 				this.protocolManager,
+				this.socketProperties,
 				channel,
 				this.platformErrorProtocol
 			);

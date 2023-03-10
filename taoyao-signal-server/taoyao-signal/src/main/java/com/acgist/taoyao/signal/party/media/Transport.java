@@ -1,24 +1,42 @@
 package com.acgist.taoyao.signal.party.media;
 
-import java.io.Closeable;
 import java.util.Map;
 
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.event.EventPublisher;
+import com.acgist.taoyao.signal.event.media.TransportCloseEvent;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 传输通道
+ * 注意：正常情况不会调用
  * 
  * @author acgist
  */
+@Slf4j
 @Getter
 @Setter
-public class Transport implements Closeable {
+public class Transport extends OperatorAdapter {
 
+    /**
+     * 方向
+     * 
+     * @author acgist
+     */
+    public enum Direction {
+        
+        // 接收
+        RECV,
+        // 发送
+        SEND;
+        
+    }
+    
     /**
      * 房间
      */
@@ -40,6 +58,10 @@ public class Transport implements Closeable {
      */
     private final String transportId;
     /**
+     * 方向
+     */
+    private final Direction direction;
+    /**
      * ICE协商
      */
     private Object iceCandidates;
@@ -56,8 +78,9 @@ public class Transport implements Closeable {
      */
     private Object sctpParameters;
     
-    public Transport(String transportId, Room room, Client client) {
+    public Transport(String transportId, Direction direction, Room room, Client client) {
         this.transportId = transportId;
+        this.direction = direction;
         this.room = room;
         this.client = client;
         this.roomId = room.getRoomId();
@@ -78,7 +101,14 @@ public class Transport implements Closeable {
     
     @Override
     public void close() {
-        // TODO：实现
+        log.info("关闭传输通道：{} - {}", this.transportId, this.direction);
+        EventPublisher.publishEvent(new TransportCloseEvent(this.transportId, this.room));
+    }
+    
+    @Override
+    public void remove() {
+        log.info("移除传输通道：{} - {}", this.transportId, this.direction);
+        this.room.getTransports().remove(this.transportId);
     }
 
 }

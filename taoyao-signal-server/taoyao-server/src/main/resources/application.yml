@@ -131,6 +131,8 @@ taoyao:
     enabled: true
     host: 0.0.0.0
     port: 9999
+    encrypt: DES
+    encrypt-key: 
     timeout: ${taoyao.timeout}
     queue-size: 100000
     min-thread: 4
@@ -138,9 +140,10 @@ taoyao:
     thread-name-prefix: ${spring.application.name}-signal-
     keep-alive-time: 60000
     buffer-size: 2048
+    max-buffer-size: 32768
   # WebRTC配置
   webrtc:
-    # 是否加密
+    # 是否加密：E2E
     encrypt: false
     # STUN服务
     stun:

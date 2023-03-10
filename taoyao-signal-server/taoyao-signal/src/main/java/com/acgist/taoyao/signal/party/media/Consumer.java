@@ -2,6 +2,8 @@ package com.acgist.taoyao.signal.party.media;
 
 import com.acgist.taoyao.signal.event.EventPublisher;
 import com.acgist.taoyao.signal.event.media.MediaConsumerCloseEvent;
+import com.acgist.taoyao.signal.event.media.MediaConsumerPauseEvent;
+import com.acgist.taoyao.signal.event.media.MediaConsumerResumeEvent;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -62,14 +64,25 @@ public class Consumer extends OperatorAdapter {
     
     @Override
     public void remove() {
-        this.getProducer().remove(this.consumerId);
-        this.consumerClient.getConsumers().remove(this.consumerId);
         log.info("移除消费者：{} - {}", this.streamId, this.consumerId);
+        this.room.getConsumers().remove(this.consumerId);
+        this.producer.getConsumers().remove(this.consumerId);
+        this.consumerClient.getConsumers().remove(this.consumerId);
     }
     
-    /**
-     * 记录日志
-     */
+    @Override
+    public void pause() {
+        log.info("暂停消费者：{} - {}", this.streamId, this.consumerId);
+        EventPublisher.publishEvent(new MediaConsumerPauseEvent(this.consumerId, this.room));
+    }
+    
+    @Override
+    public void resume() {
+        log.info("恢复消费者：{} - {}", this.streamId, this.consumerId);
+        EventPublisher.publishEvent(new MediaConsumerResumeEvent(this.consumerId, this.room));
+    }
+    
+    @Override
     public void log() {
         log.debug("当前消费者：{} - {} - {}", this.consumerId, this.kind, this.streamId);
     }

@@ -28,8 +28,22 @@ public abstract class ProtocolRoomAdapter extends ProtocolClientAdapter {
         if(room == null) {
             throw MessageCodeException.of("无效房间：" + roomId);
         }
-        // TODO：验证用户是否在房间里面
-		this.execute(clientId, clientType, room, client, room.getMediaClient(), message, body);
+        if(!this.authenticate(room, client)) {
+            throw MessageCodeException.of("终端没有房间权限：" + clientId);
+        }
+        synchronized (room) {
+            this.execute(clientId, clientType, room, client, room.getMediaClient(), message, body);
+        }
+	}
+	
+	/**
+	 * @param room 房间
+	 * @param client 终端
+	 * 
+	 * @return 是否授权
+	 */
+	protected boolean authenticate(Room room, Client client) {
+	    return room.authenticate(client);
 	}
 	
 	/**

@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 房间
  * 房间和媒体路由一对一关联
+ * 房间媒体媒体路由规则：订阅类型 + 路由类型
  * 
  * @author acgist
  */
@@ -52,6 +53,26 @@ public class Room extends OperatorAdapter {
 	 * 终端
 	 */
 	private final Map<Client, ClientWrapper> clients;
+	/**
+	 * 通道
+	 */
+	private final Map<String, Transport> transports;
+    /**
+     * 生产者
+     */
+    private final Map<String, Producer> producers;
+    /**
+     * 消费者
+     */
+    private final Map<String, Consumer> consumers;
+    /**
+     * 数据生产者
+     */
+    private final Map<String, DataProducer> dataProducers;
+    /**
+     * 数据消费者
+     */
+    private final Map<String, DataConsumer> dataConsumers;
 	
 	/**
 	 * @param mediaClient 媒体服务
@@ -61,6 +82,22 @@ public class Room extends OperatorAdapter {
 	    this.mediaClient = mediaClient;
 	    this.roomManager = roomManager;
 	    this.clients = new ConcurrentHashMap<>();
+	    this.transports = new ConcurrentHashMap<>();
+	    this.producers = new ConcurrentHashMap<>();
+	    this.consumers = new ConcurrentHashMap<>();
+	    this.dataProducers = new ConcurrentHashMap<>();
+	    this.dataConsumers = new ConcurrentHashMap<>();
+	}
+	
+	/**
+	 * @param client 终端
+	 * 
+	 * @return 是否授权
+	 */
+	public boolean authenticate(Client client) {
+	    return
+	        this.mediaClient == client ||
+	        this.clients.containsKey(client);
 	}
 	
 	/**
@@ -132,17 +169,6 @@ public class Room extends OperatorAdapter {
     public Message request(Message message) {
         return this.mediaClient.request(message);
     }
-	
-    /**
-     * 广播消息
-     * 所有终端以及媒体服务
-     * 
-     * @param message 消息
-     */
-    public void broadcastAll(Message message) {
-        this.broadcast(message);
-        this.mediaClient.push(message);
-    }
     
 	/**
 	 * 广播消息
@@ -199,16 +225,21 @@ public class Room extends OperatorAdapter {
 	}
 	
 	/**
+	 * @param transportId 通道ID
+	 * 
+	 * @return 通道
+	 */
+	public Transport transport(String transportId) {
+	    return this.transports.get(transportId);
+	}
+	
+	/**
 	 * @param producerId 生产者ID
 	 * 
 	 * @return 生产者
 	 */
 	public Producer producer(String producerId) {
-	    return this.clients.values().stream()
-	        .map(wrapper -> wrapper.getProducers().get(producerId))
-	        .filter(Objects::nonNull)
-	        .findFirst()
-	        .orElse(null);
+	    return this.producers.get(producerId);
 	}
 	
 	/**
@@ -217,11 +248,25 @@ public class Room extends OperatorAdapter {
 	 * @return 消费者
 	 */
 	public Consumer consumer(String consumerId) {
-	    return this.clients.values().stream()
-	        .map(wrapper -> wrapper.getConsumers().get(consumerId))
-	        .filter(Objects::nonNull)
-	        .findFirst()
-	        .orElse(null);
+	    return this.consumers.get(consumerId);
+	}
+	
+	/**
+	 * @param producerId 数据生产者ID
+	 * 
+	 * @return 数据生产者
+	 */
+	public DataProducer dataProducer(String producerId) {
+	    return this.dataProducers.get(producerId);
+	}
+	
+	/**
+	 * @param consumerId 数据消费者ID
+	 * 
+	 * @return 数据消费者
+	 */
+	public DataConsumer dataConsumer(String consumerId) {
+	    return this.dataConsumers.get(consumerId);
 	}
 	
 	@Override
@@ -240,15 +285,23 @@ public class Room extends OperatorAdapter {
         this.roomManager.remove(this);
 	}
 
-	/**
-	 * 记录日志
-	 */
+	@Override
 	public void log() {
 	    log.info("""
 	        当前房间：{}
-	        终端数量：{}""",
+	        终端数量：{}
+	        通道数量：{}
+	        消费者数量：{}
+	        生产者数量：{}
+	        数据消费者数量：{}
+	        数据生产者数量：{}""",
 	        this.roomId,
-	        this.clients.size()
+	        this.clients.size(),
+	        this.transports.size(),
+	        this.consumers.size(),
+	        this.producers.size(),
+	        this.dataConsumers.size(),
+	        this.dataProducers.size()
 	    );
 	    this.clients.values().forEach(ClientWrapper::log);
 	}

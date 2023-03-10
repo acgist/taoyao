@@ -32,7 +32,9 @@ public class WebMvcConfigurerAutoConfiguration implements WebMvcConfigurer {
 		.sorted((a, z) -> a.getValue().compareTo(z.getValue()))
 		.forEach(entry -> {
 			final InterceptorAdapter value = entry.getValue();
-			log.info("注册MVC拦截器：{} - {}", String.format("%-32s", entry.getKey()), value.name());
+			if(log.isDebugEnabled()) {
+			    log.debug("注册MVC拦截器：{} - {}", String.format("%-32s", entry.getKey()), value.name());
+			}
 			registry.addInterceptor(value).addPathPatterns(value.pathPattern());
 		});
 	}

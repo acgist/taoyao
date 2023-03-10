@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.acgist.taoyao.boot.config.MediaProperties;
+import com.acgist.taoyao.boot.config.SocketProperties;
 import com.acgist.taoyao.boot.config.WebrtcProperties;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.config.camera.CameraProperties;
@@ -27,11 +28,18 @@ public class ConfigController {
     
 	private final MediaProperties mediaProperties;
 	private final CameraProperties cameraProperties;
+	private final SocketProperties socketProperties;
 	private final WebrtcProperties webrtcProperties;
 	
-	public ConfigController(MediaProperties mediaProperties, CameraProperties cameraProperties, WebrtcProperties webrtcProperties) {
+	public ConfigController(
+	    MediaProperties mediaProperties,
+	    CameraProperties cameraProperties,
+	    SocketProperties socketProperties,
+	    WebrtcProperties webrtcProperties
+	) {
         this.mediaProperties = mediaProperties;
         this.cameraProperties = cameraProperties;
+        this.socketProperties = socketProperties;
         this.webrtcProperties = webrtcProperties;
     }
 
@@ -47,6 +55,13 @@ public class ConfigController {
     @ApiResponse(content = @Content(schema = @Schema(implementation = CameraProperties.class)))
     private Message camera() {
         return Message.success(this.cameraProperties);
+    }
+    
+    @Operation(summary = "Socket配置", description = "Socket配置")
+    @GetMapping("/socket")
+    @ApiResponse(content = @Content(schema = @Schema(implementation = SocketProperties.class)))
+    public Message socket() {
+        return Message.success(this.socketProperties);
     }
 	
 	@Operation(summary = "WebRTC配置", description = "WebRTC配置")

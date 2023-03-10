@@ -330,14 +330,13 @@ class Room {
       return;
     }
     me.close = true;
-    // TODO：测试是否需要这里释放
-    // me.producers.forEach(v => v.close());
-    // me.consumers.forEach(v => v.close());
-    // me.dataProducers.forEach(v => v.close());
-    // me.dataConsumers.forEach(v => v.close());
+    me.producers.forEach(v => v.close());
+    me.consumers.forEach(v => v.close());
+    me.dataProducers.forEach(v => v.close());
+    me.dataConsumers.forEach(v => v.close());
+    me.transports.forEach(v => v.close());
     me.audioLevelObserver.close();
     me.activeSpeakerObserver.close();
-    me.transports.forEach(v => v.close());
     me.mediasoupRouter.close();
   }
 }
@@ -402,11 +401,29 @@ class Taoyao {
       case "media::consumer::close":
         me.mediaConsumerClose(message, body);
         break;
+      case "media::consumer::pause":
+        me.mediaConsumerPause(message, body);
+        break;
+      case "media::consumer::resume":
+        me.mediaConsumerResume(message, body);
+        break;
       case "media::produce":
         me.mediaProduce(message, body);
         break;
+      case "media::producer::close":
+        me.mediaProducerClose(message, body);
+        break;
+      case "media::producer::pause":
+        me.mediaProducerPause(message, body);
+        break;
+      case "media::producer::resume":
+        me.mediaProducerResume(message, body);
+        break;
       case "media::router::rtp::capabilities":
         me.mediaRouterRtpCapabilities(message, body);
+        break;
+      case "media::transport::close":
+        this.mediaTransportClose(message, body);
         break;
       case "media::transport::webrtc::connect":
         me.mediaTransportWebrtcConnect(message, body);
@@ -569,11 +586,12 @@ class Taoyao {
       producer.close();
     });
     producer.on("score", (score) => {
+      console.info("producer score：", producer.id, score);
       self.push(
         protocol.buildMessage("media::producer::score", {
+          score: score,
           roomId: roomId,
           producerId: producer.id,
-          score,
         })
       );
     });
@@ -584,7 +602,7 @@ class Taoyao {
       console.info("producer trace：", producer.id, trace);
     });
     producer.observer.on("close", () => {
-      if(me.producers.delete(producer.id)) {
+      if(room.producers.delete(producer.id)) {
         console.info("producer close：", producer.id);
         this.push(
           protocol.buildMessage("media::producer::close", {
@@ -598,9 +616,21 @@ class Taoyao {
     });
     producer.observer.on("pause", () => {
       console.info("producer pause：", producer.id);
+      this.push(
+        protocol.buildMessage("media::producer::pause", {
+          roomId: roomId,
+          producerId: producer.id
+        })
+      );
     });
     producer.observer.on("resume", () => {
       console.info("producer resume：", producer.id);
+      this.push(
+        protocol.buildMessage("media::producer::resume", {
+          roomId: roomId,
+          producerId: producer.id
+        })
+      );
     });
     // producer.observer.on("score", fn(score));
     // producer.observer.on("videoorientationchange", fn(videoOrientation));
@@ -610,10 +640,77 @@ class Taoyao {
     if (producer.kind === "audio") {
       room.audioLevelObserver
         .addProducer({ producerId: producer.id })
-        .catch(() => {});
+        .catch((error) => {
+          console.error("音量监听异常：", error);
+        });
       room.activeSpeakerObserver
         .addProducer({ producerId: producer.id })
-        .catch(() => {});
+        .catch((error) => {
+          console.error("声音监听异常：", error);
+        });
+    }
+  }
+
+  /**
+   * 关闭生产者信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  async mediaProducerClose(message, body) {
+    const {
+      roomId,
+      producerId,
+    } = body;
+    const room = this.rooms.get(roomId);
+    const producer = room?.producers.get(producerId);
+    if(producer) {
+      console.info("关闭生产者：", producerId);
+      await producer.close();
+    } else {
+      console.info("关闭生产者无效：", producerId);
+    }
+  }
+
+  /**
+   * 暂停生产者信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+   async mediaProducerPause(message, body) {
+    const {
+      roomId,
+      producerId,
+    } = body;
+    const room = this.rooms.get(roomId);
+    const producer = room.producers.get(producerId);
+    if(producer) {
+      console.info("暂停生产者：", producerId);
+      await producer.pause();
+    } else {
+      console.info("暂停生产者无效：", producerId);
+    }
+  }
+
+  /**
+   * 恢复生产者信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+   async mediaProducerResume(message, body) {
+    const {
+      roomId,
+      producerId,
+    } = body;
+    const room = this.rooms.get(roomId);
+    const producer = room.producers.get(producerId);
+    if(producer) {
+      console.info("恢复生产者：", producerId);
+      await producer.resume();
+    } else {
+      console.info("恢复生产者无效：", producerId);
     }
   }
 
@@ -680,20 +777,17 @@ class Taoyao {
           room.consumers.set(consumer.id, consumer);
           consumer.on("transportclose", () => {
             console.info("consumer transportclose：", consumer.id);
-            // 信令服务统一调度关闭
-            // consumer.close();
-            // room.consumers.delete(consumer.id);
+            consumer.close();
           });
           consumer.on("producerclose", () => {
             console.info("consumer producerclose：", consumer.id);
-            // 信令服务统一调度关闭
-            // consumer.close();
-            // room.consumers.delete(consumer.id);
+            consumer.close();
           });
           consumer.on("producerpause", () => {
             console.info("consumer producerpause：", consumer.id);
             this.push(
               protocol.buildMessage("media::consumer::pause", {
+                roomId: roomId,
                 consumerId: consumer.id,
               })
             );
@@ -702,6 +796,7 @@ class Taoyao {
             console.info("consumer producerresume：", consumer.id);
             this.push(
               protocol.buildMessage("media::consumer::resume", {
+                roomId: roomId,
                 consumerId: consumer.id,
               })
             );
@@ -720,6 +815,7 @@ class Taoyao {
             console.info("consumer layerschange：", consumer.id, layers);
             this.push(
               protocol.buildMessage("media::consumer::layers::change", {
+                roomId: roomId,
                 consumerId: consumer.id,
                 spatialLayer: layers ? layers.spatialLayer : null,
                 temporalLayer: layers ? layers.temporalLayer : null,
@@ -734,7 +830,7 @@ class Taoyao {
           // });
           consumer.observer.on("close", () => {
             if(room.consumers.delete(consumer.id)) {
-              console.debug("consumer close：", consumer.id);
+              console.info("consumer close：", consumer.id);
               this.push(
                 protocol.buildMessage("media::consumer::close", {
                   roomId: roomId,
@@ -746,6 +842,7 @@ class Taoyao {
             }
           });
           consumer.observer.on("pause", () => {
+            console.info("consumer pause：", consumer.id);
             this.push(
               protocol.buildMessage("media::consumer::pause", {
                 roomId: roomId,
@@ -754,6 +851,7 @@ class Taoyao {
             );
           });
           consumer.observer.on("resume", () => {
+            console.info("consumer resume：", consumer.id);
             this.push(
               protocol.buildMessage("media::consumer::resume", {
                 roomId: roomId,
@@ -805,15 +903,51 @@ class Taoyao {
    * @param {*} message 消息
    * @param {*} body 消息主体
    */
-  mediaConsumerClose(message, body) {
+  async mediaConsumerClose(message, body) {
+    const { roomId, consumerId } = body;
+    const room = this.rooms.get(roomId);
+    const consumer = room?.consumers.get(consumerId);
+    if(consumer) {
+      console.info("关闭消费者：", consumerId);
+      await consumer.close();
+    } else {
+      console.info("关闭消费者无效：", consumerId);
+    }
+  }
+
+  /**
+   * 暂停消费者信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+   async mediaConsumerPause(message, body) {
     const { roomId, consumerId } = body;
     const room = this.rooms.get(roomId);
     const consumer = room.consumers.get(consumerId);
     if(consumer) {
-      console.info("关闭消费者：", consumerId);
-      consumer.close();
+      console.info("暂停消费者：", consumerId);
+      await consumer.pause();
     } else {
-      console.debug("关闭消费者无效：", consumerId);
+      console.info("暂停消费者无效：", consumerId);
+    }
+  }
+
+  /**
+   * 恢复消费者信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+   async mediaConsumerResume(message, body) {
+    const { roomId, consumerId } = body;
+    const room = this.rooms.get(roomId);
+    const consumer = room.consumers.get(consumerId);
+    if(consumer) {
+      console.info("恢复消费者：", consumerId);
+      await consumer.resume();
+    } else {
+      console.info("恢复消费者无效：", consumerId);
     }
   }
 
@@ -828,6 +962,24 @@ class Taoyao {
     const room = this.rooms.get(roomId);
     message.body.rtpCapabilities = room.mediasoupRouter.rtpCapabilities;
     this.push(message);
+  }
+
+  /**
+   * 关闭传输通道信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  async mediaTransportClose(message, body) {
+    const { roomId, transportId } = body;
+    const room = this.rooms.get(roomId);
+    const transport = room.transports.get(transportId);
+    if(transport) {
+      console.info("关闭传输通道：", transportId);
+      transport.close();
+    } else {
+      console.info("关闭传输通道无效：", transportId);
+    }
   }
 
   /**
@@ -892,20 +1044,30 @@ class Taoyao {
       console.debug("transport trace：", transport.id, trace);
     });
     transport.observer.on("close", () => {
-      console.info("transport close：", transport.id);
+      if(room.transports.delete(transport.id)) {
+        console.info("transport close：", transport.id);
+        self.push(
+          protocol.buildMessage("media::transport::close", {
+            roomId: roomId,
+            transportId: transport.id,
+          })
+        );
+      } else {
+        console.info("transport close non：", transport.id);
+      }
     });
-    transport.observer.on("newproducer", (producer) => {
-      console.info("transport newproducer：", transport.id, producer.id);
-    });
-    transport.observer.on("newconsumer", (consumer) => {
-      console.info("transport newconsumer：", transport.id, consumer.id);
-    });
-    transport.observer.on("newdataproducer", (dataProducer) => {
-      console.info("transport newdataproducer：", transport.id, dataProducer.id);
-    });
-    transport.observer.on("newdataconsumer", (dataConsumer) => {
-      console.info("transport newdataconsumer：", transport.id, dataProducer.id);
-    });
+    // transport.observer.on("newproducer", (producer) => {
+    //   console.info("transport newproducer：", transport.id, producer.id);
+    // });
+    // transport.observer.on("newconsumer", (consumer) => {
+    //   console.info("transport newconsumer：", transport.id, consumer.id);
+    // });
+    // transport.observer.on("newdataproducer", (dataProducer) => {
+    //   console.info("transport newdataproducer：", transport.id, dataProducer.id);
+    // });
+    // transport.observer.on("newdataconsumer", (dataConsumer) => {
+    //   console.info("transport newdataconsumer：", transport.id, dataProducer.id);
+    // });
     // transport.observer.on("trace", fn(trace));
     /********************* webRtcTransport通道事件 *********************/
     // transport.on("icestatechange", (iceState) => {
@@ -1020,8 +1182,8 @@ class Taoyao {
       activeSpeakerObserver,
     });
     me.rooms.set(roomId, room);
-    console.info("roomCreate：", roomId, mediasoupRouter.id);
     me.push(message);
+    console.info("创建房间：", roomId, mediasoupRouter.id);
     mediasoupRouter.on("workerclose", () => {
       console.info("mediasoupRouter workerclose：", roomId, mediasoupRouter.id);
       room.closeAll();

@@ -18,6 +18,7 @@ import com.acgist.taoyao.signal.event.media.MediaConsumeEvent;
 import com.acgist.taoyao.signal.party.media.ClientWrapper;
 import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.party.media.Transport;
+import com.acgist.taoyao.signal.party.media.Transport.Direction;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 import lombok.extern.slf4j.Slf4j;
@@ -60,6 +61,7 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
         body.put(Constant.CLIENT_ID, clientId);
         final Message response = room.request(message);
         final Map<String, Object> responseBody = response.body();
+        final Map<String, Transport> transports = room.getTransports();
         final String transportId = MapUtils.get(responseBody, Constant.TRANSPORT_ID);
         // 重写地址
         this.rewriteIp(client.ip(), responseBody);
@@ -70,9 +72,12 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
         if(Boolean.TRUE.equals(consuming)) {
             Transport recvTransport = clientWrapper.getRecvTransport();
             if(recvTransport == null) {
-                recvTransport = new Transport(transportId, room, client);
-                clientWrapper.setRecvTransport(recvTransport);
+                recvTransport = new Transport(transportId, Direction.RECV, room, client);
+                transports.put(transportId, recvTransport);
+            } else {
+                log.warn("接收通道已经存在：{}", transportId);
             }
+            clientWrapper.setRecvTransport(recvTransport);
             // 拷贝属性
             recvTransport.copy(responseBody);
             this.publishEvent(new MediaConsumeEvent(room, clientWrapper));
@@ -82,14 +87,17 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
         if(Boolean.TRUE.equals(producing)) {
             Transport sendTransport = clientWrapper.getSendTransport();
             if(sendTransport == null) {
-                sendTransport = new Transport(transportId, room, client);
-                clientWrapper.setSendTransport(sendTransport);
+                sendTransport = new Transport(transportId, Direction.SEND, room, client);
+                transports.put(transportId, sendTransport);
+            } else {
+                log.warn("发送通道已经存在：{}", transportId);
             }
+            clientWrapper.setSendTransport(sendTransport);
             // 拷贝属性
             sendTransport.copy(responseBody);
         }
         client.push(response);
-        log.info("{} 创建WebRTC信令通道：{}", clientId, transportId);
+        log.info("{}创建WebRTC信令通道：{}", clientId, transportId);
     }
     
     /**

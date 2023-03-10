@@ -349,9 +349,11 @@ class Taoyao extends RemoteClient {
     username,
     password,
     roomId,
+    // TODO：修改默认关闭
     dataConsume = true,
     audioConsume = true,
     videoConsume = true,
+    // TODO：修改默认关闭
     dataProduce = true,
     audioProduce = true,
     videoProduce = true,
@@ -784,7 +786,7 @@ class Taoyao extends RemoteClient {
       return;
     }
     console.info("关闭房间：", roomId);
-    me.close();
+    me.closeMedia();
   }
   /**
    * 创建房间信令
@@ -1450,7 +1452,7 @@ class Taoyao extends RemoteClient {
   /**
    * 关闭媒体
    */
-  closeMedia = function () {
+  closeMedia() {
     let self = this;
     if (self.sendTransport) {
       self.sendTransport.close();
@@ -1460,13 +1462,13 @@ class Taoyao extends RemoteClient {
     }
   };
   /**
-   * 关闭
+   * 关闭资源
    */
-  close = function () {
-    let self = this;
-    self.closeMedia();
-    if (self.signalChannel) {
-      self.signalChannel.close();
+  close() {
+    let me = this;
+    me.closeMedia();
+    if (me.signalChannel) {
+      me.signalChannel.close();
     }
   };
 }

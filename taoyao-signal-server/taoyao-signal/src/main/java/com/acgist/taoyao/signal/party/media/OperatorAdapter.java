@@ -13,11 +13,23 @@ public abstract class OperatorAdapter implements Operator {
     protected volatile boolean close = false;
     
     @Override
+    public void close() {
+    }
+    
+    @Override
+    public void remove() {
+    }
+    
+    @Override
     public void pause() {
     }
     
     @Override
     public void resume() {
+    }
+    
+    @Override
+    public void log() {
     }
     
     /**

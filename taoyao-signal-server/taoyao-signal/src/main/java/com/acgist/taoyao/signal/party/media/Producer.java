@@ -1,11 +1,12 @@
 package com.acgist.taoyao.signal.party.media;
 
-import java.io.Closeable;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.acgist.taoyao.signal.event.EventPublisher;
 import com.acgist.taoyao.signal.event.media.MediaProducerCloseEvent;
+import com.acgist.taoyao.signal.event.media.MediaProducerPauseEvent;
+import com.acgist.taoyao.signal.event.media.MediaProducerResumeEvent;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -19,12 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Getter
 @Setter
-public class Producer implements Closeable {
+public class Producer extends OperatorAdapter {
     
-    /**
-     * 是否关闭
-     */
-    private volatile boolean close = false;
     /**
      * 媒体类型
      */
@@ -51,41 +48,47 @@ public class Producer implements Closeable {
      */
     private final Map<String, Consumer> consumers;
     
-    public Producer(String kind, String streamId, String producerId, Room room, ClientWrapper produceClient) {
+    public Producer(String kind, String streamId, String producerId, Room room, ClientWrapper producerClient) {
         this.kind = Kind.of(kind);
         this.streamId = streamId;
         this.producerId = producerId;
         this.room = room;
-        this.producerClient = produceClient;
+        this.producerClient = producerClient;
         this.consumers = new ConcurrentHashMap<>();
     }
 
-    /**
-     * 删除消费者
-     * 
-     * @param consumerId 消费者ID
-     */
-    public void remove(String consumerId) {
-        this.consumers.remove(consumerId);
-    }
-    
     @Override
     public void close() {
-        if(this.close) {
+        if(this.markClose()) {
             return;
         }
-        this.close = true;
         log.info("关闭生产者：{} - {}", this.streamId, this.producerId);
-        this.consumers.forEach((k, v) -> v.close());
-        this.producerClient.getProducers().remove(this.producerId);
+        this.consumers.values().forEach(Consumer::close);
         EventPublisher.publishEvent(new MediaProducerCloseEvent(this.producerId, this.room));
     }
     
-    /**
-     * 记录日志
-     */
+    @Override
+    public void remove() {
+        log.info("移除生产者：{} - {}", this.streamId, this.producerId);
+        this.room.getProducers().remove(this.producerId);
+        this.producerClient.getProducers().remove(this.producerId);
+    }
+    
+    @Override
+    public void pause() {
+        log.info("暂停生产者：{} - {}", this.streamId, this.producerId);
+        EventPublisher.publishEvent(new MediaProducerPauseEvent(this.producerId, this.room));
+    }
+    
+    @Override
+    public void resume() {
+        log.info("恢复生产者：{} - {}", this.streamId, this.producerId);
+        EventPublisher.publishEvent(new MediaProducerResumeEvent(this.producerId, this.room));
+    }
+    
+    @Override
     public void log() {
-        log.debug("当前生产者：{} - {} - {}", this.producerId, this.kind, this.streamId);
+        log.info("当前生产者：{} - {} - {}", this.producerId, this.kind, this.streamId);
         this.consumers.values().forEach(Consumer::log);
     }
     

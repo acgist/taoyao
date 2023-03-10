@@ -12,10 +12,6 @@ public interface Constant {
      */
     String TO = "to";
     /**
-     * 换行
-     */
-    String LINE = "\n";
-    /**
      * IP
      */
     String IP = "ip";

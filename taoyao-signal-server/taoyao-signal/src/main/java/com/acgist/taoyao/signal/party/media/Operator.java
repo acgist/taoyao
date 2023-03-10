@@ -31,4 +31,9 @@ public interface Operator extends Closeable {
      */
     void resume();
     
+    /**
+     * 记录日志
+     */
+    void log();
+    
 }
