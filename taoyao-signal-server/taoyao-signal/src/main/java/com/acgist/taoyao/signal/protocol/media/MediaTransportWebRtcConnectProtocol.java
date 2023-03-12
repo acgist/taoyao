@@ -43,7 +43,7 @@ public class MediaTransportWebRtcConnectProtocol extends ProtocolRoomAdapter {
             final Map<String, Object> responseBody = response.body();
             client.push(response);
             final String transportId = MapUtils.get(responseBody, Constant.TRANSPORT_ID);
-            log.info("{}连接WebRTC信令通道：{}", clientId, transportId);
+            log.info("{}连接WebRTC通道信令：{}", clientId, transportId);
         } else {
             // 忽略其他情况
         }

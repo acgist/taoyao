@@ -2,6 +2,7 @@ package com.acgist.taoyao.signal.controller;
 
 import java.util.List;
 
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +26,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * @author acgist
  */
 @Tag(name = "房间", description = "房间管理")
+@Validated
 @RestController
 @RequestMapping("/room")
 public class RoomController {

@@ -98,7 +98,7 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
             sendTransport.copy(responseBody);
         }
         client.push(response);
-        log.info("{}创建WebRTC信令通道：{}", clientId, transportId);
+        log.info("{}创建WebRTC通道信令：{}", clientId, transportId);
     }
     
     /**

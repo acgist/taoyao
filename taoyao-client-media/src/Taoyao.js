@@ -452,6 +452,9 @@ class Taoyao {
       case "media::transport::close":
         this.mediaTransportClose(message, body);
         break;
+      case "media::transport::plain::in":
+        me.mediaTransportPlainIn(message, body);
+        break;
       case "media::transport::webrtc::connect":
         me.mediaTransportWebrtcConnect(message, body);
         break;
@@ -1250,6 +1253,36 @@ class Taoyao {
     } else {
       console.info("关闭传输通道无效：", transportId);
     }
+  }
+
+  /**
+   * 创建RTP输入通道信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  async mediaTransportPlainIn(message, body) {
+    const me = this;
+    const { roomId, rtcpMux, comedia, clientId } = body;
+    const plainTransportOptions = {
+      rtcpMux: rtcpMux,
+      comedia: comedia,
+      ...config.mediasoup.plainTransportOptions,
+    };
+    const room = this.rooms.get(roomId);
+    const transport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
+    transport.clientId = clientId;
+    room.transports.set(transport.id, transport);
+    console.info(transport.tuple)
+    console.info(transport.rtcpTuple)
+    message.body = {
+      ip          : transport.tuple.localIp,
+      port        : transport.tuple.localPort,
+      roomId      : roomId,
+      rtcpPort    : transport.rtcpTuple ? transport.rtcpTuple.localPort : undefined,
+      transportId : transport.id,
+    };
+    me.push(message);
   }
 
   /**

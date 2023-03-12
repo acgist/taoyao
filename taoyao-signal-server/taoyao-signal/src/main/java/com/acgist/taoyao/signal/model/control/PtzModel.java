@@ -9,7 +9,7 @@ import jakarta.validation.constraints.NotNull;
  * @author acgist
  */
 @Schema(title = "PTZ控制参数", description = "PTZ控制参数")
-public class PtzControl {
+public class PtzModel {
 
     /**
      * PTZ类型

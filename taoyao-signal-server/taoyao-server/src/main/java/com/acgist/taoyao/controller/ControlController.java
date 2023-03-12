@@ -12,7 +12,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.config.camera.AiProperties;
 import com.acgist.taoyao.signal.config.camera.BeautyProperties;
 import com.acgist.taoyao.signal.config.camera.WatermarkProperties;
-import com.acgist.taoyao.signal.model.control.PtzControl;
+import com.acgist.taoyao.signal.model.control.PtzModel;
 import com.acgist.taoyao.signal.protocol.control.ControlAiProtocol;
 import com.acgist.taoyao.signal.protocol.control.ControlBeautyProtocol;
 import com.acgist.taoyao.signal.protocol.control.ControlBellProtocol;
@@ -79,8 +79,8 @@ public class ControlController {
     
     @Operation(summary = "PTZ", description = "PTZ控制")
     @GetMapping("/ptz/{clientId}")
-    public Message ptz(@PathVariable String clientId, @Valid PtzControl ptzControl) {
-        return Message.success(this.controlPtzProtocol.execute(clientId, ptzControl));
+    public Message ptz(@PathVariable String clientId, @Valid PtzModel ptzModel) {
+        return Message.success(this.controlPtzProtocol.execute(clientId, ptzModel));
     }
     
     @Operation(summary = "响铃", description = "响铃控制")
