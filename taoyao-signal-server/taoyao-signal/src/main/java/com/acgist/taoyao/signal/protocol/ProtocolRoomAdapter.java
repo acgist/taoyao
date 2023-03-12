@@ -31,9 +31,7 @@ public abstract class ProtocolRoomAdapter extends ProtocolClientAdapter {
         if(!this.authenticate(room, client)) {
             throw MessageCodeException.of("终端没有房间权限：" + clientId);
         }
-        synchronized (room) {
-            this.execute(clientId, clientType, room, client, room.getMediaClient(), message, body);
-        }
+        this.execute(clientId, clientType, room, client, room.getMediaClient(), message, body);
 	}
 	
 	/**

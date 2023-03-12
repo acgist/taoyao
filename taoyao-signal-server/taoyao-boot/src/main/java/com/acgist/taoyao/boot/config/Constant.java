@@ -1,5 +1,7 @@
 package com.acgist.taoyao.boot.config;
 
+import java.util.function.BiFunction;
+
 /**
  * 常量
  * 
@@ -107,6 +109,10 @@ public interface Constant {
      * 密码
      */
     String PASSWORD = "password";
+    /**
+     * 数据
+     */
+    String DATA = "data";
     /**
      * 名称
      */
@@ -228,4 +234,14 @@ public interface Constant {
      */
     String SUBSCRIBE_TYPE = "subscribeType";
 
+    /**
+     * 生产者ID生成器
+     */
+    public static final BiFunction<String, String, String> STREAM_ID_PRODUCER = (type, producerId) -> type + "::" + producerId;
+    
+    /**
+     * 消费者ID生成器
+     */
+    public static final BiFunction<String, String, String> STREAM_ID_CONSUMER = (producerStreamId, consumerId) -> producerStreamId + "->" + consumerId;
+    
 }

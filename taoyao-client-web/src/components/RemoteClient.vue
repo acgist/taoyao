@@ -5,14 +5,14 @@
     <video ref="video"></video>
     <p class="title">{{ client?.name || "" }}</p>
     <div class="buttons" :style="{'--volume': client?.volume}">
-      <el-button v-show="!client.audioActive" type="primary" title="打开麦克风" :icon="Microphone" circle />
-      <el-button v-show="client.audioActive" type="danger" title="关闭麦克风" :icon="Mute" circle />
-      <el-button v-show="!client.videoActive" type="primary" title="打开摄像头" :icon="VideoPlay" circle />
-      <el-button v-show="client.videoActive" type="danger" title="关闭摄像头" :icon="VideoPause" circle />
+      <el-button @click="taoyao.mediaConsumerResume(audioConsumer.id)" v-show="audioConsumer && audioConsumer.paused" type="primary" title="打开麦克风" :icon="Microphone" circle />
+      <el-button @click="taoyao.mediaConsumerPause(audioConsumer.id)" v-show="audioConsumer && !audioConsumer.paused" type="danger" title="关闭麦克风" :icon="Mute" circle />
+      <el-button @click="taoyao.mediaConsumerResume(videoConsumer.id)" v-show="videoConsumer && videoConsumer.paused" type="primary" title="打开摄像头" :icon="VideoPlay" circle />
+      <el-button @click="taoyao.mediaConsumerPause(videoConsumer.id)" v-show="videoConsumer && !videoConsumer.paused" type="danger" title="关闭摄像头" :icon="VideoPause" circle />
       <el-button title="拍照" :icon="Camera" circle />
       <el-button title="录像" :icon="VideoCamera" circle />
       <el-button title="媒体信息" :icon="InfoFilled" circle />
-      <el-button title="踢出" :icon="CircleClose" circle />
+      <el-button @click="roomExpel" title="踢出" :icon="CircleClose" circle />
     </div>
   </div>
 </template>
@@ -69,8 +69,12 @@ export default {
     }
   },
   methods: {
+    roomExpel() {
+      this.taoyao.roomExpel(this.client.clientId);
+    },
     media(track, consumer) {
       if(track.kind === 'audio') {
+        this.audioConsumer = consumer;
         if (this.audioStream) {
           // TODO：资源释放
         } else {
@@ -80,6 +84,7 @@ export default {
         }
         this.audio.play().catch((error) => console.warn("视频播放失败", error));
       } else if(track.kind === 'video') {
+        this.videoConsumer = consumer;
         if (this.videoStream) {
           // TODO：资源释放
         } else {

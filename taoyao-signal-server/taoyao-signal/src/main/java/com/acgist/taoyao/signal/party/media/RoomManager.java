@@ -5,6 +5,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.springframework.scheduling.annotation.Scheduled;
+
 import com.acgist.taoyao.boot.annotation.Manager;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
@@ -36,6 +38,11 @@ public class RoomManager {
         this.idService = idService;
         this.clientManager = clientManager;
         this.rooms = new CopyOnWriteArrayList<>();
+    }
+	
+    @Scheduled(cron = "${taoyao.scheduled.room:0 0/5 * * * ?}")
+    public void scheduled() {
+        this.releaseUnknowClient();
     }
 
 	/**
@@ -160,6 +167,13 @@ public class RoomManager {
 	        this.rooms.size()
 	    );
 	    this.rooms.forEach(Room::log);
+	}
+
+	/**
+	 * 清理没有关联终端的资源
+	 */
+	private void releaseUnknowClient() {
+	    this.rooms.forEach(Room::releaseUnknowClient);
 	}
 	
 }

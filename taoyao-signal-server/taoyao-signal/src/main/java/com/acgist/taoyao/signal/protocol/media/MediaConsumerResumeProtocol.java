@@ -34,7 +34,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 )
 public class MediaConsumerResumeProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaConsumerResumeEvent> {
 
-    public static final String SIGNAL = "media::consumer::resumt";
+    public static final String SIGNAL = "media::consumer::resume";
     
     public MediaConsumerResumeProtocol() {
         super("恢复消费者信令", SIGNAL);
@@ -57,8 +57,9 @@ public class MediaConsumerResumeProtocol extends ProtocolRoomAdapter implements 
         if(clientType.mediaClient()) {
             final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);
             final Consumer consumer = room.consumer(consumerId);
-            consumer.pause();
+            consumer.resume();
         } else if(clientType.mediaServer()) {
+            // TODO：路由到真实消费者
             room.broadcast(message);
         } else {
             this.logNoAdapter(clientType);

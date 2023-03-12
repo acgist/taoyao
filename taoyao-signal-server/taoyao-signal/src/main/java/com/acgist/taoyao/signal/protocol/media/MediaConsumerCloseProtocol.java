@@ -69,6 +69,7 @@ public class MediaConsumerCloseProtocol extends ProtocolRoomAdapter implements A
         if(clientType.mediaClient()) {
             consumer.close();
         } else if(clientType.mediaServer()) {
+            // TODO：路由到真实消费者
             consumer.remove();
             room.broadcast(message);
         } else {

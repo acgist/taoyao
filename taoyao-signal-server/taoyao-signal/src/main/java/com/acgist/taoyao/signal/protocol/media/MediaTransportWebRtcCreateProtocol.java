@@ -80,6 +80,7 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
             clientWrapper.setRecvTransport(recvTransport);
             // 拷贝属性
             recvTransport.copy(responseBody);
+            // 消费媒体：不能在连接时调用
             this.publishEvent(new MediaConsumeEvent(room, clientWrapper));
         }
         // 生产者

@@ -1,5 +1,5 @@
-const config = require("./Config");
-const process = require("child_process");
+const config    = require("./Config.js");
+const process   = require("child_process");
 const WebSocket = require("ws");
 
 /**
@@ -21,33 +21,39 @@ const protocol = {
     }
     const date = new Date();
     return (
-      100000000000000 * date.getDate() +
-      1000000000000 * date.getHours() +
-      10000000000 * date.getMinutes() +
-      100000000 * date.getSeconds() +
-      1000 * this.clientIndex +
+      100000000000000 * date.getDate()    +
+      1000000000000   * date.getHours()   +
+      10000000000     * date.getMinutes() +
+      100000000       * date.getSeconds() +
+      1000            * this.clientIndex  +
       this.index
     );
   },
   /**
    * @param {*} signal 信令标识
-   * @param {*} body 消息主体
-   * @param {*} id 消息ID
+   * @param {*} body   消息主体
+   * @param {*} id     消息ID
+   * @param {*} v      消息版本
    *
    * @returns 信令消息
    */
-  buildMessage(signal, body = {}, id) {
+  buildMessage(signal, body = {}, id, v) {
     const message = {
       header: {
-        v: config.signal.version,
-        id: id || this.buildId(),
+        v:      v  || config.signal.version,
+        id:     id || this.buildId(),
         signal: signal,
       },
-      body: body,
+      body:     body,
     };
     return message;
   },
 };
+
+/**
+ * 名称冲突
+ */
+ const taoyaoProtocol = protocol;
 
 /**
  * 信令通道
@@ -404,8 +410,29 @@ class Taoyao {
       case "media::consumer::pause":
         me.mediaConsumerPause(message, body);
         break;
+      case "media::consumer::request::key::frame":
+        me.mediaConsumerRequestKeyFrame(message, body);
+        break;
       case "media::consumer::resume":
         me.mediaConsumerResume(message, body);
+        break;
+      case "media::consumer::set::preferred::layers":
+        me.mediaConsumerSetPreferredLayers(message, body);
+        break;
+      case "media::data::consume":
+        me.mediaDataConsume(message, body);
+        break;
+      case "media::data::consumer::close":
+        me.mediaDataConsumerClose(message, body);
+        break;
+      case "media::data::produce":
+        me.mediaDataProduce(message, body);
+        break;
+      case "media::data::producer::close":
+        me.mediaDataProducerClose(message, body);
+        break;
+      case "media::ice::restart":
+        me.mediaIceRestart(message, body);
         break;
       case "media::produce":
         me.mediaProduce(message, body);
@@ -576,6 +603,7 @@ class Taoyao {
       kind,
       appData,
       rtpParameters,
+      // 关键帧延迟时间
       // keyFrameRequestDelay: 5000
     });
     producer.clientId = clientId;
@@ -597,10 +625,15 @@ class Taoyao {
     });
     producer.on("videoorientationchange", (videoOrientation) => {
       console.info("producer videoorientationchange：", producer.id, videoOrientation);
+      self.push(protocol.buildMessage("media::video::orientation::change", {
+        roomId: roomId,
+        ...videoOrientation
+      }));
     });
-    producer.on("trace", (trace) => {
-      console.info("producer trace：", producer.id, trace);
-    });
+    // await producer.enableTraceEvent([ 'rtp', 'keyframe', 'nack', 'pli', 'fir' ]);
+    // producer.on("trace", (trace) => {
+    //   console.info("producer trace：", producer.id, trace);
+    // });
     producer.observer.on("close", () => {
       if(room.producers.delete(producer.id)) {
         console.info("producer close：", producer.id);
@@ -635,7 +668,7 @@ class Taoyao {
     // producer.observer.on("score", fn(score));
     // producer.observer.on("videoorientationchange", fn(videoOrientation));
     // producer.observer.on("trace", fn(trace));
-    message.body = { kind: kind, producerId: producer.id };
+    message.body = { kind: kind, roomId: roomId, producerId: producer.id };
     this.push(message);
     if (producer.kind === "audio") {
       room.audioLevelObserver
@@ -725,8 +758,8 @@ class Taoyao {
       rtpCapabilities,
     } = body;
     const room = this.rooms.get(roomId);
-    const producer = room.producers.get(producerId);
-    const transport = room.transports.get(transportId);
+    const producer = room?.producers.get(producerId);
+    const transport = room?.transports.get(transportId);
     if (
       !room ||
       !producer ||
@@ -822,9 +855,10 @@ class Taoyao {
               })
             );
           });
-          consumer.on("trace", (trace) => {
-            console.info("consumer trace：", consumer.id, trace);
-          });
+					// await consumer.enableTraceEvent([ 'rtp', 'keyframe', 'nack', 'pli', 'fir' ]);
+          // consumer.on("trace", (trace) => {
+          //   console.info("consumer trace：", consumer.id, trace);
+          // });
           // consumer.on("rtp", (rtpPacket) => {
           //   console.info("consumer rtp：", consumer.id, rtpPacket);
           // });
@@ -863,18 +897,19 @@ class Taoyao {
           // consumer.observer.on("layerschange", fn(layers));
           // consumer.observer.on("trace", fn(trace));
           // 等待终端准备就绪
-          this.request(
+          await this.request(
+          // this.push(
             protocol.buildMessage("media::consume", {
               kind: consumer.kind,
               type: consumer.type,
               roomId: roomId,
+              appData: producer.appData,
               clientId: clientId,
               sourceId: sourceId,
               streamId: streamId,
               producerId: producerId,
               consumerId: consumer.id,
               rtpParameters: consumer.rtpParameters,
-              appData: producer.appData,
               producerPaused: consumer.producerPaused,
             })
           );
@@ -924,12 +959,33 @@ class Taoyao {
    async mediaConsumerPause(message, body) {
     const { roomId, consumerId } = body;
     const room = this.rooms.get(roomId);
-    const consumer = room.consumers.get(consumerId);
+    const consumer = room?.consumers.get(consumerId);
     if(consumer) {
       console.info("暂停消费者：", consumerId);
       await consumer.pause();
     } else {
       console.info("暂停消费者无效：", consumerId);
+    }
+  }
+
+  /**
+   * 请求关键帧信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  async mediaConsumerRequestKeyFrame(message, body) {
+    const me = this;
+    const { roomId, consumerId } = body;
+    const room = this.rooms.get(roomId);
+    const consumer = room?.consumers.get(consumerId);
+    if(consumer) {
+      console.info("mediaConsumerRequestKeyFrame：", consumerId);
+      // 处理trace监听读取关键帧
+      await consumer.requestKeyFrame();
+      me.push(message);
+    } else {
+      console.info("mediaConsumerRequestKeyFrame non：", consumerId);
     }
   }
 
@@ -949,6 +1005,220 @@ class Taoyao {
     } else {
       console.info("恢复消费者无效：", consumerId);
     }
+  }
+
+  /**
+   * 修改最佳空间层和时间层信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  async mediaConsumerSetPreferredLayers(message, body) {
+    const me = this;
+    const { roomId, consumerId, spatialLayer, temporalLayer } = body;
+    const room = this.rooms.get(roomId);
+    const consumer = room?.consumers.get(consumerId);
+    if(consumer) {
+      console.info("mediaConsumerSetPreferredLayers：", consumerId);
+      await consumer.setPreferredLayers({ spatialLayer, temporalLayer });
+      me.push(message);
+    } else {
+      console.info("mediaConsumerSetPreferredLayers non：", consumerId);
+    }
+  }
+
+  /**
+   * 消费数据信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  async mediaDataConsume(message, body) {
+    const me = this;
+    const {
+      roomId,
+      clientId,
+      sourceId,
+      streamId,
+      producerId,
+      transportId,
+      rtpCapabilities,
+    } = body;
+    const room = this.rooms.get(roomId);
+    const transport = room?.transports.get(transportId);
+    const dataProducer = room?.dataProducers.get(producerId);
+    if (
+      !room ||
+      !transport ||
+      !dataProducer
+    ) {
+      console.warn(
+        "不能消费数据：",
+        roomId,
+        clientId,
+        producerId,
+        transportId
+      );
+      return;
+    }
+		let dataConsumer;
+		try {
+			dataConsumer = await transport.consumeData({
+        dataProducerId : dataProducer.id
+      });
+		} catch (error) {
+      console.error("消费数据异常：", producerId, error);
+      return;
+		}
+    dataConsumer.clientId = clientId;
+    dataConsumer.streamId = streamId;
+		room.dataConsumers.set(dataConsumer.id, dataConsumer);
+    console.info("创建数据消费者：", dataProducer.id);
+		dataConsumer.on('transportclose', () => {
+      console.info("dataConsumer transportclose：", dataConsumer.id);
+			dataConsumer.close();
+		});
+		dataConsumer.on('dataproducerclose', () => {
+      console.info("dataConsumer dataproducerclose：", dataConsumer.id);
+      dataConsumer.close();
+		});
+    dataConsumer.observer.on("close", () => {
+      if(room.dataConsumers.delete(dataConsumer.id)) {
+        console.info("dataConsumer close：", dataConsumer.id);
+        me.push(
+          protocol.buildMessage("media::data::consumer::close", {
+            roomId: roomId,
+            consumerId: dataConsumer.id,
+          })
+        );
+      } else {
+        console.info("dataConsumer close non：", dataConsumer.id);
+      }
+    });
+    // dataConsumer.on("message", fn(message, ppid));
+    // dataConsumer.on("bufferedamountlow", fn(bufferedAmount));
+    // dataConsumer.on("sctpsendbufferfull", fn());
+    this.push(
+      protocol.buildMessage("media::data::consume", {
+        label: dataConsumer.label,
+        roomId: roomId,
+        appData: dataProducer.appData,
+        protocol: dataConsumer.protocol,
+        clientId: clientId,
+        sourceId: sourceId,
+        streamId: streamId,
+        producerId: producerId,
+        consumerId: dataConsumer.id,
+        sctpStreamParameters: dataConsumer.sctpStreamParameters,
+      })
+    );
+  }
+
+  /**
+   * 关闭数据消费者信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  async mediaDataConsumerClose(message, body) {
+    const { roomId, consumerId } = body;
+    const room = this.rooms.get(roomId);
+    const dataConsumer = room?.dataConsumers.get(consumerId);
+    if(dataConsumer) {
+      console.info("关闭数据消费者：", consumerId);
+      await dataConsumer.close();
+    } else {
+      console.info("关闭数据消费者无效：", consumerId);
+    }
+  }
+
+  /**
+   * 生产数据信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  async mediaDataProduce(message, body) {
+    const me = this;
+    const {
+      label,
+      roomId,
+      appData,
+      clientId,
+      streamId,
+      protocol,
+      transportId,
+      sctpStreamParameters,
+    } = body;
+    const room = me.rooms.get(roomId);
+    const transport = room?.transports.get(transportId);
+    if(!transport) {
+      console.warn("生产数据生产者通道无效：", transportId);
+      return;
+    }
+    const dataProducer = await transport.produceData({
+      label,
+      appData,
+      protocol,
+      sctpStreamParameters,
+    });
+    dataProducer.clientId = clientId;
+    dataProducer.streamId = streamId;
+    room.dataProducers.set(dataProducer.id, dataProducer);
+    console.info("创建数据生产者：", dataProducer.id);
+    dataProducer.on("transportclose", () => {
+      console.info("dataProducer transportclose：", dataProducer.id);
+      dataProducer.close();
+    });
+    dataProducer.observer.on("close", () => {
+      if(room.dataProducers.delete(dataProducer.id)) {
+        console.info("dataProducer close：", dataProducer.id);
+        me.push(
+          taoyaoProtocol.buildMessage("media::data::producer::close", {
+            roomId: roomId,
+            producerId: dataProducer.id,
+          })
+        );
+      } else {
+        console.info("dataProducer close non：", dataProducer.id);
+      }
+    })
+    message.body = { roomId: roomId, producerId: dataProducer.id };
+    this.push(message);
+  }
+
+  /**
+   * 关闭数据生产者信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+   async mediaDataProducerClose(message, body) {
+    const { roomId, producerId } = body;
+    const room = this.rooms.get(roomId);
+    const dataProducer = room?.dataProducers.get(producerId);
+    if(dataProducer) {
+      console.info("关闭数据生产者：", producerId);
+      await dataProducer.close();
+    } else {
+      console.info("关闭数据生产者无效：", producerId);
+    }
+  }
+
+  /**
+   * 重启ICE信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body 消息主体
+   */
+  async mediaIceRestart(message, body) {
+    const me = this;
+    const { roomId, transportId } = body;
+    const room = this.rooms.get(roomId);
+    const transport = room?.transports.get(transportId);
+    const iceParameters = await transport.restartIce();
+    message.body.iceParameters = iceParameters;
+    me.push(message);
   }
 
   /**
@@ -973,7 +1243,7 @@ class Taoyao {
   async mediaTransportClose(message, body) {
     const { roomId, transportId } = body;
     const room = this.rooms.get(roomId);
-    const transport = room.transports.get(transportId);
+    const transport = room?.transports.get(transportId);
     if(transport) {
       console.info("关闭传输通道：", transportId);
       transport.close();
@@ -991,10 +1261,15 @@ class Taoyao {
   async mediaTransportWebrtcConnect(message, body) {
     const { roomId, transportId, dtlsParameters } = body;
     const room = this.rooms.get(roomId);
-    const transport = room.transports.get(transportId);
-    await transport.connect({ dtlsParameters });
-    message.body = { roomId: roomId, transportId: transport.id };
-    this.push(message);
+    const transport = room?.transports.get(transportId);
+    if(transport) {
+      console.info("连接WebRTC通道：", transportId);
+      await transport.connect({ dtlsParameters });
+      message.body = { roomId: roomId, transportId: transport.id };
+      this.push(message);
+    } else {
+      console.info("连接WebRTC通道无效：", transportId);
+    }
   }
 
   /**
@@ -1038,11 +1313,10 @@ class Taoyao {
       console.info("transport listenserverclose：", transport.id);
       transport.close();
     });
-    await transport.enableTraceEvent(["bwe"]);
     // await transport.enableTraceEvent([ 'probation', 'bwe' ]);
-    transport.on("trace", (trace) => {
-      console.debug("transport trace：", transport.id, trace);
-    });
+    // transport.on("trace", (trace) => {
+    //   console.debug("transport trace：", transport.id, trace);
+    // });
     transport.observer.on("close", () => {
       if(room.transports.delete(transport.id)) {
         console.info("transport close：", transport.id);
@@ -1100,6 +1374,7 @@ class Taoyao {
     // transport.on("rtcp", fn(rtcpPacket));
     room.transports.set(transport.id, transport);
     message.body = {
+      roomId: roomId,
       transportId: transport.id,
       iceCandidates: transport.iceCandidates,
       iceParameters: transport.iceParameters,

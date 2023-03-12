@@ -66,6 +66,7 @@ public class MediaDataProducerCloseProtocol extends ProtocolRoomAdapter implemen
         if(clientType.mediaClient()) {
             dataProducer.close();
         } else if(clientType.mediaServer()) {
+            // TODO：路由到真实消费者
             dataProducer.remove();
             room.broadcast(message);
         } else {

@@ -37,6 +37,12 @@ import lombok.extern.slf4j.Slf4j;
     终端生产媒体当前房间所有终端根据订阅类型自动消费媒体
     终端创建WebRTC消费通道根据订阅类型自动消费当前房间已有媒体
     """,
+    body = """
+    {
+        "roomId": "房间ID"
+        "producerId": "生产者ID"
+    }
+    """,
     flow = {
         "终端-[生产媒体]>信令服务-[其他终端消费])信令服务",
         "终端-[创建WebRTC消费通道]>信令服务-[消费其他终端])信令服务",
@@ -118,7 +124,7 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
     private void consume(Room room, ClientWrapper consumerClientWrapper, Producer producer, Message message) {
         final Client mediaClient = room.getMediaClient();
         final String consumerClientId = consumerClientWrapper.getClientId();
-        final String streamId = producer.getStreamId() + "->" + consumerClientId;
+        final String streamId = Constant.STREAM_ID_CONSUMER.apply(producer.getStreamId(), consumerClientId);
         final ClientWrapper producerClientWrapper = producer.getProducerClient();
         final String producerClientId = producerClientWrapper.getClientId();
         if(consumerClientWrapper.consumed(producer)) {

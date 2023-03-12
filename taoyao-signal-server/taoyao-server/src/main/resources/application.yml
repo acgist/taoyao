@@ -203,6 +203,8 @@ taoyao:
     password: taoyao
   # 定时任务
   scheduled:
+    # 清理房间无效资源
+    room: 0 0/5 * * * ?
     # 清理无效终端连接
     client: 0 * * * * ?
   # 地址重写

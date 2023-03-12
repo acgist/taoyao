@@ -82,6 +82,8 @@ async function main() {
   console.log(`
     桃之夭夭，灼灼其华。
     之子于归，宜其室家。
+
+    :: https://gitee.com/acgist/taoyao
   `);
   console.info("开始启动：", config.name);
   await buildMediasoupWorkers();

@@ -170,6 +170,18 @@ public class Room extends OperatorAdapter {
         return this.mediaClient.request(message);
     }
     
+    /**
+     * 单播消息
+     * 
+     * @param to 接收终端
+     * @param message 消息
+     */
+    public void unicast(String to, Message message) {
+        this.clients.keySet().stream()
+        .filter(v -> Objects.equals(to, v.clientId()))
+        .forEach(v -> v.push(message));
+    }
+    
 	/**
 	 * 广播消息
 	 * 
@@ -304,6 +316,17 @@ public class Room extends OperatorAdapter {
 	        this.dataProducers.size()
 	    );
 	    this.clients.values().forEach(ClientWrapper::log);
+	}
+
+	/**
+	 * 清理没有关联终端的资源
+	 */
+	public void releaseUnknowClient() {
+	    this.transports.values().stream().filter(v -> !this.clients.containsKey(v.getClient())).forEach(Transport::close);
+	    this.consumers.values().stream().filter(v -> !this.clients.containsValue(v.getConsumerClient())).forEach(Consumer::close);
+	    this.producers.values().stream().filter(v -> !this.clients.containsValue(v.getProducerClient())).forEach(Producer::close);
+	    this.dataConsumers.values().stream().filter(v -> !this.clients.containsValue(v.getConsumerClient())).forEach(DataConsumer::close);
+	    this.dataProducers.values().stream().filter(v -> !this.clients.containsValue(v.getProducerClient())).forEach(DataProducer::close);
 	}
 	
 }

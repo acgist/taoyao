@@ -59,6 +59,7 @@ public class MediaConsumerPauseProtocol extends ProtocolRoomAdapter implements A
             final Consumer consumer = room.consumer(consumerId);
             consumer.pause();
         } else if(clientType.mediaServer()) {
+            // TODO：路由到真实消费者
             room.broadcast(message);
         } else {
             this.logNoAdapter(clientType);

@@ -58,7 +58,7 @@ public class DataConsumer extends OperatorAdapter {
     @Override
     public void remove() {
         log.info("移除数据消费者：{} - {}", this.streamId, this.consumerId);
-        this.room.getDataProducers().remove(this.consumerId);
+        this.room.getDataConsumers().remove(this.consumerId);
         this.dataProducer.getDataConsumers().remove(this.consumerId);
         this.consumerClient.getDataConsumers().remove(this.consumerId);
     }

@@ -49,7 +49,7 @@ public class MediaProduceProtocol extends ProtocolRoomAdapter {
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         if(clientType.mediaClient()) {
             final String kind = MapUtils.get(body, Constant.KIND);
-            final String streamId = kind + "::" + clientId;
+            final String streamId = Constant.STREAM_ID_PRODUCER.apply(kind, clientId);
             body.put(Constant.CLIENT_ID, clientId);
             body.put(Constant.STREAM_ID, streamId);
             final Message response = room.request(message);
@@ -69,7 +69,7 @@ public class MediaProduceProtocol extends ProtocolRoomAdapter {
                 Constant.KIND, kind,
                 Constant.STREAM_ID, streamId,
                 Constant.PRODUCER_ID, producerId
-                ));
+            ));
             room.broadcast(responseMessage);
             log.info("{}生产媒体：{} - {}", clientId, streamId, producerId);
             this.publishEvent(new MediaConsumeEvent(room, producer));

@@ -57,6 +57,7 @@ public class MediaProducerPauseProtocol extends ProtocolRoomAdapter implements A
             final Producer producer = room.producer(producerId);
             producer.pause();
         } else if(clientType.mediaServer()) {
+            // TODO：路由到真实消费者
             room.broadcast(message);
         } else {
             this.logNoAdapter(clientType);

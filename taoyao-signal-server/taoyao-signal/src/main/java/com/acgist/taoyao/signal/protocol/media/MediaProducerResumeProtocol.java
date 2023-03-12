@@ -57,6 +57,7 @@ public class MediaProducerResumeProtocol extends ProtocolRoomAdapter implements 
             final Producer producer = room.producer(producerId);
             producer.resume();
         } else if(clientType.mediaServer()) {
+            // TODO：路由到真实消费者
             room.broadcast(message);
         } else {
             this.logNoAdapter(clientType);

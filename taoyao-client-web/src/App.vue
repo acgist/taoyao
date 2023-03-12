@@ -3,7 +3,7 @@
   <div id="taoyao">
     <!-- 信令 -->
     <el-dialog center width="30%" title="终端设置" :show-close="false" v-model="signalVisible">
-      <el-form ref="SignalSetting" :model="config">
+      <el-form ref="SignalSetting">
         <el-form-item label="终端标识">
           <el-input v-model="config.clientId" placeholder="终端标识" />
         </el-form-item>
@@ -29,7 +29,7 @@
     </el-dialog>
     <!-- 房间 -->
     <el-dialog center width="30%" title="房间设置" :show-close="false" v-model="roomVisible" @open="loadList">
-      <el-form ref="RoomSetting" :model="room">
+      <el-form ref="RoomSetting">
         <el-tabs v-model="roomActive">
           <el-tab-pane label="进入房间" name="enter">
             <el-form-item label="房间标识">
@@ -48,6 +48,13 @@
               <el-input v-model="room.name" placeholder="房间名称" />
             </el-form-item>
           </el-tab-pane>
+          <el-tab-pane label="邀请终端" name="invite">
+            <el-form-item label="终端标识">
+              <el-select v-model="room.inviteClientId" placeholder="终端标识">
+                <el-option v-for="value in clients" :key="value.clientId" :label="value.name || value.clientId" :value="value.clientId" />
+              </el-select>
+            </el-form-item>
+          </el-tab-pane>
         </el-tabs>
         <el-form-item label="房间密码">
           <el-input v-model="room.password" placeholder="房间密码" />
@@ -56,23 +63,24 @@
       <template #footer>
         <el-button type="primary" @click="roomEnter" v-if="roomActive === 'enter'">进入</el-button>
         <el-button type="primary" @click="roomCreate" v-if="roomActive === 'create'">创建</el-button>
+        <el-button type="primary" @click="roomInvite" v-if="roomActive === 'invite'">邀请</el-button>
       </template>
     </el-dialog>
 
     <!-- 菜单 -->
     <div class="menus">
-      <el-button type="primary" :disabled="taoyao && taoyao.connect" @click="signalVisible = true">连接信令</el-button>
-      <el-button type="primary" :disabled="!taoyao" @click="roomActive = 'enter';roomVisible = true;">选择房间</el-button>
-      <el-button type="primary" :disabled="!taoyao" @click="roomActive = 'create';roomVisible = true;">创建房间</el-button>
-      <el-button :disabled="!taoyao || !room.roomId">邀请终端</el-button>
-      <el-button :disabled="!taoyao || !room.roomId">离开房间</el-button>
-      <el-button :disabled="!taoyao || !room.roomId" @click="roomClose()" type="danger">关闭房间</el-button>
+      <el-button @click="signalVisible = true" type="primary" :disabled="taoyao && taoyao.connect">连接信令</el-button>
+      <el-button @click="roomActive = 'enter'; roomVisible = true;" type="primary" :disabled="!taoyao">选择房间</el-button>
+      <el-button @click="roomActive = 'create'; roomVisible = true;" type="primary" :disabled="!taoyao">创建房间</el-button>
+      <el-button @click="roomActive = 'invite'; roomVisible = true;" :disabled="!taoyao || !taoyao.roomId">邀请终端</el-button>
+      <el-button @click="roomLeave" :disabled="!taoyao || !taoyao.roomId">离开房间</el-button>
+      <el-button @click="roomClose" :disabled="!taoyao || !taoyao.roomId" type="danger">关闭房间</el-button>
     </div>
 
     <!-- 终端 -->
     <div class="clients">
       <!-- 本地终端 -->
-      <LocalClient v-if="taoyao" ref="local-client" :client="taoyao" :taoyao="taoyao"></LocalClient>
+      <LocalClient v-if="taoyao && taoyao.roomId" ref="local-client" :client="taoyao" :taoyao="taoyao"></LocalClient>
       <!-- 远程终端 -->
       <RemoteClient v-for="(kv, index) in remoteClients" :key="index" :ref="'remote-client-' + kv[0]" :client="kv[1]" :taoyao="taoyao"></RemoteClient>
     </div>
@@ -92,6 +100,7 @@ export default {
       room: {},
       rooms: null,
       medias: null,
+      clients: null,
       config: {
         clientId: "taoyao",
         name: "taoyao",
@@ -111,6 +120,8 @@ export default {
     console.info(`
       中庭地白树栖鸦，冷露无声湿桂花。
       今夜月明人尽望，不知秋思落谁家。
+      
+      :: https://gitee.com/acgist/taoyao
     `);
   },
   methods: {
@@ -126,22 +137,27 @@ export default {
     async loadList() {
       this.rooms = await this.taoyao.roomList();
       this.medias = await this.taoyao.mediaList();
+      this.clients = await this.taoyao.clientList();
+    },
+    async roomLeave() {
+      this.taoyao.roomLeave();
     },
     async roomClose() {
       this.taoyao.roomClose();
-    },
-    async roomCreate() {
-      const room = await this.taoyao.roomCreate(this.room);
-      this.room.roomId = room.roomId;
-      await this.roomEnter();
     },
     async roomEnter() {
       await this.taoyao.roomEnter(this.room.roomId, this.room.password);
       await this.taoyao.produceMedia();
       this.roomVisible = false;
     },
-    audioVolume(message) {
-
+    async roomCreate() {
+      const room = await this.taoyao.roomCreate(this.room);
+      this.room.roomId = room.roomId;
+      await this.roomEnter();
+    },
+    async roomInvite() {
+      this.taoyao.roomInvite(this.room.inviteClientId);
+      this.roomVisible = false;
     },
     /**
      * 信令回调
@@ -156,9 +172,6 @@ export default {
       switch (message.header.signal) {
         case "client::config":
           me.roomVisible = true;
-          break;
-        case "media::audio::active::speaker":
-          me.audioVolume(message);
           break;
         case "platform::error":
           if (error) {
