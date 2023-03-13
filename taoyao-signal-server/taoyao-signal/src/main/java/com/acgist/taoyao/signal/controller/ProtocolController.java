@@ -15,6 +15,7 @@ import com.acgist.taoyao.signal.protocol.Protocol;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -26,14 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequestMapping("/protocol")
+@RequiredArgsConstructor
 public class ProtocolController {
 
     private final ApplicationContext applicationContext;
     
-    public ProtocolController(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
-    }
-
     @Operation(summary = "信令列表", description = "信令列表Markdown")
     @GetMapping("/list")
     public String list() {

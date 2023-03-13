@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 房间
@@ -29,14 +30,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Validated
 @RestController
 @RequestMapping("/room")
+@RequiredArgsConstructor
 public class RoomController {
 	
 	private final RoomManager roomManager;
 	
-	public RoomController(RoomManager roomManager) {
-        this.roomManager = roomManager;
-    }
-
     @Operation(summary = "房间信息", description = "房间信息")
     @GetMapping("/log")
 	public Message log() {

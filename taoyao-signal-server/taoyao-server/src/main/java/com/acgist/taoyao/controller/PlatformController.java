@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.signal.protocol.platform.PlatformRebootProtocol;
 import com.acgist.taoyao.signal.protocol.platform.PlatformShutdownProtocol;
 
@@ -38,6 +39,9 @@ public class PlatformController {
     @Operation(summary = "重启平台", description = "重启平台")
     @GetMapping("/reboot")
     public Message platformReboot() {
+        if(this.platformRebootProtocol == null) {
+            return Message.fail(MessageCode.CODE_3406, "功能没有开启");
+        }
         this.platformRebootProtocol.execute();
         return Message.success();
     }
@@ -45,6 +49,9 @@ public class PlatformController {
     @Operation(summary = "关闭平台", description = "关闭平台")
     @GetMapping("/shutdown")
     public Message platformShutdown() {
+        if(this.platformShutdownProtocol == null) {
+            return Message.fail(MessageCode.CODE_3406, "功能没有开启");
+        }
         this.platformShutdownProtocol.execute();
         return Message.success();
     }

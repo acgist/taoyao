@@ -67,11 +67,16 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
             final ClientWrapper produceClientWrapper = producer.getProducerClient();
             room.getClients().values().stream()
             .filter(v -> v != produceClientWrapper)
+            .filter(v -> v.getRecvTransport() != null)
             .filter(v -> v.getSubscribeType().canConsume(producer))
             .forEach(v -> this.consume(room, v, producer, this.build()));
         } else if(event.getClientWrapper() != null) {
             // 创建WebRTC消费通道：消费其他终端
             final ClientWrapper consumeClientWrapper = event.getClientWrapper();
+            if(consumeClientWrapper.getRecvTransport() == null) {
+                log.debug("没有消费通道：{}", consumeClientWrapper.getClientId());
+                return;
+            }
             room.getClients().values().stream()
             .filter(v -> v != consumeClientWrapper)
             .flatMap(v -> v.getProducers().values().stream())

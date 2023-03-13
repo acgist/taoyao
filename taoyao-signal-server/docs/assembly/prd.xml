@@ -37,7 +37,9 @@
 			<directory>src/main/resources</directory>
 			<outputDirectory>config</outputDirectory>
 			<includes>
-				<include>*.jks</include>
+                <include>*.jks</include>
+                <include>*.p12</include>
+                <include>*.pfx</include>
 			</includes>
 		</fileSet>
 		<fileSet>

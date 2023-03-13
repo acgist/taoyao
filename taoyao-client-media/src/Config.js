@@ -119,12 +119,12 @@ module.exports = {
           announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
         },
         // TCP
-        // {
-        //   protocol: "tcp",
-        //   ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-        //   port: 44444,
-        //   announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
-        // },
+        {
+          protocol: "tcp",
+          ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
+          port: 44444,
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
+        },
       ],
     },
     // WebRtcTransport：https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcTransportOptions

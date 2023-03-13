@@ -21,8 +21,9 @@ const protocol = {
    * @returns 索引
    */
   buildId() {
-    if (++this.index > this.maxIndex) {
-      this.index = 0;
+    const me = this;
+    if (++me.index > me.maxIndex) {
+      me.index = 0;
     }
     const date = new Date();
     return (
@@ -30,8 +31,8 @@ const protocol = {
       1000000000000   * date.getHours()   +
       10000000000     * date.getMinutes() +
       100000000       * date.getSeconds() +
-      1000            * this.clientIndex  +
-      this.index
+      1000            * me.clientIndex    +
+      me.index
     );
   },
   /**
@@ -2010,23 +2011,25 @@ class Taoyao extends RemoteClient {
    */
   closeMedia() {
     let me = this;
-    if (me.sendTransport) {
-      me.sendTransport.close();
-    }
-    if (me.recvTransport) {
-      me.recvTransport.close();
-    }
     if(me.audioTrack) {
       me.audioTrack.stop();
     }
     if(me.videoTrack) {
       me.videoTrack.stop();
     }
+    if (me.sendTransport) {
+      me.sendTransport.close();
+    }
+    if (me.recvTransport) {
+      me.recvTransport.close();
+    }
     me.sendTransport = null;
     me.recvTransport = null;
+    me.dataProducer = null;
     me.audioProducer = null;
     me.videoProducer = null;
-    me.dataProducer = null;
+    me.consumers.clear();
+    me.dataConsumers.clear();
   }
   /**
    * 关闭资源

@@ -80,7 +80,7 @@ public class SocketSignalTest {
 	    }
 	    """;
 		// {"header":{"v":"1.0.0","id":1215310510002009,"signal":"room::enter"},"body":{"roomId":"8260e615-3081-4bfc-96a8-574f4dd780d9"}}
-		// {"header":{"v":"1.0.0","id":1215310510002010,"signal":"media::transport::plain::in"},"body":{"roomId":"8260e615-3081-4bfc-96a8-574f4dd780d9","rtcpMux":false,"comedia":true}}
+		// {"header":{"v":"1.0.0","id":1215310510002010,"signal":"media::transport::plain"},"body":{"roomId":"8260e615-3081-4bfc-96a8-574f4dd780d9","rtcpMux":false,"comedia":true}}
 		// {"header":{"v":"1.0.0","id":1215375110006012,"signal":"media::produce"},"body":{"kind":"video","roomId":"8260e615-3081-4bfc-96a8-574f4dd780d9","transportId":"14dc9307-bf9c-4442-a9ad-ce6a97623ef4","appData":{},"rtpParameters":{"codecs":[{"mimeType":"video/vp8","clockRate":90000,"payloadType":102,"rtcpFeedback":[]}],"encodings":[{"ssrc":123123}]}}}
 //      ffplay -protocol_whitelist "file,udp,rtp" taoyao.sdp
 //		ffmpeg -re -i video.mp4 -vcodec copy -map 0:0 -f rtp rtp://localhost:6666 > taoyao.sdp

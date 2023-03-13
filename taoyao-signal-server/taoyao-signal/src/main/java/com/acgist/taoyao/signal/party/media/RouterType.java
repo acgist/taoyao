@@ -5,7 +5,7 @@ package com.acgist.taoyao.signal.party.media;
  * 
  * @author acgist
  */
-public enum RouteType {
+public enum RouterType {
 
     // 对讲：只有两个人之间的媒体相互路由
     ONE_TO_ONE,

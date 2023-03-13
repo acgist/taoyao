@@ -26,6 +26,10 @@
 |taoyao-client-harmony|鸿蒙终端|鸿蒙智能终端接入|
 |taoyao-signal-server|信令服务|终端信令控制|
 
+## 证书
+
+本地开发测试安装`docs/certs`中的`ca.crt`证书
+
 ## 部署
 
 [部署文档](./docs/Deploy.md)

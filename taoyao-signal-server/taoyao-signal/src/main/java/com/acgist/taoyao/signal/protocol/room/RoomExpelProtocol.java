@@ -40,6 +40,8 @@ public class RoomExpelProtocol extends ProtocolRoomAdapter {
         if(clientType.mediaClient()) {
             final String expelClientId = MapUtils.get(body, Constant.CLIENT_ID);
             room.unicast(expelClientId, message);
+            // 如果需要强制提出
+//          room.leave(this.clientManager.clients(expelClientId));
         } else {
             this.logNoAdapter(clientType);
         }

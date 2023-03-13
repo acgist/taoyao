@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 配置
@@ -24,6 +25,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "配置", description = "配置管理")
 @RestController
 @RequestMapping("/config")
+@RequiredArgsConstructor
 public class ConfigController {
     
 	private final MediaProperties mediaProperties;
@@ -31,18 +33,6 @@ public class ConfigController {
 	private final SocketProperties socketProperties;
 	private final WebrtcProperties webrtcProperties;
 	
-	public ConfigController(
-	    MediaProperties mediaProperties,
-	    CameraProperties cameraProperties,
-	    SocketProperties socketProperties,
-	    WebrtcProperties webrtcProperties
-	) {
-        this.mediaProperties = mediaProperties;
-        this.cameraProperties = cameraProperties;
-        this.socketProperties = socketProperties;
-        this.webrtcProperties = webrtcProperties;
-    }
-
     @Operation(summary = "媒体配置", description = "媒体配置")
 	@GetMapping("/media")
 	@ApiResponse(content = @Content(schema = @Schema(implementation = MediaProperties.class)))

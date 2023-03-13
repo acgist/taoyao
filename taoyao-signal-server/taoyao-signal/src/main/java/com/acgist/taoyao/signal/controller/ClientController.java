@@ -17,6 +17,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 终端
@@ -26,6 +27,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @Tag(name = "终端", description = "终端管理")
 @RestController
 @RequestMapping("/client")
+@RequiredArgsConstructor
 public class ClientController {
 
 	private final ClientManager clientManager;
@@ -33,16 +35,6 @@ public class ClientController {
 	private final ClientRebootProtocol clientRebootProtocol;
 	private final ClientShutdownProtocol clientShutdownProtocol;
 	
-	public ClientController(
-	    ClientManager clientManager, ClientWakeupProtocol clientWakeupProtocol,
-        ClientRebootProtocol clientRebootProtocol, ClientShutdownProtocol clientShutdownProtocol
-    ) {
-        this.clientManager = clientManager;
-        this.clientWakeupProtocol = clientWakeupProtocol;
-        this.clientRebootProtocol = clientRebootProtocol;
-        this.clientShutdownProtocol = clientShutdownProtocol;
-    }
-
     @Operation(summary = "终端列表", description = "终端列表")
 	@GetMapping("/list")
 	@ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))

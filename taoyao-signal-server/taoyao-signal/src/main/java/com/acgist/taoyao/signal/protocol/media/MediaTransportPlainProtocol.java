@@ -22,7 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 创建RTP输入通道信令
- * TODO：srtp
+ * 注意：
+ * 3. ffmpeg不支持rtcpMux
+ * 2. comedia必须开启srtp功能
+ * 1. 如果关闭comedia不会自动升级双向通道
  * 
  * @author acgist
  */
@@ -34,14 +37,21 @@ import lombok.extern.slf4j.Slf4j;
         "roomId": "房间ID",
         "rtcpMux": RTP和RTCP端口复用（true|false）,
         "comedia": 自动终端端口（true|false）,
+        "enableSctp": 是否开启sctp（true|false）,
+        "numSctpStreams": sctp数量,
+        "enableSrtp": 是否开启srtp（true|false）,
+        "srtpCryptoSuite": {
+            "cryptoSuite": "算法（AEAD_AES_256_GCM|AEAD_AES_128_GCM|AES_CM_128_HMAC_SHA1_80|AES_CM_128_HMAC_SHA1_32）",
+            "keyBase64": "密钥"
+        }
     }
     """
 )
-public class MediaTransportPlainInProtocol extends ProtocolRoomAdapter {
+public class MediaTransportPlainProtocol extends ProtocolRoomAdapter {
 
-    public static final String SIGNAL = "media::transport::plain::in";
+    public static final String SIGNAL = "media::transport::plain";
     
-    public MediaTransportPlainInProtocol() {
+    public MediaTransportPlainProtocol() {
         super("创建RTP输入通道信令", SIGNAL);
     }
     
@@ -65,6 +75,7 @@ public class MediaTransportPlainInProtocol extends ProtocolRoomAdapter {
             log.warn("发送通道已经存在：{}", transportId);
         }
         clientWrapper.setSendTransport(sendTransport);
+        // TODO：双向队列
         // 拷贝属性
         sendTransport.copy(responseBody);
         client.push(response);

@@ -1,6 +1,5 @@
 package com.acgist.taoyao.signal.configuration;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -13,6 +12,7 @@ import com.acgist.taoyao.signal.event.EventPublisher;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
 
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 信令自动配置
@@ -20,13 +20,13 @@ import jakarta.annotation.PostConstruct;
  * @author acgist
  */
 @AutoConfiguration
+@RequiredArgsConstructor
 @EnableConfigurationProperties({
     CameraProperties.class
 })
 public class SignalAutoConfiguration {
 
-    @Autowired
-    private ApplicationContext applicationContext;
+    private final ApplicationContext applicationContext;
     
     @PostConstruct
     public void init() {

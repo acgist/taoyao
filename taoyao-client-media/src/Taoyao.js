@@ -452,8 +452,8 @@ class Taoyao {
       case "media::transport::close":
         this.mediaTransportClose(message, body);
         break;
-      case "media::transport::plain::in":
-        me.mediaTransportPlainIn(message, body);
+      case "media::transport::plain":
+        me.mediaTransportPlain(message, body);
         break;
       case "media::transport::webrtc::connect":
         me.mediaTransportWebrtcConnect(message, body);
@@ -629,8 +629,8 @@ class Taoyao {
     producer.on("videoorientationchange", (videoOrientation) => {
       console.info("producer videoorientationchange：", producer.id, videoOrientation);
       self.push(protocol.buildMessage("media::video::orientation::change", {
+        ...videoOrientation,
         roomId: roomId,
-        ...videoOrientation
       }));
     });
     // await producer.enableTraceEvent([ 'rtp', 'keyframe', 'nack', 'pli', 'fir' ]);
@@ -821,6 +821,7 @@ class Taoyao {
           });
           consumer.on("producerpause", () => {
             console.info("consumer producerpause：", consumer.id);
+            // consumer.pause();
             this.push(
               protocol.buildMessage("media::consumer::pause", {
                 roomId: roomId,
@@ -830,6 +831,7 @@ class Taoyao {
           });
           consumer.on("producerresume", () => {
             console.info("consumer producerresume：", consumer.id);
+            // consumer.resume();
             this.push(
               protocol.buildMessage("media::consumer::resume", {
                 roomId: roomId,
@@ -1261,16 +1263,21 @@ class Taoyao {
    * @param {*} message 消息
    * @param {*} body 消息主体
    */
-  async mediaTransportPlainIn(message, body) {
+  async mediaTransportPlain(message, body) {
     const me = this;
-    const { roomId, rtcpMux, comedia, clientId } = body;
+    const { roomId, rtcpMux, comedia, clientId, enableSctp, numSctpStreams, enableSrtp, srtpCryptoSuite } = body;
     const plainTransportOptions = {
-      rtcpMux: rtcpMux,
-      comedia: comedia,
       ...config.mediasoup.plainTransportOptions,
+      rtcpMux:         rtcpMux,
+      comedia:         comedia,
+      enableSctp:      enableSctp || Boolean(numSctpStreams),
+      numSctpStreams:  numSctpStreams || 0,
+      enableSrtp:      enableSrtp,
+      srtpCryptoSuite: srtpCryptoSuite,
     };
     const room = this.rooms.get(roomId);
     const transport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
+    me.transportEvent("plain", roomId, transport);
     transport.clientId = clientId;
     room.transports.set(transport.id, transport);
     console.info(transport.tuple)
@@ -1336,8 +1343,35 @@ class Taoyao {
       ...webRtcTransportOptions,
       webRtcServer: room.webRtcServer,
     });
+    me.transportEvent("webrtc", roomId, transport);
     transport.clientId = clientId;
-    // 通用事件
+    room.transports.set(transport.id, transport);
+    message.body = {
+      roomId: roomId,
+      transportId: transport.id,
+      iceCandidates: transport.iceCandidates,
+      iceParameters: transport.iceParameters,
+      dtlsParameters: transport.dtlsParameters,
+      sctpParameters: transport.sctpParameters,
+    };
+    self.push(message);
+    const { maxIncomingBitrate } = config.mediasoup.webRtcTransportOptions;
+    // If set, apply max incoming bitrate limit.
+    if (maxIncomingBitrate) {
+      try {
+        await transport.setMaxIncomingBitrate(maxIncomingBitrate);
+      } catch (error) {}
+    }
+  }
+  /**
+   * 通道事件
+   * 
+   * @param {*} type      类型：webrtc|plain|pipe|direct
+   * @param {*} roomId    房间ID
+   * @param {*} transport 通道
+   */
+  transportEvent(type, roomId, transport) {
+    /********************* 通用通道事件 *********************/
     transport.on("routerclose", () => {
       console.info("transport routerclose：", transport.id);
       transport.close();
@@ -1377,50 +1411,41 @@ class Taoyao {
     // });
     // transport.observer.on("trace", fn(trace));
     /********************* webRtcTransport通道事件 *********************/
-    // transport.on("icestatechange", (iceState) => {
-    //   console.info("transport icestatechange：", transport.id, iceState);
-    // });
-    // transport.on("iceselectedtuplechange", (iceSelectedTuple) => {
-    //   console.info("transport iceselectedtuplechange：", transport.id, iceSelectedTuple);
-    // });
-    // transport.on("dtlsstatechange", (dtlsState) => {
-    //   console.info("transport dtlsstatechange：", transport.id, dtlsState);
-    // });
-    // transport.on("sctpstatechange", (sctpState) => {
-    //   console.info("transport sctpstatechange：", transport.id, sctpState);
-    // });
-    // transport.observer.on("icestatechange", fn(iceState));
-    // transport.observer.on("iceselectedtuplechange", fn(iceSelectedTuple));
-    // transport.observer.on("dtlsstatechange", fn(dtlsState));
-    // transport.observer.on("sctpstatechange", fn(sctpState));
+    if("webrtc" === type) {
+      // transport.on("icestatechange", (iceState) => {
+      //   console.info("transport icestatechange：", transport.id, iceState);
+      // });
+      // transport.on("iceselectedtuplechange", (iceSelectedTuple) => {
+      //   console.info("transport iceselectedtuplechange：", transport.id, iceSelectedTuple);
+      // });
+      // transport.on("dtlsstatechange", (dtlsState) => {
+      //   console.info("transport dtlsstatechange：", transport.id, dtlsState);
+      // });
+      // transport.on("sctpstatechange", (sctpState) => {
+      //   console.info("transport sctpstatechange：", transport.id, sctpState);
+      // });
+      // transport.observer.on("icestatechange", fn(iceState));
+      // transport.observer.on("iceselectedtuplechange", fn(iceSelectedTuple));
+      // transport.observer.on("dtlsstatechange", fn(dtlsState));
+      // transport.observer.on("sctpstatechange", fn(sctpState));
+    }
     /********************* plainTransport通道事件 *********************/
-    // transport.on("tuple", fn(tuple));
-    // transport.on("rtcptuple", fn(rtcpTuple));
-    // transport.on("sctpstatechange", fn(sctpState));
-    // transport.observer.on("tuple", fn(tuple));
-    // transport.observer.on("rtcptuple", fn(rtcpTuple));
-    // transport.observer.on("sctpstatechange", fn(sctpState));
+    if("plain" === type) {
+      // transport.on("tuple", fn(tuple));
+      // transport.on("rtcptuple", fn(rtcpTuple));
+      // transport.on("sctpstatechange", fn(sctpState));
+      // transport.observer.on("tuple", fn(tuple));
+      // transport.observer.on("rtcptuple", fn(rtcpTuple));
+      // transport.observer.on("sctpstatechange", fn(sctpState));
+    }
     /********************* pipeTransport通道事件 *********************/
-    // transport.on("sctpstatechange", fn(sctpState));
-    // transport.observer.on("sctpstatechange", fn(sctpState));
+    if("pipe" === type) {
+      // transport.on("sctpstatechange", fn(sctpState));
+      // transport.observer.on("sctpstatechange", fn(sctpState));
+    }
     /********************* directTransport通道事件 *********************/
-    // transport.on("rtcp", fn(rtcpPacket));
-    room.transports.set(transport.id, transport);
-    message.body = {
-      roomId: roomId,
-      transportId: transport.id,
-      iceCandidates: transport.iceCandidates,
-      iceParameters: transport.iceParameters,
-      dtlsParameters: transport.dtlsParameters,
-      sctpParameters: transport.sctpParameters,
-    };
-    self.push(message);
-    const { maxIncomingBitrate } = config.mediasoup.webRtcTransportOptions;
-    // If set, apply max incoming bitrate limit.
-    if (maxIncomingBitrate) {
-      try {
-        await transport.setMaxIncomingBitrate(maxIncomingBitrate);
-      } catch (error) {}
+    if("rtcp" === type) {
+      // transport.on("rtcp", fn(rtcpPacket));
     }
   }
   /**

@@ -27,6 +27,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 
 /**
  * 控制
@@ -37,6 +38,7 @@ import jakarta.validation.constraints.NotNull;
 @Validated
 @RestController
 @RequestMapping("/control")
+@RequiredArgsConstructor
 public class ControlController {
     
     private final ControlAiProtocol controlAiProtocol;
@@ -49,28 +51,6 @@ public class ControlController {
     private final ControlConfigAudioProtocol controlConfigAudioProtocol;
     private final ControlConfigVideoProtocol controlConfigVideoProtocol;
     
-    public ControlController(
-        ControlAiProtocol controlAiProtocol,
-        ControlPtzProtocol controlPtzProtocol,
-        ControlBellProtocol controlBellProtocol,
-        ControlBeautyProtocol controlBeautyProtocol,
-        ControlRecordProtocol controlRecordProtocol,
-        ControlWatermarkProtocol controlWatermarkProtocol,
-        ControlPhotographProtocol controlPhotographProtocol,
-        ControlConfigAudioProtocol controlConfigAudioProtocol,
-        ControlConfigVideoProtocol controlConfigVideoProtocol
-    ) {
-        this.controlAiProtocol = controlAiProtocol;
-        this.controlPtzProtocol = controlPtzProtocol;
-        this.controlBellProtocol = controlBellProtocol;
-        this.controlBeautyProtocol = controlBeautyProtocol;
-        this.controlRecordProtocol = controlRecordProtocol;
-        this.controlWatermarkProtocol = controlWatermarkProtocol;
-        this.controlPhotographProtocol = controlPhotographProtocol;
-        this.controlConfigAudioProtocol = controlConfigAudioProtocol;
-        this.controlConfigVideoProtocol = controlConfigVideoProtocol;
-    }
-
     @Operation(summary = "AI识别", description = "AI识别控制")
     @GetMapping("/ai/{clientId}")
     public Message ai(@PathVariable String clientId, @Valid AiProperties aiProperties) {
