@@ -1343,7 +1343,7 @@ class Taoyao {
       ...webRtcTransportOptions,
       webRtcServer: room.webRtcServer,
     });
-    me.transportEvent("webrtc", roomId, transport);
+    self.transportEvent("webrtc", roomId, transport);
     transport.clientId = clientId;
     room.transports.set(transport.id, transport);
     message.body = {
@@ -1371,6 +1371,7 @@ class Taoyao {
    * @param {*} transport 通道
    */
   transportEvent(type, roomId, transport) {
+    const self = this;
     /********************* 通用通道事件 *********************/
     transport.on("routerclose", () => {
       console.info("transport routerclose：", transport.id);

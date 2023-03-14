@@ -586,11 +586,11 @@ class Taoyao extends RemoteClient {
   /************************ 管理 ************************/
   getProducer(producerId) {
     const me = this;
-    if(me?.audioProducer.id === producerId) {
+    if(me.audioProducer?.id === producerId) {
       return me.audioProducer;
-    } else if(me?.videoProducer.id === producerId) {
+    } else if(me.videoProducer?.id === producerId) {
       return me.videoProducer;
-    } else if(me?.dataProducer.id === producerId) {
+    } else if(me.dataProducer?.id === producerId) {
       return me.dataProducer;
     } else {
       return null;
