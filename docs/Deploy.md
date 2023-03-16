@@ -4,12 +4,12 @@
 
 ```
 CentOS：CentOS Linux release 7.9.2009 (Core)
-pm2 >= 5.2.0
 git >= 1.8.0
+pm2 >= 5.2.0
 Java >= 17.0.0
 Maven >= 3.8.0
-gcc/g++ >= 10.0.0
-node version >= v16.0.0
+gcc/g++ >= 10.2.0
+node version >= v16.19.0
 python version >= 3.8.0 with PIP
 ```
 
@@ -82,7 +82,7 @@ yum install devtoolset-10-gcc devtoolset-10-gcc-c++
 scl enable devtoolset-10 -- bash
 
 # 配置
-vim /etc/profile
+vim ~/.bash_profile
 
 ---
 source /opt/rh/devtoolset-10/enable
@@ -152,8 +152,8 @@ JAVA_HOME=/data/dev/java/jdk-17.0.2
 PATH=$PATH:$JAVA_HOME/bin
 ---
 
+# 立即生效
 . ~/.bash_profile
-ln -sf /data/dev/java/jdk-17.0.2/bin/java /usr/local/bin/java
 
 # 验证
 java -version
@@ -165,17 +165,18 @@ java -version
 # 下载
 mkdir -p /data/dev/maven
 cd /data/dev/maven
-wget https://dlcdn.apache.org/maven/maven-3/3.8.6/binaries/apache-maven-3.8.6-bin.tar.gz
-tar -zxvf apache-maven-3.8.6-bin.tar.gz
+wget https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
+tar -zxvf apache-maven-3.8.8-bin.tar.gz
 
 # 配置
 vim ~/.bash_profile
 
 ---
-MAVEN_HOME=/data/dev/maven/apache-maven-3.8.6
+MAVEN_HOME=/data/dev/maven/apache-maven-3.8.8
 PATH=$PATH:$MAVEN_HOME/bin
 ---
 
+# 立即生效
 . ~/.bash_profile
 
 # 验证
@@ -186,9 +187,7 @@ mvn -version
 
 ```
 # 依赖
-yum install zlib-devel
-yum install libffi-devel
-yum install openssl-devel
+yum install zlib-devel libffi-devel openssl-devel
 
 # 下载
 mkdir -p /data/dev/python
@@ -221,19 +220,9 @@ vim /usr/libexec/urlgrabber-ext-down
 yum --version
 pip --version
 python --version
-```
 
-## 下载源码
-
-```
-cd /data
-git clone https://gitee.com/acgist/taoyao.git --recursive
-```
-
-## 安装媒体
-
-```
 # 设置镜像
+mkdir -p ~/.pip/
 vim ~/.pip/pip.conf
 
 ---
@@ -245,71 +234,6 @@ trusted-host = mirrors.aliyun.com
 
 # 验证镜像
 pip config list
-
-# 编译代码
-cd /data/taoyao/taoyao-client-media
-git submodule update --remote
-cd modulesup
-git checkout taoyao
-cd ..
-npm install
-
-# 配置服务：服务名称必须和配置终端标识一致否则不能执行重启和关闭信令
-pm2 start npm --name "taoyao-client-media" -- run dev | prd
-pm2 save
-
-# 配置ecosystem
-pm2 ecosystem
-pm2 start | reload ecosystem.config.json
-pm2 save
-
-# 管理服务：服务名称必须和配置终端标识一致否则不能执行重启和关闭信令
-pm2 start | stop | restart taoyao-client-media
-```
-
-### Mediasoup单独编译
-
-编译媒体服务时会自动编译`mediasoup`所以可以不用单独编译
-
-```
-# 编译代码
-# make -C worker
-cd /data/taoyao/taoyao-client-media/mediasoup/worker
-make
-
-# 清理结果
-make clean
-```
-
-### 问题
-
-#### Subproject exists but has no meson.build file
-
-编译过程需要第三方的依赖，进入目录`mediasoup/worker/subprojects`，查看`*.wrap`依次下载然后修改名称放到`packagecache`，重新编译即可。
-
-## 安装信令
-
-```
-# 编译代码
-cd /data/taoyao/taoyao-signal-server
-mvn clean package -D skipTests
-#mvn clean package -D skipTests -P prd
-
-# 拷贝脚本
-cp taoyao-server/target/taoyao-server-1.0.0/bin/deploy.sh ./
-
-# 配置服务
-cp /data/taoyao/docs/etc/taoyao-signal-server.service /usr/lib/systemd/system/taoyao-signal-server.service
-
-# 配置自启
-systemctl daemon-reload
-systemctl enable taoyao-signal-server
-
-# 执行脚本
-./deploy.sh
-
-# 管理服务
-systemctl start | stop | restart taoyao-signal-server
 ```
 
 ## 安装Nginx
@@ -336,9 +260,76 @@ SELINUX=disabled
 ---
 ```
 
-## 安装终端
+## 下载源码
 
-如果不是本机测试需要配置`HTTPS`
+```
+cd /data
+git clone https://gitee.com/acgist/taoyao.git --recursive
+```
+
+## 安装媒体
+
+```
+# 编译代码
+cd /data/taoyao/taoyao-client-media
+npm install
+
+# 配置ecosystem
+pm2 start | reload ecosystem.config.json
+pm2 save
+
+# 管理服务：服务名称必须和配置终端标识一致否则不能执行重启和关闭信令
+pm2 start | stop | restart taoyao-client-media
+```
+
+### Mediasoup编译失败
+
+编译过程中的依赖下载容易失败，
+需要进入目录`mediasoup/worker/subprojects`，查看`*.wrap`文件依次下载所需依赖，修改名称放到`packagefiles`目录中，最后注释下载链接。
+将`package.json`中的`mediasoup`改为本地依赖`file:./mediasoup`，重新编译即可。
+
+> 下载依赖建议备份以备以后编译使用
+
+### Mediasoup单独编译
+
+编译媒体服务时会自动编译`mediasoup`所以可以不用单独编译
+
+```
+# 编译代码
+# make -C worker
+cd /data/taoyao/taoyao-client-media/mediasoup/worker
+make
+
+# 清理结果
+make clean
+```
+
+## 安装信令
+
+```
+# 编译代码
+cd /data/taoyao/taoyao-signal-server
+mvn clean package -D skipTests
+#mvn clean package -D skipTests -P prd
+
+# 拷贝脚本
+cp taoyao-server/target/taoyao-server-1.0.0/bin/deploy.sh ./
+
+# 配置服务
+cp /data/taoyao/docs/etc/taoyao-signal-server.service /usr/lib/systemd/system/taoyao-signal-server.service
+
+# 配置自启
+systemctl daemon-reload
+systemctl enable taoyao-signal-server
+
+# 执行脚本
+./deploy.sh
+
+# 管理服务
+systemctl start | stop | restart taoyao-signal-server
+```
+
+## 安装终端
 
 ```
 # 编译代码
@@ -356,7 +347,7 @@ pm2 start | stop | restart taoyao-client-web
 npm run build
 
 # Nginx配置
-cp /data/taoyao/docs/etc/nginx /etc/nginx/nginx.conf
+cp /data/taoyao/docs/etc/nginx.conf /etc/nginx/nginx.conf
 
 nginx -s reload
 ```
