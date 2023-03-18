@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="GB2312" ?>
+<Partition_Info ProgrammerFile="">
+<Part Sel="1" PartitionName="fastboot" FlashType="spi" FileSystem="none" Start="0" Length="1M" SelectFile="D:\tmp\openharmony\u-boot-hi3518ev300.bin"/>
+<Part Sel="1" PartitionName="kernel" FlashType="spi" FileSystem="none" Start="1M" Length="6M" SelectFile="D:\tmp\openharmony\OHOS_Image.bin"/>
+<Part Sel="1" PartitionName="rootfs" FlashType="spi" FileSystem="none" Start="7M" Length="8M" SelectFile="D:\tmp\openharmony\rootfs_jffs2.img"/>
+<Part Sel="1" PartitionName="userfs" FlashType="spi" FileSystem="none" Start="15M" Length="1M" SelectFile="D:\tmp\openharmony\userfs_jffs2.img"/>
+</Partition_Info>

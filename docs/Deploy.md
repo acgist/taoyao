@@ -9,7 +9,7 @@ pm2 >= 5.2.0
 Java >= 17.0.0
 Maven >= 3.8.0
 gcc/g++ >= 10.2.0
-node version >= v16.19.0
+node version >= v16.18.0
 python version >= 3.8.0 with PIP
 ```
 

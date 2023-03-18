@@ -1,0 +1,10 @@
+CMakeCache.txt
+
+**/*.so
+**/*.exe
+**/*.lib
+
+.vscode/**
+
+build/**
+openharmony/**
