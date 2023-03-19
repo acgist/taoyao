@@ -10,6 +10,8 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 
+#include <ctime>
+#include <mutex>
 #include <thread>
 #include <iostream>
 
@@ -34,6 +36,15 @@ private:
     struct timeval timeout;
     // 地址
     struct sockaddr_in serverAddress;
+private:
+    // 当前索引
+    int index       = 0;
+    // 最大索引
+    int maxIndex    = 999;
+    // 终端索引
+    int clientIndex = 99999;
+    // 索引互斥
+    std::mutex indexMutex;
 public:
     /**
      * @param port    端口
@@ -46,6 +57,19 @@ public:
      */
     virtual ~Taoyao();
 private:
+    /**
+     * 生成ID
+     */
+    long long buildId();
+    /**
+     * @param signal 信令标识
+     * @param body   消息主体
+     * @param id     消息ID
+     * @param v      消息版本
+     *
+     * @returns 信令消息
+     */
+    std::string buildMessage(std::string signal, json body, long long id, std::string v);
     /**
      * 接收消息
      */
@@ -62,7 +86,7 @@ public:
     /**
      * 请求消息
      */
-    void request(std::string message);
+    // void request(std::string message);
     /**
      * 关闭信令
      */

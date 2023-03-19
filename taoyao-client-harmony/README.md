@@ -101,9 +101,9 @@ userfs_jffs2.img：userfs
 串口：`115200`
 
 ```
-setenv bootcmd "sf probe 0;sf read 0x40000000 0x100000 0x600000;go 0x40000000";
-setenv bootargs "console=ttyAMA0,115200n8 root=flash fstype=jffs2 rw rootaddr=7M rootsize=8M";
-save;
+setenv bootcmd "sf probe 0;sf read 0x40000000 0x100000 0x600000;go 0x40000000"
+setenv bootargs "console=ttyAMA0,115200n8 root=flash fstype=jffs2 rw rootaddr=7M rootsize=8M"
+save
 reset
 ./bin/wpa_supplicant -iwlan0 -c /etc/wpa_supplicant.conf
 ```

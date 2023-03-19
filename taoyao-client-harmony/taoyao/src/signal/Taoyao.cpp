@@ -18,6 +18,31 @@ Taoyao::Taoyao(int port, std::string address, int timeout = 5) {
 Taoyao::~Taoyao() {
 }
 
+long long Taoyao::buildId() {
+    this->indexMutex.lock();
+    int index = this->index;
+    if (++index > this->maxIndex) {
+      index = 0;
+    }
+    this->index = index;
+    this->indexMutex.unlock();
+    time_t curtime;
+    time(&curtime);
+    tm *pCurtime = localtime(&curtime);
+    return (
+      100000000000000 * pCurtime->tm_mday +
+      1000000000000   * pCurtime->tm_hour +
+      10000000000     * pCurtime->tm_min  +
+      100000000       * pCurtime->tm_sec  +
+      1000            * this->clientIndex +
+      index
+    );
+}
+
+std::string Taoyao::buildMessage(std::string signal, json body, long long id = this->buildId(), std::string v = "1.0.0") {
+
+}
+
 void Taoyao::acceptSignal() {
     int status;
     char recvbuf[BUFFER_SIZE];
@@ -61,8 +86,8 @@ void Taoyao::push(std::string message) {
     memset(sendbuf, 0, sizeof(sendbuf));
 }
 
-void Taoyao::request(std::string message) {
-}
+// void Taoyao::request(std::string message) {
+// }
 
 void Taoyao::closeSignal() {
     if(this->socketChannel != 0) {

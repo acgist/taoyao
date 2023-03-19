@@ -9,7 +9,7 @@
   "ohos": {
     "os": "3.0.0",
     "board": "hi3518",
-    "kernel": "linux"
+    "kernel": "liteos_a"
   },
   "base": {
     "name": "@ohos/hispark_aries",
