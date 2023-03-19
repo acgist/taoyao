@@ -1,10 +1,12 @@
-CMakeCache.txt
+local.properties
 
-**/*.so
-**/*.exe
-**/*.lib
+.clangd
+.clang-tidy
+.clang-format
 
-.vscode/**
+**/.cxx
+**/.idea
+**/.gradle
 
-build/**
-openharmony/**
+**/build
+**/node_modules

@@ -1,0 +1,60 @@
+{
+  "app": {
+    "bundleName": "com.acgist.taoyao",
+    "vendor": "acgist",
+    "version": {
+      "code": 1000000,
+      "name": "1.0.0"
+    }
+  },
+  "deviceConfig": {
+    "default": {
+      "keepAlive": true
+    }
+  },
+  "module": {
+    "package": "com.acgist.taoyao",
+    "name": "com.acgist.taoyao.TaoyaoApplication",
+    "mainAbility": "com.acgist.taoyao.MainAbility",
+    "deviceType": [
+      "phone"
+    ],
+    "distro": {
+      "deliveryWithInstall": true,
+      "moduleName": "client",
+      "moduleType": "entry",
+      "installationFree": false
+    },
+    "abilities": [
+      {
+        "name": "com.acgist.taoyao.MainAbility",
+        "icon": "$media:icon",
+        "label": "$string:main_label",
+        "description": "$string:main_description",
+        "launchType": "standard",
+        "orientation": "unspecified",
+        "visible": true,
+        "skills": [
+          {
+            "actions": [
+              "action.system.home",
+              "main",
+              "setting"
+            ],
+            "entities": [
+              "entity.system.home"
+            ]
+          }
+        ],
+        "type": "page"
+      },
+      {
+        "name": "com.acgist.taoyao.MediaAbility",
+        "description": "$string:media_description",
+        "type": "service",
+        "backgroundModes": [],
+        "icon": "$media:icon"
+      }
+    ]
+  }
+}

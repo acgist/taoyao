@@ -1,0 +1,41 @@
+apply plugin: 'com.huawei.ohos.app'
+
+ohos {
+    signingConfigs {
+        debug {
+            storeFile file('C:\\Users\\acgis\\.ohos\\config\\auto_debug_taoyao_com.acgist.taoyao_30086000001511570.p12')
+            storePassword '0000001BF429DD369062C4630873F17257C6AE37F3B5CCC5BE92C1DE60CEBE94E3592C9A6423F38CA5C88E'
+            keyAlias = 'debugKey'
+            keyPassword '0000001B814502DD14E5F3430066B6F451C85FFB36AB7ADB13AC53823EB7A3F644FED4758F5053827B968D'
+            signAlg = 'SHA256withECDSA'
+            profile file('C:\\Users\\acgis\\.ohos\\config\\auto_debug_taoyao_com.acgist.taoyao_30086000001511570.p7b')
+            certpath file('C:\\Users\\acgis\\.ohos\\config\\auto_debug_taoyao_com.acgist.taoyao_30086000001511570.cer')
+        }
+    }
+    compileSdkVersion 7
+}
+
+buildscript {
+    repositories {
+        maven {
+            url 'https://repo.huaweicloud.com/repository/maven/'
+        }
+        maven {
+            url 'https://developer.huawei.com/repo/'
+        }
+    }
+    dependencies {
+        classpath 'com.huawei.ohos:hap:3.1.2.0'
+        classpath 'com.huawei.ohos:decctest:1.2.7.19'
+    }
+}
+allprojects {
+    repositories {
+        maven {
+            url 'https://repo.huaweicloud.com/repository/maven/'
+        }
+        maven {
+            url 'https://developer.huawei.com/repo/'
+        }
+    }
+}

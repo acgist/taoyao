@@ -3,6 +3,7 @@ package com.acgist.taoyao.signal.configuration;
 import java.util.Base64;
 import java.util.Random;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -57,7 +58,7 @@ public class SocketSignalAutoConfiguration {
 	 */
 	private void buildSecret(SocketProperties socketProperties) {
 	    log.info("Socket信令加密策略：{}", socketProperties.getEncrypt());
-	    if(socketProperties.getEncrypt() == null) {
+	    if(socketProperties.getEncrypt() == null || StringUtils.isNotEmpty(socketProperties.getEncryptKey())) {
 	        return;
 	    }
 	    final Random random = new Random();
