@@ -16,19 +16,19 @@ ohos {
     }
     externalNativeBuild {
         path "src/main/cpp/CMakeLists.txt"
+        cppFlags ""
         arguments ""
         abiFilters "arm64-v8a"
-        cppFlags ""
     }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar', '*.har'])
+    implementation fileTree(dir: 'libs', include: ['*.so', '*.jar', '*.har'])
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.2'
     testImplementation 'junit:junit:4.13.1'
     ohosTestImplementation 'com.huawei.ohos.testkit:runner:2.0.0.400'
 }
 decc {
-    supportType = ['html', 'xml']
+    supportType = ['xml', 'html']
 }
