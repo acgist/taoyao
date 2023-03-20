@@ -21,9 +21,9 @@
 
 |模块|名称|描述|
 |:--|:--|:--|
-|taoyao-client-web|Web终端|提供前端控制页面|
-|taoyao-client-media|媒体服务|提供音视频接入服务|
-|taoyao-client-harmony|鸿蒙终端|鸿蒙智能终端接入|
+|taoyao-client-web|Web终端|Web终端|
+|taoyao-client-media|媒体终端|媒体服务|
+|taoyao-client-android|安卓终端|安卓终端|
 |taoyao-signal-server|信令服务|终端信令控制|
 
 ## 证书

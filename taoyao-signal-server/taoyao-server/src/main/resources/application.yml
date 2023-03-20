@@ -85,47 +85,65 @@ taoyao:
     # 采样率
     min-sample-rate: 8000
     max-sample-rate: 48000
+    # ABR CBR VBR
     # 默认音频
     audio:
       format: OPUS
-      sample-size: 16
-      sample-rate: 32000
+      sample-size: 32
+      sample-rate: 44100
     # 默认视频
     video:
       format: H264
       bitrate: 1200
       frame-rate: 24
       resolution: 1920*1080
-    # 4K：UD=UHD=4K
-    ud-video:
-      format: H264
-      bitrate: 1600
-      frame-rate: 45
-      resolution: 4096*2160
-    # 2K：QD=QHD=2K
-    qd-video:
-      format: H264
-      bitrate: 1600
-      frame-rate: 30
-      resolution: 2560*1440
-    # 超清视频：FD=FHD=1080P
-    fd-video:
-      format: H264
-      bitrate: 1200
-      frame-rate: 24
-      resolution: 1920*1080
-    # 高清视频：HD=720P
-    hd-video:
-      format: H264
-      bitrate: 1000
-      frame-rate: 18
-      resolution: 1280*720
-    # 标清视频：SD=480P
-    sd-video:
-      format: H264
-      bitrate: 800
-      frame-rate: 15
-      resolution: 720*480
+    audios:
+      # 超清
+      fd-audio:
+        format: OPUS
+        sample-size: 32
+        sample-rate: 48000
+      # 高清
+      hd-audio:
+        format: OPUS
+        sample-size: 24
+        sample-rate: 44100
+      # 标清
+      sd-audio:
+        format: OPUS
+        sample-size: 24
+        sample-rate: 32000
+    videos:
+      # 4K：UD=UHD=4K
+      ud-video:
+        format: H264
+        bitrate: 1600
+        frame-rate: 45
+        resolution: 4096*2160
+      # 2K：QD=QHD=2K
+      qd-video:
+        format: H264
+        bitrate: 1600
+        frame-rate: 30
+        resolution: 2560*1440
+      # 超清视频：FD=FHD=1080P
+      fd-video:
+        format: H264
+        bitrate: 1200
+        frame-rate: 24
+        resolution: 1920*1080
+      # 高清视频：HD=720P
+      hd-video:
+        format: H264
+        bitrate: 1000
+        frame-rate: 18
+        resolution: 1280*720
+      # 标清视频：SD=480P
+      sd-video:
+        format: H264
+        bitrate: 800
+        frame-rate: 15
+        resolution: 720*480
   # Socket信令
   socket:
     enabled: true

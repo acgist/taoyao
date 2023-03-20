@@ -1,8 +1,0 @@
-{
-  "integer": [
-    {
-      "name": "timeout",
-      "value": 5000
-    }
-  ]
-}

@@ -1,5 +1,7 @@
 package com.acgist.taoyao.boot.config;
 
+import java.util.Map;
+
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -45,15 +47,9 @@ public class MediaProperties {
 	private MediaAudioProperties audio;
 	@Schema(title = "视频默认配置", description = "视频默认配置")
 	private MediaVideoProperties video;
-	@Schema(title = "4K视频配置", description = "4K视频配置")
-	private MediaVideoProperties udVideo;
-	@Schema(title = "2K视频配置", description = "2K视频配置")
-	private MediaVideoProperties qdVideo;
-	@Schema(title = "超清视频配置", description = "超清视频配置")
-	private MediaVideoProperties fdVideo;
-	@Schema(title = "高清视频配置", description = "高清视频配置")
-	private MediaVideoProperties hdVideo;
-	@Schema(title = "标清视频配置", description = "标清视频配置")
-	private MediaVideoProperties sdVideo;
+	@Schema(title = "音频配置", description = "音频配置")
+	private Map<String, MediaAudioProperties> audios;
+	@Schema(title = "视频配置", description = "视频配置")
+	private Map<String, MediaVideoProperties> videos;
 
 }
