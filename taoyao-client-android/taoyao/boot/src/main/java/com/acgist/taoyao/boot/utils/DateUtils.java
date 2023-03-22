@@ -10,17 +10,17 @@ import java.util.Objects;
 
 /**
  * 日期工具
- * 
+ *
  * @author acgist
  */
 public final class DateUtils {
-	
-	private DateUtils() {
-	}
+
+    private DateUtils() {
+    }
 
     /**
      * 日期
-     * 
+     *
      * @author acgist
      */
     public static enum DateStyle {
@@ -44,60 +44,61 @@ public final class DateUtils {
             this.dateTimeFormatter = DateTimeFormatter.ofPattern(format);
         }
 
-		public String getFormat() {
-			return this.format;
-		}
+        public String getFormat() {
+            return this.format;
+        }
 
-		public DateTimeFormatter getDateTimeFormatter() {
-			return this.dateTimeFormatter;
-		}
-	}
-	
-	/**
-	 * 时间
-	 * 
-	 * @author acgist
-	 */
-	public static enum TimeStyle {
+        public DateTimeFormatter getDateTimeFormatter() {
+            return this.dateTimeFormatter;
+        }
+    }
 
-		HH24("HH"),
-		HH24MM("HHmm"),
-		HH24_MM("HH:mm"),
-		HH24MMSS("HHmmss"),
-		HH24_MM_SS("HH:mm:ss"),
-		HH24MMSSSSS("HHmmssSSS"),
-		HH24_MM_SS_SSS("HH:mm:ss.SSS");
+    /**
+     * 时间
+     *
+     * @author acgist
+     */
+    public static enum TimeStyle {
 
-		/**
-		 * 格式
-		 */
-		private final String format;
-		/**
-		 * 格式工具
-		 */
-		private final DateTimeFormatter dateTimeFormatter;
+        HH24("HH"),
+        HH24MM("HHmm"),
+        HH24_MM("HH:mm"),
+        HH24MMSS("HHmmss"),
+        HH24_MM_SS("HH:mm:ss"),
+        HH24MMSSSSS("HHmmssSSS"),
+        HH24_MM_SS_SSS("HH:mm:ss.SSS");
 
-		private TimeStyle(String format) {
-			this.format = format;
-			this.dateTimeFormatter = DateTimeFormatter.ofPattern(format);
-		}
-		public String getFormat() {
-			return this.format;
-		}
+        /**
+         * 格式
+         */
+        private final String format;
+        /**
+         * 格式工具
+         */
+        private final DateTimeFormatter dateTimeFormatter;
 
-		public DateTimeFormatter getDateTimeFormatter() {
-			return this.dateTimeFormatter;
-		}
+        private TimeStyle(String format) {
+            this.format = format;
+            this.dateTimeFormatter = DateTimeFormatter.ofPattern(format);
+        }
 
-	}
-	
+        public String getFormat() {
+            return this.format;
+        }
+
+        public DateTimeFormatter getDateTimeFormatter() {
+            return this.dateTimeFormatter;
+        }
+
+    }
+
     /**
      * 日期时间
-     * 
+     *
      * @author acgist
      */
     public static enum DateTimeStyle {
-        
+
         // YYYY
         YYYYMMDD_HH24_MM("yyyyMMdd HH:mm"),
         YYYY_MM_DD_HH24_MM("yyyy-MM-dd HH:mm"),
@@ -140,119 +141,111 @@ public final class DateUtils {
             this.format = format;
             this.dateTimeFormatter = DateTimeFormatter.ofPattern(format);
         }
-		public String getFormat() {
-			return this.format;
-		}
 
-		public DateTimeFormatter getDateTimeFormatter() {
-			return this.dateTimeFormatter;
-		}
+        public String getFormat() {
+            return this.format;
+        }
+
+        public DateTimeFormatter getDateTimeFormatter() {
+            return this.dateTimeFormatter;
+        }
 
     }
 
-	/**
-	 * 生成时间戳
-	 * 
-	 * @return 时间戳
-	 * 
-	 * @see #buildTime(LocalDateTime)
-	 */
-	public static final String buildTime() {
-		return buildTime(LocalDateTime.now());
-	}
+    /**
+     * 生成时间戳
+     *
+     * @return 时间戳
+     * @see #buildTime(LocalDateTime)
+     */
+    public static final String buildTime() {
+        return buildTime(LocalDateTime.now());
+    }
 
-	/**
-	 * 生成时间戳
-	 * 
-	 * @param localDateTime 日期时间
-	 * 
-	 * @return 时间戳
-	 */
-	public static final String buildTime(LocalDateTime localDateTime) {
-		if (Objects.isNull(localDateTime)) {
-			return buildTime();
-		}
-		return DateTimeStyle.YYYYMMDDHH24MMSS.getDateTimeFormatter().format(localDateTime);
-	}
-	
-	/**
-	 * 日期转化
-	 * 
-	 * @param date Date
-	 * 
-	 * @return LocalDate
-	 */
-	public static final LocalDate toLocalDate(Date date) {
-		return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-	}
-	
-	/**
-	 * 日期转化
-	 * 
-	 * @param date Date
-	 * 
-	 * @return LocalTime
-	 */
-	public static final LocalTime toLocalTime(Date date) {
-	    return date.toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
-	}
+    /**
+     * 生成时间戳
+     *
+     * @param localDateTime 日期时间
+     * @return 时间戳
+     */
+    public static final String buildTime(LocalDateTime localDateTime) {
+        if (Objects.isNull(localDateTime)) {
+            return buildTime();
+        }
+        return DateTimeStyle.YYYYMMDDHH24MMSS.getDateTimeFormatter().format(localDateTime);
+    }
 
-	/**
-	 * 日期转化
-	 * 
-	 * @param date Date
-	 * 
-	 * @return LocalDateTime
-	 */
-	public static final LocalDateTime toLocalDateTime(Date date) {
-		return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-	}
+    /**
+     * 日期转化
+     *
+     * @param date Date
+     * @return LocalDate
+     */
+    public static final LocalDate toLocalDate(Date date) {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    }
 
-	/**
-	 * 转换毫秒
-	 * 
-	 * @param localDateTime LocalDateTime
-	 * 
-	 * @return 毫秒
-	 */
-	public static final long toMilli(LocalDateTime localDateTime) {
-		return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
-	}
-	
-	/**
-	 * 格式化日期
-	 * 
-	 * @param localDate LocalDate
-	 * @param format 格式
-	 * 
-	 * @return 日期字符串
-	 */
-	public static String format(LocalDate localDate, DateStyle format) {
-	    return localDate != null && format != null ? format.getDateTimeFormatter().format(localDate) : null;
-	}
-	
-	/**
-	 * 格式化时间
-	 * 
-	 * @param localTime LocalTime
-	 * @param format 格式
-	 * 
-	 * @return 时间字符串
-	 */
-	public static String format(LocalTime localTime, TimeStyle format) {
-		return localTime != null && format != null ? format.getDateTimeFormatter().format(localTime) : null;
-	}
-	
-	/**
-	 * 格式化日期时间
-	 * 
-	 * @param localDateTime LocalDateTime
-	 * @param format 格式
-	 * 
-	 * @return 日期时间字符串
-	 */
-	public static String format(LocalDateTime localDateTime, DateTimeStyle format) {
-		return localDateTime != null && format != null ? format.getDateTimeFormatter().format(localDateTime) : null;
-	}
+    /**
+     * 日期转化
+     *
+     * @param date Date
+     * @return LocalTime
+     */
+    public static final LocalTime toLocalTime(Date date) {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalTime();
+    }
+
+    /**
+     * 日期转化
+     *
+     * @param date Date
+     * @return LocalDateTime
+     */
+    public static final LocalDateTime toLocalDateTime(Date date) {
+        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+    }
+
+    /**
+     * 转换毫秒
+     *
+     * @param localDateTime LocalDateTime
+     * @return 毫秒
+     */
+    public static final long toMilli(LocalDateTime localDateTime) {
+        return localDateTime.atZone(ZoneId.systemDefault()).toInstant().toEpochMilli();
+    }
+
+    /**
+     * 格式化日期
+     *
+     * @param localDate LocalDate
+     * @param format    格式
+     * @return 日期字符串
+     */
+    public static String format(LocalDate localDate, DateStyle format) {
+        return localDate != null && format != null ? format.getDateTimeFormatter().format(localDate) : null;
+    }
+
+    /**
+     * 格式化时间
+     *
+     * @param localTime LocalTime
+     * @param format    格式
+     * @return 时间字符串
+     */
+    public static String format(LocalTime localTime, TimeStyle format) {
+        return localTime != null && format != null ? format.getDateTimeFormatter().format(localTime) : null;
+    }
+
+    /**
+     * 格式化日期时间
+     *
+     * @param localDateTime LocalDateTime
+     * @param format        格式
+     * @return 日期时间字符串
+     */
+    public static String format(LocalDateTime localDateTime, DateTimeStyle format) {
+        return localDateTime != null && format != null ? format.getDateTimeFormatter().format(localDateTime) : null;
+    }
 
 }

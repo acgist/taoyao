@@ -5,10 +5,11 @@
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_acgist_taoyao_client_MainActivity_stringFromJNI(
-        JNIEnv* env,
-        jobject /* this */) {
+    JNIEnv *env,
+    jobject /* this */
+) {
     mediasoupclient::Device device;
-    if(device.IsLoaded()) {
+    if (device.IsLoaded()) {
         std::string hello = "Hello from C++ true";
         return env->NewStringUTF(hello.c_str());
     } else {

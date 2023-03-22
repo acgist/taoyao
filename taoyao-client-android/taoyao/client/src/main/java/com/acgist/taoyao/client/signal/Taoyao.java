@@ -1,15 +1,13 @@
 package com.acgist.taoyao.client.signal;
 
+import android.net.wifi.WifiManager;
+import android.os.BatteryManager;
+
 import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.CloseableUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
@@ -23,6 +21,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.spec.SecretKeySpec;
 
 /**
  * 桃夭信令
@@ -38,19 +42,21 @@ public class Taoyao {
     /**
      * 端口
      */
-    private int port;
+    private final int port;
     /**
      * 地址
      */
-    private String host;
+    private final String host;
+    private final String clientId;
+    private final String name;
+    private final String username;
+    private final String password;
     /**
      * Socket
      */
     private Socket socket;
     private InputStream input;
     private OutputStream output;
-    private String username;
-    private String password;
     private boolean close;
     /**
      * 是否连接
@@ -58,13 +64,18 @@ public class Taoyao {
     private boolean connect;
     private final Cipher encrypt;
     private final Cipher decrypt;
+    private final WifiManager wifiManager;
+    private final BatteryManager batteryManager;
 
-    public Taoyao(int port, String host, String algo, String secret) {
+    public Taoyao(
+        int port, String host, String algo, String secret, String clientId, String name, String username, String password,
+        WifiManager wifiManager, BatteryManager batteryManager
+    ) {
         this.port = port;
         this.host = host;
         this.close = false;
         this.connect = false;
-        if(algo == null || algo.isEmpty() || algo.equals("PLAINTEXT")) {
+        if (algo == null || algo.isEmpty() || algo.equals("PLAINTEXT")) {
             // 明文
             this.encrypt = null;
             this.decrypt = null;
@@ -72,6 +83,12 @@ public class Taoyao {
             this.encrypt = this.buildCipher(Cipher.ENCRYPT_MODE, algo, secret);
             this.decrypt = this.buildCipher(Cipher.DECRYPT_MODE, algo, secret);
         }
+        this.clientId = clientId;
+        this.name = name;
+        this.username = username;
+        this.password = password;
+        this.wifiManager = wifiManager;
+        this.batteryManager = batteryManager;
         EXECUTOR.submit(this::read);
     }
 
@@ -95,9 +112,9 @@ public class Taoyao {
 //        HiLog.debug(this.label, "连接信令：%s:%d", this.host, this.port);
         this.socket = new Socket();
         try {
-//            socket.setSoTimeout(5000);
+//          socket.setSoTimeout(5000);
             this.socket.connect(new InetSocketAddress(this.host, this.port), 5000);
-            if(this.socket.isConnected()) {
+            if (this.socket.isConnected()) {
                 this.input = this.socket.getInputStream();
                 this.output = this.socket.getOutputStream();
                 this.register();
@@ -116,9 +133,9 @@ public class Taoyao {
         short messageLength = 0;
         final byte[] bytes = new byte[1024];
         final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
-        while(!this.close) {
+        while (!this.close) {
             try {
-                while(this.input == null) {
+                while (this.input == null) {
                     this.connect();
                     synchronized (this) {
                         this.wait(5000);
@@ -168,12 +185,11 @@ public class Taoyao {
 
     /**
      * @param message 消息
-     *
      * @return 加密消息
      */
     private byte[] encrypt(Message message) {
         final byte[] bytes = message.toString().getBytes();
-        if(this.encrypt != null) {
+        if (this.encrypt != null) {
             try {
                 // 加密
                 final byte[] encryptBytes = this.encrypt.doFinal(bytes);
@@ -194,7 +210,7 @@ public class Taoyao {
     }
 
     public void push(Message message) {
-        if(this.output == null) {
+        if (this.output == null) {
             return;
         }
         try {
@@ -211,13 +227,20 @@ public class Taoyao {
     private void register() {
         final Header header = new Header();
         this.push(this.buildMessage(
-                "client::register",
-                "clientId", "harmony",
-                "name", "harmony",
-                "clientType", "camera",
-                "username", "taoyao",
-                "password","taoyao"
+            "client::register",
+            "clientId", this.clientId,
+            "name", this.name,
+            "clientType", "camera",
+            "username", this.username,
+            "password", this.password,
+            "signal", this.wifiManager.getMaxSignalLevel(),
+            "batter", this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY),
+            "charging", this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS)
         ));
+    }
+
+    private void heartbeat() {
+
     }
 
     private void close() {
@@ -258,19 +281,19 @@ public class Taoyao {
         final LocalDateTime time = LocalDateTime.now();
         return
             100000000000000L * time.getDayOfMonth() +
-            1000000000000L   * time.getHour()       +
-            10000000000L     * time.getMinute()     +
-            100000000L       * time.getSecond()     +
-            1000000L         * this.clientIndex     +
-            index;
+                1000000000000L * time.getHour() +
+                10000000000L * time.getMinute() +
+                100000000L * time.getSecond() +
+                1000000L * this.clientIndex +
+                index;
     }
 
     private String version;
 
-    public Message buildMessage(String signal, Object ... args) {
+    public Message buildMessage(String signal, Object... args) {
         final Map<Object, Object> map = new HashMap<>();
-        if(args != null) {
-            for (int index = 0; index < args.length; index+=2) {
+        if (args != null) {
+            for (int index = 0; index < args.length; index += 2) {
                 map.put(args[index], args[index + 1]);
             }
         }
@@ -293,11 +316,11 @@ public class Taoyao {
 //                                    log.debug("收到消息：{}", new String(this.decrypt.doFinal(message)));
         System.out.println(content);
         final Message message = JSONUtils.toJava(content, Message.class);
-        if(message == null) {
+        if (message == null) {
             return;
         }
         final Header header = message.getHeader();
-        if(header == null) {
+        if (header == null) {
             return;
         }
         final Map<String, Object> body = message.body();
