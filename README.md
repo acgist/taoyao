@@ -26,6 +26,12 @@
 |taoyao-client-android|安卓终端|安卓终端|
 |taoyao-signal-server|信令服务|终端信令控制|
 
+## 功能
+
+Web、信令已经完成大部分音视频功能，还有部分视频质量调整功能没有完成。
+
+Android还在学习之中...
+
 ## 证书
 
 本地开发测试安装`docs/certs`中的`ca.crt`证书

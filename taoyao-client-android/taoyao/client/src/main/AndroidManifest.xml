@@ -10,15 +10,15 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Taoyao">
         <service
-            android:name=".client.MediaService"
+            android:name=".MediaService"
             android:enabled="true"
             android:exported="false" />
         <activity
-            android:name=".client.SettingsActivity"
+            android:name=".SettingsActivity"
             android:exported="false"
             android:label="@string/title_activity_settings" />
         <activity
-            android:name=".client.MainActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

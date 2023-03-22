@@ -93,6 +93,24 @@ gcc -v
 g++ -v
 ```
 
+## 安装CMake
+
+```
+# 下载
+mkdir -p /data/dev/cmake
+cd /data/dev/cmake
+wget https://github.com/Kitware/CMake/releases/download/v3.26.0/cmake-3.26.0.tar.gz
+
+# 安装
+tar -zxvf cmake-3.26.0.tar.gz
+cd cmake-3.26.0
+./configure
+make && make install
+
+# 验证
+cmake -v
+```
+
 ## 安装Node
 
 ```
@@ -260,6 +278,90 @@ SELINUX=disabled
 ---
 ```
 
+## libwebrtc（可选）
+
+https://webrtc.github.io/webrtc-org/native-code/android/
+https://webrtc.github.io/webrtc-org/native-code/development/
+https://webrtc.github.io/webrtc-org/native-code/development/prerequisite-sw/
+https://www.chromium.org/developers/how-tos/install-depot-tools/
+
+建议直接购买国外的按需使用的主机，用完直接释放，配置建议：
+
+* 内存`8G`
+* 四核`CPU`
+* 硬盘`100G`
+* 系统`Ubuntu 20.xx`
+* 宽带按需`100Mbps/s`（不要固定宽带）
+* 整个编译过程大概需要两到三个小时（不会下载回来很慢）
+
+```
+# 编译工具
+mkdir -p /data
+git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+
+# 源码
+mkdir -p /data/webrtc
+cd /data/webrtc
+fetch --nohooks webrtc_android
+/data/depot_tools/gclient sync
+
+# 分支
+cd src
+git checkout -b m94 branch-heads/4606
+/data/depot_tools/gclient sync
+
+# 编译依赖
+./build/install-build-deps.sh
+./build/install-build-deps-android.sh
+source ./build/android/envsetup.sh
+
+---
+'target_os': 'android',
+'is_clang': True,
+'is_debug': False,
+'use_rtti': True,
+'rtc_use_h264': True,
+'use_custom_libcxx': False,
+'rtc_include_tests': False,
+'is_component_build': False,
+'treat_warnings_as_errors': False,
+'use_goma': use_goma,
+'target_cpu': _GetTargetCpu(arch)
+---
+
+# 编译.so
+./tools_webrtc/android/build_aar.py --build-dir ./out/release-build/
+# 指定CPU架构：--arch x86 x86_64 arm64-v8a armeabi-v7a
+
+# 编译.a
+/data/depot_tools/autoninja -C ./out/release-build/x86 webrtc &&
+/data/depot_tools/autoninja -C ./out/release-build/x86_64 webrtc &&
+/data/depot_tools/autoninja -C ./out/release-build/arm64-v8a webrtc &&
+/data/depot_tools/autoninja -C ./out/release-build/armeabi-v7a webrtc
+
+# 依赖打包
+zip -r webrtc.zip out libwebrtc.aar
+```
+
+[WebRTC](https://pan.baidu.com/s/1E_DXv32D9ODyj5J-o-ji_g?pwd=hudc)
+
+## libmediasoupclient（可选）
+
+https://mediasoup.org/documentation/v3/libmediasoupclient/installation/
+
+```
+# 编译
+cmake . -B build \
+-DCMAKE_BUILD_TYPE=Debug | Release \
+-DMEDIASOUPCLIENT_LOG_DEV=OFF \
+-DMEDIASOUPCLIENT_LOG_TRACE=OFF \
+-DMEDIASOUPCLIENT_BUILD_TESTS=OFF \
+-DLIBWEBRTC_INCLUDE_PATH:PATH=PATH_TO_LIBWEBRTC_SOURCES \
+-DLIBWEBRTC_BINARY_PATH:PATH=PATH_TO_LIBWEBRTC_BINARY
+make -C build
+make install -C build
+```
+
 ## 下载源码
 
 ```
@@ -329,7 +431,7 @@ systemctl enable taoyao-signal-server
 systemctl start | stop | restart taoyao-signal-server
 ```
 
-## 安装终端
+## 安装Web终端
 
 ```
 # 编译代码
@@ -350,6 +452,12 @@ npm run build
 cp /data/taoyao/docs/etc/nginx.conf /etc/nginx/nginx.conf
 
 nginx -s reload
+```
+
+## 安装Android终端
+
+```
+# Android Studio
 ```
 
 ## 配置防火墙
@@ -414,4 +522,42 @@ openssl x509 -in server.crt -subject -issuer -noout
 # subject= /C=cn/ST=gd/L=gz/O=acgist/OU=taoyao/CN=taoyao.acgist.com
 # issuer= /C=cn/ST=gd/L=gz/O=acgist/OU=acgist/CN=acgist.com
 openssl pkcs12 -export -clcerts -in server.crt -inkey server.key -out server.p12 -name taoyao
+```
+
+## licenses
+
+```
+List of licenses:
+webrtc,
+abseil-cpp,
+android_deps,
+android_deps:com_android_support_support_annotations.*,
+android_ndk,
+android_sdk,
+androidx,
+base64,
+boringssl,
+crc32c,
+fft,
+fiat,
+g711,
+g722,
+ijar,
+jdk,
+libaom,
+libevent,
+libjpeg_turbo,
+libsrtp,
+libvpx,
+libyuv,
+nasm,
+ooura,
+opus,
+pffft,
+protobuf,
+rnnoise,
+sigslot,
+spl_sqrt_floor,
+usrsctp,
+zlib
 ```
