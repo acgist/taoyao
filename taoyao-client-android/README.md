@@ -19,26 +19,24 @@
 
 ## 学习资料
 
-https://developer.android.google.cn/docs?hl=zh-cn
-https://developer.android.google.cn/guide?hl=zh-cn
+* https://developer.android.google.cn/docs?hl=zh-cn
+* https://developer.android.google.cn/guide?hl=zh-cn
 
 ## 依赖编译
 
-https://webrtc.github.io/webrtc-org/native-code/android/
-https://webrtc.github.io/webrtc-org/native-code/development/
-https://webrtc.github.io/webrtc-org/native-code/development/prerequisite-sw/
-https://www.chromium.org/developers/how-tos/install-depot-tools/
-https://mediasoup.org/documentation/v3/libmediasoupclient/installation/
+* https://webrtc.github.io/webrtc-org/native-code/android/
+* https://webrtc.github.io/webrtc-org/native-code/development/
+* https://webrtc.github.io/webrtc-org/native-code/development/prerequisite-sw/
+* https://www.chromium.org/developers/how-tos/install-depot-tools/
+* https://mediasoup.org/documentation/v3/libmediasoupclient/installation/
 
 ## 参考项目
 
-https://github.com/haiyangwu/webrtc-android-build
-https://github.com/haiyangwu/mediasoup-demo-android
-https://github.com/haiyangwu/mediasoup-client-android
+* https://github.com/haiyangwu/webrtc-android-build
+* https://github.com/haiyangwu/mediasoup-demo-android
+* https://github.com/haiyangwu/mediasoup-client-android
 
-## 其他依赖
-
-其他一些框架：
+## 其他实现
 
 * `org.webrtc:google-webrtc`
 * `io.github.haiyangwu:mediasoup-client`

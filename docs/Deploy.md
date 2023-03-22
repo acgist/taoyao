@@ -280,10 +280,10 @@ SELINUX=disabled
 
 ## libwebrtc（可选）
 
-https://webrtc.github.io/webrtc-org/native-code/android/
-https://webrtc.github.io/webrtc-org/native-code/development/
-https://webrtc.github.io/webrtc-org/native-code/development/prerequisite-sw/
-https://www.chromium.org/developers/how-tos/install-depot-tools/
+* https://webrtc.github.io/webrtc-org/native-code/android/
+* https://webrtc.github.io/webrtc-org/native-code/development/
+* https://webrtc.github.io/webrtc-org/native-code/development/prerequisite-sw/
+* https://www.chromium.org/developers/how-tos/install-depot-tools/
 
 建议直接购买国外的按需使用的主机，用完直接释放，配置建议：
 
