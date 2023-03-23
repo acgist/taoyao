@@ -1,12 +1,20 @@
 package com.acgist.taoyao.client.signal;
 
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationManager;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
+import android.util.Log;
 
 import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.CloseableUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
+import com.acgist.taoyao.client.media.Recorder;
+import com.acgist.taoyao.client.utils.IdUtils;
+
+import org.apache.commons.lang3.ArrayUtils;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -15,7 +23,6 @@ import java.net.Socket;
 import java.nio.ByteBuffer;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
-import java.time.LocalDateTime;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
@@ -33,11 +40,7 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * @author acgist
  */
-public class Taoyao {
-
-//    private static final HiLogLabel label = new HiLogLabel(HiLog.LOG_APP, 0, "[信令]");
-
-    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(8);
+public final class Taoyao {
 
     /**
      * 端口
@@ -47,10 +50,24 @@ public class Taoyao {
      * 地址
      */
     private final String host;
+    /**
+     * 终端ID
+     */
     private final String clientId;
+    private final String clientType = "camera";
+    /**
+     * 终端名称
+     */
     private final String name;
+    /**
+     * 桃夭帐号
+     */
     private final String username;
+    /**
+     * 桃夭密码
+     */
     private final String password;
+    private String version;
     /**
      * Socket
      */
@@ -66,10 +83,15 @@ public class Taoyao {
     private final Cipher decrypt;
     private final WifiManager wifiManager;
     private final BatteryManager batteryManager;
+    private final LocationManager locationManager;
+    // 线程池
+    private final ExecutorService executor = Executors.newFixedThreadPool(8);
+    // 定时任务线程池
+    private final ExecutorService scheduled = Executors.newScheduledThreadPool(2);
 
     public Taoyao(
         int port, String host, String algo, String secret, String clientId, String name, String username, String password,
-        WifiManager wifiManager, BatteryManager batteryManager
+        WifiManager wifiManager, BatteryManager batteryManager, LocationManager locationManager
     ) {
         this.port = port;
         this.host = host;
@@ -89,7 +111,9 @@ public class Taoyao {
         this.password = password;
         this.wifiManager = wifiManager;
         this.batteryManager = batteryManager;
-        EXECUTOR.submit(this::read);
+        this.locationManager = locationManager;
+        executor.submit(this::read);
+        scheduled.submit(this::heartbeat);
     }
 
     private Cipher buildCipher(int mode, String name, String secret) {
@@ -126,6 +150,10 @@ public class Taoyao {
             e.printStackTrace();
 //            HiLog.error(this.label, "连接信令异常：%s:%d", this.host, this.port);
         }
+    }
+
+    private void heartbeat() {
+
     }
 
     private void read() {
@@ -167,8 +195,12 @@ public class Taoyao {
                                 buffer.get(message);
                                 buffer.compact();
                                 final String content = new String(this.decrypt.doFinal(message));
-                                EXECUTOR.submit(() -> {
-                                    Taoyao.this.on(content);
+                                executor.submit(() -> {
+                                    try {
+                                        Taoyao.this.on(content);
+                                    } catch (Exception e) {
+                                        Log.e(Taoyao.class.getSimpleName(), "处理信令异常：" + content, e);
+                                    }
                                 });
                             }
                         }
@@ -224,25 +256,9 @@ public class Taoyao {
         return null;
     }
 
-    private void register() {
-        final Header header = new Header();
-        this.push(this.buildMessage(
-            "client::register",
-            "clientId", this.clientId,
-            "name", this.name,
-            "clientType", "camera",
-            "username", this.username,
-            "password", this.password,
-            "signal", this.wifiManager.getMaxSignalLevel(),
-            "batter", this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY),
-            "charging", this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS)
-        ));
-    }
-
-    private void heartbeat() {
-
-    }
-
+    /**
+     * 释放连接
+     */
     private void close() {
         this.connect = false;
         CloseableUtils.close(this.input);
@@ -253,46 +269,25 @@ public class Taoyao {
         this.socket = null;
     }
 
+    /**
+     * 关闭信令
+     */
     private void shutdown() {
         this.close();
         this.close = true;
-        EXECUTOR.shutdownNow();
+        executor.shutdownNow();
+        scheduled.shutdownNow();
     }
 
     /**
-     * 当前索引
+     * @param signal 信令
+     * @param args   消息主体内容
+     *
+     * @return 消息
      */
-    private int index;
-    /**
-     * 当前终端索引
-     */
-    private int clientIndex = 99999;
-
-    private static final int MAX_INDEX = 999;
-
-    public long buildId() {
-        int index;
-        synchronized (this) {
-            if (++this.index > MAX_INDEX) {
-                this.index = 0;
-            }
-            index = this.index;
-        }
-        final LocalDateTime time = LocalDateTime.now();
-        return
-            100000000000000L * time.getDayOfMonth() +
-                1000000000000L * time.getHour() +
-                10000000000L * time.getMinute() +
-                100000000L * time.getSecond() +
-                1000000L * this.clientIndex +
-                index;
-    }
-
-    private String version;
-
-    public Message buildMessage(String signal, Object... args) {
+    public Message buildMessage(String signal, Object ... args) {
         final Map<Object, Object> map = new HashMap<>();
-        if (args != null) {
+        if (ArrayUtils.isNotEmpty(args)) {
             for (int index = 0; index < args.length; index += 2) {
                 map.put(args[index], args[index + 1]);
             }
@@ -300,21 +295,28 @@ public class Taoyao {
         return this.buildMessage(signal, map);
     }
 
+    /**
+     * @param signal 信令
+     * @param body   消息主体
+     *
+     * @return 消息
+     */
     public Message buildMessage(String signal, Object body) {
         final Header header = new Header();
         header.setV(this.version == null ? "1.0.0" : this.version);
-        header.setId(this.buildId());
+        header.setId(IdUtils.buildId());
         header.setSignal(signal);
         final Message message = new Message();
         message.setHeader(header);
-        message.setBody(body == null ? new HashMap<>() : body);
+        message.setBody(body == null ? Map.of() : body);
         return message;
     }
 
+    /**
+     * @param content 信令消息
+     */
     private void on(String content) {
-        // TODO：日志
-//                                    log.debug("收到消息：{}", new String(this.decrypt.doFinal(message)));
-        System.out.println(content);
+        Log.d(Taoyao.class.getSimpleName(), "收到消息：" + content);
         final Message message = JSONUtils.toJava(content, Message.class);
         if (message == null) {
             return;
@@ -325,18 +327,61 @@ public class Taoyao {
         }
         final Map<String, Object> body = message.body();
         switch (header.getSignal()) {
-            case "client::register":
-                this.register(message, body);
-                break;
-            default:
-                break;
+            case "client::register" -> this.register(message, body);
+            default -> Log.i(Taoyao.class.getSimpleName(), "没有适配信令：" + content);
         }
     }
 
+    /**
+     * 注册
+     */
+    private void register() {
+        final Location location = this.location();
+        this.push(this.buildMessage(
+            "client::register",
+            "username", this.username,
+            "password", this.password,
+            "name", this.name,
+            "clientId", this.clientId,
+            "clientType", this.clientType,
+            "latitude", location == null ? -1 : location.getLatitude(),
+            "longitude", location == null ? -1 : location.getLongitude(),
+            "signal", this.wifiManager == null ? -1 : this.wifiManager.getMaxSignalLevel(),
+            "batter", this.batteryManager == null ? -1 : this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY),
+            "charging", this.batteryManager == null ? -1 : this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS),
+            "recording", Recorder.getInstance().isActive()
+        ));
+    }
+
+    /**
+     * @param message 消息
+     * @param body    消息主体
+     */
     private void register(Message message, Map<String, Object> body) {
         final Integer index = (Integer) body.get("index");
-        this.clientIndex = index;
-        System.out.println(clientIndex);
+        IdUtils.setClientIndex(index);
+    }
+
+    /**
+     * @return 位置
+     */
+    private Location location() {
+        if(this.locationManager == null) {
+            return null;
+        }
+        final Criteria criteria = new Criteria();
+        // 耗电
+        criteria.setCostAllowed(false);
+        // 不要海拔
+        criteria.setAltitudeRequired(false);
+        // 不要方位
+        criteria.setBearingRequired(false);
+        // 精度
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
+        // 低功耗
+        criteria.setPowerRequirement(Criteria.POWER_LOW);
+        final String provider = locationManager.getBestProvider(criteria, true);
+        return this.locationManager.getLastKnownLocation(provider);
     }
 
 }

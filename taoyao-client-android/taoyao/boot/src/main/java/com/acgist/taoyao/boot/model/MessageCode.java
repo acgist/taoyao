@@ -84,14 +84,15 @@ public enum MessageCode {
     }
 
     public String getCode() {
-        return code;
+        return this.code;
     }
 
     public Integer getStatus() {
-        return status;
+        return this.status;
     }
 
     public String getMessage() {
-        return message;
+        return this.message;
     }
+
 }

@@ -39,7 +39,7 @@ public class Header implements Serializable {
     }
 
     public String getV() {
-        return v;
+        return this.v;
     }
 
     public void setV(String v) {
@@ -47,7 +47,7 @@ public class Header implements Serializable {
     }
 
     public Long getId() {
-        return id;
+        return this.id;
     }
 
     public void setId(Long id) {
@@ -55,10 +55,11 @@ public class Header implements Serializable {
     }
 
     public String getSignal() {
-        return signal;
+        return this.signal;
     }
 
     public void setSignal(String signal) {
         this.signal = signal;
     }
+
 }

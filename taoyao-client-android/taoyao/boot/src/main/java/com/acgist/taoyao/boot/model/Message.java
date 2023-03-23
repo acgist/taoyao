@@ -1,11 +1,13 @@
 package com.acgist.taoyao.boot.model;
 
+import com.acgist.taoyao.boot.utils.JSONUtils;
+import com.fasterxml.jackson.annotation.JsonIncludeProperties;
+
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.acgist.taoyao.boot.utils.JSONUtils;
-import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 
 
 /**
@@ -39,13 +41,6 @@ public class Message implements Cloneable, Serializable {
     /**
      * @param code 状态编码
      */
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    /**
-     * @param code 状态编码
-     */
     public void setCode(MessageCode code) {
         this.setCode(code, null);
     }
@@ -57,7 +52,7 @@ public class Message implements Cloneable, Serializable {
      */
     public Message setCode(MessageCode code, String message) {
         this.code = code.getCode();
-        this.message = message == null || message.isEmpty() ? code.getMessage() : message;
+        this.message = StringUtils.isEmpty(message) ? code.getMessage() : message;
         return this;
     }
 
@@ -186,11 +181,15 @@ public class Message implements Cloneable, Serializable {
     }
 
     public String getCode() {
-        return code;
+        return this.code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getMessage() {
-        return message;
+        return this.message;
     }
 
     public void setMessage(String message) {
@@ -198,7 +197,7 @@ public class Message implements Cloneable, Serializable {
     }
 
     public Header getHeader() {
-        return header;
+        return this.header;
     }
 
     public void setHeader(Header header) {
@@ -206,7 +205,7 @@ public class Message implements Cloneable, Serializable {
     }
 
     public Object getBody() {
-        return body;
+        return this.body;
     }
 
     public void setBody(Object body) {

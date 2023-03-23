@@ -68,4 +68,8 @@ public class MessageCodeException extends RuntimeException {
         this.code = code;
     }
 
+    public MessageCode getCode() {
+        return this.code;
+    }
+    
 }
