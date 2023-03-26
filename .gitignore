@@ -3,6 +3,9 @@
 *.settings
 *.classpath
 *.factorypath
+
+.vscode
+
 package-lock.json
 
 logs

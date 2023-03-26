@@ -15,6 +15,7 @@ public enum ClientType {
     WEB("Web"),
     MEDIA("媒体服务"),
     CAMERA("摄像头"),
+    MOBILE("移动端"),
     OTHER("其他终端");
     
     /**
@@ -27,31 +28,10 @@ public enum ClientType {
     }
     
     /**
-     * @return 是否是Web
-     */
-    public boolean web() {
-        return this == WEB;
-    }
-    
-    /**
-     * @return 是否是媒体服务
-     */
-    public boolean media() {
-        return this == MEDIA;
-    }
-    
-    /**
-     * @return 是否是摄像头
-     */
-    public boolean camera() {
-        return this == CAMERA;
-    }
-    
-    /**
      * @return 是否是媒体终端
      */
     public boolean mediaClient() {
-        return this == WEB || this == CAMERA;
+        return this == WEB || this == CAMERA || this == MOBILE;
     }
     
     /**

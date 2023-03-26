@@ -55,6 +55,7 @@ Android还在学习之中...
 ## TODO
 
 * P2P
+* RTP
 * 标识 -> ID
 * 所有字段获取 -> get
 * 优化JS错误回调 -> platform::error

@@ -25,8 +25,10 @@ set(
 
 set(
     SOURCE_FILES
-    ${SOURCE_DIR}/main.hpp
-    ${SOURCE_DIR}/main.cpp
+    ${SOURCE_DIR}/rtp.hpp
+    ${SOURCE_DIR}/rtp.cpp
+    ${SOURCE_DIR}/webrtc.hpp
+    ${SOURCE_DIR}/webrtc.cpp
 )
 
 set(LIBWEBRTC_BINARY_PATH ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI} CACHE STRING "libwebrtc binary path" FORCE)

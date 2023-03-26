@@ -10,8 +10,7 @@
 
 ## 项目配置
 
-可以自己编译`WebRTC`依赖或者下载已有依赖，
-项目导入以后拷贝`libmediasoupclient`源码还有`WebRTC`头文件和二进制文件到`deps`目录。
+可以自己编译`WebRTC`依赖或者下载已有依赖，项目导入以后拷贝`libmediasoupclient`源码还有`WebRTC`头文件和二进制文件到`deps`目录。
 
 [WebRTC](https://pan.baidu.com/s/1E_DXv32D9ODyj5J-o-ji_g?pwd=hudc)
 
@@ -22,13 +21,18 @@
 * https://developer.android.google.cn/docs?hl=zh-cn
 * https://developer.android.google.cn/guide?hl=zh-cn
 
-## 依赖编译
+## 依赖编译（可选）
 
 * https://webrtc.github.io/webrtc-org/native-code/android/
 * https://webrtc.github.io/webrtc-org/native-code/development/
 * https://webrtc.github.io/webrtc-org/native-code/development/prerequisite-sw/
 * https://www.chromium.org/developers/how-tos/install-depot-tools/
 * https://mediasoup.org/documentation/v3/libmediasoupclient/installation/
+
+## 安卓编译（可选）
+
+* https://mirrors.tuna.tsinghua.edu.cn/help/AOSP/
+* https://source.android.google.cn/source/initializing?hl=zh-cn
 
 ## 参考项目
 
