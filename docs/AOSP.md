@@ -37,26 +37,26 @@ git config --global user.name "acgist"
 ./repo sync
 ```
 
-ROOT权限
-
 ## 裁剪
 
 ```
 # 应用
-
-# 驱动
-
+build/target/product/handheld_*.mk
 # root
-userdebug
-
 # framework
 ```
+
+## 驱动
+
+`Google`官方只提供了`Nexus`和`Pixel`的驱动
 
 ## 编译
 
 ```
+source build/envsetup.sh
 lunch aosp_arm64-user
 make -j 8
+make udpatepackage
 ```
 
 ## 刷机
@@ -64,9 +64,61 @@ make -j 8
 ```
 adb reboot bootloader
 fastboot flashall
+fastboot -w update aosp_arm64-img-eng.xxx.zip
 ```
 
+## 小米5S
 
-https://blog.csdn.net/u012932409/article/details/106792906
-https://blog.csdn.net/qq_33240707/article/details/123704679
-https://blog.csdn.net/weixin_42929891/article/details/122667831
+由于使用小米5S作为测试机，没有适合的`LineageOS`版本，所有这里选择了`PixelExperience`作为测试系统，如果其他机器建议使用`LineageOS`，`ROM`下载地址：
+
+### TWRP
+
+* https://twrp.me/Devices/
+
+### MIUI
+
+* 卡刷：http://bigota.d.miui.com/V11.0.2.0.OAGCNXM/miui_MI5S_V11.0.2.0.OAGCNXM_6ce204eb2c_8.0.zip
+* 线刷：http://bigota.d.miui.com/V11.0.2.0.OAGCNXM/capricorn_images_V11.0.2.0.OAGCNXM_20191023.0000.00_8.0_cn_714988e4b7.tgz
+* 文章：https://web.vip.miui.com/page/info/mio/mio/detail?isTop=0&postId=17843063
+
+### PixelExperience
+
+* https://get.pixelexperience.org/capricorn
+
+### 砖头
+
+如果刷机过程中出现了黑屏，进不了`recovery`和`bootloader`时，需要使用`MiFlash`通过串口刷机。
+
+## ADB命令
+
+```
+adb devices
+adb reboot
+adb reboot recovery
+adb reboot bootloader
+adb pull
+adb push
+adb shell
+adb logcat
+adb install
+adb uninstall
+```
+
+## 刷机命令
+
+注意：注意备份数据
+
+```
+fastboot devices
+fastboot reboot
+fastboot reboot-bootloader
+fastboot reboot-recovery
+fastboot erase boot
+fastboot erase recovery
+fastboot erase system
+fastboot erase userdata
+fastboot erase cache
+fastboot flash boot     boot.img
+fastboot flash recovery recovery.img
+fastboot flash system   system.img
+```

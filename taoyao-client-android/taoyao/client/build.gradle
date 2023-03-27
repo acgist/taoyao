@@ -6,7 +6,7 @@ android {
     namespace 'com.acgist.taoyao.client'
     compileSdk 32
     defaultConfig {
-        minSdk 31
+        minSdk 30
         targetSdk 32
         versionCode 100
         versionName "1.0.0"
@@ -31,9 +31,9 @@ android {
 dependencies {
     implementation project(path: ':boot')
     implementation project(path: ':media')
-    implementation 'androidx.appcompat:appcompat:1.4.1'
-    implementation 'com.google.android.material:material:1.5.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'androidx.appcompat:appcompat:1.5.1'
+    implementation 'com.google.android.material:material:1.8.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.apache.commons:commons-collections4:4.4'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'

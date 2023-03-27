@@ -9,7 +9,7 @@ android {
     namespace 'com.acgist.mediasoup'
     compileSdk 32
     defaultConfig {
-        minSdk 31
+        minSdk 30
         targetSdk 32
         versionCode 100
         versionName "1.0.0"
