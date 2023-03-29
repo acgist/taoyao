@@ -79,6 +79,7 @@ public class MainActivity extends AppCompatActivity {
             if(this.mainHandler == null) {
                 this.mainHandler = new MainHandler();
             }
+            intent.setAction(MediaService.Action.CONNECT.name());
             intent.putExtra("mainHandler", this.mainHandler);
             intent.setAction("connect");
             this.startService(intent);

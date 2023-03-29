@@ -1,4 +1,4 @@
 package com.acgist.taoyao.client.media;
 
-public class ClientManager {
+public class RoomClientManager {
 }

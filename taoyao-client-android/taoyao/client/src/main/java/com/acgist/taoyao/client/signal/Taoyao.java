@@ -20,7 +20,7 @@ import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.CloseableUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
-import com.acgist.media.ClientRecorder;
+import com.acgist.taoyao.media.ClientRecorder;
 import com.acgist.taoyao.client.utils.IdUtils;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -314,9 +314,7 @@ public final class Taoyao {
                 }
             } catch (Exception e) {
                 Log.e(Taoyao.class.getSimpleName(), "接收信令异常", e);
-                if(this.socket.isClosed()) {
-                    this.disconnect();
-                }
+                this.disconnect();
             }
         }
     }
@@ -416,8 +414,8 @@ public final class Taoyao {
         Log.d(Taoyao.class.getSimpleName(), "关闭信令：" + this.host + ":" + this.port);
         this.close = true;
         this.disconnect();
-        this.executor.shutdownNow();
-        this.scheduled.shutdownNow();
+        this.executor.shutdown();
+        this.scheduled.shutdown();
     }
 
     /**

@@ -89,7 +89,7 @@ public class SettingsActivity extends AppCompatActivity {
         editor.commit();
         // 重连
         final Intent intent = new Intent(this, MediaService.class);
-        intent.setAction("reconnect");
+        intent.setAction(MediaService.Action.RECONNECT.name());
         this.startService(intent);
         // 返回预览页面
         this.startActivity(new Intent(this, MainActivity.class));

@@ -27,6 +27,20 @@ public class MediaService extends Service {
         System.loadLibrary("taoyao");
     }
 
+    /**
+     * 动作类型
+     *
+     * @author acgist
+     */
+    public enum Action {
+
+        // 连接
+        CONNECT,
+        // 重连
+        RECONNECT;
+
+    }
+
     private Taoyao taoyao;
     private Handler mainHandler;
 
@@ -45,7 +59,7 @@ public class MediaService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(MediaService.class.getSimpleName(), "onStartCommand");
-        if("connect".equals(intent.getAction())) {
+        if(Action.CONNECT.name().equals(intent.getAction())) {
             if(this.taoyao == null) {
                 Log.d(MediaService.class.getSimpleName(), "打开信令连接");
                 this.mainHandler = (Handler) intent.getSerializableExtra("mainHandler");
@@ -53,7 +67,7 @@ public class MediaService extends Service {
             } else {
                 Log.d(MediaService.class.getSimpleName(), "信令已经连接");
             }
-        } else if("reconnect".equals(intent.getAction())) {
+        } else if(Action.RECONNECT.name().equals(intent.getAction())) {
             Log.d(MediaService.class.getSimpleName(), "重新连接信令");
             this.connect();
         } else {
