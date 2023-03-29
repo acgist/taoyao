@@ -52,7 +52,7 @@ public class SocketProperties {
     @Schema(title = "加密策略", description = "加密策略")
     private Encrypt encrypt;
     @Schema(title = "加密密钥", description = "加密密钥：为空自动生成")
-    private String encryptKey;
+    private String encryptSecret;
     @Schema(title = "超时时间", description = "超时时间")
 	private Long timeout;
     @Schema(title = "队列长度", description = "队列长度")

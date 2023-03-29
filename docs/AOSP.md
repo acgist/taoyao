@@ -55,7 +55,7 @@ build/target/product/handheld_*.mk
 ```
 source build/envsetup.sh
 lunch aosp_arm64-user
-make -j 8
+make -j 16
 make udpatepackage
 ```
 

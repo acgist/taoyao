@@ -39,7 +39,7 @@ public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
 	public SocketClient(SocketProperties socketProperties, AsynchronousSocketChannel instance) {
 		super(socketProperties.getTimeout(), instance);
 		this.ip = this.clientIp(instance);
-		this.cipher = CipherUtils.buildCipher(Cipher.ENCRYPT_MODE, socketProperties.getEncrypt(), socketProperties.getEncryptKey());
+		this.cipher = CipherUtils.buildCipher(Cipher.ENCRYPT_MODE, socketProperties.getEncrypt(), socketProperties.getEncryptSecret());
 	}
 
 	@Override

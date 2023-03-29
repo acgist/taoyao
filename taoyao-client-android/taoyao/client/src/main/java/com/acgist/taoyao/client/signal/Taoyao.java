@@ -6,8 +6,10 @@ import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
+import android.os.Handler;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
@@ -18,7 +20,7 @@ import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.CloseableUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
-import com.acgist.taoyao.client.media.Recorder;
+import com.acgist.media.ClientRecorder;
 import com.acgist.taoyao.client.utils.IdUtils;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -51,6 +53,8 @@ import javax.crypto.spec.SecretKeySpec;
  * @author acgist
  */
 public final class Taoyao {
+
+    private static final long MAX_TIMEOUT = 60L * 1000;
 
     /**
      * 端口
@@ -87,15 +91,19 @@ public final class Taoyao {
     /**
      * 是否关闭
      */
-    private boolean close;
+    private volatile boolean close;
     /**
      * 是否连接
      */
-    private boolean connect;
+    private volatile boolean connect;
     /**
      * 超时时间
      */
     private final int timeout;
+    /**
+     * 重试次数
+     */
+    private int connectRetryTimes;
     /**
      * Socket
      */
@@ -116,6 +124,10 @@ public final class Taoyao {
      * 解密工具
      */
     private final Cipher decrypt;
+    /**
+     * Handler
+     */
+    private final Handler handler;
     /**
      * 服务上下文
      */
@@ -144,16 +156,13 @@ public final class Taoyao {
      * 定时任务线程池
      */
     private final ScheduledExecutorService scheduled;
-    /**
-     * 全局单例
-     */
-    private static Taoyao instance;
 
     public Taoyao(
         int port, String host, String version,
         String name, String clientId, String clientType, String username, String password,
         int timeout, String algo, String secret,
-        Context context, WifiManager wifiManager, BatteryManager batteryManager, LocationManager locationManager
+        Handler handler, Context context,
+        WifiManager wifiManager, BatteryManager batteryManager, LocationManager locationManager
     ) {
         this.close = false;
         this.connect = false;
@@ -166,9 +175,11 @@ public final class Taoyao {
         this.username = username;
         this.password = password;
         this.timeout = timeout;
+        this.connectRetryTimes = 1;
         final boolean plaintext = algo == null || algo.isEmpty() || algo.equals("PLAINTEXT");
         this.encrypt = plaintext ? null : this.buildCipher(Cipher.ENCRYPT_MODE, algo, secret);
         this.decrypt = plaintext ? null : this.buildCipher(Cipher.DECRYPT_MODE, algo, secret);
+        this.handler = handler;
         this.context = context;
         this.wifiManager = wifiManager;
         this.batteryManager = batteryManager;
@@ -178,19 +189,8 @@ public final class Taoyao {
         this.executor = Executors.newFixedThreadPool(3);
         // 心跳线程
         this.scheduled = Executors.newScheduledThreadPool(1);
-        executor.submit(this::loopMessage);
-        scheduled.scheduleWithFixedDelay(this::heartbeat, 30, 30, TimeUnit.SECONDS);
-        if(Taoyao.instance != null) {
-            Taoyao.instance.close();
-        }
-        Taoyao.instance = this;
-    }
-
-    /**
-     * @return 信令
-     */
-    public static final Taoyao getInstance() {
-        return Taoyao.instance;
+        this.executor.submit(this::loopMessage);
+        this.scheduled.scheduleWithFixedDelay(this::heartbeat, 30, 30, TimeUnit.SECONDS);
     }
 
     /**
@@ -215,9 +215,9 @@ public final class Taoyao {
     /**
      * 连接信令
      */
-    public synchronized void connect() {
+    public synchronized boolean connect() {
         if(this.close) {
-            return;
+            return false;
         }
         // 释放连接
         this.disconnect();
@@ -233,13 +233,17 @@ public final class Taoyao {
                 this.output = this.socket.getOutputStream();
                 this.register();
                 this.connect = true;
+                this.connectRetryTimes = 1;
                 synchronized (this) {
                     this.notifyAll();
                 }
+            } else {
+                this.connect = false;
             }
         } catch (Exception e) {
             Log.e(Taoyao.class.getSimpleName(), "连接信令异常：" + this.host + ":" + this.port, e);
         }
+        return this.connect;
     }
 
     /**
@@ -256,7 +260,17 @@ public final class Taoyao {
                 while (!this.close && !this.connect) {
                     this.connect();
                     synchronized (this) {
-                        this.wait(this.timeout);
+                        try {
+                            long timeout = this.timeout;
+                            if(MAX_TIMEOUT > this.timeout * this.connectRetryTimes) {
+                                timeout = this.timeout * this.connectRetryTimes++;
+                            } else {
+                                timeout = MAX_TIMEOUT;
+                            }
+                            this.wait(timeout);
+                        } catch (InterruptedException e) {
+                            Log.d(Taoyao.class.getSimpleName(), "信令等待异常", e);
+                        }
                     }
                 }
                 // 读取
@@ -300,7 +314,9 @@ public final class Taoyao {
                 }
             } catch (Exception e) {
                 Log.e(Taoyao.class.getSimpleName(), "接收信令异常", e);
-                this.connect();
+                if(this.socket.isClosed()) {
+                    this.disconnect();
+                }
             }
         }
     }
@@ -340,6 +356,7 @@ public final class Taoyao {
             Log.w(Taoyao.class.getSimpleName(), "通道没有打开：" + message);
             return;
         }
+        Log.i(Taoyao.class.getSimpleName(), "发送信令：" + message);
         try {
             this.output.write(this.encrypt(message));
         } catch (Exception e) {
@@ -375,7 +392,10 @@ public final class Taoyao {
     /**
      * 释放连接
      */
-    private void disconnect() {
+    private synchronized void disconnect() {
+        if(!this.connect) {
+            return;
+        }
         Log.d(Taoyao.class.getSimpleName(), "释放信令：" + this.host + ":" + this.port);
         this.connect = false;
         CloseableUtils.close(this.input);
@@ -389,11 +409,15 @@ public final class Taoyao {
     /**
      * 关闭信令
      */
-    private void close() {
-        this.disconnect();
+    public synchronized void close() {
+        if(this.close) {
+            return;
+        }
+        Log.d(Taoyao.class.getSimpleName(), "关闭信令：" + this.host + ":" + this.port);
         this.close = true;
-        executor.shutdownNow();
-        scheduled.shutdownNow();
+        this.disconnect();
+        this.executor.shutdownNow();
+        this.scheduled.shutdownNow();
     }
 
     /**
@@ -474,10 +498,10 @@ public final class Taoyao {
             "clientType", this.clientType,
             "latitude", location == null ? -1 : location.getLatitude(),
             "longitude", location == null ? -1 : location.getLongitude(),
-            "signal", this.wifiManager == null ? -1 : this.wifiManager.getMaxSignalLevel(),
-            "batter", this.batteryManager == null ? -1 : this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY),
-            "charging", this.batteryManager == null ? -1 : this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS),
-            "recording", Recorder.getInstance().isActive()
+            "signal", this.wifiSignal(),
+            "battery", this.battery(),
+            "charging", this.charging(),
+            "recording", ClientRecorder.getInstance().isActive()
         ));
     }
 
@@ -497,18 +521,51 @@ public final class Taoyao {
      * 心跳
      */
     private void heartbeat() {
-        while(!this.close) {
-            final Location location = this.location();
-            this.push(this.buildMessage(
-                "client::heartbeat",
-                "latitude", location == null ? -1 : location.getLatitude(),
-                "longitude", location == null ? -1 : location.getLongitude(),
-                "signal", this.wifiManager == null ? -1 : this.wifiManager.getMaxSignalLevel(),
-                "batter", this.batteryManager == null ? -1 : this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY),
-                "charging", this.batteryManager == null ? -1 : this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS),
-                "recording", Recorder.getInstance().isActive()
-            ));
+        if(this.close || !this.connect) {
+            return;
         }
+        final Location location = this.location();
+        this.push(this.buildMessage(
+            "client::heartbeat",
+            "latitude", location == null ? -1 : location.getLatitude(),
+            "longitude", location == null ? -1 : location.getLongitude(),
+            "signal", this.wifiSignal(),
+            "battery", this.battery(),
+            "charging", this.charging(),
+            "recording", ClientRecorder.getInstance().isActive()
+        ));
+    }
+
+    /**
+     * @return 电量百分比
+     */
+    private int battery() {
+        return this.batteryManager == null ? -1 : this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+    }
+
+    /**
+     * @return 充电状态
+     */
+    private boolean charging() {
+        return
+            this.batteryManager == null ?
+            false :
+            this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS) == BatteryManager.BATTERY_STATUS_CHARGING;
+    }
+
+    /**
+     * @return WIFI信号强度
+     */
+    private int wifiSignal() {
+        if(this.wifiManager == null) {
+            return -1;
+        }
+        final WifiInfo wifiInfo = this.wifiManager.getConnectionInfo();
+        if(wifiInfo == null) {
+            return -1;
+        }
+        final int signal = this.wifiManager.calculateSignalLevel(wifiInfo.getRssi());
+        return signal / this.wifiManager.getMaxSignalLevel() * 100;
     }
 
     /**

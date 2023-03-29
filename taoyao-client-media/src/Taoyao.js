@@ -1,6 +1,7 @@
 const config    = require("./Config.js");
 const process   = require("child_process");
 const WebSocket = require("ws");
+const { trace } = require("console");
 
 /**
  * 信令协议
@@ -1383,7 +1384,12 @@ class Taoyao {
     });
     // await transport.enableTraceEvent([ 'probation', 'bwe' ]);
     // transport.on("trace", (trace) => {
-    //   console.debug("transport trace：", transport.id, trace);
+    //   // 网络评估
+    //   if (trace.type === "bwe" && trace.direction === "out") {
+    //     logger.debug("transport downlinkBwe：", trace);
+    //   } else {
+    //     console.debug("transport trace：", transport.id, trace);
+    //   }
     // });
     transport.observer.on("close", () => {
       if(room.transports.delete(transport.id)) {

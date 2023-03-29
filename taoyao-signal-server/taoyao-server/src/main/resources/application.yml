@@ -150,7 +150,7 @@ taoyao:
     host: 0.0.0.0
     port: 9999
     encrypt: DES
-    encrypt-key: 2SPWy+TF1zM=
+    encrypt-secret: 2SPWy+TF1zM=
     timeout: ${taoyao.timeout}
     queue-size: 100000
     min-thread: 4

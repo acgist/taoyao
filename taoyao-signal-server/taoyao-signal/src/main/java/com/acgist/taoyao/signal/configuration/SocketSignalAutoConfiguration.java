@@ -58,25 +58,25 @@ public class SocketSignalAutoConfiguration {
 	 */
 	private void buildSecret(SocketProperties socketProperties) {
 	    log.info("Socket信令加密策略：{}", socketProperties.getEncrypt());
-	    if(socketProperties.getEncrypt() == null || StringUtils.isNotEmpty(socketProperties.getEncryptKey())) {
+	    if(socketProperties.getEncrypt() == null) {
 	        return;
 	    }
-	    final Random random = new Random();
-	    switch (socketProperties.getEncrypt()) {
-	    case AES -> {
-	        final byte[] bytes = new byte[16];
-	        random.nextBytes(bytes);
-	        socketProperties.setEncryptKey(Base64.getMimeEncoder().encodeToString(bytes));
+	    if(StringUtils.isNotEmpty(socketProperties.getEncryptSecret())) {
+	        log.info("Socket信令加密密码（固定）：{}", socketProperties.getEncryptSecret());
+	        return;
 	    }
-	    case DES -> {
-	        final byte[] bytes = new byte[8];
-	        random.nextBytes(bytes);
-	        socketProperties.setEncryptKey(Base64.getMimeEncoder().encodeToString(bytes));
+	    final byte[] bytes = switch (socketProperties.getEncrypt()) {
+	    case AES -> new byte[16];
+	    case DES -> new byte[8];
+	    default  -> null;
+        };
+	    if(bytes == null) {
+	        final Random random = new Random();
+	        random.nextBytes(bytes);	        socketProperties.setEncryptSecret(Base64.getMimeEncoder().encodeToString(bytes));
+	        log.info("Socket信令加密密码（随机）：{}", socketProperties.getEncryptSecret());
+	    } else {
+	        log.warn("Socket信令加密密码算法不支持的算法：{}", socketProperties.getEncrypt());
 	    }
-	    default -> {
-	        // 其他情况使用明文
-	    }        }
-	    log.info("Socket信令加密密码：{}", socketProperties.getEncryptKey());
 	}
 	
 }

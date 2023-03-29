@@ -19,6 +19,7 @@ public class BootReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        Log.i(BootReceiver.class.getSimpleName(), "onReceive");
         final Resources resources = context.getResources();
         if ("android.intent.action.BOOT_COMPLETED".equals(intent.getAction())) {
             if(resources.getBoolean(R.bool.preview)) {

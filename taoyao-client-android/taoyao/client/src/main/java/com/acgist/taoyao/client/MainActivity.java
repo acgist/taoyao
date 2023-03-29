@@ -1,17 +1,21 @@
 package com.acgist.taoyao.client;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Process;
+import android.os.Handler;
+import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Display;
+import android.view.View;
 import android.view.WindowManager;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.acgist.taoyao.client.databinding.ActivityMainBinding;
+
+import java.io.Serializable;
 
 /**
  * 预览界面
@@ -20,10 +24,12 @@ import com.acgist.taoyao.client.databinding.ActivityMainBinding;
  */
 public class MainActivity extends AppCompatActivity {
 
+    private MainHandler mainHandler;
     private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle bundle) {
+        Log.i(MainActivity.class.getSimpleName(), "onCreate");
         super.onCreate(bundle);
         // 启动点亮屏幕
         this.setTurnScreenOn(true);
@@ -37,20 +43,25 @@ public class MainActivity extends AppCompatActivity {
         this.binding = ActivityMainBinding.inflate(this.getLayoutInflater());
         this.setContentView(this.binding.getRoot());
         // 设置按钮
-        this.binding.settings.setOnClickListener(view -> {
-            final Intent settings = new Intent(this, SettingsActivity.class);
-            this.startActivity(settings);
-        });
+        this.binding.settings.setOnClickListener(this::launchSettings);
     }
 
     @Override
     protected void onStart() {
+        Log.i(MainActivity.class.getSimpleName(), "onStart");
         super.onStart();
     }
 
     @Override
     protected void onStop() {
+        Log.i(MainActivity.class.getSimpleName(), "onStop");
         super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        Log.i(MainActivity.class.getSimpleName(), "onDestroy");
+        super.onDestroy();
     }
 
     /**
@@ -63,13 +74,42 @@ public class MainActivity extends AppCompatActivity {
             SystemClock.sleep(100);
         }
         if(display.STATE_ON == display.getState()) {
-            // 媒体服务
             Log.i(MainActivity.class.getSimpleName(), "拉起媒体服务");
-            final Intent mediaService = new Intent(this, MediaService.class);
-            this.startService(mediaService);
+            final Intent intent = new Intent(this, MediaService.class);
+            if(this.mainHandler == null) {
+                this.mainHandler = new MainHandler();
+            }
+            intent.putExtra("mainHandler", this.mainHandler);
+            intent.setAction("connect");
+            this.startService(intent);
         } else {
             Log.w(MainActivity.class.getSimpleName(), "拉起媒体服务失败");
         }
+    }
+
+    /**
+     * 拉起设置页面
+     *
+     * @param view View
+     */
+    private void launchSettings(View view) {
+        final Intent intent = new Intent(this, SettingsActivity.class);
+        this.startActivity(intent);
+    }
+
+    /**
+     * Handler
+     *
+     * @author acgist
+     */
+    private static class MainHandler extends Handler implements Serializable {
+
+        @Override
+        public void handleMessage(@NonNull Message message) {
+            super.handleMessage(message);
+            Log.d(MainActivity.class.getSimpleName(), "Handler消息：" + message.what + " - " + message.obj);
+        }
+
     }
 
 }

@@ -10,7 +10,6 @@ public class TaoyaoApplication {
 
 	public static void main(String[] args) {
 		SpringApplication.run(TaoyaoApplication.class, args);
-//      System.exit(SpringApplication.exit(SpringApplication.run(TaoyaoApplication.class, args)));
 	}
 
 }

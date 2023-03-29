@@ -66,7 +66,7 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
 	    this.messageLength = 0;
 		this.bufferSize = socketProperties.getBufferSize();
 		this.maxBufferSize = socketProperties.getMaxBufferSize();
-		this.cipher = CipherUtils.buildCipher(Cipher.DECRYPT_MODE, socketProperties.getEncrypt(), socketProperties.getEncryptKey());
+		this.cipher = CipherUtils.buildCipher(Cipher.DECRYPT_MODE, socketProperties.getEncrypt(), socketProperties.getEncryptSecret());
 		this.buffer = ByteBuffer.allocateDirect(maxBufferSize);
 		this.channel = channel;
 		this.clientManager = clientManager;

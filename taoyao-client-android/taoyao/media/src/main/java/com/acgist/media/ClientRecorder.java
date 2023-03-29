@@ -1,20 +1,20 @@
-package com.acgist.taoyao.client.media;
+package com.acgist.media;
 
 /**
  * 录像机
  *
  * @author acgist
  */
-public final class Recorder {
+public final class ClientRecorder {
 
     /**
      * 是否正在录像
      */
     private boolean active;
 
-    private static final Recorder INSTANCE = new Recorder();
+    private static final ClientRecorder INSTANCE = new ClientRecorder();
 
-    public static final Recorder getInstance() {
+    public static final ClientRecorder getInstance() {
         return INSTANCE;
     }
 

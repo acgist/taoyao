@@ -8,8 +8,8 @@
     <integer name="timeout">5000</integer>
     <!-- 终端类型：CAMERA|MOBILE -->
     <string name="clientType">MOBILE</string>
-    <!--信令加密算法-->
-    <string name="algo">DES</string>
-    <!--信令加密密钥-->
-    <string name="secret">DES</string>
+    <!-- 信令加密策略：AES|DES -->
+    <string name="encrypt">DES</string>
+    <!-- 信令加密密钥 -->
+    <string name="encryptSecret">2SPWy+TF1zM=</string>
 </resources>
