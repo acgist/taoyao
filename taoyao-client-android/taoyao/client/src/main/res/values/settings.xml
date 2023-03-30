@@ -12,4 +12,7 @@
     <string name="encrypt">DES</string>
     <!-- 信令加密密钥 -->
     <string name="encryptSecret">2SPWy+TF1zM=</string>
+    <!-- 文件存储目录 -->
+    <string name="storagePathImage">/taoyao/image</string>
+    <string name="storagePathVideo">/taoyao/video</string>
 </resources>

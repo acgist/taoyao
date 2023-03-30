@@ -1,4 +1,4 @@
-package com.acgist.taoyao.p2p;
+package com.acgist.taoyao.media;
 
 /**
  * P2P终端

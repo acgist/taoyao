@@ -20,7 +20,7 @@ import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.CloseableUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
-import com.acgist.taoyao.media.ClientRecorder;
+import com.acgist.taoyao.media.MediaRecorder;
 import com.acgist.taoyao.client.utils.IdUtils;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -499,7 +499,7 @@ public final class Taoyao {
             "signal", this.wifiSignal(),
             "battery", this.battery(),
             "charging", this.charging(),
-            "recording", ClientRecorder.getInstance().isActive()
+            "recording", MediaRecorder.getInstance().isActive()
         ));
     }
 
@@ -530,7 +530,7 @@ public final class Taoyao {
             "signal", this.wifiSignal(),
             "battery", this.battery(),
             "charging", this.charging(),
-            "recording", ClientRecorder.getInstance().isActive()
+            "recording", MediaRecorder.getInstance().isActive()
         ));
     }
 

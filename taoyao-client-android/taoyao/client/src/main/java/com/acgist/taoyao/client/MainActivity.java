@@ -1,6 +1,8 @@
 package com.acgist.taoyao.client;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -9,6 +11,7 @@ import android.util.Log;
 import android.view.Display;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -31,6 +34,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle bundle) {
         Log.i(MainActivity.class.getSimpleName(), "onCreate");
         super.onCreate(bundle);
+        // 请求权限
+        this.requestPermission();
         // 启动点亮屏幕
         this.setTurnScreenOn(true);
         // 锁屏显示屏幕
@@ -65,6 +70,35 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * 请求权限
+     */
+    private void requestPermission() {
+        final String[] permissions = new String[]{
+            Manifest.permission.CAMERA,
+            Manifest.permission.INTERNET,
+            Manifest.permission.RECORD_AUDIO,
+            Manifest.permission.ACCESS_WIFI_STATE,
+            Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.RECEIVE_BOOT_COMPLETED,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        };
+        boolean allGranted = true;
+        for (String permission : permissions) {
+            if(this.getApplicationContext().checkCallingOrSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
+                Log.i(MediaService.class.getSimpleName(), "授权成功：" + permission);
+            } else {
+                allGranted = false;
+                Log.w(MediaService.class.getSimpleName(), "授权失败：" + permission);
+            }
+        }
+        if(!allGranted) {
+            Toast.makeText(this, "授权失败", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    /**
      * 拉起媒体服务
      */
     private void launchMediaService() {
@@ -81,7 +115,6 @@ public class MainActivity extends AppCompatActivity {
             }
             intent.setAction(MediaService.Action.CONNECT.name());
             intent.putExtra("mainHandler", this.mainHandler);
-            intent.setAction("connect");
             this.startService(intent);
         } else {
             Log.w(MainActivity.class.getSimpleName(), "拉起媒体服务失败");

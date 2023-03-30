@@ -1,9 +1,11 @@
 package com.acgist.taoyao.client;
 
+import android.Manifest;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.location.LocationManager;
 import android.net.wifi.WifiManager;
@@ -59,15 +61,15 @@ public class MediaService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(MediaService.class.getSimpleName(), "onStartCommand");
-        if(Action.CONNECT.name().equals(intent.getAction())) {
-            if(this.taoyao == null) {
+        if (Action.CONNECT.name().equals(intent.getAction())) {
+            if (this.taoyao == null) {
                 Log.d(MediaService.class.getSimpleName(), "打开信令连接");
                 this.mainHandler = (Handler) intent.getSerializableExtra("mainHandler");
                 this.connect();
             } else {
                 Log.d(MediaService.class.getSimpleName(), "信令已经连接");
             }
-        } else if(Action.RECONNECT.name().equals(intent.getAction())) {
+        } else if (Action.RECONNECT.name().equals(intent.getAction())) {
             Log.d(MediaService.class.getSimpleName(), "重新连接信令");
             this.connect();
         } else {
@@ -114,7 +116,7 @@ public class MediaService extends Service {
     }
 
     private synchronized void close() {
-        if(this.taoyao == null) {
+        if (this.taoyao == null) {
             return;
         }
         Toast.makeText(this.getApplicationContext(), "关闭信令", Toast.LENGTH_SHORT).show();

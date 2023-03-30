@@ -1,4 +1,4 @@
 package com.acgist.taoyao.media;
 
-public class AudioPublisher {
+public class Room {
 }

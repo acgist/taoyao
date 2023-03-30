@@ -5,16 +5,16 @@ package com.acgist.taoyao.media;
  *
  * @author acgist
  */
-public final class ClientRecorder {
+public final class MediaRecorder {
 
     /**
      * 是否正在录像
      */
     private boolean active;
 
-    private static final ClientRecorder INSTANCE = new ClientRecorder();
+    private static final MediaRecorder INSTANCE = new MediaRecorder();
 
-    public static final ClientRecorder getInstance() {
+    public static final MediaRecorder getInstance() {
         return INSTANCE;
     }
 

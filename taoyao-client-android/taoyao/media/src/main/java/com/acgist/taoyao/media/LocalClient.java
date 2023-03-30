@@ -6,8 +6,7 @@ package com.acgist.taoyao.media;
  *
  * @author acgist
  */
-public class RoomClient {
-
+public class LocalClient {
 
 
 }
