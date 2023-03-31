@@ -27,6 +27,7 @@ public class MediaService extends Service {
 
     static {
         System.loadLibrary("taoyao");
+        System.loadLibrary("jingle_peerconnection_so");
     }
 
     /**

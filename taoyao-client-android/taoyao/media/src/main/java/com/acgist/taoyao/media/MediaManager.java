@@ -1,7 +1,14 @@
 package com.acgist.taoyao.media;
 
 import android.content.Context;
+import android.content.Intent;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
+
+import com.acgist.taoyao.config.Config;
 
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
@@ -12,6 +19,7 @@ import org.webrtc.EglBase;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnectionFactory;
+import org.webrtc.ScreenCapturerAndroid;
 import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
@@ -36,6 +44,8 @@ public class MediaManager {
      */
     public enum Type {
 
+        // 文件共享
+        FILE,
         // 后置摄像头
         BACK,
         // 前置摄像头
@@ -43,12 +53,33 @@ public class MediaManager {
         // 屏幕共享
         SCREEN;
 
+        /**
+         * @return 是否摄像头
+         */
+        public boolean isCamera() {
+            return this == BACK || this == FRONT;
+        }
+
+
+    }
+
+    private static final MediaManager INSTANCE = new MediaManager();
+
+    private MediaManager() {
+    }
+
+    public static final MediaManager getInstance() {
+        return INSTANCE;
     }
 
     /**
      * 视频类型
      */
     private Type type;
+    /**
+     * Handler
+     */
+    private Handler handler;
     /**
      * 上下文
      */
@@ -58,21 +89,16 @@ public class MediaManager {
      */
     private MediaStream mediaStream;
     /**
-     * 屏幕捕获
+     * 视频捕获
+     * FileVideoCapturer
+     * CameraVideoCapturer
+     * ScreenCapturerAndroid
      */
     private VideoCapturer videoCapturer;
-    /**
-     * 摄像头捕获
-     */
-    private CameraVideoCapturer cameraVideoCapturer;
     /**
      * Peer连接工厂
      */
     private PeerConnectionFactory peerConnectionFactory;
-    /**
-     * 预览
-     */
-    private SurfaceViewRenderer previewView;
 
     static {
         // 设置采样
@@ -85,8 +111,17 @@ public class MediaManager {
 
     /**
      * 加载媒体流
+     *
+     * @param context 上下文
      */
-    public void init() {
+    public void init(Context context) {
+        this.type = Type.BACK;
+        this.context = context;
+        PeerConnectionFactory.initialize(
+            PeerConnectionFactory.InitializationOptions.builder(this.context)
+            .setEnableInternalTracer(true)
+            .createInitializationOptions()
+        );
         this.peerConnectionFactory = PeerConnectionFactory.builder().createPeerConnectionFactory();
         this.mediaStream = this.peerConnectionFactory.createLocalMediaStream("ARDAMS");
     }
@@ -104,11 +139,10 @@ public class MediaManager {
         }
         this.type = type;
         Log.i(MediaManager.class.getSimpleName(), "设置视频来源：" + type);
-        if(this.type == Type.SCREEN || type == Type.SCREEN) {
-            this.initVideo();
-        } else {
+        if(this.type.isCamera() && type.isCamera()) {
             // TODO：测试是否需要完全重置
-            this.cameraVideoCapturer.switchCamera(new CameraVideoCapturer.CameraSwitchHandler() {
+            final CameraVideoCapturer cameraVideoCapturer = (CameraVideoCapturer) this.videoCapturer;
+            cameraVideoCapturer.switchCamera(new CameraVideoCapturer.CameraSwitchHandler() {
                 @Override
                 public void onCameraSwitchDone(boolean success) {
                 }
@@ -116,13 +150,15 @@ public class MediaManager {
                 public void onCameraSwitchError(String message) {
                 }
             });
+        } else {
+            this.initVideo();
         }
     }
 
     /**
      * 加载音频
      */
-    private void initAudio() {
+    public void initAudio() {
         // 关闭音频
         this.closeAudioTrack();
         // 加载音频
@@ -137,55 +173,66 @@ public class MediaManager {
     /**
      * 加载视频
      */
-    private void initVideo() {
+    public void initVideo() {
         this.closeVideoTrack();
-        if(this.cameraVideoCapturer != null) {
-            this.cameraVideoCapturer.dispose();
+        if(this.videoCapturer != null) {
+            this.videoCapturer.dispose();
         }
-        final CameraEnumerator cameraEnumerator = new Camera2Enumerator(this.context);
-        final String[] names = cameraEnumerator.getDeviceNames();
-        for(String name : names) {
-            if(this.type == Type.FRONT && cameraEnumerator.isFrontFacing(name)) {
-                Log.i(MediaManager.class.getSimpleName(), "加载前置摄像头：" + name);
-                this.cameraVideoCapturer = cameraEnumerator.createCapturer(name, new MediaCameraEventsHandler());
-            } else if(this.type == Type.BACK && cameraEnumerator.isBackFacing(name)) {
-                Log.i(MediaManager.class.getSimpleName(), "加载后置摄像头：" + name);
-                this.cameraVideoCapturer = cameraEnumerator.createCapturer(name, new MediaCameraEventsHandler());
-            } else {
-                Log.i(MediaManager.class.getSimpleName(), "忽略摄像头：" + name);
+        if(this.type.isCamera()) {
+            final CameraEnumerator cameraEnumerator = new Camera2Enumerator(this.context);
+            final String[] names = cameraEnumerator.getDeviceNames();
+            for(String name : names) {
+                if(this.type == Type.FRONT && cameraEnumerator.isFrontFacing(name)) {
+                    Log.i(MediaManager.class.getSimpleName(), "加载视频（前置摄像头）：" + name);
+                    this.videoCapturer = cameraEnumerator.createCapturer(name, new MediaCameraEventsHandler());
+                } else if(this.type == Type.BACK && cameraEnumerator.isBackFacing(name)) {
+                    Log.i(MediaManager.class.getSimpleName(), "加载视频（后置摄像头）：" + name);
+                    this.videoCapturer = cameraEnumerator.createCapturer(name, new MediaCameraEventsHandler());
+                } else {
+                    Log.d(MediaManager.class.getSimpleName(), "忽略摄像头：" + name);
+                }
             }
+        } else if(this.type == Type.FILE) {
+            Log.i(MediaManager.class.getSimpleName(), "加载视频（文件）");
+        } else if(this.type == Type.SCREEN) {
+            Log.i(MediaManager.class.getSimpleName(), "加载视频（录屏）");
+            final MediaProjectionManager mediaProjectionManager = this.context.getSystemService(MediaProjectionManager.class);
+            final Intent intent = mediaProjectionManager.createScreenCaptureIntent();
+            final Message message = Message.obtain(this.handler, () -> {
+                this.videoCapturer = new ScreenCapturerAndroid(intent, new MediaProjection.Callback() {
+                    @Override
+                    public void onStop() {
+                        super.onStop();
+                        Log.i(MediaManager.class.getSimpleName(), "停止屏幕捕获");
+                    }
+                });
+            });
+            message.obj = intent;
+            message.what = Config.WHAT_SCREEN_CAPTURE;
+            this.handler.sendMessage(message);
+//          this.handler.dispatchMessage(message);
         }
+        this.initVideoTrack();
     }
 
     /**
      * 加载视频
      */
     private void initVideoTrack() {
-        SurfaceTextureHelper surfaceTextureHelper = null;
         // 设置预览
-        if(this.previewView != null) {
-            final EglBase eglBase = EglBase.create();
-            surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", eglBase.getEglBaseContext());
-            this.previewView.setMirror(true);
-            this.previewView.setEnableHardwareScaler(true);
-        }
-        // 是否捕获屏幕
-        final boolean screen = this.type == Type.SCREEN;
-        final VideoSource videoSource = this.peerConnectionFactory.createVideoSource(screen);
-        if(screen) {
-            Log.i(MediaManager.class.getSimpleName(), "捕获屏幕");
-        } else {
-            Log.i(MediaManager.class.getSimpleName(), "捕获摄像头");
-            this.cameraVideoCapturer.initialize(surfaceTextureHelper, this.context, videoSource.getCapturerObserver());
-            this.cameraVideoCapturer.startCapture(640, 480, 30);
-        }
+        final SurfaceViewRenderer surfaceViewRenderer = new SurfaceViewRenderer(this.context);
+        surfaceViewRenderer.setMirror(true);
+        surfaceViewRenderer.setEnableHardwareScaler(true);
+        // 加载视频
+        final EglBase eglBase = EglBase.create();
+        final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", eglBase.getEglBaseContext());
+        final VideoSource videoSource = this.peerConnectionFactory.createVideoSource(this.videoCapturer.isScreencast());
+        this.videoCapturer.initialize(surfaceTextureHelper, this.context, videoSource.getCapturerObserver());
+        this.videoCapturer.startCapture(640, 480, 30);
         final VideoTrack videoTrack = this.peerConnectionFactory.createVideoTrack("ARDAMSv0", videoSource);
         videoTrack.setEnabled(true);
         this.mediaStream.addTrack(videoTrack);
         Log.i(MediaManager.class.getSimpleName(), "加载视频：" + videoTrack.id());
-    }
-
-    private void initPreview() {
     }
 
     public void pauseAudio() {
@@ -264,14 +311,17 @@ public class MediaManager {
      * 释放资源
      */
     public void close() {
-        if(this.cameraVideoCapturer != null) {
-            this.cameraVideoCapturer.dispose();
+        if(this.videoCapturer != null) {
+            this.videoCapturer.dispose();
+            this.videoCapturer = null;
         }
         if(this.mediaStream != null) {
             this.mediaStream.dispose();
+            this.mediaStream = null;
         }
         if(this.peerConnectionFactory != null) {
             this.peerConnectionFactory.dispose();
+            this.peerConnectionFactory = null;
         }
     }
 

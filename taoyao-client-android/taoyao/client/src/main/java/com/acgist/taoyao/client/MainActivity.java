@@ -9,14 +9,19 @@ import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Display;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.acgist.taoyao.client.databinding.ActivityMainBinding;
+import com.acgist.taoyao.config.Config;
+import com.acgist.taoyao.media.MediaManager;
 
 import java.io.Serializable;
 
@@ -25,7 +30,7 @@ import java.io.Serializable;
  *
  * @author acgist
  */
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements Serializable {
 
     private MainHandler mainHandler;
     private ActivityMainBinding binding;
@@ -96,6 +101,9 @@ public class MainActivity extends AppCompatActivity {
         if(!allGranted) {
             Toast.makeText(this, "授权失败", Toast.LENGTH_SHORT).show();
         }
+        MediaManager.getInstance().init(this.getApplicationContext());
+        MediaManager.getInstance().initAudio();
+        MediaManager.getInstance().initVideo();
     }
 
     /**
@@ -111,7 +119,7 @@ public class MainActivity extends AppCompatActivity {
             Log.i(MainActivity.class.getSimpleName(), "拉起媒体服务");
             final Intent intent = new Intent(this, MediaService.class);
             if(this.mainHandler == null) {
-                this.mainHandler = new MainHandler();
+                this.mainHandler = new MainHandler(this);
             }
             intent.setAction(MediaService.Action.CONNECT.name());
             intent.putExtra("mainHandler", this.mainHandler);
@@ -136,14 +144,52 @@ public class MainActivity extends AppCompatActivity {
      *
      * @author acgist
      */
-    private static class MainHandler extends Handler implements Serializable {
+    public static class MainHandler extends Handler implements Serializable {
+
+        private final MainActivity mainActivity;
+
+        public MainHandler(MainActivity mainActivity) {
+            this.mainActivity = mainActivity;
+        }
 
         @Override
         public void handleMessage(@NonNull Message message) {
             super.handleMessage(message);
-            Log.d(MainActivity.class.getSimpleName(), "Handler消息：" + message.what + " - " + message.obj);
+            Log.d(MainHandler.class.getSimpleName(), "Handler消息：" + message.what + " - " + message.obj);
+            switch(message.what) {
+                case Config.WHAT_SCREEN_CAPTURE -> this.mainActivity.screenCapture(message);
+                case Config.WHAT_NEW_CLIENT_VIDEO -> this.mainActivity.newClientVideo(message);
+            }
         }
 
+    }
+
+    /**
+     * 屏幕捕获
+     *
+     * @param message 消息
+     */
+    private void screenCapture(Message message) {
+        final ActivityResultLauncher<Intent> activityResultLauncher = this.registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(),
+            result -> {
+                if(result.getResultCode() == RESULT_OK) {
+                    Log.i(MediaManager.class.getSimpleName(), "开始屏幕捕获");
+                    message.getCallback().run();
+                } else {
+                    Log.w(MainActivity.class.getSimpleName(), "屏幕捕获失败：" + result.getResultCode());
+                }
+            }
+        );
+        activityResultLauncher.launch((Intent) message.obj);
+    }
+
+    /**
+     * 新建用户视频
+     *
+     * @param message 消息
+     */
+    private void newClientVideo(Message message) {
     }
 
 }

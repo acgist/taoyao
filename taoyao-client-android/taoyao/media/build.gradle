@@ -24,7 +24,8 @@ android {
                     "-DLIBWEBRTC_BINARY_PATH=" + WEBRTC_LIB_PATH,
                     "-DMEDIASOUPCLIENT_BUILD_TESTS=OFF",
                     "-DMEDIASOUPCLIENT_LOG_TRACE=OFF",
-                    "-DMEDIASOUPCLIENT_LOG_DEV=OFF"
+                    "-DMEDIASOUPCLIENT_LOG_DEV=OFF",
+                    "-DANDROID_STL=c++_shared"
             }
         }
     }
@@ -44,10 +45,15 @@ android {
             version '3.22.1'
         }
     }
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ["libs"]
+        }
+    }
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.a', '*.so', '*.jar'])
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'org.apache.commons:commons-lang3:3.12.0'
     implementation 'org.apache.commons:commons-collections4:4.4'
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
