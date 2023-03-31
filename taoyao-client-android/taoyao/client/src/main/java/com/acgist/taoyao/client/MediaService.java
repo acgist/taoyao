@@ -1,12 +1,15 @@
 package com.acgist.taoyao.client;
 
-import android.Manifest;
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.graphics.BitmapFactory;
 import android.location.LocationManager;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
@@ -16,7 +19,10 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
+import androidx.core.app.NotificationCompat;
+
 import com.acgist.taoyao.client.signal.Taoyao;
+import com.acgist.taoyao.media.MediaManager;
 
 /**
  * 媒体服务
@@ -40,7 +46,9 @@ public class MediaService extends Service {
         // 连接
         CONNECT,
         // 重连
-        RECONNECT;
+        RECONNECT,
+        // 屏幕录制
+        SCREEN_RECORD;
 
     }
 
@@ -63,16 +71,11 @@ public class MediaService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(MediaService.class.getSimpleName(), "onStartCommand");
         if (Action.CONNECT.name().equals(intent.getAction())) {
-            if (this.taoyao == null) {
-                Log.d(MediaService.class.getSimpleName(), "打开信令连接");
-                this.mainHandler = (Handler) intent.getSerializableExtra("mainHandler");
-                this.connect();
-            } else {
-                Log.d(MediaService.class.getSimpleName(), "信令已经连接");
-            }
+            this.openConnect(intent);
         } else if (Action.RECONNECT.name().equals(intent.getAction())) {
-            Log.d(MediaService.class.getSimpleName(), "重新连接信令");
-            this.connect();
+            this.reconnect();
+        } else if (Action.SCREEN_RECORD.name().equals(intent.getAction())) {
+            this.screenRecord(intent);
         } else {
             Log.w(MediaService.class.getSimpleName(), "未知动作：" + intent.getAction());
         }
@@ -84,6 +87,21 @@ public class MediaService extends Service {
         Log.i(MediaService.class.getSimpleName(), "onDestroy");
         super.onDestroy();
         this.close();
+    }
+
+    private void openConnect(Intent intent) {
+        if (this.taoyao == null) {
+            Log.d(MediaService.class.getSimpleName(), "打开信令连接");
+            this.mainHandler = (Handler) intent.getSerializableExtra("mainHandler");
+            this.connect();
+        } else {
+            Log.d(MediaService.class.getSimpleName(), "信令已经连接");
+        }
+    }
+
+    private void reconnect() {
+        Log.d(MediaService.class.getSimpleName(), "重新连接信令");
+        this.connect();
     }
 
     /**
@@ -123,6 +141,25 @@ public class MediaService extends Service {
         Toast.makeText(this.getApplicationContext(), "关闭信令", Toast.LENGTH_SHORT).show();
         this.taoyao.close();
         this.taoyao = null;
+    }
+
+    public void screenRecord(Intent intent) {
+        final Intent notificationIntent = new Intent(this, MediaService.class);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "NOTIFICATION_CHANNEL_ID")
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
+            .setLargeIcon(BitmapFactory.decodeResource(this.getResources(), R.mipmap.ic_launcher_foreground))
+            .setTicker("NOTIFICATION_TICKER")
+            .setContentTitle("屏幕录制")
+            .setContentText("屏幕录制共享")
+            .setContentIntent(pendingIntent);
+        final Notification notification = notificationBuilder.build();
+        final NotificationChannel channel = new NotificationChannel("NOTIFICATION_CHANNEL_ID", "NOTIFICATION_CHANNEL_NAME", NotificationManager.IMPORTANCE_DEFAULT);
+        channel.setDescription("NOTIFICATION_CHANNEL_DESC");
+        final NotificationManager notificationManager = this.getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
+        this.startForeground((int) System.currentTimeMillis(), notification);
+        MediaManager.getInstance().screenRecord(intent.getParcelableExtra("data"));
     }
 
 }

@@ -9,8 +9,25 @@ import java.util.logging.Handler;
  */
 public class LocalClient extends RoomClient {
 
+    /**
+     * 传输类型
+     *
+     * @author acgist
+     */
+    public enum TransportType {
+
+        RTP,
+        WEBRTC;
+
+    }
+
     public LocalClient(String name, String clientId, Handler handler) {
         super(name, clientId, handler);
+    }
+
+    @Override
+    public void close() {
+        super.close();
     }
 
 }

@@ -3,6 +3,7 @@
     <string name="app_name">桃夭</string>
     <string name="title_activity_main">桃夭终端预览</string>
     <string name="title_activity_settings">桃夭终端设置</string>
+    <string name="button_record">录制</string>
     <string name="button_setting">设置</string>
     <string name="button_connect">连接</string>
     <string name="signal_port">信令端口</string>

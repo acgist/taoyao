@@ -87,3 +87,41 @@ cmake . -B build \
 make -C build
 make install -C build
 ```
+
+## licenses
+
+```
+List of licenses:
+webrtc,
+abseil-cpp,
+android_deps,
+android_deps:com_android_support_support_annotations.*,
+android_ndk,
+android_sdk,
+androidx,
+base64,
+boringssl,
+crc32c,
+fft,
+fiat,
+g711,
+g722,
+ijar,
+jdk,
+libaom,
+libevent,
+libjpeg_turbo,
+libsrtp,
+libvpx,
+libyuv,
+nasm,
+ooura,
+opus,
+pffft,
+protobuf,
+rnnoise,
+sigslot,
+spl_sqrt_floor,
+usrsctp,
+zlib
+```

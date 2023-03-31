@@ -23,14 +23,22 @@
 |:--|:--|:--|
 |taoyao-client-web|Web终端|Web终端|
 |taoyao-client-media|媒体终端|媒体服务|
-|taoyao-client-android|安卓终端|安卓终端|
 |taoyao-signal-server|信令服务|终端信令控制|
+|taoyao-client-android|安卓终端|安卓终端|
 
-## 功能
+### Web终端功能
 
-Web、信令已经完成大部分音视频功能，还有部分视频质量调整功能没有完成。
+|功能|是否支持|是否实现|描述|
+|P2P|支持|暂未实现|P2P监控模式|
+|WebRTC|支持|实现|Web终端不能同时进入多个房间|
 
-Android还在学习之中...
+### 安卓终端功能
+
+|功能|是否支持|是否实现|描述|
+|P2P|支持|暂未实现|P2P监控模式|
+|WebRTC|支持|暂未实现|安卓终端支持同时进入多个房间|
+|RTP|支持|暂未实现|支持房间RTP推流（不会拉流）|
+||||
 
 ## 证书
 
@@ -54,8 +62,6 @@ Android还在学习之中...
 
 ## TODO
 
-* P2P
-* RTP
 * 标识 -> ID
 * 所有字段获取 -> get
 * 优化JS错误回调 -> platform::error

@@ -15,4 +15,8 @@
     <!-- 文件存储目录 -->
     <string name="storagePathImage">/taoyao/image</string>
     <string name="storagePathVideo">/taoyao/video</string>
+    <!-- 传输类型：RTP|WEBRTC -->
+    <string name="transportType">WEBRTC</string>
+    <string name="audioRecordFormat"></string>
+    <string name="videoRecordFormat"></string>
 </resources>

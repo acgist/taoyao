@@ -403,6 +403,17 @@ firewall-cmd --list-ports
 ```
 mkdir /data/certs
 cd /data/certs
+
+# CA证书
+
+openssl genrsa -out ca.key 2048
+openssl req -x509 -new -key ca.key -out ca.crt -days 3650
+openssl x509 -in ca.crt -subject -issuer -noout
+# subject= /C=cn/ST=gd/L=gz/O=acgist/OU=acgist/CN=acgist.com
+# issuer= /C=cn/ST=gd/L=gz/O=acgist/OU=acgist/CN=acgist.com
+
+# Server证书信息
+
 vim server.ext
 
 ---
@@ -422,58 +433,19 @@ DNS.3=www.acgist.com
 DNS.4=taoyao.acgist.com
 ---
 
-# CA
-openssl genrsa -out ca.key 2048
-openssl req -x509 -new -key ca.key -out ca.crt -days 3650
-openssl x509 -in ca.crt -subject -issuer -noout
-# subject= /C=cn/ST=gd/L=gz/O=acgist/OU=acgist/CN=acgist.com
-# issuer= /C=cn/ST=gd/L=gz/O=acgist/OU=acgist/CN=acgist.com
-
-# Server
+# Server证书
 
 openssl genrsa -out server.key 2048
 openssl req -new -key server.key -out server.csr
+# 设置信息：-subj "/C=cn/ST=gd/L=gz/O=acgist/OU=taoyao/CN=taoyao.acgist.com"
 openssl x509 -req -in server.csr -out server.crt -CA ca.crt -CAkey ca.key -CAcreateserial -days 3650 -extfile server.ext
 openssl x509 -in server.crt -subject -issuer -noout
 # subject= /C=cn/ST=gd/L=gz/O=acgist/OU=taoyao/CN=taoyao.acgist.com
 # issuer= /C=cn/ST=gd/L=gz/O=acgist/OU=acgist/CN=acgist.com
 openssl pkcs12 -export -clcerts -in server.crt -inkey server.key -out server.p12 -name taoyao
-```
-
-## licenses
-
-```
-List of licenses:
-webrtc,
-abseil-cpp,
-android_deps,
-android_deps:com_android_support_support_annotations.*,
-android_ndk,
-android_sdk,
-androidx,
-base64,
-boringssl,
-crc32c,
-fft,
-fiat,
-g711,
-g722,
-ijar,
-jdk,
-libaom,
-libevent,
-libjpeg_turbo,
-libsrtp,
-libvpx,
-libyuv,
-nasm,
-ooura,
-opus,
-pffft,
-protobuf,
-rnnoise,
-sigslot,
-spl_sqrt_floor,
-usrsctp,
-zlib
+# 不要导出ca证书：-clcerts
+# 设置密码：-passout pass:123456
+# keytool -importkeystore -v -srckeystore server.p12 -srcstoretype pkcs12 -destkeystore server.jks -deststoretype jks
+# 原始密码：-srcstorepass 123456
+# 设置密码：-deststorepass 123456
 ```

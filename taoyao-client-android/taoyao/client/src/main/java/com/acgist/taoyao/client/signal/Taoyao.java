@@ -22,6 +22,8 @@ import com.acgist.taoyao.boot.utils.CloseableUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.media.MediaRecorder;
 import com.acgist.taoyao.client.utils.IdUtils;
+import com.acgist.taoyao.media.P2PClient;
+import com.acgist.taoyao.media.Room;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -34,8 +36,10 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -156,6 +160,14 @@ public final class Taoyao {
      * 定时任务线程池
      */
     private final ScheduledExecutorService scheduled;
+    /**
+     * 房间列表
+     */
+    private final List<Room> roomList;
+    /**
+     * P2P终端列表
+     */
+    private final List<P2PClient> p2pClientList;
 
     public Taoyao(
         int port, String host, String version,
@@ -191,6 +203,8 @@ public final class Taoyao {
         this.scheduled = Executors.newScheduledThreadPool(1);
         this.executor.submit(this::loopMessage);
         this.scheduled.scheduleWithFixedDelay(this::heartbeat, 30, 30, TimeUnit.SECONDS);
+        this.roomList = new CopyOnWriteArrayList<>();
+        this.p2pClientList = new CopyOnWriteArrayList<>();
     }
 
     /**
@@ -416,6 +430,8 @@ public final class Taoyao {
         this.disconnect();
         this.executor.shutdown();
         this.scheduled.shutdown();
+        this.roomList.forEach(Room::close);
+        this.p2pClientList.forEach(P2PClient::close);
     }
 
     /**

@@ -109,6 +109,7 @@ public final class NetUtils {
         if(Boolean.FALSE.equals(NetUtils.ipRewriteProperties.getEnabled())) {
             return sourceIp;
         }
+        log.debug("重写地址：{} - {}", sourceIp, clientIp);
         try {
             final InetAddress sourceAddress = NetUtils.realAddress(sourceIp);
             final InetAddress clientAddress = NetUtils.realAddress(clientIp);

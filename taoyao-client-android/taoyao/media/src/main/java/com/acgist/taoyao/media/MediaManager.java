@@ -2,9 +2,11 @@ package com.acgist.taoyao.media;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioRecord;
 import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
@@ -15,18 +17,29 @@ import org.webrtc.AudioTrack;
 import org.webrtc.Camera2Enumerator;
 import org.webrtc.CameraEnumerator;
 import org.webrtc.CameraVideoCapturer;
+import org.webrtc.DefaultVideoDecoderFactory;
+import org.webrtc.DefaultVideoEncoderFactory;
 import org.webrtc.EglBase;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnectionFactory;
+import org.webrtc.RendererCommon;
 import org.webrtc.ScreenCapturerAndroid;
 import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
+import org.webrtc.VideoDecoderFactory;
+import org.webrtc.VideoEncoderFactory;
+import org.webrtc.VideoFrame;
+import org.webrtc.VideoSink;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
+import org.webrtc.audio.JavaAudioDeviceModule;
+import org.webrtc.voiceengine.WebRtcAudioManager;
+import org.webrtc.voiceengine.WebRtcAudioRecord;
 import org.webrtc.voiceengine.WebRtcAudioUtils;
 
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -34,6 +47,18 @@ import java.util.List;
  * 媒体来源管理器
  *
  * @author acgist
+ *
+ * https://zhuanlan.zhihu.com/p/82446482
+ * https://www.jianshu.com/p/97acd9a51909
+ * https://blog.csdn.net/nanoage/article/details/127406494
+ * https://webrtc.org.cn/20190419_tutorial3_webrtc_android
+ * https://blog.csdn.net/CSDN_Mew/article/details/103406781
+ * https://blog.csdn.net/Tong_Hou/article/details/112116349
+ * https://blog.csdn.net/u011418943/article/details/127108642
+ * https://blog.csdn.net/csdn_shen0221/article/details/120331004
+ * https://blog.csdn.net/csdn_shen0221/article/details/119982257
+ *
+ * TODO：动态码率（BITRATE_MODE_VBR、BITRATE_MODE）
  */
 public class MediaManager {
 
@@ -85,6 +110,14 @@ public class MediaManager {
      */
     private Context context;
     /**
+     * 本地终端
+     */
+    private LocalClient localClient;
+    /**
+     *
+     */
+    private EglBase eglBase;
+    /**
      * 媒体流：声音、主码流（预览流）、次码流
      */
     private MediaStream mediaStream;
@@ -107,6 +140,8 @@ public class MediaManager {
         WebRtcAudioUtils.setWebRtcBasedNoiseSuppressor(true);
         // 回声小丑
         WebRtcAudioUtils.setWebRtcBasedAcousticEchoCanceler(true);
+        // 使用OpenSL ES
+//      WebRtcAudioManager.setBlacklistDeviceForOpenSLESUsage(true);
     }
 
     /**
@@ -114,16 +149,38 @@ public class MediaManager {
      *
      * @param context 上下文
      */
-    public void init(Context context) {
+    public void init(Handler handler, Context context) {
         this.type = Type.BACK;
+        this.handler = handler;
         this.context = context;
+        this.eglBase = EglBase.create();
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(this.context)
             .setEnableInternalTracer(true)
             .createInitializationOptions()
         );
-        this.peerConnectionFactory = PeerConnectionFactory.builder().createPeerConnectionFactory();
+        final VideoDecoderFactory videoDecoderFactory = new DefaultVideoDecoderFactory(this.eglBase.getEglBaseContext());
+        final VideoEncoderFactory videoEncoderFactory = new DefaultVideoEncoderFactory(this.eglBase.getEglBaseContext(), true, true);
+        final JavaAudioDeviceModule javaAudioDeviceModule = JavaAudioDeviceModule.builder(this.context)
+            // 本地音频
+            .setSamplesReadyCallback(MediaRecorder.getInstance().audioRecoder)
+            // 远程音频
+//          .setAudioTrackStateCallback()
+//          .setUseHardwareNoiseSuppressor(true)
+//          .setUseHardwareAcousticEchoCanceler(true)
+            .createAudioDeviceModule();
+        this.peerConnectionFactory = PeerConnectionFactory.builder()
+//          .setAudioProcessingFactory()
+//          .setAudioDecoderFactoryFactory()
+//          .setAudioEncoderFactoryFactory()
+            .setAudioDeviceModule(javaAudioDeviceModule)
+            .setVideoDecoderFactory(videoDecoderFactory)
+            .setVideoEncoderFactory(videoEncoderFactory)
+            .createPeerConnectionFactory();
         this.mediaStream = this.peerConnectionFactory.createLocalMediaStream("ARDAMS");
+        Arrays.stream(videoEncoderFactory.getSupportedCodecs()).forEach(v -> {
+            Log.i(MediaManager.class.getSimpleName(), "支持的视频解码器：" + v.name);
+        });
     }
 
     /**
@@ -163,6 +220,25 @@ public class MediaManager {
         this.closeAudioTrack();
         // 加载音频
         final MediaConstraints mediaConstraints = new MediaConstraints();
+        // 高音过滤
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googHighpassFilter", "true"));
+//        // 自动增益
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googAutoGainControl", "true"));
+//        // 回声消除
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googEchoCancellation", "true"));
+//        // 噪音处理
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googNoiseSuppression", "true"));
+        // 更多
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googEchoCancellation", "true"));
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googEchoCancellation2", "true"));
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googDAEchoCancellation", "true"));
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googTypingNoiseDetection", "true"));
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googAutoGainControl", "true"));
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googAutoGainControl2", "true"));
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googNoiseSuppression", "true"));
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googNoiseSuppression2", "true"));
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googAudioMirroring", "false"));
+//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googHighpassFilter", "true"));
         final AudioSource audioSource = this.peerConnectionFactory.createAudioSource(mediaConstraints);
         final AudioTrack audioTrack = this.peerConnectionFactory.createAudioTrack("ARDAMSa0", audioSource);
         audioTrack.setEnabled(true);
@@ -192,26 +268,25 @@ public class MediaManager {
                     Log.d(MediaManager.class.getSimpleName(), "忽略摄像头：" + name);
                 }
             }
+            this.initVideoTrack();
         } else if(this.type == Type.FILE) {
             Log.i(MediaManager.class.getSimpleName(), "加载视频（文件）");
         } else if(this.type == Type.SCREEN) {
             Log.i(MediaManager.class.getSimpleName(), "加载视频（录屏）");
-            final MediaProjectionManager mediaProjectionManager = this.context.getSystemService(MediaProjectionManager.class);
-            final Intent intent = mediaProjectionManager.createScreenCaptureIntent();
-            final Message message = Message.obtain(this.handler, () -> {
-                this.videoCapturer = new ScreenCapturerAndroid(intent, new MediaProjection.Callback() {
-                    @Override
-                    public void onStop() {
-                        super.onStop();
-                        Log.i(MediaManager.class.getSimpleName(), "停止屏幕捕获");
-                    }
-                });
-            });
-            message.obj = intent;
+            final Message message = new Message();
             message.what = Config.WHAT_SCREEN_CAPTURE;
             this.handler.sendMessage(message);
-//          this.handler.dispatchMessage(message);
         }
+    }
+
+    public void screenRecord(Intent intent) {
+        this.videoCapturer = new ScreenCapturerAndroid(intent, new MediaProjection.Callback() {
+            @Override
+            public void onStop() {
+                super.onStop();
+                Log.i(MediaManager.class.getSimpleName(), "停止屏幕捕获");
+            }
+        });
         this.initVideoTrack();
     }
 
@@ -219,20 +294,42 @@ public class MediaManager {
      * 加载视频
      */
     private void initVideoTrack() {
-        // 设置预览
-        final SurfaceViewRenderer surfaceViewRenderer = new SurfaceViewRenderer(this.context);
-        surfaceViewRenderer.setMirror(true);
-        surfaceViewRenderer.setEnableHardwareScaler(true);
+        final SurfaceViewRenderer surfaceViewRenderer = this.preview();
         // 加载视频
-        final EglBase eglBase = EglBase.create();
-        final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", eglBase.getEglBaseContext());
+        final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", this.eglBase.getEglBaseContext());
         final VideoSource videoSource = this.peerConnectionFactory.createVideoSource(this.videoCapturer.isScreencast());
         this.videoCapturer.initialize(surfaceTextureHelper, this.context, videoSource.getCapturerObserver());
         this.videoCapturer.startCapture(640, 480, 30);
         final VideoTrack videoTrack = this.peerConnectionFactory.createVideoTrack("ARDAMSv0", videoSource);
+        videoTrack.addSink(surfaceViewRenderer);
+        videoTrack.addSink(MediaRecorder.getInstance().videoRecoder);
         videoTrack.setEnabled(true);
         this.mediaStream.addTrack(videoTrack);
         Log.i(MediaManager.class.getSimpleName(), "加载视频：" + videoTrack.id());
+//      二次处理：VideoProcessor
+    }
+
+    private SurfaceViewRenderer preview() {
+        // 设置预览
+        final SurfaceViewRenderer surfaceViewRenderer = new SurfaceViewRenderer(this.context);
+        // 视频反转
+        surfaceViewRenderer.setMirror(false);
+        // 视频拉伸
+        surfaceViewRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
+        // 硬件拉伸
+        surfaceViewRenderer.setEnableHardwareScaler(true);
+        // 加载
+        surfaceViewRenderer.init(this.eglBase.getEglBaseContext(), null);
+        // 事件
+//      surfaceViewRenderer.setOnClickListener();
+        // TODO：迁移localvideo
+//        surfaceViewRenderer.release();
+        // 页面加载
+        final Message message = new Message();
+        message.obj = surfaceViewRenderer;
+        message.what = Config.WHAT_NEW_LOCAL_VIDEO;
+        this.handler.sendMessage(message);
+        return surfaceViewRenderer;
     }
 
     public void pauseAudio() {

@@ -14,7 +14,7 @@ import lombok.Setter;
 @Setter
 @Schema(title = "AI识别配置", description = "AI识别配置")
 public class AiProperties {
-
+    
     /**
      * 识别类型
      * 

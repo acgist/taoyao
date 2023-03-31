@@ -12,8 +12,20 @@ public class Config {
      */
     public static final int WHAT_SCREEN_CAPTURE = 1000;
     /**
-     * 新建用户视频
+     * 新建本地音频
      */
-    public static final int WHAT_NEW_CLIENT_VIDEO = 1001;
+    public static final int WHAT_NEW_LOCAL_AUDIO = 2000;
+    /**
+     * 新建本地视频
+     */
+    public static final int WHAT_NEW_LOCAL_VIDEO = 2001;
+    /**
+     * 新建远程音频
+     */
+    public static final int WHAT_NEW_REMOTE_AUDIO = 2002;
+    /**
+     * 新建远程视频
+     */
+    public static final int WHAT_NEW_REMOTE_VIDEO = 2003;
 
 }
