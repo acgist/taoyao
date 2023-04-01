@@ -10,6 +10,7 @@ import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
@@ -20,9 +21,9 @@ import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.CloseableUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
-import com.acgist.taoyao.media.MediaRecorder;
 import com.acgist.taoyao.client.utils.IdUtils;
-import com.acgist.taoyao.media.P2PClient;
+import com.acgist.taoyao.media.MediaRecorder;
+import com.acgist.taoyao.media.SessionClient;
 import com.acgist.taoyao.media.Room;
 
 import org.apache.commons.lang3.ArrayUtils;
@@ -40,10 +41,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -57,8 +54,6 @@ import javax.crypto.spec.SecretKeySpec;
  * @author acgist
  */
 public final class Taoyao {
-
-    private static final long MAX_TIMEOUT = 60L * 1000;
 
     /**
      * 端口
@@ -105,10 +100,6 @@ public final class Taoyao {
      */
     private final int timeout;
     /**
-     * 重试次数
-     */
-    private int connectRetryTimes;
-    /**
      * Socket
      */
     private Socket socket;
@@ -131,7 +122,7 @@ public final class Taoyao {
     /**
      * Handler
      */
-    private final Handler handler;
+    private final Handler mainHandler;
     /**
      * 服务上下文
      */
@@ -152,14 +143,12 @@ public final class Taoyao {
      * 请求消息：同步消息
      */
     private final Map<Long, Message> requestMessage;
-    /**
-     * 线程池
-     */
-    private final ExecutorService executor;
-    /**
-     * 定时任务线程池
-     */
-    private final ScheduledExecutorService scheduled;
+    private final Handler loopMessageHandler;
+    private final HandlerThread loopMessageThread;
+    private final Handler heartbeatHandler;
+    private final HandlerThread heartbeatThread;
+    private final Handler executeMessageHandler;
+    private final HandlerThread executeMessageThread;
     /**
      * 房间列表
      */
@@ -167,13 +156,13 @@ public final class Taoyao {
     /**
      * P2P终端列表
      */
-    private final List<P2PClient> p2pClientList;
+    private final List<SessionClient> p2pClientList;
 
     public Taoyao(
         int port, String host, String version,
         String name, String clientId, String clientType, String username, String password,
         int timeout, String algo, String secret,
-        Handler handler, Context context,
+        Handler mainHandler, Context context,
         WifiManager wifiManager, BatteryManager batteryManager, LocationManager locationManager
     ) {
         this.close = false;
@@ -187,22 +176,26 @@ public final class Taoyao {
         this.username = username;
         this.password = password;
         this.timeout = timeout;
-        this.connectRetryTimes = 1;
         final boolean plaintext = algo == null || algo.isEmpty() || algo.equals("PLAINTEXT");
         this.encrypt = plaintext ? null : this.buildCipher(Cipher.ENCRYPT_MODE, algo, secret);
         this.decrypt = plaintext ? null : this.buildCipher(Cipher.DECRYPT_MODE, algo, secret);
-        this.handler = handler;
+        this.mainHandler = mainHandler;
         this.context = context;
         this.wifiManager = wifiManager;
         this.batteryManager = batteryManager;
         this.locationManager = locationManager;
         this.requestMessage = new ConcurrentHashMap<>();
-        // 读取线程 + 两条处理线程
-        this.executor = Executors.newFixedThreadPool(3);
-        // 心跳线程
-        this.scheduled = Executors.newScheduledThreadPool(1);
-        this.executor.submit(this::loopMessage);
-        this.scheduled.scheduleWithFixedDelay(this::heartbeat, 30, 30, TimeUnit.SECONDS);
+        this.loopMessageThread = new HandlerThread("TaoyaoLoopMessageThread");
+        this.loopMessageThread.start();
+        this.loopMessageHandler = new Handler(this.loopMessageThread.getLooper());
+        this.loopMessageHandler.post(this::loopMessage);
+        this.heartbeatThread = new HandlerThread("TaoyaoHeartbeatThread");
+        this.heartbeatThread.start();
+        this.heartbeatHandler = new Handler(this.heartbeatThread.getLooper());
+        this.heartbeatHandler.postDelayed(this::heartbeat, 30L * 1000);
+        this.executeMessageThread = new HandlerThread("TaoyaoExecuteMessageThread");
+        this.executeMessageThread.start();
+        this.executeMessageHandler = new Handler(this.executeMessageThread.getLooper());
         this.roomList = new CopyOnWriteArrayList<>();
         this.p2pClientList = new CopyOnWriteArrayList<>();
     }
@@ -247,12 +240,18 @@ public final class Taoyao {
                 this.output = this.socket.getOutputStream();
                 this.register();
                 this.connect = true;
-                this.connectRetryTimes = 1;
                 synchronized (this) {
                     this.notifyAll();
                 }
             } else {
                 this.connect = false;
+                synchronized (this) {
+                    try {
+                        this.wait(this.timeout);
+                    } catch (InterruptedException e) {
+                        Log.d(Taoyao.class.getSimpleName(), "信令等待异常", e);
+                    }
+                }
             }
         } catch (Exception e) {
             Log.e(Taoyao.class.getSimpleName(), "连接信令异常：" + this.host + ":" + this.port, e);
@@ -273,22 +272,9 @@ public final class Taoyao {
                 // 重连
                 while (!this.close && !this.connect) {
                     this.connect();
-                    synchronized (this) {
-                        try {
-                            long timeout = this.timeout;
-                            if(MAX_TIMEOUT > this.timeout * this.connectRetryTimes) {
-                                timeout = this.timeout * this.connectRetryTimes++;
-                            } else {
-                                timeout = MAX_TIMEOUT;
-                            }
-                            this.wait(timeout);
-                        } catch (InterruptedException e) {
-                            Log.d(Taoyao.class.getSimpleName(), "信令等待异常", e);
-                        }
-                    }
                 }
                 // 读取
-                while ((length = this.input.read(bytes)) >= 0) {
+                while (this.input != null && (length = this.input.read(bytes)) >= 0) {
                     buffer.put(bytes, 0, length);
                     while (buffer.position() > 0) {
                         if (messageLength <= 0) {
@@ -314,9 +300,9 @@ public final class Taoyao {
                                 buffer.get(message);
                                 buffer.compact();
                                 final String content = new String(this.decrypt.doFinal(message));
-                                Log.d(Taoyao.class.getSimpleName(), "处理信令：" + content);
-                                executor.submit(() -> {
+                                this.executeMessageHandler.post(() -> {
                                     try {
+                                        Log.d(Taoyao.class.getSimpleName(), "处理信令：" + content);
                                         Taoyao.this.on(content);
                                     } catch (Exception e) {
                                         Log.e(Taoyao.class.getSimpleName(), "处理信令异常：" + content, e);
@@ -428,10 +414,11 @@ public final class Taoyao {
         Log.d(Taoyao.class.getSimpleName(), "关闭信令：" + this.host + ":" + this.port);
         this.close = true;
         this.disconnect();
-        this.executor.shutdown();
-        this.scheduled.shutdown();
+        this.heartbeatThread.quitSafely();
+        this.loopMessageThread.quitSafely();
+        this.executeMessageThread.quitSafely();
         this.roomList.forEach(Room::close);
-        this.p2pClientList.forEach(P2PClient::close);
+        this.p2pClientList.forEach(SessionClient::close);
     }
 
     /**
@@ -471,7 +458,6 @@ public final class Taoyao {
      * @param content 信令消息
      */
     private void on(String content) {
-        Log.d(Taoyao.class.getSimpleName(), "收到消息：" + content);
         final Message message = JSONUtils.toJava(content, Message.class);
         if (message == null) {
             return;
@@ -535,6 +521,7 @@ public final class Taoyao {
      * 心跳
      */
     private void heartbeat() {
+        this.heartbeatHandler.postDelayed(this::heartbeat, 30L * 1000);
         if(this.close || !this.connect) {
             return;
         }

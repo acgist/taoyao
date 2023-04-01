@@ -4,7 +4,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -16,12 +15,11 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.Toast;
+import android.widget.LinearLayout;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
@@ -61,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         this.launchMediaService();
         // 布局
         this.binding = ActivityMainBinding.inflate(this.getLayoutInflater());
+        this.binding.getRoot().setZ(100F);
         this.setContentView(this.binding.getRoot());
         this.registerMediaProjection();
         this.binding.record.setOnClickListener(this::switchRecord);
@@ -161,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             MediaManager.getInstance().init(this.mainHandler, this.getApplicationContext());
             MediaManager.getInstance().initAudio();
             MediaManager.getInstance().initVideo();
-            mediaRecorder.init(System.currentTimeMillis() + ".mp4", null, null, 1, 1);
+            MediaManager.getInstance().record();
         }
     }
 
@@ -216,7 +215,10 @@ public class MainActivity extends AppCompatActivity implements Serializable {
      */
     private void newLocalVideo(Message message) {
         final SurfaceView surfaceView = (SurfaceView) message.obj;
-        this.addContentView(surfaceView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        final LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.weight = 1;
+        surfaceView.setZ(0F);
+        this.addContentView(surfaceView, layoutParams);
     }
 
 }

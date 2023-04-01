@@ -227,6 +227,40 @@ const signalChannel = {
 };
 
 /**
+ * 会话
+ */
+class Session {
+
+  // 会话ID
+  id;
+  // 远程终端名称
+  name;
+  // 远程终端ID
+  clientId;
+  // 本地音频
+  localAudioTrack;
+  // 本地视频
+  localVideoTrack;
+  // 远程音频
+  remoteAudioTrack;
+  // 远程视频
+  remoteVideoTrack;
+  // PeerConnection
+  peerConnection;
+
+  constructor({
+    id,
+    name,
+    clientId
+  }) {
+    this.id = id;
+    this.name = name;
+    this.clientId = clientId;
+  }
+
+}
+
+/**
  * 远程终端
  */
 class RemoteClient {
@@ -339,6 +373,8 @@ class Taoyao extends RemoteClient {
   dataConsumers = new Map();
   // 远程终端
   remoteClients = new Map();
+  // 会话终端
+  sessionClients = new Map();
 
   constructor({
     name,
@@ -560,6 +596,15 @@ class Taoyao extends RemoteClient {
       case "media::video::orientation::change":
         me.defaultMediaVideoOrientationChange(message);
         break;
+      case "session::call":
+        me.defaultSessionCall(message);
+        break;
+        case "session::close":
+          me.defaultSessionClose(message);
+          break;
+      case "session::exchange":
+        me.defaultSessionExchange(message);
+        break;
       case "room::client::list":
         me.defaultRoomClientList(message);
         break;
@@ -595,6 +640,37 @@ class Taoyao extends RemoteClient {
     } else {
       return null;
     }
+  }
+  async getStream() {
+    let stream;
+    const self = this;
+    if (self.videoSource === "file") {
+      // TODO：实现文件分享
+      // const stream = await this._getExternalVideoStream();
+      // track = stream.getVideoTracks()[0].clone();
+    } else if (self.videoSource === "camera") {
+      console.debug("enableWebcam() | calling getUserMedia()");
+      // TODO：参数
+      stream = await navigator.mediaDevices.getUserMedia({
+        audio: self.audioConfig,
+        video: self.videoConfig,
+      });
+    } else if (self.videoSource === "screen") {
+      stream = await navigator.mediaDevices.getDisplayMedia({
+        audio: self.audioConfig,
+        video: {
+          cursor: true,
+          width: { max: 1920 },
+          height: { max: 1080 },
+          frameRate: { max: 30 },
+          logicalSurface: true,
+          displaySurface: "monitor",
+        },
+      });
+    } else {
+      // TODO：异常
+    }
+    return stream;
   }
   async getVideoTrack() {
     let track;
@@ -1696,7 +1772,7 @@ class Taoyao extends RemoteClient {
         });
         const tracks = stream.getAudioTracks();
         if (tracks.length > 1) {
-          console.log("多个音频轨道");
+          console.warn("多个音频轨道");
         }
         track = tracks[0];
         // TODO：验证修改API audioTrack.applyCapabilities
@@ -2004,6 +2080,129 @@ class Taoyao extends RemoteClient {
     } catch (error) {
       self.callbackError("重启ICE失败", error);
     }
+  }
+
+  /**
+   * 发起会话
+   * 
+   * @param {*} clientId 接收者ID
+   */
+  async sessionCall(clientId) {
+    const me = this;
+    if (!clientId) {
+      this.callbackError("无效终端");
+      return;
+    }
+    const response = await me.request(
+      protocol.buildMessage("session::call", {
+        clientId
+      })
+    );
+    const { name, sessionId } = response.body;
+    const session = new Session(name, response.body.clientId, sessionId);
+    this.sessionClients.set(sessionId, session);
+    session.peerConnection = await me.buildPeerConnection(session, sessionId);
+    const localStream = await me.getStream();
+    session.localAudioTrack = localStream.getAudioTracks()[0];
+    session.localVideoTrack = localStream.getVideoTracks()[0];
+    session.peerConnection.addTrack(session.localAudioTrack, localStream);
+    session.peerConnection.addTrack(session.localVideoTrack, localStream);
+  }
+
+  async defaultSessionCall(message) {
+    const me = this;
+    const { name, clientId, sessionId } = message.body;
+    const session = new Session(name, clientId, sessionId);
+    this.sessionClients.set(sessionId, session);
+    session.peerConnection = await me.buildPeerConnection(session, sessionId);
+    const localStream = await me.getStream();
+    session.localAudioTrack = localStream.getAudioTracks()[0];
+    session.localVideoTrack = localStream.getVideoTracks()[0];
+    session.peerConnection.addTrack(session.localAudioTrack, localStream);
+    session.peerConnection.addTrack(session.localVideoTrack, localStream);
+    session.peerConnection.createOffer().then(async description => {
+      await session.peerConnection.setLocalDescription(description);
+      me.push(
+        protocol.buildMessage("session::exchange", {
+          sdp      : description.sdp,
+          type     : description.type,
+          sessionId: sessionId
+        })
+      );
+    });
+  }
+
+  async sessionClose() {
+  }
+
+  async defaultSessionClose(message) {
+  }
+
+  async defaultSessionExchange(message) {
+    const me = this;
+    const { type, candidate, sessionId } = message.body;
+    const session = this.sessionClients.get(sessionId);
+    if (type === "offer") {
+      session.peerConnection.setRemoteDescription(new RTCSessionDescription(message.body));
+      session.peerConnection.createAnswer().then(async description => {
+        await session.peerConnection.setLocalDescription(description);
+        me.push(
+          protocol.buildMessage("session::exchange", {
+            sdp      : description.sdp,
+            type     : description.type,
+            sessionId: sessionId
+          })
+        );
+      });
+    } else if (type === "answer") {
+      await session.peerConnection.setRemoteDescription(new RTCSessionDescription(message.body));
+    } else if (type === "candidate") {
+      if(candidate) {
+        await session.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+    }
+  }
+  
+  async buildPeerConnection(session, sessionId) {
+    const me = this;
+    const peerConnection = new RTCPeerConnection({"iceServers" : [{"url" : "stun:stun1.l.google.com:19302"}]});
+    peerConnection.ontrack = event => {
+      console.debug("buildPeerConnection ontrack", event);
+      const track = event.track;
+      if(track.kind === 'audio') {
+        session.remoteAudioTrack = track;
+      } else if(track.kind === 'video') {
+        session.remoteVideoTrack = track;
+      } else {
+      }
+      if(session.proxy && session.proxy.media) {
+        session.proxy.media(track);
+      }
+    };
+    peerConnection.onicecandidate = event => {
+      console.debug("buildPeerConnection onicecandidate", event);
+      me.push(
+        protocol.buildMessage("session::exchange", {
+          type      : "candidate",
+          sessionId : sessionId,
+          candidate : event.candidate
+        })
+      );
+    };
+    peerConnection.onnegotiationneeded = event => {
+      console.debug("buildPeerConnection onnegotiationneeded", event);
+      session.peerConnection.createOffer().then(async description => {
+        await session.peerConnection.setLocalDescription(description);
+        me.push(
+          protocol.buildMessage("session::exchange", {
+            sdp      : description.sdp,
+            type     : description.type,
+            sessionId: sessionId
+          })
+        );
+      });
+    }
+    return peerConnection;
   }
 
   /**

@@ -162,6 +162,10 @@ public interface Constant {
      */
     String SOURCE_ID = "sourceId";
     /**
+     * 会话ID
+     */
+    String SESSION_ID = "sessionId";
+    /**
      * 传输通道ID
      */
     String TRANSPORT_ID = "transportId";

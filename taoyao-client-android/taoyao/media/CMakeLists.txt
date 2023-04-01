@@ -28,17 +28,17 @@ set(
     ${SOURCE_DIR}/include/LocalClient.hpp
     ${SOURCE_DIR}/include/MediaRecorder.hpp
     ${SOURCE_DIR}/include/MediasoupClient.hpp
-    ${SOURCE_DIR}/include/P2PClient.hpp
     ${SOURCE_DIR}/include/RemoteClient.hpp
     ${SOURCE_DIR}/include/Room.hpp
     ${SOURCE_DIR}/include/RtpAudioPublisher.hpp
     ${SOURCE_DIR}/include/RtpClient.hpp
     ${SOURCE_DIR}/include/RtpVideoPublisher.hpp
+    ${SOURCE_DIR}/include/SessionClient.hpp
     ${SOURCE_DIR}/media/LocalClient.cpp
     ${SOURCE_DIR}/media/MediaRecorder.cpp
-    ${SOURCE_DIR}/media/P2PClient.cpp
     ${SOURCE_DIR}/media/RemoteClient.cpp
     ${SOURCE_DIR}/media/Room.cpp
+    ${SOURCE_DIR}/media/SessionClient.cpp
     ${SOURCE_DIR}/rtp/RtpAudioPublisher.cpp
     ${SOURCE_DIR}/rtp/RtpClient.cpp
     ${SOURCE_DIR}/rtp/RtpVideoPublisher.cpp

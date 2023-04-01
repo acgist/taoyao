@@ -31,10 +31,10 @@
     <el-dialog center width="30%" title="房间设置" :show-close="false" v-model="roomVisible" @open="loadList">
       <el-form ref="RoomSetting">
         <el-tabs v-model="roomActive">
-          <el-tab-pane label="进入房间" name="enter">
-            <el-form-item label="房间标识">
-              <el-select v-model="room.roomId" placeholder="房间标识">
-                <el-option v-for="value in rooms" :key="value.roomId" :label="value.name || value.roomId" :value="value.roomId" />
+          <el-tab-pane label="监控终端" name="call">
+            <el-form-item label="终端标识">
+              <el-select v-model="room.callClientId" placeholder="终端标识">
+                <el-option v-for="value in clients" :key="value.clientId" :label="value.name || value.clientId" :value="value.clientId" />
               </el-select>
             </el-form-item>
           </el-tab-pane>
@@ -48,6 +48,13 @@
               <el-input v-model="room.name" placeholder="房间名称" />
             </el-form-item>
           </el-tab-pane>
+          <el-tab-pane label="选择房间" name="enter">
+            <el-form-item label="房间标识">
+              <el-select v-model="room.roomId" placeholder="房间标识">
+                <el-option v-for="value in rooms" :key="value.roomId" :label="value.name || value.roomId" :value="value.roomId" />
+              </el-select>
+            </el-form-item>
+          </el-tab-pane>
           <el-tab-pane label="邀请终端" name="invite">
             <el-form-item label="终端标识">
               <el-select v-model="room.inviteClientId" placeholder="终端标识">
@@ -56,13 +63,14 @@
             </el-form-item>
           </el-tab-pane>
         </el-tabs>
-        <el-form-item label="房间密码">
+        <el-form-item label="房间密码" v-if="roomActive !== 'call'">
           <el-input v-model="room.password" placeholder="房间密码" />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button type="primary" @click="roomEnter" v-if="roomActive === 'enter'">进入</el-button>
+        <el-button type="primary" @click="sessionCall" v-if="roomActive === 'call'">监控</el-button>
         <el-button type="primary" @click="roomCreate" v-if="roomActive === 'create'">创建</el-button>
+        <el-button type="primary" @click="roomEnter" v-if="roomActive === 'enter'">进入</el-button>
         <el-button type="primary" @click="roomInvite" v-if="roomActive === 'invite'">邀请</el-button>
       </template>
     </el-dialog>
@@ -70,8 +78,9 @@
     <!-- 菜单 -->
     <div class="menus">
       <el-button @click="signalVisible = true" type="primary" :disabled="taoyao && taoyao.connect">连接信令</el-button>
-      <el-button @click="roomActive = 'enter'; roomVisible = true;" type="primary" :disabled="!taoyao">选择房间</el-button>
+      <el-button @click="roomActive = 'call'; roomVisible = true;" :disabled="!taoyao">监控终端</el-button>
       <el-button @click="roomActive = 'create'; roomVisible = true;" type="primary" :disabled="!taoyao">创建房间</el-button>
+      <el-button @click="roomActive = 'enter'; roomVisible = true;" type="primary" :disabled="!taoyao">选择房间</el-button>
       <el-button @click="roomActive = 'invite'; roomVisible = true;" :disabled="!taoyao || !taoyao.roomId">邀请终端</el-button>
       <el-button @click="roomLeave" :disabled="!taoyao || !taoyao.roomId">离开房间</el-button>
       <el-button @click="roomClose" :disabled="!taoyao || !taoyao.roomId" type="danger">关闭房间</el-button>
@@ -83,6 +92,8 @@
       <LocalClient v-if="taoyao && taoyao.roomId" ref="local-client" :client="taoyao" :taoyao="taoyao"></LocalClient>
       <!-- 远程终端 -->
       <RemoteClient v-for="(kv, index) in remoteClients" :key="index" :ref="'remote-client-' + kv[0]" :client="kv[1]" :taoyao="taoyao"></RemoteClient>
+      <!-- 远程会话 -->
+      <SessionClient v-for="(kv, index) in sessionClients" :key="index" :ref="'session-client-' + kv[0]" :client="kv[1]" :taoyao="taoyao"></SessionClient>
     </div>
   </div>
 </template>
@@ -92,6 +103,7 @@ import { ElMessage } from 'element-plus'
 import { Taoyao } from "./components/Taoyao.js";
 import LocalClient from './components/LocalClient.vue';
 import RemoteClient from './components/RemoteClient.vue';
+import SessionClient from './components/SessionClient.vue';
 
 export default {
   name: "Taoyao",
@@ -110,10 +122,11 @@ export default {
         password: "taoyao",
       },
       taoyao: null,
-      roomActive: "enter",
+      roomActive: "call",
       roomVisible: false,
       signalVisible: false,
       remoteClients: new Map(),
+      sessionClients: new Map(),
     };
   },
   mounted() {
@@ -131,6 +144,7 @@ export default {
       await me.taoyao.connectSignal(me.callback);
       me.signalVisible = false;
       me.remoteClients = me.taoyao.remoteClients;
+      me.sessionClients = me.taoyao.sessionClients;
       // 全局绑定
       window.taoyao = me.taoyao;
     },
@@ -145,15 +159,19 @@ export default {
     async roomClose() {
       this.taoyao.roomClose();
     },
-    async roomEnter() {
-      await this.taoyao.roomEnter(this.room.roomId, this.room.password);
-      await this.taoyao.produceMedia();
+    async sessionCall() {
+      this.taoyao.sessionCall(this.room.callClientId);
       this.roomVisible = false;
     },
     async roomCreate() {
       const room = await this.taoyao.roomCreate(this.room);
       this.room.roomId = room.roomId;
       await this.roomEnter();
+    },
+    async roomEnter() {
+      await this.taoyao.roomEnter(this.room.roomId, this.room.password);
+      await this.taoyao.produceMedia();
+      this.roomVisible = false;
     },
     async roomInvite() {
       this.taoyao.roomInvite(this.room.inviteClientId);
@@ -190,7 +208,8 @@ export default {
   },
   components: {
     LocalClient,
-    RemoteClient
+    RemoteClient,
+    SessionClient,
   },
 };
 </script>

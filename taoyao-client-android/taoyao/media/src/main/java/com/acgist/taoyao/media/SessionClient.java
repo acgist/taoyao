@@ -3,7 +3,6 @@ package com.acgist.taoyao.media;
 import android.util.Log;
 
 import java.io.Closeable;
-import java.io.IOException;
 
 /**
  * P2P终端
@@ -11,11 +10,11 @@ import java.io.IOException;
  *
  * @author acgist
  */
-public class P2PClient implements Closeable {
+public class SessionClient implements Closeable {
 
     private final String clientId;
 
-    public P2PClient(String clientId) {
+    public SessionClient(String clientId) {
         this.clientId = clientId;
     }
 
@@ -27,6 +26,10 @@ public class P2PClient implements Closeable {
 //    PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(iceServers);
 //    PeerConnectionObserver connectionObserver = getObserver();
 //    peerConnection = peerConnectionFactory.createPeerConnection(configuration, connectionObserver);
+
+//    pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
+//pcConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
+//pcConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
 
     @Override
     public void close() {

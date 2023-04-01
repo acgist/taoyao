@@ -1,5 +1,6 @@
 package com.acgist.taoyao.media;
 
+import android.graphics.YuvImage;
 import android.media.AudioFormat;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -7,24 +8,35 @@ import android.media.MediaCodecList;
 import android.media.MediaFormat;
 import android.media.MediaMuxer;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
+import android.view.Surface;
 
+import org.webrtc.EglBase;
+import org.webrtc.GlRectDrawer;
+import org.webrtc.HardwareVideoEncoderFactory;
+import org.webrtc.VideoEncoderFactory;
 import org.webrtc.VideoFrame;
+import org.webrtc.VideoFrameDrawer;
 import org.webrtc.VideoSink;
+import org.webrtc.YuvConverter;
+import org.webrtc.YuvHelper;
 import org.webrtc.audio.JavaAudioDeviceModule;
-import org.webrtc.voiceengine.WebRtcAudioRecord;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
+import java.util.Optional;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * 录像机
- *
+ * <p>
  * https://blog.csdn.net/m0_60259116/article/details/126875532
  *
  * @author acgist
@@ -32,6 +44,43 @@ import java.util.stream.Stream;
 public final class MediaRecorder {
 
     private static final MediaRecorder INSTANCE = new MediaRecorder();
+
+    public static final MediaRecorder getInstance() {
+        return INSTANCE;
+    }
+
+    /**
+     * 是否正在录像
+     */
+    private volatile boolean active;
+    private volatile boolean audioActive;
+    private volatile boolean videoActive;
+    private volatile long pts;
+    private String file;
+    /**
+     * 音频编码
+     */
+    private MediaCodec audioCodec;
+    private HandlerThread audioThread;
+    /**
+     * 视频编码
+     */
+    private MediaCodec videoCodec;
+    private HandlerThread videoThread;
+    private Handler videoHandler;
+    private ExecutorService executorService;
+    /**
+     * 媒体合成器
+     */
+    private MediaMuxer mediaMuxer;
+    /**
+     * 音频录制
+     */
+    public final JavaAudioDeviceModule.SamplesReadyCallback audioRecoder;
+    /**
+     * 视频录制
+     */
+    public final VideoSink videoRecoder;
 
     private MediaRecorder() {
         final MediaCodecList mediaCodecList = new MediaCodecList(-1);
@@ -49,53 +98,35 @@ public final class MediaRecorder {
                 }
             }
         }
+        this.executorService = Executors.newFixedThreadPool(2);
         this.audioRecoder = audioSamples -> {
-            Log.d(MediaRecorder.class.getSimpleName(), audioSamples + " - 音频");
         };
         this.videoRecoder = videoFrame -> {
-//            Log.d(MediaRecorder.class.getSimpleName(), videoFrame + " - 视频");
-            if(this.active && this.videoActive) {
-                final VideoFrame.Buffer buffer = videoFrame.getBuffer();
-                final VideoFrame.I420Buffer i420Buffer = buffer.toI420();
-                i420Buffer.getDataU();
-//                this.putVideo(videoFrame.getBuffer(), videoFrame.getTimestampNs());
+            if (this.active && this.videoActive) {
+                this.executorService.submit(() -> {
+//                    videoFrame.retain();
+                    final int outputFrameSize = videoFrame.getRotatedWidth() * videoFrame.getRotatedHeight() * 3 / 2;
+                    final ByteBuffer outputFrameBuffer = ByteBuffer.allocateDirect(outputFrameSize);
+                        final int index = this.videoCodec.dequeueInputBuffer(1000L * 1000);
+//                      YuvImage：截图
+                        // YV12
+                        VideoFrame.I420Buffer i420 = videoFrame.getBuffer().toI420();
+//                      i420.retain();
+                    Log.i(MediaRecorder.class.getSimpleName(), "视频信息：" + videoFrame.getRotatedWidth() + " - " + videoFrame.getRotatedHeight());
+//                      YuvHelper.I420Copy(i420.getDataY(), i420.getStrideY(), i420.getDataU(), i420.getStrideU(), i420.getDataV(), i420.getStrideV(), outputFrameBuffer, i420.getWidth(), i420.getHeight());
+                    // NV12
+                    YuvHelper.I420ToNV12(i420.getDataY(), i420.getStrideY(), i420.getDataU(), i420.getStrideU(), i420.getDataV(), i420.getStrideV(), outputFrameBuffer, i420.getWidth(), i420.getHeight());
+//                    YuvHelper.I420Rotate(i420.getDataY(), i420.getStrideY(), i420.getDataU(), i420.getStrideU(), i420.getDataV(), i420.getStrideV(), outputFrameBuffer, i420.getWidth(), i420.getHeight(), videoFrame.getRotation());
+                    final ByteBuffer x = this.videoCodec.getInputBuffer(index);
+//                      i420.release();
+                        x.put(outputFrameBuffer.array());
+                        this.videoCodec.queueInputBuffer(index, 0, outputFrameSize, System.currentTimeMillis(), 0);
+//                      this.putVideo(outputFrameBuffer, System.currentTimeMillis());
+//                      videoFrame.release();
+                });
             }
         };
     }
-
-    public static final MediaRecorder getInstance() {
-        return INSTANCE;
-    }
-
-    /**
-     * 是否正在录像
-     */
-    private volatile boolean active;
-    private volatile boolean audioActive;
-    private volatile boolean videoActive;
-    private volatile long pts;
-    /**
-     * 音频编码
-     */
-    private MediaCodec audioCodec;
-    private Thread audioThread;
-    /**
-     * 视频编码
-     */
-    private MediaCodec videoCodec;
-    private Thread videoThread;
-    /**
-     * 媒体合成器
-     */
-    private MediaMuxer mediaMuxer;
-    /**
-     * 音频录制
-     */
-    public final JavaAudioDeviceModule.SamplesReadyCallback audioRecoder;
-    /**
-     * 视频录制
-     */
-    public final VideoSink videoRecoder;
 
     /**
      * @return 是否正在录像
@@ -106,24 +137,24 @@ public final class MediaRecorder {
 
     public void init(String file, String audioFormat, String videoFormat, int width, int height) {
         synchronized (MediaRecorder.INSTANCE) {
+            this.file = file;
             this.active = true;
-            if(
+            if (
                 this.audioThread == null || !this.audioThread.isAlive() ||
-                this.videoThread == null || !this.videoThread.isAlive()
+                    this.videoThread == null || !this.videoThread.isAlive()
             ) {
                 this.initMediaMuxer(file);
                 this.initAudioThread(MediaFormat.MIMETYPE_AUDIO_AAC, 96000, 44100, 1);
                 this.initVideoThread(MediaFormat.MIMETYPE_VIDEO_AVC, 2500 * 1000, 30, 1, 1920, 1080);
             }
-//        this.audioCodec = MediaCodec.createByCodecName();
         }
     }
 
     /**
-     * @param audioType  类型
-     * @param bitRate    比特率：96 * 1000 | 128 * 1000 | 256 * 1000
-     * @param sampleRate 采样率：32000 | 44100 | 48000
-     * @param channelCount   通道数量
+     * @param audioType    类型
+     * @param bitRate      比特率：96 * 1000 | 128 * 1000 | 256 * 1000
+     * @param sampleRate   采样率：32000 | 44100 | 48000
+     * @param channelCount 通道数量
      */
     private void initAudioThread(String audioType, int bitRate, int sampleRate, int channelCount) {
         try {
@@ -139,57 +170,58 @@ public final class MediaRecorder {
             Log.e(MediaRecorder.class.getSimpleName(), "加载音频录制线程异常", e);
         }
         final MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-        this.audioThread = new Thread(() -> {
-            int trackIndex;
+        this.audioThread = new HandlerThread("AudioRecoderThread");
+        this.audioThread.start();
+        final Handler audioHandler = new Handler(this.audioThread.getLooper());
+        audioHandler.post(() -> {
+            int trackIndex = -1;
             int outputIndex;
-            synchronized (MediaRecorder.INSTANCE) {
-                Log.i(MediaRecorder.class.getSimpleName(), "开始录制音频");
-                this.audioCodec.start();
-                this.audioActive = true;
-                trackIndex = this.mediaMuxer.addTrack(this.audioCodec.getOutputFormat());
-                if(this.videoActive) {
-                    Log.i(MediaRecorder.class.getSimpleName(), "开始录制文件");
-                    this.pts = System.currentTimeMillis();
-                    this.mediaMuxer.start();
-                    MediaRecorder.INSTANCE.notifyAll();
-                } else {
-                    try {
-                        MediaRecorder.INSTANCE.wait();
-                    } catch (InterruptedException e) {
-                    }
-                }
-            }
-            while(this.active) {
+            this.audioCodec.start();
+            this.audioActive = true;
+            while (this.active) {
                 outputIndex = this.audioCodec.dequeueOutputBuffer(info, 1000L * 1000);
-                if(outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
-                } else if(outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                } else {
+                if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                } else if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                    synchronized (MediaRecorder.INSTANCE) {
+                        trackIndex = this.mediaMuxer.addTrack(this.audioCodec.getOutputFormat());
+                        Log.i(MediaRecorder.class.getSimpleName(), "开始录制音频：" + trackIndex);
+                        if (this.videoActive) {
+                            Log.i(MediaRecorder.class.getSimpleName(), "开始录制文件：" + this.file);
+                            this.pts = System.currentTimeMillis();
+                            this.mediaMuxer.start();
+                            MediaRecorder.INSTANCE.notifyAll();
+                        } else if (this.active) {
+                            try {
+                                MediaRecorder.INSTANCE.wait();
+                            } catch (InterruptedException e) {
+                            }
+                        }
+                    }
+                } else if (outputIndex >= 0) {
                     final ByteBuffer outputBuffer = this.audioCodec.getOutputBuffer(outputIndex);
                     outputBuffer.position(info.offset);
                     outputBuffer.limit(info.offset + info.size);
-                    info.presentationTimeUs = info.presentationTimeUs - this.pts;
-                    this.mediaMuxer.writeSampleData(trackIndex, outputBuffer, info);
+                    info.presentationTimeUs = (info.presentationTimeUs - this.pts) * 1000;
+//                    this.mediaMuxer.writeSampleData(trackIndex, outputBuffer, info);
                     this.audioCodec.releaseOutputBuffer(outputIndex, false);
                 }
             }
             synchronized (MediaRecorder.INSTANCE) {
-                if(this.audioCodec != null) {
+                if (this.audioCodec != null) {
                     Log.i(MediaRecorder.class.getSimpleName(), "结束录制音频");
                     this.audioCodec.stop();
                     this.audioCodec.release();
                     this.audioCodec = null;
                 }
                 this.audioActive = false;
-                if(this.mediaMuxer != null && !this.videoActive) {
-                    Log.i(MediaRecorder.class.getSimpleName(), "结束录制文件");
+                if (this.mediaMuxer != null && !this.videoActive) {
+                    Log.i(MediaRecorder.class.getSimpleName(), "结束录制文件：" + this.file);
                     this.mediaMuxer.stop();
                     this.mediaMuxer.release();
                     this.mediaMuxer = null;
                 }
             }
         });
-        this.audioThread.setName("AudioRecoder");
-        this.audioThread.start();
     }
 
     public void putAudio(byte[] bytes) {
@@ -207,51 +239,54 @@ public final class MediaRecorder {
     private void initVideoThread(String videoType, int bitRate, int frameRate, int iFrameInterval, int width, int height) {
         try {
             this.videoCodec = MediaCodec.createEncoderByType(videoType);
-            final MediaFormat videoFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, width, height);
-            videoFormat.setInteger(MediaFormat.KEY_BIT_RATE, 2500000);
-//          videoFormat.setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel32);
-//          videoFormat.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileHigh);
+            final MediaFormat videoFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, 360, 480);
+//            videoFormat.setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel31);
+//            videoFormat.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileHigh);
+            videoFormat.setInteger(MediaFormat.KEY_BIT_RATE, 800 * 1000);
             videoFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 30);
-//          videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
-            videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
+//            videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
+            videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar);
             videoFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
             this.videoCodec.configure(videoFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         } catch (Exception e) {
             Log.e(MediaRecorder.class.getSimpleName(), "加载视频录制线程异常", e);
         }
         final MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-        this.videoThread = new Thread(() -> {
-            int trackIndex;
+        this.videoThread = new HandlerThread("VideoRecoderThread");
+        this.videoThread.start();
+        this.videoHandler = new Handler(this.videoThread.getLooper());
+        this.videoHandler.post(() -> {
+            int trackIndex = -1;
             int outputIndex;
-            synchronized (MediaRecorder.INSTANCE) {
-                Log.i(MediaRecorder.class.getSimpleName(), "开始录制视频");
-                this.videoCodec.start();
-                this.videoActive = true;
-                trackIndex = this.mediaMuxer.addTrack(this.videoCodec.getOutputFormat());
-                if(this.audioActive) {
-                    Log.i(MediaRecorder.class.getSimpleName(), "开始录制文件");
-                    this.pts = System.currentTimeMillis();
-                    this.mediaMuxer.start();
-                    MediaRecorder.INSTANCE.notifyAll();
-                } else {
-                    try {
-                        MediaRecorder.INSTANCE.wait();
-                    } catch (InterruptedException e) {
-                    }
-                }
-            }
-            while(this.active) {
+            this.videoCodec.start();
+            this.videoActive = true;
+            while (this.active) {
                 outputIndex = this.videoCodec.dequeueOutputBuffer(info, 1000L * 1000);
-                if(outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
-                } else if(outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
-                } else {
-                    Log.i(MediaRecorder.class.getSimpleName(), "======" + info.size);
-                    final ByteBuffer outputBuffer = this.audioCodec.getOutputBuffer(outputIndex);
+                if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
+                } else if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
+                    synchronized (MediaRecorder.INSTANCE) {
+                        trackIndex = this.mediaMuxer.addTrack(this.videoCodec.getOutputFormat());
+                        Log.i(MediaRecorder.class.getSimpleName(), "开始录制视频：" + trackIndex);
+                        if (this.audioActive) {
+                            Log.i(MediaRecorder.class.getSimpleName(), "开始录制文件：" + this.file);
+                            this.pts = System.currentTimeMillis();
+                            this.mediaMuxer.start();
+                            MediaRecorder.INSTANCE.notifyAll();
+                        } else if (this.active) {
+                            try {
+                                MediaRecorder.INSTANCE.wait();
+                            } catch (InterruptedException e) {
+                            }
+                        }
+                    }
+                } else if (outputIndex >= 0) {
+                    final ByteBuffer outputBuffer = this.videoCodec.getOutputBuffer(outputIndex);
                     outputBuffer.position(info.offset);
                     outputBuffer.limit(info.offset + info.size);
-                    info.presentationTimeUs = info.presentationTimeUs - this.pts;
+                    info.presentationTimeUs = (info.presentationTimeUs - this.pts) * 1000;
                     this.mediaMuxer.writeSampleData(trackIndex, outputBuffer, info);
-                    this.audioCodec.releaseOutputBuffer(outputIndex, false);
+                    this.videoCodec.releaseOutputBuffer(outputIndex, false);
+                    Log.d(MediaRecorder.class.getSimpleName(), "录制视频帧（时间戳）：" + (info.presentationTimeUs / 1000000F));
 //                  if(info.flags == MediaCodec.BUFFER_FLAG_KEY_FRAME) {
 //                  } else if(info.flags == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
 //                  } else if(info.flags == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
@@ -260,34 +295,32 @@ public final class MediaRecorder {
                 }
             }
             synchronized (MediaRecorder.INSTANCE) {
-                if(this.videoCodec != null) {
+                if (this.videoCodec != null) {
                     Log.i(MediaRecorder.class.getSimpleName(), "结束录制视频");
                     this.videoCodec.stop();
                     this.videoCodec.release();
                     this.videoCodec = null;
                 }
                 this.videoActive = false;
-                if(this.mediaMuxer != null && !this.audioActive) {
-                    Log.i(MediaRecorder.class.getSimpleName(), "结束录制文件");
+                if (this.mediaMuxer != null && !this.audioActive) {
+                    Log.i(MediaRecorder.class.getSimpleName(), "结束录制文件：" + this.file);
                     this.mediaMuxer.stop();
                     this.mediaMuxer.release();
                     this.mediaMuxer = null;
                 }
             }
         });
-        this.videoThread.setName("VideoRecoder");
-        this.videoThread.start();
     }
 
-    public void putVideo(byte[] bytes, long pts) {
-        while(this.active && this.videoActive) {
+    public void putVideo(ByteBuffer buffer, long pts) {
+        while (this.active && this.videoActive) {
             final int index = this.videoCodec.dequeueInputBuffer(1000L * 1000);
-            if(index < 0) {
+            if (index < 0) {
                 continue;
             }
             final ByteBuffer byteBuffer = this.videoCodec.getInputBuffer(index);
-            byteBuffer.put(bytes);
-            this.videoCodec.queueInputBuffer(index, 0, bytes.length, pts, 0);
+            byteBuffer.put(buffer);
+            this.videoCodec.queueInputBuffer(index, 0, buffer.capacity(), pts, 0);
         }
     }
 
@@ -305,10 +338,22 @@ public final class MediaRecorder {
     }
 
     public void stop() {
-        synchronized(MediaRecorder.INSTANCE) {
+        synchronized (MediaRecorder.INSTANCE) {
+            Log.i(MediaRecorder.class.getSimpleName(), "结束录制：" + this.file);
             this.active = false;
-            this.audioThread = null;
-            this.videoThread = null;
+            if (audioThread != null) {
+                this.audioThread.quitSafely();
+                this.audioThread = null;
+            }
+            if (this.videoThread != null) {
+                this.videoThread.quitSafely();
+                this.videoThread = null;
+            }
+            if(this.executorService != null) {
+                this.executorService.shutdown();
+                this.executorService = null;
+            }
+            MediaRecorder.INSTANCE.notifyAll();
         }
     }
 
