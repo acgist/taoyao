@@ -122,6 +122,14 @@ public interface Constant {
      */
     String KIND = "kind";
     /**
+     * 声音
+     */
+    String AUDIO = "audio";
+    /**
+     * 视频
+     */
+    String VIDEO = "video";
+    /**
      * 索引
      */
     String INDEX = "index";

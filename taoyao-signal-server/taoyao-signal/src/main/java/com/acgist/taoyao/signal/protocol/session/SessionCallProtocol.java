@@ -21,7 +21,9 @@ import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
 @Description(
     body = """
     {
-        "clientId": "接收者ID"
+        "clientId": "接收者ID",
+        "audio"   : 是否需要声音（true|false），
+        "video"   : 是否需要视频（true|false）
     }
     """,
     flow = {
@@ -52,7 +54,9 @@ public class SessionCallProtocol extends ProtocolSessionAdapter {
         callMessage.setBody(Map.of(
             Constant.NAME,       client.status().getName(),
             Constant.CLIENT_ID,  client.clientId(),
-            Constant.SESSION_ID, session.getId()
+            Constant.SESSION_ID, session.getId(),
+            Constant.AUDIO,      MapUtils.get(body, Constant.AUDIO),
+            Constant.VIDEO,      MapUtils.get(body, Constant.VIDEO)
         ));
         target.push(callMessage);
     }
