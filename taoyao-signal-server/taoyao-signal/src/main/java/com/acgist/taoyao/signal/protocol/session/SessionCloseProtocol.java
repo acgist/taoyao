@@ -10,14 +10,11 @@ import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.party.session.Session;
 import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * 关闭媒体信令
  * 
  * @author acgist
  */
-@Slf4j
 @Protocol
 @Description(
     body = """

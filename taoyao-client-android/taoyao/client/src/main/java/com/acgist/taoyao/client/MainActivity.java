@@ -2,12 +2,19 @@ package com.acgist.taoyao.client;
 
 import android.Manifest;
 import android.app.Activity;
+import android.app.AlarmManager;
+import android.app.Application;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
+import android.os.Process;
 import android.os.SystemClock;
 import android.util.Log;
 import android.view.Display;
@@ -40,13 +47,15 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
     private MainHandler mainHandler;
     private ActivityMainBinding binding;
-    private ActivityResultLauncher<Intent> activityResultLauncher;
     private MediaProjectionManager mediaProjectionManager;
+    private ActivityResultLauncher<Intent> activityResultLauncher;
 
     @Override
     protected void onCreate(Bundle bundle) {
         Log.i(MainActivity.class.getSimpleName(), "onCreate");
         super.onCreate(bundle);
+        // 全局异常
+        this.catchAll();
         // 请求权限
         this.requestPermission();
         // 启动点亮屏幕
@@ -64,6 +73,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         this.registerMediaProjection();
         this.binding.record.setOnClickListener(this::switchRecord);
         this.binding.settings.setOnClickListener(this::launchSettings);
+        // 加载媒体管理
+        MediaManager.getInstance().initMedia(this.mainHandler, this.getApplicationContext());
     }
 
     @Override
@@ -95,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             Manifest.permission.ACCESS_WIFI_STATE,
             Manifest.permission.FOREGROUND_SERVICE,
             Manifest.permission.ACCESS_FINE_LOCATION,
+            Manifest.permission.ACCESS_NETWORK_STATE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.RECEIVE_BOOT_COMPLETED,
@@ -111,17 +123,18 @@ public class MainActivity extends AppCompatActivity implements Serializable {
      * 拉起媒体服务
      */
     private void launchMediaService() {
-        int times = 0;
+        if(this.mainHandler != null) {
+            return;
+        }
+        int waitCount = 0;
+        this.mainHandler = new MainHandler(this);
         final Display display = this.getWindow().getContext().getDisplay();
-        while(Display.STATE_ON != display.getState() && times++ < 10) {
+        while(Display.STATE_ON != display.getState() && waitCount++ < 10) {
             SystemClock.sleep(100);
         }
         if(display.STATE_ON == display.getState()) {
             Log.i(MainActivity.class.getSimpleName(), "拉起媒体服务");
             final Intent intent = new Intent(this, MediaService.class);
-            if(this.mainHandler == null) {
-                this.mainHandler = new MainHandler(this);
-            }
             intent.setAction(MediaService.Action.CONNECT.name());
             intent.putExtra("mainHandler", this.mainHandler);
             this.startService(intent);
@@ -152,15 +165,12 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         );
     }
 
-    private void switchRecord(View view) {
+    private synchronized void switchRecord(View view) {
         final MediaRecorder mediaRecorder = MediaRecorder.getInstance();
         if(mediaRecorder.isActive()) {
             mediaRecorder.stop();
         } else {
-            MediaManager.getInstance().init(this.mainHandler, this.getApplicationContext());
-            MediaManager.getInstance().initAudio();
-            MediaManager.getInstance().initVideo();
-            MediaManager.getInstance().record();
+            mediaRecorder.record(Resources.getSystem().getString(R.string.storagePathVideo));
         }
     }
 
@@ -192,8 +202,9 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             super.handleMessage(message);
             Log.d(MainHandler.class.getSimpleName(), "Handler消息：" + message.what + " - " + message.obj);
             switch(message.what) {
-                case Config.WHAT_SCREEN_CAPTURE -> this.mainActivity.screenCapture(message);
-                case Config.WHAT_NEW_LOCAL_VIDEO -> this.mainActivity.newLocalVideo(message);
+                case Config.WHAT_SCREEN_CAPTURE   -> this.mainActivity.screenCapture(message);
+                case Config.WHAT_NEW_LOCAL_VIDEO  -> this.mainActivity.newLocalVideo(message);
+                case Config.WHAT_NEW_REMOTE_VIDEO -> this.mainActivity.newRemoteVideo(message);
             }
         }
 
@@ -219,6 +230,33 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         layoutParams.weight = 1;
         surfaceView.setZ(0F);
         this.addContentView(surfaceView, layoutParams);
+    }
+
+    private void newRemoteVideo(Message message) {
+        final SurfaceView surfaceView = (SurfaceView) message.obj;
+        final LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        layoutParams.weight = 1;
+        surfaceView.setZ(0F);
+        this.addContentView(surfaceView, layoutParams);
+    }
+
+    private void catchAll() {
+        Log.i(MainActivity.class.getSimpleName(), "全局异常捕获");
+        final Thread.UncaughtExceptionHandler old = Thread.getDefaultUncaughtExceptionHandler();
+        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                Log.e(MediaService.class.getSimpleName(), "系统异常：" + t.getName(), e);
+                final Looper looper = Looper.myLooper();
+                if(looper == Looper.getMainLooper()) {
+//              if(t.getId() == Looper.getMainLooper().getThread().getId()) {
+                    // TODO：重启应用
+                    old.uncaughtException(t, e);
+                } else {
+                    // 子线程
+                }
+            }
+        });
     }
 
 }

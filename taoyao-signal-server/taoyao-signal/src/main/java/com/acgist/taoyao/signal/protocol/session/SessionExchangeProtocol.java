@@ -10,16 +10,14 @@ import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.party.session.Session;
 import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * 媒体交换信令
  * 
  * @author acgist
  */
-@Slf4j
 @Protocol
 @Description(
+    memo = "媒体交换协商：offer/answer/candidate",
     body = """
     {
     }

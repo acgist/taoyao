@@ -2107,6 +2107,16 @@ class Taoyao extends RemoteClient {
     session.localVideoTrack = localStream.getVideoTracks()[0];
     session.peerConnection.addTrack(session.localAudioTrack, localStream);
     session.peerConnection.addTrack(session.localVideoTrack, localStream);
+    session.peerConnection.createOffer().then(async description => {
+      await session.peerConnection.setLocalDescription(description);
+      me.push(
+        protocol.buildMessage("session::exchange", {
+          sdp      : description.sdp,
+          type     : description.type,
+          sessionId: sessionId
+        })
+      );
+    });
   }
 
   async defaultSessionCall(message) {
@@ -2118,6 +2128,7 @@ class Taoyao extends RemoteClient {
     const localStream = await me.getStream();
     session.localAudioTrack = localStream.getAudioTracks()[0];
     session.localVideoTrack = localStream.getVideoTracks()[0];
+    // 相同Stream音视频同步
     session.peerConnection.addTrack(session.localAudioTrack, localStream);
     session.peerConnection.addTrack(session.localVideoTrack, localStream);
     session.peerConnection.createOffer().then(async description => {
@@ -2191,16 +2202,9 @@ class Taoyao extends RemoteClient {
     };
     peerConnection.onnegotiationneeded = event => {
       console.debug("buildPeerConnection onnegotiationneeded", event);
-      session.peerConnection.createOffer().then(async description => {
-        await session.peerConnection.setLocalDescription(description);
-        me.push(
-          protocol.buildMessage("session::exchange", {
-            sdp      : description.sdp,
-            type     : description.type,
-            sessionId: sessionId
-          })
-        );
-      });
+      if(peerConnection.connectionState === "connected") {
+        // TODO：重连
+      }
     }
     return peerConnection;
   }

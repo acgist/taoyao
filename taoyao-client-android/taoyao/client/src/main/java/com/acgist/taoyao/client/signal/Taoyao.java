@@ -11,6 +11,7 @@ import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.Process;
 import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
@@ -21,10 +22,13 @@ import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.CloseableUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
+import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.client.utils.IdUtils;
+import com.acgist.taoyao.config.MediaProperties;
 import com.acgist.taoyao.media.MediaRecorder;
-import com.acgist.taoyao.media.SessionClient;
 import com.acgist.taoyao.media.Room;
+import com.acgist.taoyao.media.SessionClient;
+import com.acgist.taoyao.signal.ITaoyao;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -37,10 +41,8 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -53,7 +55,7 @@ import javax.crypto.spec.SecretKeySpec;
  *
  * @author acgist
  */
-public final class Taoyao {
+public final class Taoyao implements ITaoyao {
 
     /**
      * 端口
@@ -150,13 +152,17 @@ public final class Taoyao {
     private final Handler executeMessageHandler;
     private final HandlerThread executeMessageThread;
     /**
+     * 媒体配置
+     */
+    private MediaProperties mediaProperties;
+    /**
      * 房间列表
      */
-    private final List<Room> roomList;
+    private final Map<String, Room> rooms;
     /**
-     * P2P终端列表
+     * 会话终端列表
      */
-    private final List<SessionClient> p2pClientList;
+    private final Map<String, SessionClient> sessionClients;
 
     public Taoyao(
         int port, String host, String version,
@@ -196,8 +202,8 @@ public final class Taoyao {
         this.executeMessageThread = new HandlerThread("TaoyaoExecuteMessageThread");
         this.executeMessageThread.start();
         this.executeMessageHandler = new Handler(this.executeMessageThread.getLooper());
-        this.roomList = new CopyOnWriteArrayList<>();
-        this.p2pClientList = new CopyOnWriteArrayList<>();
+        this.rooms = new ConcurrentHashMap<>();
+        this.sessionClients = new ConcurrentHashMap<>();
     }
 
     /**
@@ -238,7 +244,7 @@ public final class Taoyao {
             if (this.socket.isConnected()) {
                 this.input = this.socket.getInputStream();
                 this.output = this.socket.getOutputStream();
-                this.register();
+                this.clientRegister();
                 this.connect = true;
                 synchronized (this) {
                     this.notifyAll();
@@ -274,7 +280,7 @@ public final class Taoyao {
                     this.connect();
                 }
                 // 读取
-                while (this.input != null && (length = this.input.read(bytes)) >= 0) {
+                while (!this.close && (length = this.input.read(bytes)) >= 0) {
                     buffer.put(bytes, 0, length);
                     while (buffer.position() > 0) {
                         if (messageLength <= 0) {
@@ -417,8 +423,8 @@ public final class Taoyao {
         this.heartbeatThread.quitSafely();
         this.loopMessageThread.quitSafely();
         this.executeMessageThread.quitSafely();
-        this.roomList.forEach(Room::close);
-        this.p2pClientList.forEach(SessionClient::close);
+        this.rooms.values().forEach(Room::close);
+        this.sessionClients.values().forEach(SessionClient::close);
     }
 
     /**
@@ -478,8 +484,12 @@ public final class Taoyao {
         } else {
             final Map<String, Object> body = message.body();
             switch (header.getSignal()) {
-                case "client::register" -> this.register(message, body);
-                default -> Log.i(Taoyao.class.getSimpleName(), "没有适配信令：" + content);
+                case "client::config"    -> this.clientConfig(message, body);
+                case "client::register"  -> this.clientRegister(message, body);
+                case "session::call"     -> this.sessionCall(message, body);
+                case "session::close"    -> this.sessionClose(message, body);
+                case "session::exchange" -> this.sessionExchange(message, body);
+                default                  -> Log.d(Taoyao.class.getSimpleName(), "没有适配信令：" + content);
             }
         }
     }
@@ -487,7 +497,7 @@ public final class Taoyao {
     /**
      * 注册
      */
-    private void register() {
+    private void clientRegister() {
         final Location location = this.location();
         this.push(this.buildMessage(
             "client::register",
@@ -509,12 +519,50 @@ public final class Taoyao {
      * @param message 消息
      * @param body    消息主体
      */
-    private void register(Message message, Map<String, Object> body) {
+    private void clientConfig(Message message, Map<String, Object> body) {
+        this.mediaProperties = JSONUtils.toJava(JSONUtils.toJSON(body), MediaProperties.class);
+    }
+
+    /**
+     * @param message 消息
+     * @param body    消息主体
+     */
+    private void clientRegister(Message message, Map<String, Object> body) {
         final Integer index = (Integer) body.get("index");
         if (index == null) {
             return;
         }
         IdUtils.setClientIndex(index);
+    }
+
+    private void clientClose() {
+//        PowerManager manager = (PowerManager)this.getSystemService(Context.POWER_SERVICE);
+//        manager.reboot("重新启动系统")
+//        Process.killProcess(Process.myPid());
+//        System.exit(0);
+    }
+
+    private void sessionCall(Message message, Map<String, Object> body) {
+        final String name      = MapUtils.get(body, "name");
+        final String clientId  = MapUtils.get(body, "clientId");
+        final String sessionId = MapUtils.get(body, "sessionId");
+        final SessionClient sessionClient = new SessionClient(sessionId, name, clientId, this);
+        this.sessionClients.put(sessionId, sessionClient);
+        sessionClient.init();
+        sessionClient.offer();
+    }
+
+    private void sessionClose(Message message, Map<String, Object> body) {
+    }
+
+    private void sessionExchange(Message message, Map<String, Object> body) {
+        final String sessionId            = MapUtils.get(body, "sessionId");
+        final SessionClient sessionClient = this.sessionClients.get(sessionId);
+        if(sessionClient == null) {
+            Log.w(Taoyao.class.getSimpleName(), "会话交换无效会话：" + sessionId);
+            return;
+        }
+        sessionClient.exchange(message, body);
     }
 
     /**

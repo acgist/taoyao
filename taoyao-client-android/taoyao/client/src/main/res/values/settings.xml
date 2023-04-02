@@ -17,6 +17,4 @@
     <string name="storagePathVideo">/taoyao/video</string>
     <!-- 传输类型：RTP|WEBRTC -->
     <string name="transportType">WEBRTC</string>
-    <string name="audioRecordFormat"></string>
-    <string name="videoRecordFormat"></string>
 </resources>

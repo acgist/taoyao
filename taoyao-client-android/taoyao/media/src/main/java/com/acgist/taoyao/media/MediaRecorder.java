@@ -1,6 +1,5 @@
 package com.acgist.taoyao.media;
 
-import android.graphics.YuvImage;
 import android.media.AudioFormat;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
@@ -11,24 +10,17 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
-import android.view.Surface;
 
-import org.webrtc.EglBase;
-import org.webrtc.GlRectDrawer;
-import org.webrtc.HardwareVideoEncoderFactory;
-import org.webrtc.VideoEncoderFactory;
+import com.acgist.mediasoup.R;
+
 import org.webrtc.VideoFrame;
-import org.webrtc.VideoFrameDrawer;
 import org.webrtc.VideoSink;
-import org.webrtc.YuvConverter;
 import org.webrtc.YuvHelper;
 import org.webrtc.audio.JavaAudioDeviceModule;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
-import java.util.Optional;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -82,7 +74,7 @@ public final class MediaRecorder {
      */
     public final VideoSink videoRecoder;
 
-    private MediaRecorder() {
+    static {
         final MediaCodecList mediaCodecList = new MediaCodecList(-1);
         for (MediaCodecInfo mediaCodecInfo : mediaCodecList.getCodecInfos()) {
             if (mediaCodecInfo.isEncoder()) {
@@ -98,6 +90,9 @@ public final class MediaRecorder {
                 }
             }
         }
+    }
+
+    private MediaRecorder() {
         this.executorService = Executors.newFixedThreadPool(2);
         this.audioRecoder = audioSamples -> {
         };
@@ -135,7 +130,11 @@ public final class MediaRecorder {
         return this.active;
     }
 
-    public void init(String file, String audioFormat, String videoFormat, int width, int height) {
+    public void record(String path) {
+        this.record(path, System.currentTimeMillis() + ".mp4", null, null, 1, 1);
+    }
+
+    public void record(String path, String file, String audioFormat, String videoFormat, int width, int height) {
         synchronized (MediaRecorder.INSTANCE) {
             this.file = file;
             this.active = true;
@@ -143,7 +142,7 @@ public final class MediaRecorder {
                 this.audioThread == null || !this.audioThread.isAlive() ||
                     this.videoThread == null || !this.videoThread.isAlive()
             ) {
-                this.initMediaMuxer(file);
+                this.initMediaMuxer(path, file);
                 this.initAudioThread(MediaFormat.MIMETYPE_AUDIO_AAC, 96000, 44100, 1);
                 this.initVideoThread(MediaFormat.MIMETYPE_VIDEO_AVC, 2500 * 1000, 30, 1, 1920, 1080);
             }
@@ -324,10 +323,10 @@ public final class MediaRecorder {
         }
     }
 
-    private void initMediaMuxer(String file) {
+    private void initMediaMuxer(String path, String file) {
         try {
             this.mediaMuxer = new MediaMuxer(
-                Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath(), file).toAbsolutePath().toString(),
+                Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, file).toAbsolutePath().toString(),
                 MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4
             );
             // 设置方向

@@ -1,26 +1,17 @@
 package com.acgist.taoyao.media;
 
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioFormat;
-import android.media.AudioRecord;
-import android.media.MediaFormat;
 import android.media.projection.MediaProjection;
-import android.media.projection.MediaProjectionManager;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
-import android.view.Surface;
 
 import com.acgist.taoyao.config.Config;
 
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
-import org.webrtc.BuiltinAudioDecoderFactoryFactory;
-import org.webrtc.BuiltinAudioEncoderFactoryFactory;
 import org.webrtc.Camera2Enumerator;
 import org.webrtc.CameraEnumerator;
 import org.webrtc.CameraVideoCapturer;
@@ -37,18 +28,12 @@ import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoDecoderFactory;
 import org.webrtc.VideoEncoderFactory;
-import org.webrtc.VideoFileRenderer;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
-import org.webrtc.audio.AudioDeviceModule;
 import org.webrtc.audio.JavaAudioDeviceModule;
-import org.webrtc.voiceengine.WebRtcAudioManager;
-import org.webrtc.voiceengine.WebRtcAudioRecord;
-import org.webrtc.voiceengine.WebRtcAudioUtils;
 
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
@@ -60,6 +45,7 @@ import java.util.List;
  *
  * https://zhuanlan.zhihu.com/p/82446482
  * https://www.jianshu.com/p/97acd9a51909
+ * https://juejin.cn/post/7036308428305727519
  * https://blog.csdn.net/nanoage/article/details/127406494
  * https://webrtc.org.cn/20190419_tutorial3_webrtc_android
  * https://blog.csdn.net/CSDN_Mew/article/details/103406781
@@ -99,13 +85,11 @@ public class MediaManager {
 
     private static final MediaManager INSTANCE = new MediaManager();
 
-    private MediaManager() {
-    }
-
     public static final MediaManager getInstance() {
         return INSTANCE;
     }
 
+    private volatile int clientCount;
     /**
      * 视频类型
      */
@@ -155,15 +139,53 @@ public class MediaManager {
 //      WebRtcAudioManager.setBlacklistDeviceForOpenSLESUsage(true);
     }
 
+    private MediaManager() {
+        this.clientCount = 0;
+    }
+
     /**
-     * 加载媒体流
+     * 新建终端
      *
-     * @param context 上下文
+     * @param type 视频类型：第一个终端进入有效
+     *
+     * @return PeerConnectionFactory
      */
-    public void init(Handler handler, Context context) {
-        this.type = Type.BACK;
+    public PeerConnectionFactory newClient(Type type) {
+        synchronized (this) {
+            if(this.clientCount <= 0) {
+                this.initMedia(type);
+            }
+            this.clientCount++;
+        }
+        return this.peerConnectionFactory;
+    }
+
+    /**
+     * 关闭一个终端
+     *
+     * @return 剩余终端数量
+     */
+    public int closeClient() {
+        synchronized (this) {
+            this.clientCount--;
+            if(this.clientCount <= 0) {
+                this.close();
+            }
+            return this.clientCount;
+        }
+    }
+
+    public void initMedia(Handler handler, Context context) {
         this.handler = handler;
         this.context = context;
+    }
+
+    /**
+     * 加载媒体流
+     */
+    public void initMedia(Type type) {
+        Log.i(MediaManager.class.getSimpleName(), "加载媒体：" + type);
+        this.type = type;
         this.eglBase = EglBase.create();
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(this.context)
@@ -191,8 +213,10 @@ public class MediaManager {
             .createPeerConnectionFactory();
         this.mediaStream = this.peerConnectionFactory.createLocalMediaStream("ARDAMS");
         Arrays.stream(videoEncoderFactory.getSupportedCodecs()).forEach(v -> {
-            Log.i(MediaManager.class.getSimpleName(), "支持的视频解码器：" + v.name);
+            Log.d(MediaManager.class.getSimpleName(), "支持的视频解码器：" + v.name);
         });
+        this.initAudio();
+        this.initVideo();
     }
 
     /**
@@ -227,7 +251,7 @@ public class MediaManager {
     /**
      * 加载音频
      */
-    public void initAudio() {
+    private void initAudio() {
         // 关闭音频
         this.closeAudioTrack();
         // 加载音频
@@ -257,7 +281,7 @@ public class MediaManager {
     /**
      * 加载视频
      */
-    public void initVideo() {
+    private void initVideo() {
         this.closeVideoTrack();
         if(this.videoCapturer != null) {
             this.videoCapturer.dispose();
@@ -291,8 +315,8 @@ public class MediaManager {
         this.videoCapturer = new ScreenCapturerAndroid(intent, new MediaProjection.Callback() {
             @Override
             public void onStop() {
-                super.onStop();
-                Log.i(MediaManager.class.getSimpleName(), "停止屏幕捕获");
+            super.onStop();
+            Log.i(MediaManager.class.getSimpleName(), "停止屏幕捕获");
             }
         });
         this.initVideoTrack();
@@ -305,7 +329,11 @@ public class MediaManager {
         final SurfaceViewRenderer surfaceViewRenderer = this.preview();
         // 加载视频
         final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", this.eglBase.getEglBaseContext());
+//      surfaceTextureHelper.setTextureSize();
+//      surfaceTextureHelper.setFrameRotation();
         final VideoSource videoSource = this.peerConnectionFactory.createVideoSource(this.videoCapturer.isScreencast());
+        // 美颜水印
+//      videoSource.setVideoProcessor();
         this.videoCapturer.initialize(surfaceTextureHelper, this.context, videoSource.getCapturerObserver());
         this.videoCapturer.startCapture(480, 640, 30);
         final VideoTrack videoTrack = this.peerConnectionFactory.createVideoTrack("ARDAMSv0", videoSource);
@@ -314,20 +342,25 @@ public class MediaManager {
         videoTrack.setEnabled(true);
         this.mediaStream.addTrack(videoTrack);
         Log.i(MediaManager.class.getSimpleName(), "加载视频：" + videoTrack.id());
-//      二次处理：VideoProcessor
+    }
+
+    public MediaStream getMediaStream() {
+        return this.mediaStream;
     }
 
     private SurfaceViewRenderer preview() {
         // 设置预览
         final SurfaceViewRenderer surfaceViewRenderer = new SurfaceViewRenderer(this.context);
-        // 视频反转
-        surfaceViewRenderer.setMirror(false);
-        // 视频拉伸
-        surfaceViewRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
-        // 硬件拉伸
-        surfaceViewRenderer.setEnableHardwareScaler(true);
-        // 加载
-        surfaceViewRenderer.init(this.eglBase.getEglBaseContext(), null);
+        this.handler.post(() -> {
+            // 视频反转
+            surfaceViewRenderer.setMirror(false);
+            // 视频拉伸
+            surfaceViewRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
+            // 硬件拉伸
+            surfaceViewRenderer.setEnableHardwareScaler(true);
+            // 加载
+            surfaceViewRenderer.init(this.eglBase.getEglBaseContext(), null);
+        });
         // 事件
 //      surfaceViewRenderer.setOnClickListener();
         // TODO：迁移localvideo
@@ -336,12 +369,41 @@ public class MediaManager {
         final Message message = new Message();
         message.obj = surfaceViewRenderer;
         message.what = Config.WHAT_NEW_LOCAL_VIDEO;
-        this.handler.sendMessage(message);
+        // TODO：恢复
+//        this.handler.sendMessage(message);
         // 暂停
 //        surfaceViewRenderer.pauseVideo();
         // 恢复
 //        surfaceViewRenderer.disableFpsReduction();
         return surfaceViewRenderer;
+    }
+
+    public void remotePreview(final MediaStream mediaStream) {
+        // 设置预览
+        final SurfaceViewRenderer surfaceViewRenderer = new SurfaceViewRenderer(this.context);
+        this.handler.post(() -> {
+            // 视频反转
+            surfaceViewRenderer.setMirror(false);
+            // 视频拉伸
+            surfaceViewRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
+            // 硬件拉伸
+            surfaceViewRenderer.setEnableHardwareScaler(true);
+            // 加载
+            surfaceViewRenderer.init(this.eglBase.getEglBaseContext(), null);
+            // 开始播放
+            final VideoTrack videoTrack = mediaStream.videoTracks.get(0);
+            videoTrack.setEnabled(true);
+            videoTrack.addSink(surfaceViewRenderer);
+        });
+        // 页面加载
+        final Message message = new Message();
+        message.obj = surfaceViewRenderer;
+        message.what = Config.WHAT_NEW_REMOTE_VIDEO;
+        this.handler.sendMessage(message);
+        // 暂停
+//        surfaceViewRenderer.pauseVideo();
+        // 恢复
+//        surfaceViewRenderer.disableFpsReduction();
     }
 
     public void pauseAudio() {
@@ -372,10 +434,6 @@ public class MediaManager {
         synchronized (this.mediaStream.preservedVideoTracks) {
             this.mediaStream.preservedVideoTracks.forEach(v -> v.setEnabled(true));
         }
-    }
-
-    public void record() {
-        MediaRecorder.getInstance().init(System.currentTimeMillis() + ".mp4", null, null, 1, 1);
     }
 
     /**
