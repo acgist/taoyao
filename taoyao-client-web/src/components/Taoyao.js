@@ -1415,13 +1415,21 @@ class Taoyao extends RemoteClient {
       return;
     }
     me.roomId = roomId;
-    me.mediasoupDevice = new mediasoupClient.Device();
     const response = await me.request(
       protocol.buildMessage("media::router::rtp::capabilities", {
         roomId: me.roomId,
       })
     );
     const routerRtpCapabilities = response.body.rtpCapabilities;
+    me.mediasoupDevice = new mediasoupClient.Device();
+//    mediasoupClient.parseScalabilityMode("L2T3");
+//    // => { spatialLayers: 2, temporalLayers: 3 }
+//    mediasoupClient.parseScalabilityMode("S3T3");
+//    // => { spatialLayers: 3, temporalLayers: 3 }
+//    mediasoupClient.parseScalabilityMode("L4T7_KEY_SHIFT");
+//    // => { spatialLayers: 4, temporalLayers: 7 }
+//    mediasoupClient.parseScalabilityMode(undefined);
+//    // => { spatialLayers: 1, temporalLayers: 1 }
     await me.mediasoupDevice.load({ routerRtpCapabilities });
     await me.request(
       protocol.buildMessage("room::enter", {
@@ -1916,7 +1924,7 @@ class Taoyao extends RemoteClient {
           this.videoProducer = null;
         });
         this.videoProducer.on("trackended", () => {
-          console.warn("video producer trackended", this.audioProducer);
+          console.warn("video producer trackended", this.videoProducer);
           this.closeVideoProducer().catch(() => {});
         });
       } catch (error) {

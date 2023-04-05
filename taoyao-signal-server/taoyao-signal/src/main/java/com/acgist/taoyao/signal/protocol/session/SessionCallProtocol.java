@@ -55,8 +55,8 @@ public class SessionCallProtocol extends ProtocolSessionAdapter {
             Constant.NAME,       client.status().getName(),
             Constant.CLIENT_ID,  client.clientId(),
             Constant.SESSION_ID, session.getId(),
-            Constant.AUDIO,      MapUtils.get(body, Constant.AUDIO),
-            Constant.VIDEO,      MapUtils.get(body, Constant.VIDEO)
+            Constant.AUDIO,      MapUtils.get(body, Constant.AUDIO, true),
+            Constant.VIDEO,      MapUtils.get(body, Constant.VIDEO, true)
         ));
         target.push(callMessage);
     }

@@ -10,7 +10,6 @@ import lombok.Setter;
 
 /**
  * 地址重写
- * 内外网多网卡环境重写网络号保留主机号，通过重新地址实现多网互通。
  * 
  * @author acgist
  */

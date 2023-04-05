@@ -26,6 +26,8 @@ set(
 set(
     SOURCE_FILES
     ${SOURCE_DIR}/include/LocalClient.hpp
+    ${SOURCE_DIR}/include/Log.hpp
+    ${SOURCE_DIR}/include/MediaManager.hpp
     ${SOURCE_DIR}/include/MediaRecorder.hpp
     ${SOURCE_DIR}/include/RemoteClient.hpp
     ${SOURCE_DIR}/include/Room.hpp
@@ -37,6 +39,7 @@ set(
     ${SOURCE_DIR}/rtp/RtpClient.cpp
     ${SOURCE_DIR}/rtp/RtpVideoPublisher.cpp
     ${SOURCE_DIR}/webrtc/LocalClient.cpp
+    ${SOURCE_DIR}/webrtc/MediaManager.cpp
     ${SOURCE_DIR}/webrtc/MediaRecorder.cpp
     ${SOURCE_DIR}/webrtc/RemoteClient.cpp
     ${SOURCE_DIR}/webrtc/Room.cpp

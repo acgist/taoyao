@@ -3,7 +3,9 @@
 
     <application
         android:allowBackup="true"
+        android:allowNativeHeapPointerTagging="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
+        android:extractNativeLibs="true"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
@@ -17,7 +19,10 @@
             android:launchMode="singleTask"
             android:theme="@style/Theme.Taoyao">
             <intent-filter>
+                <action android:name="android.intent.action.HOME" />
                 <action android:name="android.intent.action.MAIN" />
+                <action android:name="android.intent.action.DEFAULT" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -35,11 +40,13 @@
             android:foregroundServiceType="mediaProjection" />
 
         <receiver
-            android:name=".BootReceiver"
+            android:name=".TaoyaoReceiver"
             android:enabled="true"
             android:exported="true">
             <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.REBOOT" />
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.ACTION_SHUTDOWN" />
             </intent-filter>
         </receiver>
     </application>

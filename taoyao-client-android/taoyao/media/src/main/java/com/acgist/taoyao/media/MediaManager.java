@@ -2,6 +2,8 @@ package com.acgist.taoyao.media;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaCodecInfo;
+import android.media.MediaCodecList;
 import android.media.projection.MediaProjection;
 import android.os.Handler;
 import android.os.Looper;
@@ -28,8 +30,6 @@ import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoDecoderFactory;
 import org.webrtc.VideoEncoderFactory;
-import org.webrtc.VideoFrame;
-import org.webrtc.VideoSink;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 import org.webrtc.audio.JavaAudioDeviceModule;
@@ -37,12 +37,14 @@ import org.webrtc.audio.JavaAudioDeviceModule;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * 媒体来源管理器
  *
  * @author acgist
- *
+ * <p>
  * https://zhuanlan.zhihu.com/p/82446482
  * https://www.jianshu.com/p/97acd9a51909
  * https://juejin.cn/post/7036308428305727519
@@ -53,29 +55,37 @@ import java.util.List;
  * https://blog.csdn.net/u011418943/article/details/127108642
  * https://blog.csdn.net/csdn_shen0221/article/details/120331004
  * https://blog.csdn.net/csdn_shen0221/article/details/119982257
- *
+ * <p>
  * TODO：动态码率（BITRATE_MODE_VBR、BITRATE_MODE）
  */
 public class MediaManager {
 
     /**
-     * 来源类型
+     * 视频来源类型
      *
      * @author acgist
      */
     public enum Type {
 
-        // 文件共享
+        /**
+         * 文件共享：FileVideoCapturer
+         */
         FILE,
-        // 后置摄像头
+        /**
+         * 后置摄像头：CameraVideoCapturer
+         */
         BACK,
-        // 前置摄像头
+        /**
+         * 前置摄像头：CameraVideoCapturer
+         */
         FRONT,
-        // 屏幕共享
+        /**
+         * 屏幕共享：ScreenCapturerAndroid
+         */
         SCREEN;
 
         /**
-         * @return 是否摄像头
+         * @return 是否是摄像头
          */
         public boolean isCamera() {
             return this == BACK || this == FRONT;
@@ -89,9 +99,12 @@ public class MediaManager {
         return INSTANCE;
     }
 
+    /**
+     * 当前终端数量
+     */
     private volatile int clientCount;
     /**
-     * 视频类型
+     * 视频来源类型
      */
     private Type type;
     /**
@@ -103,31 +116,28 @@ public class MediaManager {
      */
     private Context context;
     /**
-     * 本地终端
-     */
-    private LocalClient localClient;
-    /**
-     *
+     * EGL
      */
     private EglBase eglBase;
     /**
-     * 媒体流：声音、主码流（预览流）、次码流
+     * 媒体流：声音、视频
      */
     private MediaStream mediaStream;
     /**
      * 视频捕获
-     * FileVideoCapturer
-     * CameraVideoCapturer
-     * ScreenCapturerAndroid
      */
     private VideoCapturer videoCapturer;
     /**
-     * Peer连接工厂
+     * PeerConnectionFactory
      */
     private PeerConnectionFactory peerConnectionFactory;
+    /**
+     * 媒体录制
+     */
+    private final MediaRecorder mediaRecorder;
 
     static {
-        // 设置采样
+        // 采样
 //      WebRtcAudioUtils.setDefaultSampleRateHz();
         // 噪声消除
 //      WebRtcAudioUtils.setWebRtcBasedNoiseSuppressor(true);
@@ -135,25 +145,59 @@ public class MediaManager {
 //      WebRtcAudioUtils.setWebRtcBasedAcousticEchoCanceler(true);
         // 自动增益
 //      WebRtcAudioUtils.setWebRtcBasedAutomaticGainControl(true);
-        // 使用OpenSL ES
+        // OpenSL ES
 //      WebRtcAudioManager.setBlacklistDeviceForOpenSLESUsage(true);
+        final MediaCodecList mediaCodecList = new MediaCodecList(-1);
+        for (MediaCodecInfo mediaCodecInfo : mediaCodecList.getCodecInfos()) {
+//            if (mediaCodecInfo.isEncoder()) {
+                final String[] supportedTypes = mediaCodecInfo.getSupportedTypes();
+                Log.d(MediaRecorder.class.getSimpleName(), "编码器名称：" + mediaCodecInfo.getName());
+                Log.d(MediaRecorder.class.getSimpleName(), "编码器类型：" + String.join(" , ", supportedTypes));
+                for (String supportType : supportedTypes) {
+                    final MediaCodecInfo.CodecCapabilities codecCapabilities = mediaCodecInfo.getCapabilitiesForType(supportType);
+                    final int[] colorFormats = codecCapabilities.colorFormats;
+                    Log.d(MediaRecorder.class.getSimpleName(), "编码器格式：" + codecCapabilities.getMimeType());
+//                  MediaCodecInfo.CodecCapabilities.COLOR_*
+                    Log.d(MediaRecorder.class.getSimpleName(), "编码器支持格式：" + IntStream.of(colorFormats).boxed().map(String::valueOf).collect(Collectors.joining(" , ")));
+                }
+//            }
+        }
     }
 
     private MediaManager() {
         this.clientCount = 0;
+        this.mediaRecorder = MediaRecorder.getInstance();
+    }
+
+    /**
+     * 初始化上下文
+     *
+     * @param handler Handler
+     * @param context 上下文
+     */
+    public void initContext(Handler handler, Context context) {
+        this.handler = handler;
+        this.context = context;
+        PeerConnectionFactory.initialize(
+            PeerConnectionFactory.InitializationOptions.builder(this.context)
+//              .setEnableInternalTracer(true)
+                .createInitializationOptions()
+        );
     }
 
     /**
      * 新建终端
+     * 第一个终端进入时没有初始化时，初始化所有资源。
      *
-     * @param type 视频类型：第一个终端进入有效
+     * @param type 视频类型
      *
-     * @return PeerConnectionFactory
+     * @return PeerConnectionFactory PeerConnectionFactory
      */
     public PeerConnectionFactory newClient(Type type) {
         synchronized (this) {
-            if(this.clientCount <= 0) {
+            if (this.clientCount <= 0 && !MediaRecorder.getInstance().isActive()) {
                 this.initMedia(type);
+                this.nativeInit();
             }
             this.clientCount++;
         }
@@ -162,36 +206,48 @@ public class MediaManager {
 
     /**
      * 关闭一个终端
+     * 最后一个终端关闭时，释放所有资源。
      *
      * @return 剩余终端数量
      */
     public int closeClient() {
         synchronized (this) {
             this.clientCount--;
-            if(this.clientCount <= 0) {
+            if (this.clientCount <= 0) {
                 this.close();
+                this.nativeStop();
             }
             return this.clientCount;
         }
     }
 
-    public void initMedia(Handler handler, Context context) {
-        this.handler = handler;
-        this.context = context;
+    public void initRecord(Type type) {
+        synchronized (this) {
+            if(this.clientCount <= 0 && !MediaRecorder.getInstance().isActive()) {
+                this.initMedia(type);
+                this.nativeInit();
+            }
+        }
+    }
+
+    public void stopRecord() {
+        synchronized (this) {
+            if(this.clientCount <= 0) {
+                this.close();
+                this.nativeStop();
+            }
+        }
     }
 
     /**
-     * 加载媒体流
+     * 加载媒体
+     *
+     * @param type 视频来源类型
      */
-    public void initMedia(Type type) {
+    private void initMedia(Type type) {
         Log.i(MediaManager.class.getSimpleName(), "加载媒体：" + type);
         this.type = type;
         this.eglBase = EglBase.create();
-        PeerConnectionFactory.initialize(
-            PeerConnectionFactory.InitializationOptions.builder(this.context)
-//          .setEnableInternalTracer(true)
-            .createInitializationOptions()
-        );
         final VideoDecoderFactory videoDecoderFactory = new DefaultVideoDecoderFactory(this.eglBase.getEglBaseContext());
         final VideoEncoderFactory videoEncoderFactory = new DefaultVideoEncoderFactory(this.eglBase.getEglBaseContext(), true, true);
         final JavaAudioDeviceModule javaAudioDeviceModule = JavaAudioDeviceModule.builder(this.context)
@@ -223,22 +279,21 @@ public class MediaManager {
      * 切换视频来源
      *
      * @param type 来源类型
-     *
-     * TODO：设置分享
      */
     public void exchange(Type type) {
-        if(this.type == type) {
+        if (this.type == type) {
             return;
         }
         this.type = type;
         Log.i(MediaManager.class.getSimpleName(), "设置视频来源：" + type);
-        if(this.type.isCamera() && type.isCamera()) {
+        if (this.type.isCamera() && type.isCamera()) {
             // TODO：测试是否需要完全重置
             final CameraVideoCapturer cameraVideoCapturer = (CameraVideoCapturer) this.videoCapturer;
             cameraVideoCapturer.switchCamera(new CameraVideoCapturer.CameraSwitchHandler() {
                 @Override
                 public void onCameraSwitchDone(boolean success) {
                 }
+
                 @Override
                 public void onCameraSwitchError(String message) {
                 }
@@ -283,40 +338,44 @@ public class MediaManager {
      */
     private void initVideo() {
         this.closeVideoTrack();
-        if(this.videoCapturer != null) {
+        if (this.videoCapturer != null) {
             this.videoCapturer.dispose();
         }
-        if(this.type.isCamera()) {
-            final CameraEnumerator cameraEnumerator = new Camera2Enumerator(this.context);
-            final String[] names = cameraEnumerator.getDeviceNames();
-            for(String name : names) {
-                if(this.type == Type.FRONT && cameraEnumerator.isFrontFacing(name)) {
-                    Log.i(MediaManager.class.getSimpleName(), "加载视频（前置摄像头）：" + name);
-                    this.videoCapturer = cameraEnumerator.createCapturer(name, new MediaCameraEventsHandler());
-                } else if(this.type == Type.BACK && cameraEnumerator.isBackFacing(name)) {
-                    Log.i(MediaManager.class.getSimpleName(), "加载视频（后置摄像头）：" + name);
-                    this.videoCapturer = cameraEnumerator.createCapturer(name, new MediaCameraEventsHandler());
-                } else {
-                    Log.d(MediaManager.class.getSimpleName(), "忽略摄像头：" + name);
-                }
-            }
-            this.initVideoTrack();
-        } else if(this.type == Type.FILE) {
-            Log.i(MediaManager.class.getSimpleName(), "加载视频（文件）");
-        } else if(this.type == Type.SCREEN) {
-            Log.i(MediaManager.class.getSimpleName(), "加载视频（录屏）");
+        Log.i(MediaManager.class.getSimpleName(), "加载视频：" + this.type);
+        if (this.type.isCamera()) {
+            this.initCamera();
+        } else if (this.type == Type.FILE) {
+            // 文件
+        } else if (this.type == Type.SCREEN) {
             final Message message = new Message();
             message.what = Config.WHAT_SCREEN_CAPTURE;
             this.handler.sendMessage(message);
+        } else {
+            // 其他类型
         }
+    }
+
+    private void initCamera() {
+        final CameraEnumerator cameraEnumerator = new Camera2Enumerator(this.context);
+        final String[] names = cameraEnumerator.getDeviceNames();
+        for (String name : names) {
+            if (this.type == Type.FRONT && cameraEnumerator.isFrontFacing(name)) {
+                this.videoCapturer = cameraEnumerator.createCapturer(name, new MediaCameraEventsHandler());
+            } else if (this.type == Type.BACK && cameraEnumerator.isBackFacing(name)) {
+                this.videoCapturer = cameraEnumerator.createCapturer(name, new MediaCameraEventsHandler());
+            } else {
+                // 忽略其他摄像头
+            }
+        }
+        this.initVideoTrack();
     }
 
     public void screenRecord(Intent intent) {
         this.videoCapturer = new ScreenCapturerAndroid(intent, new MediaProjection.Callback() {
             @Override
             public void onStop() {
-            super.onStop();
-            Log.i(MediaManager.class.getSimpleName(), "停止屏幕捕获");
+                super.onStop();
+                Log.i(MediaManager.class.getSimpleName(), "停止屏幕捕获");
             }
         });
         this.initVideoTrack();
@@ -326,7 +385,7 @@ public class MediaManager {
      * 加载视频
      */
     private void initVideoTrack() {
-        final SurfaceViewRenderer surfaceViewRenderer = this.preview();
+        final SurfaceViewRenderer surfaceViewRenderer = this.localPreview();
         // 加载视频
         final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", this.eglBase.getEglBaseContext());
 //      surfaceTextureHelper.setTextureSize();
@@ -338,7 +397,7 @@ public class MediaManager {
         this.videoCapturer.startCapture(480, 640, 30);
         final VideoTrack videoTrack = this.peerConnectionFactory.createVideoTrack("ARDAMSv0", videoSource);
         videoTrack.addSink(surfaceViewRenderer);
-        videoTrack.addSink(MediaRecorder.getInstance().videoRecoder);
+//        videoTrack.addSink(MediaRecorder.getInstance().videoRecoder);
         videoTrack.setEnabled(true);
         this.mediaStream.addTrack(videoTrack);
         Log.i(MediaManager.class.getSimpleName(), "加载视频：" + videoTrack.id());
@@ -348,7 +407,7 @@ public class MediaManager {
         return this.mediaStream;
     }
 
-    private SurfaceViewRenderer preview() {
+    private SurfaceViewRenderer localPreview() {
         // 设置预览
         final SurfaceViewRenderer surfaceViewRenderer = new SurfaceViewRenderer(this.context);
         this.handler.post(() -> {
@@ -370,7 +429,7 @@ public class MediaManager {
         message.obj = surfaceViewRenderer;
         message.what = Config.WHAT_NEW_LOCAL_VIDEO;
         // TODO：恢复
-//        this.handler.sendMessage(message);
+        this.handler.sendMessage(message);
         // 暂停
 //        surfaceViewRenderer.pauseVideo();
         // 恢复
@@ -443,7 +502,7 @@ public class MediaManager {
         synchronized (this.mediaStream.audioTracks) {
             AudioTrack track;
             final Iterator<AudioTrack> iterator = this.mediaStream.audioTracks.iterator();
-            while(iterator.hasNext()) {
+            while (iterator.hasNext()) {
                 track = iterator.next();
                 iterator.remove();
                 track.dispose();
@@ -470,7 +529,7 @@ public class MediaManager {
         synchronized (list) {
             VideoTrack track;
             final Iterator<VideoTrack> iterator = list.iterator();
-            while(iterator.hasNext()) {
+            while (iterator.hasNext()) {
                 track = iterator.next();
                 iterator.remove();
                 track.dispose();
@@ -481,25 +540,30 @@ public class MediaManager {
     /**
      * 释放资源
      */
-    public void close() {
+    private void close() {
         this.closeAudioTrack();
         this.closeVideoTrack();
-        if(this.eglBase != null) {
+        if (this.eglBase != null) {
             this.eglBase.release();
             this.eglBase = null;
         }
-        if(this.videoCapturer != null) {
+        if (this.videoCapturer != null) {
             this.videoCapturer.dispose();
             this.videoCapturer = null;
         }
-        if(this.mediaStream != null) {
+        if (this.mediaStream != null) {
             this.mediaStream.dispose();
             this.mediaStream = null;
         }
-        if(this.peerConnectionFactory != null) {
+        if (this.peerConnectionFactory != null) {
             this.peerConnectionFactory.dispose();
             this.peerConnectionFactory = null;
         }
+    }
+
+    public void shutdown() {
+//      PeerConnectionFactory.shutdownInternalTracer();
+//      PeerConnectionFactory.stopInternalTracingCapture();
     }
 
     /**
@@ -533,5 +597,9 @@ public class MediaManager {
         public void onCameraClosed() {
         }
     }
+
+    private native void nativeInit();
+    private native void nativeStop();
+    public  native long nativeNewRoom(String roomId);
 
 }

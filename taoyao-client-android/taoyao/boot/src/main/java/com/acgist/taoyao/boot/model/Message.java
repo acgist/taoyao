@@ -1,5 +1,7 @@
 package com.acgist.taoyao.boot.model;
 
+import android.util.Log;
+
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 
@@ -161,7 +163,8 @@ public class Message implements Cloneable, Serializable {
         } else if (this.body == null) {
             return new HashMap<>();
         } else {
-            throw MessageCodeException.of("信令主体类型错误：" + this.body);
+            Log.w(Message.class.getSimpleName(), "信令主体类型错误：" + this.body);
+            return new HashMap<>();
         }
     }
 

@@ -8,6 +8,34 @@
     tools:context="com.acgist.taoyao.client.MainActivity">
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/action"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="@string/button_action"
+        android:src="@drawable/action"
+        app:borderWidth="16dp"
+        app:fabSize="normal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/settings" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/photograph"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_marginStart="16dp"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="@string/button_photograph"
+        android:src="@drawable/photograph"
+        app:borderWidth="16dp"
+        app:fabSize="normal"
+        app:layout_constraintBottom_toTopOf="@+id/action"
+        app:layout_constraintStart_toEndOf="@+id/record" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/record"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -19,9 +47,7 @@
         app:borderWidth="16dp"
         app:fabSize="normal"
         app:layout_constraintBottom_toTopOf="@+id/settings"
-        app:layout_constraintHorizontal_bias="0.04"
         app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton

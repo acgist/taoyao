@@ -6,11 +6,7 @@ import lombok.Setter;
 
 /**
  * 重写规则
- * 
- * @author acgist
- */
-/**
- * WebRTC STUN配置
+ * 没有配置内网地址等于网络号加上原始主机号
  * 
  * @author acgist
  */
@@ -21,7 +17,9 @@ public class IpRewriteRuleProperties {
 
     @Schema(title = "网络号", description = "网络号：匹配终端IP")
     private String network;
-    @Schema(title = "目标地址", description = "目标地址：没有配置等于网络号加上原始主机号")
-    private String targetHost;
+    @Schema(title = "内网地址", description = "内网地址")
+    private String innerHost;
+    @Schema(title = "外网地址", description = "外网地址")
+    private String outerHost;
     
 }

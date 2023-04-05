@@ -3,6 +3,7 @@ package com.acgist.taoyao.client.signal;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationManager;
@@ -11,6 +12,7 @@ import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.os.PowerManager;
 import android.os.Process;
 import android.util.Log;
 
@@ -18,13 +20,13 @@ import androidx.core.app.ActivityCompat;
 
 import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.boot.model.MessageCode;
-import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.CloseableUtils;
+import com.acgist.taoyao.boot.utils.IdUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
-import com.acgist.taoyao.client.utils.IdUtils;
+import com.acgist.taoyao.client.R;
 import com.acgist.taoyao.config.MediaProperties;
+import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.MediaRecorder;
 import com.acgist.taoyao.media.Room;
 import com.acgist.taoyao.media.SessionClient;
@@ -134,6 +136,10 @@ public final class Taoyao implements ITaoyao {
      */
     private final WifiManager wifiManager;
     /**
+     * 电源管理
+     */
+    private final PowerManager powerManager;
+    /**
      * 电池管理器
      */
     private final BatteryManager batteryManager;
@@ -151,6 +157,8 @@ public final class Taoyao implements ITaoyao {
     private final HandlerThread heartbeatThread;
     private final Handler executeMessageHandler;
     private final HandlerThread executeMessageThread;
+    private final MediaManager mediaManager;
+    private final MediaRecorder mediaRecorder;
     /**
      * 媒体配置
      */
@@ -163,13 +171,13 @@ public final class Taoyao implements ITaoyao {
      * 会话终端列表
      */
     private final Map<String, SessionClient> sessionClients;
+    public static Taoyao taoyao;
 
     public Taoyao(
         int port, String host, String version,
         String name, String clientId, String clientType, String username, String password,
         int timeout, String algo, String secret,
-        Handler mainHandler, Context context,
-        WifiManager wifiManager, BatteryManager batteryManager, LocationManager locationManager
+        Handler mainHandler, Context context
     ) {
         this.close = false;
         this.connect = false;
@@ -187,9 +195,10 @@ public final class Taoyao implements ITaoyao {
         this.decrypt = plaintext ? null : this.buildCipher(Cipher.DECRYPT_MODE, algo, secret);
         this.mainHandler = mainHandler;
         this.context = context;
-        this.wifiManager = wifiManager;
-        this.batteryManager = batteryManager;
-        this.locationManager = locationManager;
+        this.wifiManager = context.getSystemService(WifiManager.class);
+        this.powerManager = context.getSystemService(PowerManager.class);
+        this.batteryManager = context.getSystemService(BatteryManager.class);
+        this.locationManager = context.getSystemService(LocationManager.class);
         this.requestMessage = new ConcurrentHashMap<>();
         this.loopMessageThread = new HandlerThread("TaoyaoLoopMessageThread");
         this.loopMessageThread.start();
@@ -202,8 +211,11 @@ public final class Taoyao implements ITaoyao {
         this.executeMessageThread = new HandlerThread("TaoyaoExecuteMessageThread");
         this.executeMessageThread.start();
         this.executeMessageHandler = new Handler(this.executeMessageThread.getLooper());
+        this.mediaManager = MediaManager.getInstance();
+        this.mediaRecorder = MediaRecorder.getInstance();
         this.rooms = new ConcurrentHashMap<>();
         this.sessionClients = new ConcurrentHashMap<>();
+        Taoyao.taoyao = this;
     }
 
     /**
@@ -306,14 +318,12 @@ public final class Taoyao implements ITaoyao {
                                 buffer.get(message);
                                 buffer.compact();
                                 final String content = new String(this.decrypt.doFinal(message));
-                                this.executeMessageHandler.post(() -> {
-                                    try {
-                                        Log.d(Taoyao.class.getSimpleName(), "处理信令：" + content);
-                                        Taoyao.this.on(content);
-                                    } catch (Exception e) {
-                                        Log.e(Taoyao.class.getSimpleName(), "处理信令异常：" + content, e);
-                                    }
-                                });
+                                try {
+                                    Log.d(Taoyao.class.getSimpleName(), "处理信令：" + content);
+                                    Taoyao.this.on(content);
+                                } catch (Exception e) {
+                                    Log.e(Taoyao.class.getSimpleName(), "处理信令异常：" + content, e);
+                                }
                             }
                         }
                     }
@@ -388,7 +398,7 @@ public final class Taoyao implements ITaoyao {
         final Message response = this.requestMessage.remove(id);
         if (response == null || request.equals(response)) {
             Log.w(Taoyao.class.getSimpleName(), "请求信令没有响应：" + request);
-            throw MessageCodeException.of(MessageCode.CODE_2001, "请求信令没有响应");
+            return null;
         }
         return response;
     }
@@ -482,15 +492,26 @@ public final class Taoyao implements ITaoyao {
                 request.notifyAll();
             }
         } else {
-            final Map<String, Object> body = message.body();
-            switch (header.getSignal()) {
-                case "client::config"    -> this.clientConfig(message, body);
-                case "client::register"  -> this.clientRegister(message, body);
-                case "session::call"     -> this.sessionCall(message, body);
-                case "session::close"    -> this.sessionClose(message, body);
-                case "session::exchange" -> this.sessionExchange(message, body);
-                default                  -> Log.d(Taoyao.class.getSimpleName(), "没有适配信令：" + content);
-            }
+            this.executeMessageHandler.post(() -> this.dispatch(content, header, message));
+        }
+    }
+
+    private void dispatch(final String content, final Header header, final Message message) {
+        final Map<String, Object> body = message.body();
+        switch (header.getSignal()) {
+            case "client::config"    -> this.clientConfig(message, body);
+            case "client::register"  -> this.clientRegister(message, body);
+            case "client::reboot"    -> this.clientReboot(message, body);
+            case "client::shutdown"  -> this.clientShutdown(message, body);
+//                case "room::close"       -> this.roomClose(message, body);
+//                case "room::enter"       -> this.roomEnter(message, body);
+//                case "room::expel"       -> this.roomExpel(message, body);
+            case "room::invite"      -> this.roomInivte(message, body);
+//                case "room::leave"       -> this.roomLeave(message, body);
+            case "session::call"     -> this.sessionCall(message, body);
+            case "session::close"    -> this.sessionClose(message, body);
+            case "session::exchange" -> this.sessionExchange(message, body);
+            default                  -> Log.d(Taoyao.class.getSimpleName(), "没有适配信令：" + content);
         }
     }
 
@@ -535,11 +556,40 @@ public final class Taoyao implements ITaoyao {
         IdUtils.setClientIndex(index);
     }
 
-    private void clientClose() {
-//        PowerManager manager = (PowerManager)this.getSystemService(Context.POWER_SERVICE);
-//        manager.reboot("重新启动系统")
-//        Process.killProcess(Process.myPid());
-//        System.exit(0);
+    private void clientReboot(Message message, Map<String, Object> body) {
+        Log.i(Taoyao.class.getSimpleName(), "系统重启");
+//      this.powerManager.reboot("系统重启");
+        Process.killProcess(Process.myPid());
+    }
+
+    private void clientShutdown(Message message, Map<String, Object> body) {
+        Log.i(Taoyao.class.getSimpleName(), "系统关机");
+        // 自行实现
+//      this.powerManager.reboot("系统关机");
+        Process.killProcess(Process.myPid());
+    }
+
+    private void roomInivte(Message message, Map<String, Object> body) {
+        final String roomId   = MapUtils.get(body, "roomId");
+        final String password = MapUtils.get(body, "password");
+        final Room room = this.enterRoom(roomId, password);
+        room.produceMedia();
+    }
+
+    public Room enterRoom(String roomId, String password) {
+        final Resources resources = this.context.getResources();
+        final Room room = this.rooms.computeIfAbsent(
+            roomId,
+            key -> new Room(
+                key, password,
+                resources.getBoolean(R.bool.audioConsume),
+                resources.getBoolean(R.bool.videoConsume),
+                resources.getBoolean(R.bool.audioProduce),
+                resources.getBoolean(R.bool.videoProduce),
+                this.mediaManager.nativeNewRoom(key), this)
+        );
+        room.enter();
+        return room;
     }
 
     private void sessionCall(Message message, Map<String, Object> body) {

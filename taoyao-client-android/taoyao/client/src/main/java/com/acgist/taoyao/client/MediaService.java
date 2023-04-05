@@ -10,9 +10,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.BitmapFactory;
-import android.location.LocationManager;
-import android.net.wifi.WifiManager;
-import android.os.BatteryManager;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
@@ -43,6 +40,8 @@ public class MediaService extends Service {
      */
     public enum Action {
 
+        // 启动
+        LAUNCH,
         // 连接
         CONNECT,
         // 重连
@@ -69,8 +68,11 @@ public class MediaService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(MediaService.class.getSimpleName(), "onStartCommand");
-        if (Action.CONNECT.name().equals(intent.getAction())) {
+        Log.i(MediaService.class.getSimpleName(), "onStartCommand：" + intent.getAction());
+        if (Action.LAUNCH.name().equals(intent.getAction())) {
+            this.launch(intent);
+            this.openConnect(intent);
+        } else if (Action.CONNECT.name().equals(intent.getAction())) {
             this.openConnect(intent);
         } else if (Action.RECONNECT.name().equals(intent.getAction())) {
             this.reconnect();
@@ -87,6 +89,24 @@ public class MediaService extends Service {
         Log.i(MediaService.class.getSimpleName(), "onDestroy");
         super.onDestroy();
         this.close();
+    }
+
+    private void launch(Intent intent) {
+        final Intent notificationIntent = new Intent(this, MediaService.class);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
+        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "NOTIFICATION_CHANNEL_ID")
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
+            .setLargeIcon(BitmapFactory.decodeResource(this.getResources(), R.mipmap.ic_launcher_foreground))
+            .setTicker("NOTIFICATION_TICKER")
+            .setContentTitle("屏幕录制")
+            .setContentText("屏幕录制共享")
+            .setContentIntent(pendingIntent);
+        final Notification notification = notificationBuilder.build();
+        final NotificationChannel channel = new NotificationChannel("NOTIFICATION_CHANNEL_ID", "NOTIFICATION_CHANNEL_NAME", NotificationManager.IMPORTANCE_DEFAULT);
+        channel.setDescription("NOTIFICATION_CHANNEL_DESC");
+        final NotificationManager notificationManager = this.getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
+        this.startForeground((int) System.currentTimeMillis(), notification);
     }
 
     private void openConnect(Intent intent) {
@@ -119,17 +139,13 @@ public class MediaService extends Service {
         final Resources resources = this.getResources();
         // 系统服务
         final Context context = this.getApplicationContext();
-        final WifiManager wifiManager = context.getSystemService(WifiManager.class);
-        final BatteryManager batteryManager = context.getSystemService(BatteryManager.class);
-        final LocationManager locationManager = context.getSystemService(LocationManager.class);
         this.close();
         // 连接信令
         this.taoyao = new Taoyao(
             port, host, resources.getString(R.string.version),
             name, clientId, resources.getString(R.string.clientType), username, password,
             resources.getInteger(R.integer.timeout), resources.getString(R.string.encrypt), resources.getString(R.string.encryptSecret),
-            this.mainHandler, context,
-            wifiManager, batteryManager, locationManager
+            this.mainHandler, context
         );
         Toast.makeText(this.getApplicationContext(), "连接信令", Toast.LENGTH_SHORT).show();
     }

@@ -380,6 +380,7 @@ nginx -s reload
 
 ```
 # 终端服务：建议使用Nginx代理
+firewall-cmd --zone=public --add-port=443/tcp --permanent
 firewall-cmd --zone=public --add-port=8443/tcp --permanent
 # 信令服务（WebSocket）
 firewall-cmd --zone=public --add-port=8888/tcp --permanent
@@ -392,6 +393,7 @@ firewall-cmd --reload
 firewall-cmd --list-ports
 
 # 删除端口
+#firewall-cmd --zone=public --remove-port=443/tcp --permanent
 #firewall-cmd --zone=public --remove-port=8443/tcp --permanent
 #firewall-cmd --zone=public --remove-port=8888/tcp --permanent
 #firewall-cmd --zone=public --remove-port=9999/tcp --permanent

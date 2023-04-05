@@ -3,7 +3,6 @@ package com.acgist.taoyao.client;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.util.Log;
 
 /**
@@ -11,16 +10,15 @@ import android.util.Log;
  *
  * @author acgist
  */
-public class BootReceiver extends BroadcastReceiver {
+public class TaoyaoReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.i(BootReceiver.class.getSimpleName(), "onReceive");
-        final Resources resources = context.getResources();
+        Log.i(TaoyaoReceiver.class.getSimpleName(), "onReceive：" + intent.getAction());
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
-            if(resources.getBoolean(R.bool.preview)) {
-                this.launchPreview(context);
-            }
+            this.launchPreview(context);
+        } else {
+            // TODO：重启关机释放资源（录像）
         }
     }
 
@@ -30,8 +28,9 @@ public class BootReceiver extends BroadcastReceiver {
      * @param context 上下文
      */
     private void launchPreview(Context context) {
-        final Intent intent = new Intent(context, MainActivity.class);
+        final Intent intent = new Intent(context, MediaService.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        intent.setAction(MediaService.Action.LAUNCH.name());
         context.startForegroundService(intent);
     }
 

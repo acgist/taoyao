@@ -13,13 +13,22 @@ import android.util.Log;
 
 import com.acgist.mediasoup.R;
 
+import org.webrtc.JavaI420Buffer;
+import org.webrtc.RtpSender;
+import org.webrtc.RtpTransceiver;
+import org.webrtc.TextureBufferImpl;
+import org.webrtc.ThreadUtils;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
+import org.webrtc.YuvConverter;
 import org.webrtc.YuvHelper;
 import org.webrtc.audio.JavaAudioDeviceModule;
+import org.webrtc.voiceengine.WebRtcAudioRecord;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -74,24 +83,6 @@ public final class MediaRecorder {
      */
     public final VideoSink videoRecoder;
 
-    static {
-        final MediaCodecList mediaCodecList = new MediaCodecList(-1);
-        for (MediaCodecInfo mediaCodecInfo : mediaCodecList.getCodecInfos()) {
-            if (mediaCodecInfo.isEncoder()) {
-                final String[] supportedTypes = mediaCodecInfo.getSupportedTypes();
-                Log.d(MediaRecorder.class.getSimpleName(), "编码器名称：" + mediaCodecInfo.getName());
-                Log.d(MediaRecorder.class.getSimpleName(), "编码器类型：" + String.join(" , ", supportedTypes));
-                for (String supportType : supportedTypes) {
-                    final MediaCodecInfo.CodecCapabilities codecCapabilities = mediaCodecInfo.getCapabilitiesForType(supportType);
-                    final int[] colorFormats = codecCapabilities.colorFormats;
-                    Log.d(MediaRecorder.class.getSimpleName(), "编码器格式：" + codecCapabilities.getMimeType());
-//                  MediaCodecInfo.CodecCapabilities.COLOR_*
-                    Log.d(MediaRecorder.class.getSimpleName(), "编码器支持格式：" + IntStream.of(colorFormats).boxed().map(String::valueOf).collect(Collectors.joining(" , ")));
-                }
-            }
-        }
-    }
-
     private MediaRecorder() {
         this.executorService = Executors.newFixedThreadPool(2);
         this.audioRecoder = audioSamples -> {
@@ -99,12 +90,14 @@ public final class MediaRecorder {
         this.videoRecoder = videoFrame -> {
             if (this.active && this.videoActive) {
                 this.executorService.submit(() -> {
+//                    TextureBufferImpl
 //                    videoFrame.retain();
+                    final TextureBufferImpl buffer = (TextureBufferImpl) videoFrame.getBuffer();
                     final int outputFrameSize = videoFrame.getRotatedWidth() * videoFrame.getRotatedHeight() * 3 / 2;
                     final ByteBuffer outputFrameBuffer = ByteBuffer.allocateDirect(outputFrameSize);
-                        final int index = this.videoCodec.dequeueInputBuffer(1000L * 1000);
+                    final int index = this.videoCodec.dequeueInputBuffer(1000L * 1000);
 //                      YuvImage：截图
-                        // YV12
+                    // YV12
                         VideoFrame.I420Buffer i420 = videoFrame.getBuffer().toI420();
 //                      i420.retain();
                     Log.i(MediaRecorder.class.getSimpleName(), "视频信息：" + videoFrame.getRotatedWidth() + " - " + videoFrame.getRotatedHeight());
@@ -131,16 +124,20 @@ public final class MediaRecorder {
     }
 
     public void record(String path) {
+        if(this.active) {
+            return;
+        }
         this.record(path, System.currentTimeMillis() + ".mp4", null, null, 1, 1);
     }
 
     public void record(String path, String file, String audioFormat, String videoFormat, int width, int height) {
         synchronized (MediaRecorder.INSTANCE) {
+            MediaManager.getInstance().initRecord(MediaManager.Type.BACK);
             this.file = file;
             this.active = true;
             if (
                 this.audioThread == null || !this.audioThread.isAlive() ||
-                    this.videoThread == null || !this.videoThread.isAlive()
+                this.videoThread == null || !this.videoThread.isAlive()
             ) {
                 this.initMediaMuxer(path, file);
                 this.initAudioThread(MediaFormat.MIMETYPE_AUDIO_AAC, 96000, 44100, 1);
@@ -244,7 +241,7 @@ public final class MediaRecorder {
             videoFormat.setInteger(MediaFormat.KEY_BIT_RATE, 800 * 1000);
             videoFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 30);
 //            videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
-            videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420PackedSemiPlanar);
+            videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
             videoFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
             this.videoCodec.configure(videoFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         } catch (Exception e) {
@@ -325,8 +322,13 @@ public final class MediaRecorder {
 
     private void initMediaMuxer(String path, String file) {
         try {
+            final Path filePath   = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, file);
+            final File parentFile = filePath.getParent().toFile();
+            if(!parentFile.exists()) {
+                parentFile.mkdirs();
+            }
             this.mediaMuxer = new MediaMuxer(
-                Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, file).toAbsolutePath().toString(),
+                filePath.toAbsolutePath().toString(),
                 MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4
             );
             // 设置方向

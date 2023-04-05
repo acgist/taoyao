@@ -230,12 +230,12 @@ taoyao:
     enabled: true
     prefix: 24
     rule:
-      - prefix: 24
-        network: 192.168.1.0
-        target-host:
-      - prefix: 24
-        network: 192.168.8.0
-        target-host:
+      - network: 192.168.1.0
+        inner-host:
+        outer-host:
+      - network: 192.168.8.0
+        inner-host:
+        outer-host:
   # 脚本配置
   script:
     enabled: true

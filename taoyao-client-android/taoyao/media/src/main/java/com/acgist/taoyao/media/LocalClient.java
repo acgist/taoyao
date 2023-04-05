@@ -16,7 +16,13 @@ public class LocalClient extends RoomClient {
      */
     public enum TransportType {
 
+        /**
+         * RTP
+         */
         RTP,
+        /**
+         * WebRTC
+         */
         WEBRTC;
 
     }
