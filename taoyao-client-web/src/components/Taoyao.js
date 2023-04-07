@@ -1644,16 +1644,15 @@ class Taoyao extends RemoteClient {
       self.sendTransport.on(
         "connect",
         ({ dtlsParameters }, callback, errback) => {
-          self
-            .request(
-              protocol.buildMessage("media::transport::webrtc::connect", {
-                roomId: self.roomId,
-                transportId: self.sendTransport.id,
-                dtlsParameters,
-              })
-            )
-            .then(callback)
-            .catch(errback);
+          self.request(
+            protocol.buildMessage("media::transport::webrtc::connect", {
+              roomId: self.roomId,
+              transportId: self.sendTransport.id,
+              dtlsParameters,
+            })
+          )
+          .then(callback)
+          .catch(errback);
         }
       );
       self.sendTransport.on(
@@ -1742,16 +1741,15 @@ class Taoyao extends RemoteClient {
           callback,
           errback // eslint-disable-line no-shadow
         ) => {
-          self
-            .request(
-              protocol.buildMessage("media::transport::webrtc::connect", {
-                roomId: self.roomId,
-                transportId: self.recvTransport.id,
-                dtlsParameters,
-              })
-            )
-            .then(callback)
-            .catch(errback);
+          self.request(
+            protocol.buildMessage("media::transport::webrtc::connect", {
+              roomId: self.roomId,
+              transportId: self.recvTransport.id,
+              dtlsParameters,
+            })
+          )
+          .then(callback)
+          .catch(errback);
         }
       );
     }

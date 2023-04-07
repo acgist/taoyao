@@ -5,37 +5,31 @@
 #include <iostream>
 
 #include "jni.h"
-#include "Log.hpp"
-#include "mediasoupclient.hpp"
-
 #include "sdk/android/src/jni/pc/peer_connection.h"
 #include "sdk/android/native_api/jni/scoped_java_ref.h"
+
+#include "Log.hpp"
+#include "mediasoupclient.hpp"
 
 namespace acgist {
 
     class Room {
     public:
         mediasoupclient::Device *device;
-        mediasoupclient::PeerConnection *peerConnection;
         mediasoupclient::SendTransport *sendTransport;
         mediasoupclient::RecvTransport *recvTransport;
+        mediasoupclient::PeerConnection *peerConnection;
         mediasoupclient::SendTransport::Listener *sendListener;
         mediasoupclient::RecvTransport::Listener *recvListener;
-        jstring roomId;
+        std::string roomId;
     public:
-        /**
-         * 新建Transport回调
-         */
-        jmethodID newCallback;
-        /**
-         * 房间关闭回调
-         */
-        jmethodID closeCallback;
+        JNIEnv *env;
+        jobject routerCallback;
     public:
-        Room(jstring roomId);
+        Room(std::string roomId, JNIEnv *env, jobject routerCallback);
         virtual ~Room();
     public:
-        void load(
+        void enter(
             std::string rtpCapabilities,
             webrtc::PeerConnectionFactoryInterface *factory,
             webrtc::PeerConnectionInterface::RTCConfiguration &rtcConfiguration

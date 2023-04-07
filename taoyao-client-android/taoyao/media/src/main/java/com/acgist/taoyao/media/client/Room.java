@@ -66,7 +66,7 @@ public class Room implements Closeable, RouterCallback {
         this.dataProduce  = dataProduce;
         this.audioProduce = audioProduce;
         this.videoProduce = videoProduce;
-        this.nativeRoomPointer = this.nativeNewRoom(roomId);
+        this.nativeRoomPointer = this.nativeNewRoom(roomId, this);
         this.mediaManager = MediaManager.getInstance();
         this.remoteClients = new CopyOnWriteArrayList<>();
         this.enter = false;
@@ -95,7 +95,7 @@ public class Room implements Closeable, RouterCallback {
         this.rtcConfiguration = new PeerConnection.RTCConfiguration(iceServers);
         this.peerConnectionFactory = this.mediaManager.newClient(MediaManager.Type.BACK);
         final Object rtpCapabilities = MapUtils.get(response.body(), "rtpCapabilities");
-        this.nativeLoad(this.nativeRoomPointer, JSONUtils.toJSON(rtpCapabilities), this.peerConnectionFactory.getNativePeerConnectionFactory(), this.rtcConfiguration);
+        this.nativeEnter(this.nativeRoomPointer, JSONUtils.toJSON(rtpCapabilities), this.peerConnectionFactory.getNativePeerConnectionFactory(), this.rtcConfiguration);
     }
 
     public void produceMedia() {
@@ -121,13 +121,24 @@ public class Room implements Closeable, RouterCallback {
             Log.w(Room.class.getSimpleName(), "创建发送通道失败");
             return;
         }
-        final Map<String, Object> body = response.body();
-        this.nativeCreateSendTransport(this.nativeRoomPointer, JSONUtils.toJSON(body));
+        this.nativeCreateSendTransport(this.nativeRoomPointer, JSONUtils.toJSON(response.body()));
     }
 
     private void createRecvTransport() {
+        final Message response = this.taoyao.request(this.taoyao.buildMessage(
+            "media::transport::webrtc::create",
+            "forceTcp", false,
+            "producing", false,
+            "consuming", true,
+            "sctpCapabilities", this.dataProduce ? this.sctpCapabilities : null
+        ));
+        if(response == null) {
+            Log.w(Room.class.getSimpleName(), "创建接收通道失败");
+            return;
+        }
+        this.nativeCreateRecvTransport(this.nativeRoomPointer, JSONUtils.toJSON(response.body()));
     }
-    
+
     /**
      * 新增远程终端
      *
@@ -150,6 +161,7 @@ public class Room implements Closeable, RouterCallback {
         this.nativeCloseRoom(this.nativeRoomPointer);
     }
 
+    @Override
     public void enterCallback(String rtpCapabilities, String sctpCapabilities) {
         this.taoyao.request(this.taoyao.buildMessage(
             "room::enter",
@@ -161,13 +173,46 @@ public class Room implements Closeable, RouterCallback {
         this.enter = true;
     }
 
-    private native void nativeLoad(
+    @Override
+    public void sendTransportConnectCallback(String transportId, String dtlsParameters) {
+        this.taoyao.request(this.taoyao.buildMessage(
+            "media::transport::webrtc::connect",
+            "roomId",         this.roomId,
+            "transportId",    transportId,
+            "dtlsParameters", JSONUtils.toMap(dtlsParameters)
+        ));
+    }
+
+    @Override
+    public String sendTransportProduceCallback(String kind, String transportId, String rtpParameters) {
+        final Message response = this.taoyao.request(this.taoyao.buildMessage(
+            "media::produce",
+            "kind",          kind,
+            "roomId",        this.roomId,
+            "transportId",   transportId,
+            "rtpParameters", JSONUtils.toMap(rtpParameters)
+        ));
+        final Map<String, Object> body = response.body();
+        return MapUtils.get(body, "producerId");
+    }
+
+    @Override
+    public void recvTransportConnectCallback(String transportId, String dtlsParameters) {
+        this.taoyao.request(this.taoyao.buildMessage(
+            "media::transport::webrtc::connect",
+            "roomId",         this.roomId,
+            "transportId",    transportId,
+            "dtlsParameters", JSONUtils.toMap(dtlsParameters)
+        ));
+    }
+
+    private native void nativeEnter(
         long nativePointer,
         String rtpCapabilities,
         long peerConnectionFactoryPointer,
         PeerConnection.RTCConfiguration rtcConfiguration
     );
-    private native long nativeNewRoom(String roomId);
+    private native long nativeNewRoom(String roomId, RouterCallback routerCallback);
     private native void nativeCloseRoom(long nativePointer);
     private native void nativeCreateSendTransport(long nativeRoomPointer, String body);
     private native void nativeCreateRecvTransport(long nativeRoomPointer, String body);
