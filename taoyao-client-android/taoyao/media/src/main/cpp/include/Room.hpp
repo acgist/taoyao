@@ -6,8 +6,6 @@
 
 #include "jni.h"
 #include "Log.hpp"
-#include "LocalClient.hpp"
-#include "RemoteClient.hpp"
 #include "mediasoupclient.hpp"
 
 #include "sdk/android/src/jni/pc/peer_connection.h"
@@ -17,10 +15,12 @@ namespace acgist {
 
     class Room {
     public:
-        mediasoupclient::Device* device;
-        mediasoupclient::PeerConnection* peerConnection;
-        acgist::LocalClient* localClient;
-        std::map<std::string, acgist::RemoteClient*> remoteClients;
+        mediasoupclient::Device *device;
+        mediasoupclient::PeerConnection *peerConnection;
+        mediasoupclient::SendTransport *sendTransport;
+        mediasoupclient::RecvTransport *recvTransport;
+        mediasoupclient::SendTransport::Listener *sendListener;
+        mediasoupclient::RecvTransport::Listener *recvListener;
         jstring roomId;
     public:
         /**
@@ -35,7 +35,14 @@ namespace acgist {
         Room(jstring roomId);
         virtual ~Room();
     public:
-        void load(std::string rtpCapabilities, webrtc::PeerConnectionFactoryInterface* factory, webrtc::PeerConnectionInterface::RTCConfiguration& configuration);
+        void load(
+            std::string rtpCapabilities,
+            webrtc::PeerConnectionFactoryInterface *factory,
+            webrtc::PeerConnectionInterface::RTCConfiguration &rtcConfiguration
+        );
+        void createSendTransport(std::string body);
+        void createRecvTransport(std::string body);
+        void produceMedia(webrtc::MediaStreamInterface mediaStream);
         void closeLocalClient();
         void closeRemoteClient();
         void close();

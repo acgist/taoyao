@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -25,13 +26,15 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.client.databinding.ActivityMainBinding;
 import com.acgist.taoyao.client.signal.Taoyao;
-import com.acgist.taoyao.config.Config;
+import com.acgist.taoyao.media.TransportType;
+import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.MediaManager;
-import com.acgist.taoyao.media.MediaRecorder;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.stream.Stream;
 
 /**
@@ -141,7 +144,18 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         int waitCount = 0;
         this.mainHandler = new MainHandler(this);
         // 不能写在service里面： Attempt to invoke virtual method 'android.view.View android.view.Window.getDecorView()' on a null object reference
-        MediaManager.getInstance().initContext(this.mainHandler, this.getApplicationContext());
+        final Resources resources = this.getResources();
+        MediaManager.getInstance().initContext(
+            this.mainHandler, this.getApplicationContext(),
+            resources.getBoolean(R.bool.preview),
+            resources.getBoolean(R.bool.playAudio),
+            resources.getBoolean(R.bool.playVideo),
+            resources.getBoolean(R.bool.audioConsume),
+            resources.getBoolean(R.bool.videoConsume),
+            resources.getBoolean(R.bool.audioProduce),
+            resources.getBoolean(R.bool.videoProduce),
+            TransportType.valueOf(resources.getString(R.string.transportType))
+        );
         final Display display = this.getWindow().getContext().getDisplay();
         while (Display.STATE_ON != display.getState() && waitCount++ < 10) {
             SystemClock.sleep(100);
@@ -188,19 +202,27 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         );
     }
 
+    /**
+     * 功能测试按钮根据实际情况设置功能
+     *
+     * @param view View
+     */
     private void action(View view) {
         this.threadHandler.post(() -> {
             // 进入房间
-            Taoyao.taoyao.enterRoom("d8f1e91c-58d0-4e58-ad67-decc0fd61df2", null);
+            Taoyao.taoyao.roomEnter("d8f1e91c-58d0-4e58-ad67-decc0fd61df2", null);
         });
     }
 
-    private synchronized void switchRecord(View view) {
-        final MediaRecorder mediaRecorder = MediaRecorder.getInstance();
-        if (mediaRecorder.isActive()) {
-            mediaRecorder.stop();
+    private void switchRecord(View view) {
+        final MediaManager mediaManager = MediaManager.getInstance();
+        if (mediaManager.isRecording()) {
+            mediaManager.stopRecord();
         } else {
-            mediaRecorder.record(this.getResources().getString(R.string.storagePathVideo));
+            mediaManager.startRecord(
+                this.getResources().getString(R.string.storagePathVideo),
+                DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".mp4"
+            );
         }
     }
 

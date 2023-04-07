@@ -1,7 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 是否开启预览 -->
+    <!-- 是否预览视频 -->
     <bool name="preview">true</bool>
+    <!-- 是否开启音频播放 -->
+    <bool name="playAudio">true</bool>
+    <!-- 是否开启视频播放 -->
+    <bool name="playVideo">true</bool>
     <!-- 信令版本 -->
     <string name="version">1.0.0</string>
     <!-- 超时时间 -->
@@ -17,9 +21,16 @@
     <string name="storagePathVideo">/taoyao/video</string>
     <!-- 传输类型：RTP|WEBRTC -->
     <string name="transportType">WEBRTC</string>
-    <!-- 媒体配置 -->
+    <!-- 媒体配置：是否消费数据 -->
+    <bool name="dataConsume">false</bool>
+    <!-- 媒体配置：是否消费音频 -->
     <bool name="audioConsume">true</bool>
+    <!-- 媒体配置：是否消费视频 -->
     <bool name="videoConsume">true</bool>
+    <!-- 媒体配置：是否生产数据 -->
+    <bool name="dataProduce">false</bool>
+    <!-- 媒体配置：是否生产音频 -->
     <bool name="audioProduce">true</bool>
+    <!-- 媒体配置：是否生产视频 -->
     <bool name="videoProduce">true</bool>
 </resources>

@@ -1603,6 +1603,7 @@ class Taoyao extends RemoteClient {
         setTimeout(() => audioTrack.stop(), 30000);
       });
     }
+    // TODO：代码提取
     if (self.dataProduce || self.audioProduce || self.videoProduce) {
       const response = await self.request(
         protocol.buildMessage("media::transport::webrtc::create", {
@@ -1635,9 +1636,10 @@ class Taoyao extends RemoteClient {
         proprietaryConstraints: {
           optional: [{ googDscp: true }],
         },
-        additionalSettings:
+        additionalSettings: {
           // TODO：加密解密
-          { encodedInsertableStreams: false },
+          encodedInsertableStreams: false
+        },
       });
       self.sendTransport.on(
         "connect",
@@ -1726,8 +1728,8 @@ class Taoyao extends RemoteClient {
           // indicating 'server' here and vice-versa.
           role: "auto",
         },
-        iceServers: [],
         sctpParameters,
+        iceServers: [],
         additionalSettings: {
           // TODO：加密解密
           encodedInsertableStreams: false,

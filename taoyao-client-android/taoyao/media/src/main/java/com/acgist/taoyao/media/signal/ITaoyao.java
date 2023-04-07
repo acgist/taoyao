@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal;
+package com.acgist.taoyao.media.signal;
 
 import com.acgist.taoyao.boot.model.Message;
 

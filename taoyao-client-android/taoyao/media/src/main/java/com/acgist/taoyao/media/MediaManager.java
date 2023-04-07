@@ -6,11 +6,12 @@ import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.projection.MediaProjection;
 import android.os.Handler;
-import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
 
-import com.acgist.taoyao.config.Config;
+import com.acgist.taoyao.media.client.RecordClient;
+import com.acgist.taoyao.media.config.Config;
+import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
@@ -58,7 +59,7 @@ import java.util.stream.IntStream;
  * <p>
  * TODO：动态码率（BITRATE_MODE_VBR、BITRATE_MODE）
  */
-public class MediaManager {
+public final class MediaManager {
 
     /**
      * 视频来源类型
@@ -104,9 +105,45 @@ public class MediaManager {
      */
     private volatile int clientCount;
     /**
+     * 是否预览视频
+     */
+    private boolean preview;
+    /**
+     * 是否打开音频播放
+     */
+    private boolean playAudio;
+    /**
+     * 是否打开视频播放
+     */
+    private boolean playVideo;
+    /**
+     * 是否消费音频
+     */
+    private boolean audioConsume;
+    /**
+     * 是否消费视频
+     */
+    private boolean videoConsume;
+    /**
+     * 是否生产音频
+     */
+    private boolean audioProduce;
+    /**
+     * 是否生产视频
+     */
+    private boolean videoProduce;
+    /**
      * 视频来源类型
      */
     private Type type;
+    /**
+     * 传输通道类型
+     */
+    private TransportType transportType;
+    /**
+     * 信令
+     */
+    private ITaoyao taoyao;
     /**
      * Handler
      */
@@ -120,6 +157,10 @@ public class MediaManager {
      */
     private EglBase eglBase;
     /**
+     * 录制终端
+     */
+    private RecordClient recordClient;
+    /**
      * 媒体流：声音、视频
      */
     private MediaStream mediaStream;
@@ -128,13 +169,13 @@ public class MediaManager {
      */
     private VideoCapturer videoCapturer;
     /**
+     * 本地视频预览
+     */
+    private SurfaceViewRenderer localVideoRenderer;
+    /**
      * PeerConnectionFactory
      */
     private PeerConnectionFactory peerConnectionFactory;
-    /**
-     * 媒体录制
-     */
-    private final MediaRecorder mediaRecorder;
 
     static {
         // 采样
@@ -151,14 +192,14 @@ public class MediaManager {
         for (MediaCodecInfo mediaCodecInfo : mediaCodecList.getCodecInfos()) {
 //            if (mediaCodecInfo.isEncoder()) {
                 final String[] supportedTypes = mediaCodecInfo.getSupportedTypes();
-                Log.d(MediaRecorder.class.getSimpleName(), "编码器名称：" + mediaCodecInfo.getName());
-                Log.d(MediaRecorder.class.getSimpleName(), "编码器类型：" + String.join(" , ", supportedTypes));
+                Log.d(RecordClient.class.getSimpleName(), "编码器名称：" + mediaCodecInfo.getName());
+                Log.d(RecordClient.class.getSimpleName(), "编码器类型：" + String.join(" , ", supportedTypes));
                 for (String supportType : supportedTypes) {
                     final MediaCodecInfo.CodecCapabilities codecCapabilities = mediaCodecInfo.getCapabilitiesForType(supportType);
                     final int[] colorFormats = codecCapabilities.colorFormats;
-                    Log.d(MediaRecorder.class.getSimpleName(), "编码器格式：" + codecCapabilities.getMimeType());
+                    Log.d(RecordClient.class.getSimpleName(), "编码器格式：" + codecCapabilities.getMimeType());
 //                  MediaCodecInfo.CodecCapabilities.COLOR_*
-                    Log.d(MediaRecorder.class.getSimpleName(), "编码器支持格式：" + IntStream.of(colorFormats).boxed().map(String::valueOf).collect(Collectors.joining(" , ")));
+                    Log.d(RecordClient.class.getSimpleName(), "编码器支持格式：" + IntStream.of(colorFormats).boxed().map(String::valueOf).collect(Collectors.joining(" , ")));
                 }
 //            }
         }
@@ -166,23 +207,55 @@ public class MediaManager {
 
     private MediaManager() {
         this.clientCount = 0;
-        this.mediaRecorder = MediaRecorder.getInstance();
     }
 
     /**
-     * 初始化上下文
-     *
-     * @param handler Handler
-     * @param context 上下文
+     * @param handler      Handler
+     * @param context      上下文
+     * @param preview      是否预览视频
+     * @param playAudio    是否播放音频
+     * @param playVideo    是否播放视频
+     * @param audioConsume 是否消费音频
+     * @param videoConsume 是否消费视频
+     * @param audioProduce 是否生产音频
+     * @param videoProduce 是否生产视频
      */
-    public void initContext(Handler handler, Context context) {
+    public void initContext(
+        Handler handler, Context context,
+        boolean preview, boolean playAudio, boolean playVideo,
+        boolean audioConsume, boolean videoConsume,
+        boolean audioProduce, boolean videoProduce,
+        TransportType transportType
+    ) {
         this.handler = handler;
         this.context = context;
+        this.preview = preview;
+        this.playAudio = playAudio;
+        this.playVideo = playVideo;
+        this.audioConsume = audioConsume;
+        this.videoConsume = videoConsume;
+        this.audioProduce = audioProduce;
+        this.videoProduce = videoProduce;
+        this.transportType = transportType;
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(this.context)
-//              .setEnableInternalTracer(true)
-                .createInitializationOptions()
+//             .setEnableInternalTracer(true)
+               .createInitializationOptions()
         );
+    }
+
+    /**
+     * @param taoyao  信令
+     */
+    public void initTaoyao(ITaoyao taoyao) {
+        this.taoyao = taoyao;
+    }
+
+    /**
+     * @return 是否可用
+     */
+    public boolean available() {
+        return this.handler != null && this.context != null && this.taoyao != null;
     }
 
     /**
@@ -195,7 +268,7 @@ public class MediaManager {
      */
     public PeerConnectionFactory newClient(Type type) {
         synchronized (this) {
-            if (this.clientCount <= 0 && !MediaRecorder.getInstance().isActive()) {
+            if (this.clientCount <= 0) {
                 this.initMedia(type);
                 this.nativeInit();
             }
@@ -221,22 +294,30 @@ public class MediaManager {
         }
     }
 
-    public void initRecord(Type type) {
+    public boolean isRecording() {
+        return this.recordClient != null;
+    }
+
+    public RecordClient startRecord(String path, String filename) {
         synchronized (this) {
-            if(this.clientCount <= 0 && !MediaRecorder.getInstance().isActive()) {
-                this.initMedia(type);
-                this.nativeInit();
-            }
+            this.recordClient = new RecordClient(path, filename, this.handler, this.taoyao);
+            this.recordClient.start();
+            return this.recordClient;
         }
     }
 
     public void stopRecord() {
         synchronized (this) {
-            if(this.clientCount <= 0) {
-                this.close();
-                this.nativeStop();
-            }
+            this.recordClient.close();
+            this.recordClient = null;
         }
+    }
+
+    /**
+     * @return 照片路径
+     */
+    public String photograph() {
+        return null;
     }
 
     /**
@@ -253,7 +334,11 @@ public class MediaManager {
         final JavaAudioDeviceModule javaAudioDeviceModule = JavaAudioDeviceModule.builder(this.context)
 //          .setAudioSource(android.media.MediaRecorder.AudioSource.MIC)
             // 本地音频
-            .setSamplesReadyCallback(MediaRecorder.getInstance().audioRecoder)
+            .setSamplesReadyCallback(audioSamples -> {
+                if(this.recordClient != null) {
+                    this.recordClient.putAudio(audioSamples);
+                }
+            })
             // 远程音频
 //          .setAudioTrackStateCallback()
 //          .setUseHardwareNoiseSuppressor(true)
@@ -293,7 +378,6 @@ public class MediaManager {
                 @Override
                 public void onCameraSwitchDone(boolean success) {
                 }
-
                 @Override
                 public void onCameraSwitchError(String message) {
                 }
@@ -385,7 +469,6 @@ public class MediaManager {
      * 加载视频
      */
     private void initVideoTrack() {
-        final SurfaceViewRenderer surfaceViewRenderer = this.localPreview();
         // 加载视频
         final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", this.eglBase.getEglBaseContext());
 //      surfaceTextureHelper.setTextureSize();
@@ -396,8 +479,15 @@ public class MediaManager {
         this.videoCapturer.initialize(surfaceTextureHelper, this.context, videoSource.getCapturerObserver());
         this.videoCapturer.startCapture(480, 640, 30);
         final VideoTrack videoTrack = this.peerConnectionFactory.createVideoTrack("ARDAMSv0", videoSource);
-        videoTrack.addSink(surfaceViewRenderer);
-//        videoTrack.addSink(MediaRecorder.getInstance().videoRecoder);
+        if(preview) {
+            this.localVideoRenderer = this.localVideoRenderer();
+            videoTrack.addSink(this.localVideoRenderer);
+        }
+        videoTrack.addSink(videoFrame -> {
+            if(this.recordClient != null) {
+                this.recordClient.putVideo(videoFrame);
+            }
+        });
         videoTrack.setEnabled(true);
         this.mediaStream.addTrack(videoTrack);
         Log.i(MediaManager.class.getSimpleName(), "加载视频：" + videoTrack.id());
@@ -407,7 +497,7 @@ public class MediaManager {
         return this.mediaStream;
     }
 
-    private SurfaceViewRenderer localPreview() {
+    private SurfaceViewRenderer localVideoRenderer() {
         // 设置预览
         final SurfaceViewRenderer surfaceViewRenderer = new SurfaceViewRenderer(this.context);
         this.handler.post(() -> {
@@ -437,7 +527,7 @@ public class MediaManager {
         return surfaceViewRenderer;
     }
 
-    public void remotePreview(final MediaStream mediaStream) {
+    public void remoteVideoRenderer(final MediaStream mediaStream) {
         // 设置预览
         final SurfaceViewRenderer surfaceViewRenderer = new SurfaceViewRenderer(this.context);
         this.handler.post(() -> {
@@ -600,6 +690,5 @@ public class MediaManager {
 
     private native void nativeInit();
     private native void nativeStop();
-    public  native long nativeNewRoom(String roomId);
 
 }

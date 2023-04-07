@@ -147,6 +147,7 @@ public class MediaService extends Service {
             resources.getInteger(R.integer.timeout), resources.getString(R.string.encrypt), resources.getString(R.string.encryptSecret),
             this.mainHandler, context
         );
+        MediaManager.getInstance().initTaoyao(this.taoyao);
         Toast.makeText(this.getApplicationContext(), "连接信令", Toast.LENGTH_SHORT).show();
     }
 

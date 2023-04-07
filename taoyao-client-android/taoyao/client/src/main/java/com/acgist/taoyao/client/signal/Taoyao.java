@@ -25,12 +25,11 @@ import com.acgist.taoyao.boot.utils.IdUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.client.R;
-import com.acgist.taoyao.config.MediaProperties;
+import com.acgist.taoyao.media.config.MediaProperties;
 import com.acgist.taoyao.media.MediaManager;
-import com.acgist.taoyao.media.MediaRecorder;
-import com.acgist.taoyao.media.Room;
-import com.acgist.taoyao.media.SessionClient;
-import com.acgist.taoyao.signal.ITaoyao;
+import com.acgist.taoyao.media.client.Room;
+import com.acgist.taoyao.media.client.SessionClient;
+import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -158,7 +157,6 @@ public final class Taoyao implements ITaoyao {
     private final Handler executeMessageHandler;
     private final HandlerThread executeMessageThread;
     private final MediaManager mediaManager;
-    private final MediaRecorder mediaRecorder;
     /**
      * 媒体配置
      */
@@ -212,7 +210,6 @@ public final class Taoyao implements ITaoyao {
         this.executeMessageThread.start();
         this.executeMessageHandler = new Handler(this.executeMessageThread.getLooper());
         this.mediaManager = MediaManager.getInstance();
-        this.mediaRecorder = MediaRecorder.getInstance();
         this.rooms = new ConcurrentHashMap<>();
         this.sessionClients = new ConcurrentHashMap<>();
         Taoyao.taoyao = this;
@@ -447,6 +444,9 @@ public final class Taoyao implements ITaoyao {
         final Map<Object, Object> map = new HashMap<>();
         if (ArrayUtils.isNotEmpty(args)) {
             for (int index = 0; index < args.length; index += 2) {
+                if(args[index] == null || args[index + 1] == null) {
+                    continue;
+                }
                 map.put(args[index], args[index + 1]);
             }
         }
@@ -503,11 +503,11 @@ public final class Taoyao implements ITaoyao {
             case "client::register"  -> this.clientRegister(message, body);
             case "client::reboot"    -> this.clientReboot(message, body);
             case "client::shutdown"  -> this.clientShutdown(message, body);
-//                case "room::close"       -> this.roomClose(message, body);
-//                case "room::enter"       -> this.roomEnter(message, body);
-//                case "room::expel"       -> this.roomExpel(message, body);
+            case "room::close"       -> this.roomClose(message, body);
+            case "room::enter"       -> this.roomEnter(message, body);
+//            case "room::expel"       -> this.roomExpel(message, body);
             case "room::invite"      -> this.roomInivte(message, body);
-//                case "room::leave"       -> this.roomLeave(message, body);
+//            case "room::leave"       -> this.roomLeave(message, body);
             case "session::call"     -> this.sessionCall(message, body);
             case "session::close"    -> this.sessionClose(message, body);
             case "session::exchange" -> this.sessionExchange(message, body);
@@ -529,10 +529,10 @@ public final class Taoyao implements ITaoyao {
             "clientType", this.clientType,
             "latitude", location == null ? -1 : location.getLatitude(),
             "longitude", location == null ? -1 : location.getLongitude(),
-            "signal", this.wifiSignal(),
+            "signal", this.signal(),
             "battery", this.battery(),
             "charging", this.charging(),
-            "recording", MediaRecorder.getInstance().isActive()
+            "recording", this.mediaManager.isRecording()
         ));
     }
 
@@ -569,26 +569,48 @@ public final class Taoyao implements ITaoyao {
         Process.killProcess(Process.myPid());
     }
 
+    private void roomClose(Message message, Map<String, Object> body) {
+        final String roomId   = MapUtils.get(body, "roomId");
+        final Room room = this.rooms.remove(roomId);
+        if(room == null) {
+            return;
+        }
+        room.close();
+    }
+
+    private void roomEnter(Message message, Map<String, Object> body) {
+        final String roomId = MapUtils.get(body, "roomId");
+        final Room room = this.rooms.get(roomId);
+        if(room == null) {
+            return;
+        }
+        room.newRemoteClient(body);
+    }
+
     private void roomInivte(Message message, Map<String, Object> body) {
         final String roomId   = MapUtils.get(body, "roomId");
         final String password = MapUtils.get(body, "password");
-        final Room room = this.enterRoom(roomId, password);
-        room.produceMedia();
+        this.roomEnter(roomId, password);
     }
 
-    public Room enterRoom(String roomId, String password) {
+    public Room roomEnter(String roomId, String password) {
         final Resources resources = this.context.getResources();
         final Room room = this.rooms.computeIfAbsent(
             roomId,
             key -> new Room(
+                this.name, this.clientId,
                 key, password,
+                this.mainHandler, this,
+                resources.getBoolean(R.bool.dataConsume),
                 resources.getBoolean(R.bool.audioConsume),
                 resources.getBoolean(R.bool.videoConsume),
                 resources.getBoolean(R.bool.audioProduce),
-                resources.getBoolean(R.bool.videoProduce),
-                this.mediaManager.nativeNewRoom(key), this)
+                resources.getBoolean(R.bool.dataProduce),
+                resources.getBoolean(R.bool.videoProduce)
+            )
         );
         room.enter();
+        room.produceMedia();
         return room;
     }
 
@@ -596,7 +618,7 @@ public final class Taoyao implements ITaoyao {
         final String name      = MapUtils.get(body, "name");
         final String clientId  = MapUtils.get(body, "clientId");
         final String sessionId = MapUtils.get(body, "sessionId");
-        final SessionClient sessionClient = new SessionClient(sessionId, name, clientId, this);
+        final SessionClient sessionClient = new SessionClient(sessionId, name, clientId, this.mainHandler, this);
         this.sessionClients.put(sessionId, sessionClient);
         sessionClient.init();
         sessionClient.offer();
@@ -628,10 +650,10 @@ public final class Taoyao implements ITaoyao {
             "client::heartbeat",
             "latitude", location == null ? -1 : location.getLatitude(),
             "longitude", location == null ? -1 : location.getLongitude(),
-            "signal", this.wifiSignal(),
+            "signal", this.signal(),
             "battery", this.battery(),
             "charging", this.charging(),
-            "recording", MediaRecorder.getInstance().isActive()
+            "recording", this.mediaManager.isRecording()
         ));
     }
 
@@ -639,7 +661,10 @@ public final class Taoyao implements ITaoyao {
      * @return 电量百分比
      */
     private int battery() {
-        return this.batteryManager == null ? -1 : this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+        return
+            this.batteryManager == null ?
+            -1 :
+            this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
     }
 
     /**
@@ -655,7 +680,7 @@ public final class Taoyao implements ITaoyao {
     /**
      * @return WIFI信号强度
      */
-    private int wifiSignal() {
+    private int signal() {
         if(this.wifiManager == null) {
             return -1;
         }
@@ -681,17 +706,11 @@ public final class Taoyao implements ITaoyao {
             return null;
         }
         final Criteria criteria = new Criteria();
-        // 功耗
         criteria.setCostAllowed(false);
-        // 不要海拔
-        criteria.setAltitudeRequired(false);
-        // 不要方位
         criteria.setBearingRequired(false);
-        // 精度
+        criteria.setAltitudeRequired(false);
         criteria.setAccuracy(Criteria.ACCURACY_FINE);
-        // 功耗
         criteria.setPowerRequirement(Criteria.POWER_LOW);
-        // 最佳提供者
         final String provider = this.locationManager.getBestProvider(criteria, true);
         if (provider == null) {
             return null;

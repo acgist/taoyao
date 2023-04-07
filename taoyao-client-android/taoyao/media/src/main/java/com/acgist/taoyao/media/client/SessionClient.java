@@ -1,15 +1,15 @@
-package com.acgist.taoyao.media;
+package com.acgist.taoyao.media.client;
 
-import android.se.omapi.Session;
+import android.os.Handler;
 import android.util.Log;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
-import com.acgist.taoyao.signal.ITaoyao;
+import com.acgist.taoyao.media.MediaManager;
+import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
-import org.webrtc.JniCommon;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnection;
@@ -17,10 +17,10 @@ import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
 
-import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * P2P终端
@@ -30,25 +30,41 @@ import java.util.Map;
  *
  * @author acgist
  */
-public class SessionClient implements Closeable {
+public class SessionClient extends Client {
 
-    private final String id;
-    private final String name;
-    private final String clientId;
-    private final ITaoyao taoyao;
-    private final MediaManager mediaManager;
+    /**
+     * 会话ID
+     */
+    private final String sessionId;
+    /**
+     * 本地媒体
+     */
     private MediaStream mediaStream;
+    /**
+     * 远程媒体
+     */
+    private final List<MediaStream> remoteMediaStreams;
+    /**
+     * SDPObserver
+     */
     private SdpObserver sdpObserver;
+    /**
+     * Peer连接
+     */
     private PeerConnection peerConnection;
+    /**
+     * Peer连接Observer
+     */
     private PeerConnection.Observer observer;
+    /**
+     * Peer连接工厂
+     */
     private PeerConnectionFactory peerConnectionFactory;
 
-    public SessionClient(String id, String name, String clientId, ITaoyao taoyao) {
-        this.id = id;
-        this.name = name;
-        this.clientId = clientId;
-        this.taoyao = taoyao;
-        this.mediaManager = MediaManager.getInstance();
+    public SessionClient(String sessionId, String name, String clientId, Handler handler, ITaoyao taoyao) {
+        super(name, clientId, handler, taoyao);
+        this.sessionId = sessionId;
+        this.remoteMediaStreams = new CopyOnWriteArrayList<>();
     }
 
     public void init() {
@@ -60,9 +76,10 @@ public class SessionClient implements Closeable {
         iceServers.add(iceServer);
         final PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(iceServers);
         this.observer       = this.observer();
+        this.mediaStream    = this.mediaManager.getMediaStream();
         this.sdpObserver    = this.sdpObserver();
         this.peerConnection = this.peerConnectionFactory.createPeerConnection(configuration, this.observer);
-        this.peerConnection.addStream(this.mediaManager.getMediaStream());
+        this.peerConnection.addStream(this.mediaStream);
     }
 
     public void exchange(Message message, Map<String, Object> body) {
@@ -78,6 +95,7 @@ public class SessionClient implements Closeable {
     public void call(String clientId) {
         final MediaConstraints mediaConstraints = new MediaConstraints();
         this.peerConnection.createOffer(this.sdpObserver, mediaConstraints);
+        // TODO：实现主动拉取别人
     }
 
     /**
@@ -85,13 +103,13 @@ public class SessionClient implements Closeable {
      */
     public void offer() {
         final MediaConstraints mediaConstraints = new MediaConstraints();
-//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(1920)));
-//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(1080)));
-//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(15)));
-//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(30)));
-//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
-//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
-//        mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(1920)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(1080)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(15)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(30)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
         this.peerConnection.createOffer(this.sdpObserver, mediaConstraints);
     }
 
@@ -102,13 +120,13 @@ public class SessionClient implements Closeable {
         final SessionDescription sessionDescription = new SessionDescription(sdpType, sdp);
         this.peerConnection.setRemoteDescription(this.sdpObserver, sessionDescription);
         final MediaConstraints mediaConstraints = new MediaConstraints();
-//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(1920)));
-//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(1080)));
-//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(15)));
-//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(30)));
-//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
-//        mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
-//        mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(1920)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(1080)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(15)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(30)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
         this.peerConnection.createAnswer(this.sdpObserver, mediaConstraints);
     }
 
@@ -135,7 +153,12 @@ public class SessionClient implements Closeable {
 
     @Override
     public void close() {
-        Log.i(Room.class.getSimpleName(), "关闭终端：" + this.clientId);
+        super.close();
+        // 本地资源释放
+        this.mediaManager.closeClient();
+        // 远程资源释放
+        this.remoteMediaStreams.forEach(v -> v.dispose());
+        this.remoteMediaStreams.clear();
     }
 
     /**
@@ -143,6 +166,7 @@ public class SessionClient implements Closeable {
      */
     private PeerConnection.Observer observer() {
         return new PeerConnection.Observer() {
+
             @Override
             public void onSignalingChange(PeerConnection.SignalingState signalingState) {
             }
@@ -161,12 +185,12 @@ public class SessionClient implements Closeable {
 
             @Override
             public void onIceCandidate(IceCandidate iceCandidate) {
-                Log.d(SessionClient.class.getSimpleName(), "发送媒体协商：" + SessionClient.this.id);
+                Log.d(SessionClient.class.getSimpleName(), "发送媒体协商：" + SessionClient.this.sessionId);
                 SessionClient.this.taoyao.push(SessionClient.this.taoyao.buildMessage(
                     "session::exchange",
                     "type",      "candidate",
                     "candidate", iceCandidate,
-                    "sessionId", SessionClient.this.id
+                    "sessionId", SessionClient.this.sessionId
                 ));
             }
 
@@ -178,11 +202,13 @@ public class SessionClient implements Closeable {
             public void onAddStream(MediaStream mediaStream) {
                 Log.i(SessionClient.class.getSimpleName(), "添加远程媒体：" + SessionClient.this.clientId);
                 SessionClient.this.mediaStream = mediaStream;
-                SessionClient.this.mediaManager.remotePreview(mediaStream);
+                SessionClient.this.mediaManager.remoteVideoRenderer(mediaStream);
+                SessionClient.this.remoteMediaStreams.add(mediaStream);
             }
 
             @Override
             public void onRemoveStream(MediaStream mediaStream) {
+                SessionClient.this.remoteMediaStreams.remove(mediaStream);
             }
 
             @Override
@@ -191,32 +217,34 @@ public class SessionClient implements Closeable {
 
             @Override
             public void onRenegotiationNeeded() {
-                Log.d(SessionClient.class.getSimpleName(), "重新协商媒体：" + SessionClient.this.id);
+                Log.d(SessionClient.class.getSimpleName(), "重新协商媒体：" + SessionClient.this.sessionId);
                 if(peerConnection.connectionState() == PeerConnection.PeerConnectionState.CONNECTED) {
                     // TODO：重写协商
 //                SessionClient.this.offer();
                 }
             }
+
         };
     }
 
     private SdpObserver sdpObserver() {
         return new SdpObserver() {
+
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
-                Log.d(SessionClient.class.getSimpleName(), "创建SDP成功：" + SessionClient.this.id);
+                Log.d(SessionClient.class.getSimpleName(), "创建SDP成功：" + SessionClient.this.sessionId);
                 SessionClient.this.peerConnection.setLocalDescription(this, sessionDescription);
                 SessionClient.this.taoyao.push(SessionClient.this.taoyao.buildMessage(
                     "session::exchange",
                     "sdp",       sessionDescription.description,
                     "type",      sessionDescription.type.toString().toLowerCase(),
-                    "sessionId", SessionClient.this.id
+                    "sessionId", SessionClient.this.sessionId
                 ));
             }
 
             @Override
             public void onSetSuccess() {
-                Log.d(SessionClient.class.getSimpleName(), "设置SDP成功：" + SessionClient.this.id);
+                Log.d(SessionClient.class.getSimpleName(), "设置SDP成功：" + SessionClient.this.sessionId);
             }
 
             @Override
@@ -228,6 +256,7 @@ public class SessionClient implements Closeable {
             public void onSetFailure(String message) {
                 Log.w(SessionClient.class.getSimpleName(), "设置SDP失败：" + message);
             }
+
         };
     }
 

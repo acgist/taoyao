@@ -1,4 +1,4 @@
-package com.acgist.taoyao.config;
+package com.acgist.taoyao.media.config;
 
 import java.util.Map;
 

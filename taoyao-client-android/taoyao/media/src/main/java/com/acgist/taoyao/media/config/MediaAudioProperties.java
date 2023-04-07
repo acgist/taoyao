@@ -1,4 +1,4 @@
-package com.acgist.taoyao.config;
+package com.acgist.taoyao.media.config;
 
 /**
  * 音频配置
