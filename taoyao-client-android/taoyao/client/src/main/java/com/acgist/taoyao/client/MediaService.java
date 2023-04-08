@@ -57,6 +57,15 @@ public class MediaService extends Service {
     @Override
     public void onCreate() {
         Log.i(MediaService.class.getSimpleName(), "onCreate");
+        Log.i(MediaService.class.getSimpleName(), """
+        庭院深深深几许，杨柳堆烟，帘幕无重数。玉勒雕鞍游冶处，楼高不见章台路。
+        雨横风狂三月暮，门掩黄昏，无计留春住。泪眼问花花不语，乱红飞过秋千去。
+
+        凌波不过横塘路。但目送、芳尘去。锦瑟华年谁与度。月桥花院，琐窗朱户。只有春知处。
+        飞云冉冉蘅皋暮。彩笔新题断肠句。若问闲情都几许。一川烟草，满城风絮。梅子黄时雨。
+
+        :: https://gitee.com/acgist/taoyao
+        """);
         super.onCreate();
     }
 
