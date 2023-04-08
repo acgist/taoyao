@@ -4,7 +4,7 @@ import android.os.Handler;
 
 import com.acgist.taoyao.media.signal.ITaoyao;
 
-import org.webrtc.MediaStream;
+import org.webrtc.MediaStreamTrack;
 
 /**
  * 房间终端
@@ -14,30 +14,13 @@ import org.webrtc.MediaStream;
  */
 public class RoomClient extends Client {
 
-    protected MediaStream mediaStream;
-
     public RoomClient(String name, String clientId, Handler handler, ITaoyao taoyao) {
         super(name, clientId, handler, taoyao);
-    }
-
-    /**
-     * 打开预览
-     */
-    private void preview() {
-
     }
 
     @Override
     public void close() {
         super.close();
-    }
-
-    public MediaStream getMediaStream() {
-        return mediaStream;
-    }
-
-    public void setMediaStream(MediaStream mediaStream) {
-        this.mediaStream = mediaStream;
     }
 
 }

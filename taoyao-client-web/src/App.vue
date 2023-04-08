@@ -170,7 +170,7 @@ export default {
     },
     async roomEnter() {
       await this.taoyao.roomEnter(this.room.roomId, this.room.password);
-      await this.taoyao.produceMedia();
+      await this.taoyao.mediaProduce();
       this.roomVisible = false;
     },
     async roomInvite() {

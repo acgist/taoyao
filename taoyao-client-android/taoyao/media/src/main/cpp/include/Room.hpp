@@ -15,13 +15,18 @@ namespace acgist {
 
     class Room {
     public:
+        std::string roomId;
         mediasoupclient::Device *device;
+        mediasoupclient::PeerConnection *peerConnection;
         mediasoupclient::SendTransport *sendTransport;
         mediasoupclient::RecvTransport *recvTransport;
-        mediasoupclient::PeerConnection *peerConnection;
         mediasoupclient::SendTransport::Listener *sendListener;
         mediasoupclient::RecvTransport::Listener *recvListener;
-        std::string roomId;
+        mediasoupclient::Producer *audioProducer;
+        mediasoupclient::Producer *videoProducer;
+        mediasoupclient::Producer::Listener *producerListener;
+        mediasoupclient::Consumer::Listener *consumerListener;
+        std::map<std::string, mediasoupclient::Consumer*> consumers;
     public:
         JNIEnv *env;
         jobject routerCallback;
@@ -29,16 +34,18 @@ namespace acgist {
         Room(std::string roomId, JNIEnv *env, jobject routerCallback);
         virtual ~Room();
     public:
-        void enter(
-            std::string rtpCapabilities,
-            webrtc::PeerConnectionFactoryInterface *factory,
-            webrtc::PeerConnectionInterface::RTCConfiguration &rtcConfiguration
-        );
+        void enter(std::string rtpCapabilities, webrtc::PeerConnectionFactoryInterface *factory, webrtc::PeerConnectionInterface::RTCConfiguration &rtcConfiguration);
         void createSendTransport(std::string body);
         void createRecvTransport(std::string body);
-        void produceMedia(webrtc::MediaStreamInterface mediaStream);
-        void closeLocalClient();
-        void closeRemoteClient();
+        void mediaProduceAudio(webrtc::MediaStreamInterface *mediaStream);
+        void mediaProduceVideo(webrtc::MediaStreamInterface *mediaStream);
+        void mediaConsume(std::string message);
+        void mediaProducerPause(std::string producerId);
+        void mediaProducerResume(std::string producerId);
+        void mediaProducerClose(std::string producerId);
+        void mediaConsumerPause(std::string consumerId);
+        void mediaConsumerResume(std::string consumerId);
+        void mediaConsumerClose(std::string consumerId);
         void close();
     };
 

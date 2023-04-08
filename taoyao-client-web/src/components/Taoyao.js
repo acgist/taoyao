@@ -1173,13 +1173,13 @@ class Taoyao extends RemoteClient {
       kind,
       type,
       roomId,
+      appData,
       clientId,
       sourceId,
       streamId,
       producerId,
       consumerId,
       rtpParameters,
-      appData,
       producerPaused,
     } = message.body;
     try {
@@ -1188,11 +1188,8 @@ class Taoyao extends RemoteClient {
         kind,
         producerId,
         rtpParameters,
-        // NOTE: Force streamId to be same in mic and webcam and different
-        // in screen sharing so libwebrtc will just try to sync mic and
-        // webcam streams from the same remote peer.
-        //streamId: `${peerId}-${appData.share ? "share" : "mic-webcam"}`,
-        streamId: `${clientId}-${appData.share ? "share" : "mic-webcam"}`,
+        // 强制设置streamId，让libwebrtc同步麦克风和摄像头，屏幕共享不要求同步。
+        streamId: `${clientId}-${appData?.videoSource ? appData.videoSource : "unknown"}`,
         appData, // Trick.
       });
       consumer.clientId = clientId;
@@ -1206,25 +1203,6 @@ class Taoyao extends RemoteClient {
         mediasoupClient.parseScalabilityMode(
           consumer.rtpParameters.encodings[0].scalabilityMode
         );
-      // store.dispatch(
-      //   stateActions.addConsumer(
-      //     {
-      //       id: consumer.id,
-      //       type: type,
-      //       locallyPaused: false,
-      //       remotelyPaused: producerPaused,
-      //       rtpParameters: consumer.rtpParameters,
-      //       spatialLayers: spatialLayers,
-      //       temporalLayers: temporalLayers,
-      //       preferredSpatialLayer: spatialLayers - 1,
-      //       preferredTemporalLayer: temporalLayers - 1,
-      //       priority: 1,
-      //       codec: consumer.rtpParameters.codecs[0].mimeType.split("/")[1],
-      //       track: consumer.track,
-      //     },
-      //     peerId
-      //   )
-      // );
       self.push(message);
       console.debug("远程媒体：", consumer);
       const remoteClient = self.remoteClients.get(consumer.sourceId);
@@ -1244,7 +1222,7 @@ class Taoyao extends RemoteClient {
       } else {
         console.warn("远程终端没有实现服务代理：", remoteClient);
       }
-      // If audio-only mode is enabled, pause it.
+      // 实现进入自动暂停视频，注：必须订阅所有类型媒体，不然媒体服务直接不会转发视频媒体
       if (consumer.kind === "video" && !self.videoProduce) {
         // this.pauseConsumer(consumer);
         // TODO：实现
@@ -1509,7 +1487,7 @@ class Taoyao extends RemoteClient {
     //   return;
     // }
     await me.roomEnter(roomId, password);
-    await me.produceMedia();
+    await me.mediaProduce();
   }
   /**
    * 离开房间
@@ -1583,7 +1561,7 @@ class Taoyao extends RemoteClient {
   /**
    * 生产媒体
    */
-  async produceMedia() {
+  async mediaProduce() {
     const self = this;
     if (!self.roomId) {
       this.callbackError("无效房间");
@@ -1828,6 +1806,7 @@ class Taoyao extends RemoteClient {
       self.callbackError("麦克风打开失败");
     }
   }
+
   async closeAudioProducer() {
     console.debug("closeAudioProducer()");
     if (!this.audioProducer) {
@@ -1871,27 +1850,36 @@ class Taoyao extends RemoteClient {
         let codec;
         let encodings;
         const codecOptions = {
-          videoGoogleStartBitrate: 1000,
+          videoGoogleStartBitrate: 400,
+          videoGoogleMaxBitrate  : 1600,
+          videoGoogleMinBitrate  : 800
         };
+//        encodings   :
+//        [
+//          { maxBitrate: 100000 },
+//          { maxBitrate: 300000 },
+//          { maxBitrate: 900000 }
+//        ],
+//        codecOptions :
+//        {
+//          videoGoogleStartBitrate : 1000
+//        }
         if (self.forceH264) {
           codec = self.mediasoupDevice.rtpCapabilities.codecs.find(
             (c) => c.mimeType.toLowerCase() === "video/h264"
           );
           if (!codec) {
-            throw new Error(
-              "desired H264 codec+configuration is not supported"
-            );
+            self.callbackError("不支持H264视频编码");
           }
         } else if (self.forceVP9) {
           codec = self.mediasoupDevice.rtpCapabilities.codecs.find(
             (c) => c.mimeType.toLowerCase() === "video/vp9"
           );
           if (!codec) {
-            throw new Error("desired VP9 codec+configuration is not supported");
+            self.callbackError("不支持VP9视频编码");
           }
         }
         if (this.useSimulcast) {
-          // If VP9 is the only available video codec then use SVC.
           const firstVideoCodec =
             this.mediasoupDevice.rtpCapabilities.codecs.find(
               (c) => c.kind === "video"

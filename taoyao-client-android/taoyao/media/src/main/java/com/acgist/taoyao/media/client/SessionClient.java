@@ -1,11 +1,13 @@
 package com.acgist.taoyao.media.client;
 
 import android.os.Handler;
+import android.se.omapi.Session;
 import android.util.Log;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.media.MediaManager;
+import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.DataChannel;
@@ -16,6 +18,7 @@ import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
+import org.webrtc.VideoTrack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +46,7 @@ public class SessionClient extends Client {
     /**
      * 远程媒体
      */
-    private final List<MediaStream> remoteMediaStreams;
+    private MediaStream remoteMediaStream;
     /**
      * SDPObserver
      */
@@ -64,7 +67,6 @@ public class SessionClient extends Client {
     public SessionClient(String sessionId, String name, String clientId, Handler handler, ITaoyao taoyao) {
         super(name, clientId, handler, taoyao);
         this.sessionId = sessionId;
-        this.remoteMediaStreams = new CopyOnWriteArrayList<>();
     }
 
     public void init() {
@@ -152,13 +154,35 @@ public class SessionClient extends Client {
     }
 
     @Override
+    public void playVideo() {
+        super.playVideo();
+        if(this.remoteMediaStream == null) {
+            return;
+        }
+        final VideoTrack videoTrack = this.remoteMediaStream.videoTracks.get(0);
+        if(this.surfaceViewRenderer == null) {
+            this.surfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(Config.WHAT_NEW_REMOTE_VIDEO, videoTrack);
+        } else {
+            videoTrack.setEnabled(true);
+        }
+    }
+
+    @Override
+    public void playAudio() {
+        super.playAudio();
+        if(this.remoteMediaStream == null) {
+            return;
+        }
+        this.remoteMediaStream.audioTracks.forEach(v -> v.setEnabled(true));
+    }
+
+    @Override
     public void close() {
         super.close();
-        // 本地资源释放
+        // 本地资源释放：不要直接关闭MediaStream（共享资源）
         this.mediaManager.closeClient();
         // 远程资源释放
-        this.remoteMediaStreams.forEach(v -> v.dispose());
-        this.remoteMediaStreams.clear();
+        this.remoteMediaStream.dispose();
     }
 
     /**
@@ -201,14 +225,19 @@ public class SessionClient extends Client {
             @Override
             public void onAddStream(MediaStream mediaStream) {
                 Log.i(SessionClient.class.getSimpleName(), "添加远程媒体：" + SessionClient.this.clientId);
-                SessionClient.this.mediaStream = mediaStream;
-                SessionClient.this.mediaManager.remoteVideoRenderer(mediaStream);
-                SessionClient.this.remoteMediaStreams.add(mediaStream);
+                if(SessionClient.this.remoteMediaStream != null) {
+                    // TODO：验证音频视频是否合在一起
+                }
+                SessionClient.this.remoteMediaStream = mediaStream;
+                SessionClient.this.playVideo();
+                SessionClient.this.playAudio();
             }
 
             @Override
             public void onRemoveStream(MediaStream mediaStream) {
-                SessionClient.this.remoteMediaStreams.remove(mediaStream);
+                if(SessionClient.this.remoteMediaStream == mediaStream) {
+
+                }
             }
 
             @Override
