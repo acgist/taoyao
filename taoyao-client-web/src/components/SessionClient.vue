@@ -27,7 +27,7 @@ import {
   Microphone,
   VideoCamera,
   CircleClose,
-} from "@element-plus/icons";
+} from "@element-plus/icons-vue";
 export default {
   name: "SessionClient",
   setup() {
