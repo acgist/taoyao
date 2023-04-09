@@ -20,8 +20,8 @@ public class LocalClient extends RoomClient {
      */
     protected MediaStream mediaStream;
 
-    public LocalClient(String name, String clientId, Handler handler, ITaoyao taoyao) {
-        super(name, clientId, handler, taoyao);
+    public LocalClient(String name, String clientId, ITaoyao taoyao, Handler handler) {
+        super(name, clientId, taoyao, handler);
     }
 
     public MediaStream getMediaStream() {
@@ -58,9 +58,6 @@ public class LocalClient extends RoomClient {
     @Override
     public void close() {
         super.close();
-        if(this.mediaStream != null) {
-            this.mediaStream.dispose();
-        }
     }
 
 }

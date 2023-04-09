@@ -30,14 +30,12 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author acgist
  */
-public class Room implements Closeable, RouterCallback {
+public class Room extends CloseableClient implements RouterCallback {
 
     private final String name;
     private final String clientId;
     private final String roomId;
     private final String password;
-    private final Handler handler;
-    private final ITaoyao taoyao;
     private final boolean dataConsume;
     private final boolean audioConsume;
     private final boolean videoConsume;
@@ -45,8 +43,6 @@ public class Room implements Closeable, RouterCallback {
     private final boolean audioProduce;
     private final boolean videoProduce;
     private final long nativeRoomPointer;
-    private final MediaManager mediaManager;
-    private volatile boolean enter;
     private LocalClient localClient;
     private Map<String, RemoteClient> remoteClients;
     private PeerConnection.RTCConfiguration rtcConfiguration;
@@ -56,16 +52,15 @@ public class Room implements Closeable, RouterCallback {
     public Room(
         String name, String clientId,
         String roomId, String password,
-        Handler handler, ITaoyao taoyao,
+        ITaoyao taoyao, Handler handler,
         boolean dataConsume, boolean audioConsume, boolean videoConsume,
         boolean dataProduce, boolean audioProduce, boolean videoProduce
     ) {
+        super(taoyao, handler);
         this.name = name;
         this.clientId = clientId;
         this.roomId = roomId;
         this.password = password;
-        this.handler = handler;
-        this.taoyao = taoyao;
         this.dataConsume = dataConsume;
         this.audioConsume = audioConsume;
         this.videoConsume = videoConsume;
@@ -73,31 +68,33 @@ public class Room implements Closeable, RouterCallback {
         this.audioProduce = audioProduce;
         this.videoProduce = videoProduce;
         this.nativeRoomPointer = this.nativeNewRoom(roomId, this);
-        this.mediaManager = MediaManager.getInstance();
         this.remoteClients = new ConcurrentHashMap<>();
-        this.enter = false;
     }
 
-    public synchronized void enter() {
-        if (this.enter) {
-            return;
+    public boolean enter() {
+        synchronized (this) {
+            if (this.init) {
+                return true;
+            }
+            super.init();
+            this.peerConnectionFactory = this.mediaManager.newClient(MediaManager.Type.BACK);
+            this.localClient = new LocalClient(this.name, this.clientId, this.taoyao, this.handler);
+            this.localClient.setMediaStream(this.mediaManager.getMediaStream());
+            // STUN | TURN
+            final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
+            // TODO：读取配置
+            final PeerConnection.IceServer iceServer = PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer();
+            iceServers.add(iceServer);
+            this.rtcConfiguration = new PeerConnection.RTCConfiguration(iceServers);
+            final Message response = this.taoyao.request(this.taoyao.buildMessage("media::router::rtp::capabilities", "roomId", this.roomId));
+            if(response == null) {
+                this.close();
+                return false;
+            }
+            final Object rtpCapabilities = MapUtils.get(response.body(), "rtpCapabilities");
+            this.nativeEnter(this.nativeRoomPointer, JSONUtils.toJSON(rtpCapabilities), this.peerConnectionFactory.getNativePeerConnectionFactory(), this.rtcConfiguration);
+            return true;
         }
-        final Message response = this.taoyao.request(this.taoyao.buildMessage("media::router::rtp::capabilities", "roomId", this.roomId));
-        if (response == null) {
-            Log.w(Room.class.getSimpleName(), "获取通道能力失败");
-            return;
-        }
-        this.localClient = new LocalClient(this.name, this.clientId, this.handler, this.taoyao);
-        this.localClient.setMediaStream(this.mediaManager.getMediaStream());
-        // STUN | TURN
-        final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
-        // TODO：读取配置
-        final PeerConnection.IceServer iceServer = PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer();
-        iceServers.add(iceServer);
-        this.rtcConfiguration = new PeerConnection.RTCConfiguration(iceServers);
-        this.peerConnectionFactory = this.mediaManager.newClient(MediaManager.Type.BACK);
-        final Object rtpCapabilities = MapUtils.get(response.body(), "rtpCapabilities");
-        this.nativeEnter(this.nativeRoomPointer, JSONUtils.toJSON(rtpCapabilities), this.peerConnectionFactory.getNativePeerConnectionFactory(), this.rtcConfiguration);
     }
 
     public void mediaProduce() {
@@ -162,7 +159,7 @@ public class Room implements Closeable, RouterCallback {
             final String clientId = MapUtils.get(body, "clientId");
             final Map<String, Object> status = MapUtils.get(body, "status");
             final String name = MapUtils.get(status, "name");
-            final RemoteClient remoteClient = new RemoteClient(name, clientId, this.handler, this.taoyao);
+            final RemoteClient remoteClient = new RemoteClient(name, clientId, this.taoyao, this.handler);
             final RemoteClient old = this.remoteClients.put(clientId, remoteClient);
             if(old != null) {
                 // 关闭旧的资源
@@ -183,11 +180,18 @@ public class Room implements Closeable, RouterCallback {
 
     @Override
     public void close() {
-        Log.i(Room.class.getSimpleName(), "关闭房间：" + this.roomId);
-        this.localClient.close();
-        this.remoteClients.values().forEach(v -> this.closeRemoteClient(v.clientId));
-        this.mediaManager.closeClient();
-        this.nativeCloseRoom(this.nativeRoomPointer);
+        synchronized (this) {
+            if(this.close) {
+                return;
+            }
+            Log.i(Room.class.getSimpleName(), "关闭房间：" + this.roomId);
+            super.close();
+            this.nativeCloseRoom(this.nativeRoomPointer);
+            this.remoteClients.values().forEach(v -> this.closeRemoteClient(v.clientId));
+            this.remoteClients.clear();
+            this.localClient.close();
+            this.mediaManager.closeClient();
+        }
     }
 
     public void mediaConsumerClose(String consumerId) {
@@ -198,12 +202,20 @@ public class Room implements Closeable, RouterCallback {
         ));
     }
 
+    public void mediaConsumerClose(Map<String, Object> body) {
+
+    }
+
     public void mediaConsumerPause(String consumerId) {
         this.taoyao.push(this.taoyao.buildMessage(
             "media::consumer::pause",
             "roomId", this.roomId,
             "consumerId", consumerId
         ));
+    }
+
+    public void mediaConsumerPause(Map<String, Object> body) {
+
     }
 
     public void mediaConsumerResume(String consumerId) {
@@ -214,12 +226,20 @@ public class Room implements Closeable, RouterCallback {
         ));
     }
 
+    public void mediaConsumerResume(Map<String, Object> body) {
+
+    }
+
     public void mediaProducerClose(String producerId) {
         this.taoyao.push(this.taoyao.buildMessage(
             "media::producer::close",
             "roomId", this.roomId,
             "producerId", producerId
         ));
+    }
+
+    public void mediaProducerClose(Map<String, Object> body) {
+
     }
 
     public void mediaProducerPause(String producerId) {
@@ -230,12 +250,20 @@ public class Room implements Closeable, RouterCallback {
         ));
     }
 
+    public void mediaProducerPause(Map<String, Object> body) {
+
+    }
+
     public void mediaProducerResume(String producerId) {
         this.taoyao.push(this.taoyao.buildMessage(
             "media::producer::resume",
             "roomId", this.roomId,
             "producerId", producerId
         ));
+    }
+
+    public void mediaProducerResume(Map<String, Object> body) {
+
     }
 
     @Override
@@ -247,7 +275,6 @@ public class Room implements Closeable, RouterCallback {
             "rtpCapabilities", rtpCapabilities,
             "sctpCapabilities", sctpCapabilities
         ));
-        this.enter = true;
     }
 
     @Override

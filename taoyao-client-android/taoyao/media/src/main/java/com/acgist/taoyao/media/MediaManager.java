@@ -278,6 +278,7 @@ public final class MediaManager {
     /**
      * 关闭一个终端
      * 最后一个终端关闭时，释放所有资源。
+     * 注意：所有本地媒体关闭调用，不要直接关闭本地媒体流。
      *
      * @return 剩余终端数量
      */
@@ -298,7 +299,7 @@ public final class MediaManager {
 
     public RecordClient startRecord(String path, String filename) {
         synchronized (this) {
-            this.recordClient = new RecordClient(path, filename, this.handler, this.taoyao);
+            this.recordClient = new RecordClient(path, filename, this.taoyao, this.handler);
             this.recordClient.start();
             return this.recordClient;
         }

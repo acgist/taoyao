@@ -1,7 +1,6 @@
 package com.acgist.taoyao.media.client;
 
 import android.os.Handler;
-import android.se.omapi.Session;
 import android.util.Log;
 
 import com.acgist.taoyao.boot.model.Message;
@@ -23,7 +22,6 @@ import org.webrtc.VideoTrack;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * P2P终端
@@ -64,24 +62,31 @@ public class SessionClient extends Client {
      */
     private PeerConnectionFactory peerConnectionFactory;
 
-    public SessionClient(String sessionId, String name, String clientId, Handler handler, ITaoyao taoyao) {
-        super(name, clientId, handler, taoyao);
+    public SessionClient(String sessionId, String name, String clientId, ITaoyao taoyao, Handler handler) {
+        super(name, clientId, taoyao, handler);
         this.sessionId = sessionId;
     }
 
+    @Override
     public void init() {
-        this.peerConnectionFactory = this.mediaManager.newClient(MediaManager.Type.BACK);
-        // STUN | TURN
-        final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
-        // TODO：读取配置
-        final PeerConnection.IceServer iceServer = PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer();
-        iceServers.add(iceServer);
-        final PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(iceServers);
-        this.observer       = this.observer();
-        this.mediaStream    = this.mediaManager.getMediaStream();
-        this.sdpObserver    = this.sdpObserver();
-        this.peerConnection = this.peerConnectionFactory.createPeerConnection(configuration, this.observer);
-        this.peerConnection.addStream(this.mediaStream);
+        synchronized (this) {
+            if(this.init) {
+                return;
+            }
+            super.init();
+            this.peerConnectionFactory = this.mediaManager.newClient(MediaManager.Type.BACK);
+            // STUN | TURN
+            final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
+            // TODO：读取配置
+            final PeerConnection.IceServer iceServer = PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer();
+            iceServers.add(iceServer);
+            final PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(iceServers);
+            this.observer       = this.observer();
+            this.mediaStream    = this.mediaManager.getMediaStream();
+            this.sdpObserver    = this.sdpObserver();
+            this.peerConnection = this.peerConnectionFactory.createPeerConnection(configuration, this.observer);
+            this.peerConnection.addStream(this.mediaStream);
+        }
     }
 
     public void exchange(Message message, Map<String, Object> body) {
@@ -154,6 +159,27 @@ public class SessionClient extends Client {
     }
 
     @Override
+    public void playAudio() {
+        super.playAudio();
+        if(this.remoteMediaStream == null) {
+            return;
+        }
+        this.remoteMediaStream.audioTracks.forEach(v -> v.setEnabled(true));
+    }
+
+    @Override
+    public void pauseAudio() {
+        super.pauseAudio();
+        this.remoteMediaStream.audioTracks.forEach(v -> v.setEnabled(false));
+    }
+
+    @Override
+    public void resumeAudio() {
+        super.resumeAudio();
+        this.remoteMediaStream.audioTracks.forEach(v -> v.setEnabled(true));
+    }
+
+    @Override
     public void playVideo() {
         super.playVideo();
         if(this.remoteMediaStream == null) {
@@ -168,21 +194,41 @@ public class SessionClient extends Client {
     }
 
     @Override
-    public void playAudio() {
-        super.playAudio();
-        if(this.remoteMediaStream == null) {
-            return;
-        }
-        this.remoteMediaStream.audioTracks.forEach(v -> v.setEnabled(true));
+    public void pauseVideo() {
+        super.pauseVideo();
+        this.mediaStream.videoTracks.forEach(v -> v.setEnabled(false));
+    }
+
+    @Override
+    public void resumeVideo() {
+        super.resumeVideo();
+        this.mediaStream.videoTracks.forEach(v -> v.setEnabled(true));
+    }
+
+    @Override
+    public void pause() {
+        super.pause();
+        this.pauseAudio();
+        this.pauseVideo();
+    }
+
+    @Override
+    public void resume() {
+        super.resume();
+        this.resumeAudio();
+        this.resumeVideo();
     }
 
     @Override
     public void close() {
-        super.close();
-        // 本地资源释放：不要直接关闭MediaStream（共享资源）
-        this.mediaManager.closeClient();
-        // 远程资源释放
-        this.remoteMediaStream.dispose();
+        synchronized (this) {
+            if(this.close) {
+                return;
+            }
+            super.close();
+            this.remoteMediaStream.dispose();
+            this.mediaManager.closeClient();
+        }
     }
 
     /**

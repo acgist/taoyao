@@ -14,8 +14,8 @@ import org.webrtc.MediaStreamTrack;
  */
 public class RoomClient extends Client {
 
-    public RoomClient(String name, String clientId, Handler handler, ITaoyao taoyao) {
-        super(name, clientId, handler, taoyao);
+    public RoomClient(String name, String clientId, ITaoyao taoyao, Handler handler) {
+        super(name, clientId, taoyao, handler);
     }
 
     @Override

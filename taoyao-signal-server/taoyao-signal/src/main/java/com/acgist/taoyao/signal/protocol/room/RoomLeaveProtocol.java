@@ -45,7 +45,10 @@ public class RoomLeaveProtocol extends ProtocolRoomAdapter implements Applicatio
     public void onApplicationEvent(RoomLeaveEvent event) {
         final Room room = event.getRoom();
         final Client client = event.getClient();
-        final Map<String, String> body = Map.of(Constant.CLIENT_ID, client.clientId());
+        final Map<String, String> body = Map.of(
+            Constant.ROOM_ID,   room.getRoomId(),
+            Constant.CLIENT_ID, client.clientId()
+        );
         room.broadcast(client, this.build(body));
     }
     

@@ -27,11 +27,26 @@ public class Session implements Closeable {
      * 接收者
      */
     private final Client target;
+    /**
+     * P2P会话管理器
+     */
+    private final SessionManager sessionManager;
     
-    public Session(String id, Client source, Client target) {
+    public Session(String id, Client source, Client target, SessionManager sessionManager) {
         this.id = id;
         this.source = source;
         this.target = target;
+        this.sessionManager = sessionManager;
+    }
+    
+    /**
+     * 推送消息
+     * 
+     * @param message 消息
+     */
+    public void push(Message message) {
+        this.source.push(message);
+        this.target.push(message);
     }
     
     /**
@@ -40,7 +55,7 @@ public class Session implements Closeable {
      * @param clientId 当前终端ID
      * @param message  消息
      */
-    public void pushRemote(String clientId, Message message) {
+    public void pushOther(String clientId, Message message) {
         if(this.source.clientId().equals(clientId)) {
             this.target.push(message);
         } else {
@@ -50,7 +65,7 @@ public class Session implements Closeable {
     
     @Override
     public void close() {
-
+        this.sessionManager.remove(this.id);
     }
 
 

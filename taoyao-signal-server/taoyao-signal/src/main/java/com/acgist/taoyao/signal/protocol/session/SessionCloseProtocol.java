@@ -21,7 +21,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
     {
     }
     """,
-    flow = "终端->信令服务->终端"
+    flow = "终端->信令服务+)终端"
 )
 public class SessionCloseProtocol extends ProtocolSessionAdapter {
     
@@ -33,6 +33,8 @@ public class SessionCloseProtocol extends ProtocolSessionAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Session session, Client client, Message message, Map<String, Object> body) {
+        session.push(message);
+        session.close();
     }
     
 }

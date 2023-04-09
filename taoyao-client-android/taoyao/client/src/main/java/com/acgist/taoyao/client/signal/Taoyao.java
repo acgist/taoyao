@@ -505,24 +505,26 @@ public final class Taoyao implements ITaoyao {
             case "client::shutdown"                           -> this.clientShutdown(message, body);
             case "media::consume"                             -> this.mediaConsume(message, body);
 //            case "media::audio::volume"                       -> this.mediaAudioVolume(message, body);
-//            case "media::consumer::close"                     -> this.mediaConsumerClose(message, body);
-//            case "media::consumer::pause"                     -> this.mediaConsumerPause(message, body);
+            case "media::consumer::close"                     -> this.mediaConsumerClose(message, body);
+            case "media::consumer::pause"                     -> this.mediaConsumerPause(message, body);
 //            case "media::consumer::request::key::frame"       -> this.mediaConsumerRequestKeyFrame(message, body);
-//            case "media::consumer::resume"                    -> this.mediaConsumerResume(message, body);
+            case "media::consumer::resume"                    -> this.mediaConsumerResume(message, body);
 //            case "media::consumer::set::preferred::layers"    -> this.mediaConsumerSetPreferredLayers(message, body);
 //            case "media::consumer::status"                    -> this.mediaConsumerStatus(message, body);
-//            case "media::producer::close"                     -> this.mediaProducerClose(message, body);
-//            case "media::producer::pause"                     -> this.mediaProducerPause(message, body);
-//            case "media::producer::resume"                    -> this.mediaProducerResume(message, body);
+            case "media::producer::close"                     -> this.mediaProducerClose(message, body);
+            case "media::producer::pause"                     -> this.mediaProducerPause(message, body);
+            case "media::producer::resume"                    -> this.mediaProducerResume(message, body);
 //            case "media::producer::video::orientation:change" -> this.mediaVideoOrientationChange(message, body);
             case "room::close"                                -> this.roomClose(message, body);
             case "room::enter"                                -> this.roomEnter(message, body);
-//            case "room::expel"                                -> this.roomExpel(message, body);
+            case "room::expel"                                -> this.roomExpel(message, body);
             case "room::invite"                               -> this.roomInivte(message, body);
-//            case "room::leave"                                -> this.roomLeave(message, body);
+            case "room::leave"                                -> this.roomLeave(message, body);
             case "session::call"                              -> this.sessionCall(message, body);
             case "session::close"                             -> this.sessionClose(message, body);
             case "session::exchange"                          -> this.sessionExchange(message, body);
+            case "session::pause"                             -> this.sessionPause(message, body);
+            case "session::resume"                            -> this.sessionResume(message, body);
             default                                           -> Log.d(Taoyao.class.getSimpleName(), "没有适配信令：" + content);
         }
     }
@@ -590,6 +592,60 @@ public final class Taoyao implements ITaoyao {
         room.mediaConsume(message, body);
     }
 
+    private void mediaConsumerClose(Message message, Map<String, Object> body) {
+        final String roomId = MapUtils.get(body, "roomId");
+        final Room room = this.rooms.get(roomId);
+        if(room == null) {
+            return;
+        }
+        room.mediaConsumerClose(body);
+    }
+
+    private void mediaConsumerPause(Message message, Map<String, Object> body) {
+        final String roomId = MapUtils.get(body, "roomId");
+        final Room room = this.rooms.get(roomId);
+        if(room == null) {
+            return;
+        }
+        room.mediaConsumerPause(body);
+    }
+
+    private void mediaConsumerResume(Message message, Map<String, Object> body) {
+        final String roomId = MapUtils.get(body, "roomId");
+        final Room room = this.rooms.get(roomId);
+        if(room == null) {
+            return;
+        }
+        room.mediaConsumerResume(body);
+    }
+
+    private void mediaProducerClose(Message message, Map<String, Object> body) {
+        final String roomId = MapUtils.get(body, "roomId");
+        final Room room = this.rooms.get(roomId);
+        if(room == null) {
+            return;
+        }
+        room.mediaProducerClose(body);
+    }
+
+    private void mediaProducerPause(Message message, Map<String, Object> body) {
+        final String roomId = MapUtils.get(body, "roomId");
+        final Room room = this.rooms.get(roomId);
+        if(room == null) {
+            return;
+        }
+        room.mediaProducerPause(body);
+    }
+
+    private void mediaProducerResume(Message message, Map<String, Object> body) {
+        final String roomId = MapUtils.get(body, "roomId");
+        final Room room = this.rooms.get(roomId);
+        if(room == null) {
+            return;
+        }
+        room.mediaProducerResume(body);
+    }
+
     private void roomClose(Message message, Map<String, Object> body) {
         final String roomId   = MapUtils.get(body, "roomId");
         final Room room = this.rooms.remove(roomId);
@@ -608,12 +664,6 @@ public final class Taoyao implements ITaoyao {
         room.newRemoteClient(body);
     }
 
-    private void roomInivte(Message message, Map<String, Object> body) {
-        final String roomId   = MapUtils.get(body, "roomId");
-        final String password = MapUtils.get(body, "password");
-        this.roomEnter(roomId, password);
-    }
-
     public Room roomEnter(String roomId, String password) {
         final Resources resources = this.context.getResources();
         final Room room = this.rooms.computeIfAbsent(
@@ -621,7 +671,7 @@ public final class Taoyao implements ITaoyao {
             key -> new Room(
                 this.name, this.clientId,
                 key, password,
-                this.mainHandler, this,
+                this, this.mainHandler,
                 resources.getBoolean(R.bool.dataConsume),
                 resources.getBoolean(R.bool.audioConsume),
                 resources.getBoolean(R.bool.videoConsume),
@@ -630,22 +680,66 @@ public final class Taoyao implements ITaoyao {
                 resources.getBoolean(R.bool.videoProduce)
             )
         );
-        room.enter();
-        room.mediaProduce();
-        return room;
+        final boolean success = room.enter();
+        if(success) {
+            room.mediaProduce();
+            return room;
+        } else {
+            this.rooms.remove(roomId);
+            return null;
+        }
+    }
+
+    private void roomExpel(Message message, Map<String, Object> body) {
+        final String roomId = MapUtils.get(body, "roomId");
+        this.roomLeave(roomId);
+    }
+
+    private void roomInivte(Message message, Map<String, Object> body) {
+        final String roomId   = MapUtils.get(body, "roomId");
+        final String password = MapUtils.get(body, "password");
+        this.roomEnter(roomId, password);
+    }
+
+    public void roomLeave(String roomId) {
+        final Room room = this.rooms.remove(roomId);
+        if(room == null) {
+            return;
+        }
+        this.push(this.buildMessage(
+            "room::leave",
+            "roomId", roomId
+        ));
+        room.close();
+    }
+
+    private void roomLeave(Message message, Map<String, Object> body) {
+        final String roomId   = MapUtils.get(body, "roomId");
+        final String clientId = MapUtils.get(body, "clientId");
+        final Room room = this.rooms.get(roomId);
+        if(room == null) {
+            return;
+        }
+        room.closeRemoteClient(clientId);
     }
 
     private void sessionCall(Message message, Map<String, Object> body) {
         final String name      = MapUtils.get(body, "name");
         final String clientId  = MapUtils.get(body, "clientId");
         final String sessionId = MapUtils.get(body, "sessionId");
-        final SessionClient sessionClient = new SessionClient(sessionId, name, clientId, this.mainHandler, this);
+        final SessionClient sessionClient = new SessionClient(sessionId, name, clientId, this, this.mainHandler);
         this.sessionClients.put(sessionId, sessionClient);
         sessionClient.init();
         sessionClient.offer();
     }
 
     private void sessionClose(Message message, Map<String, Object> body) {
+        final String sessionId = MapUtils.get(body, "sessionId");
+        final SessionClient sessionClient = this.sessionClients.remove(sessionId);
+        if(sessionClient == null) {
+            return;
+        }
+        sessionClient.close();
     }
 
     private void sessionExchange(Message message, Map<String, Object> body) {
@@ -656,6 +750,24 @@ public final class Taoyao implements ITaoyao {
             return;
         }
         sessionClient.exchange(message, body);
+    }
+
+    private void sessionPause(Message message, Map<String, Object> body) {
+        final String sessionId            = MapUtils.get(body, "sessionId");
+        final SessionClient sessionClient = this.sessionClients.get(sessionId);
+        if(sessionClient == null) {
+            return;
+        }
+        sessionClient.pause();
+    }
+
+    private void sessionResume(Message message, Map<String, Object> body) {
+        final String sessionId            = MapUtils.get(body, "sessionId");
+        final SessionClient sessionClient = this.sessionClients.get(sessionId);
+        if(sessionClient == null) {
+            return;
+        }
+        sessionClient.resume();
     }
 
     /**

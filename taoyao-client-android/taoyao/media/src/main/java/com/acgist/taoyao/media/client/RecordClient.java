@@ -36,10 +36,6 @@ import java.util.concurrent.Executors;
 public class RecordClient extends Client {
 
     /**
-     * 是否正在录像
-     */
-    private volatile boolean active;
-    /**
      * 音频准备录制
      */
     private volatile boolean audioActive;
@@ -92,8 +88,8 @@ public class RecordClient extends Client {
      */
     private final ExecutorService executorService;
 
-    public RecordClient(String path, String filename, Handler handler, ITaoyao taoyao) {
-        super("本地录像", "LocalRecordClient", handler, taoyao);
+    public RecordClient(String path, String filename, ITaoyao taoyao, Handler handler) {
+        super("本地录像", "LocalRecordClient", taoyao, handler);
         this.filename = filename;
         final Path filePath   = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, filename);
         final File parentFile = filePath.getParent().toFile();
@@ -105,19 +101,13 @@ public class RecordClient extends Client {
         this.executorService = Executors.newFixedThreadPool(2);
     }
 
-    /**
-     * @return 是否正在录像
-     */
-    public boolean isActive() {
-        return this.active;
-    }
-
     public void start() {
         synchronized (this) {
-            if(this.active) {
+            if(this.init) {
                 return;
             }
-            this.active = true;
+            super.init();
+            this.mediaManager.newClient(MediaManager.Type.BACK);
             this.record(null, null, 1, 1);
         }
     }
@@ -161,7 +151,7 @@ public class RecordClient extends Client {
             int outputIndex;
             this.audioCodec.start();
             this.audioActive = true;
-            while (this.active) {
+            while (!this.close) {
                 outputIndex = this.audioCodec.dequeueOutputBuffer(info, 1000L * 1000);
                 if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
                 } else if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
@@ -173,7 +163,7 @@ public class RecordClient extends Client {
                             this.pts = System.currentTimeMillis();
                             this.mediaMuxer.start();
                             this.notifyAll();
-                        } else if (this.active) {
+                        } else if (!this.close) {
                             try {
                                 this.wait();
                             } catch (InterruptedException e) {
@@ -208,12 +198,12 @@ public class RecordClient extends Client {
     }
 
     public void putAudio(JavaAudioDeviceModule.AudioSamples audioSamples) {
-        if(this.active && this.audioActive) {
+        if(!this.close && this.audioActive) {
         }
     }
 
     public void putVideo(VideoFrame videoFrame) {
-        if (this.active && this.videoActive) {
+        if (!this.close && this.videoActive) {
             this.executorService.submit(() -> {
 //                    TextureBufferImpl
 //                    videoFrame.retain();
@@ -281,7 +271,7 @@ public class RecordClient extends Client {
             int outputIndex;
             this.videoCodec.start();
             this.videoActive = true;
-            while (this.active) {
+            while (!this.close) {
                 outputIndex = this.videoCodec.dequeueOutputBuffer(info, 1000L * 1000);
                 if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
                 } else if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
@@ -293,7 +283,7 @@ public class RecordClient extends Client {
                             this.pts = System.currentTimeMillis();
                             this.mediaMuxer.start();
                             this.notifyAll();
-                        } else if (this.active) {
+                        } else if (!this.close) {
                             try {
                                 this.wait();
                             } catch (InterruptedException e) {
@@ -346,28 +336,25 @@ public class RecordClient extends Client {
         }
     }
 
-    private void stop() {
-        Log.i(RecordClient.class.getSimpleName(), "结束录制：" + this.filepath);
-        this.active = false;
-        if (audioThread != null) {
-            this.audioThread.quitSafely();
-        }
-        if (this.videoThread != null) {
-            this.videoThread.quitSafely();
-        }
-        if(this.executorService != null) {
-            this.executorService.shutdown();
-        }
-        synchronized (this) {
-            this.notifyAll();
-        }
-    }
-
     @Override
     public void close() {
         synchronized (this) {
+            if(this.close) {
+                return;
+            }
             super.close();
-            this.stop();
+            Log.i(RecordClient.class.getSimpleName(), "结束录制：" + this.filepath);
+            if (audioThread != null) {
+                this.audioThread.quitSafely();
+            }
+            if (this.videoThread != null) {
+                this.videoThread.quitSafely();
+            }
+            if(this.executorService != null) {
+                this.executorService.shutdown();
+            }
+            this.notifyAll();
+            this.mediaManager.closeClient();
         }
     }
 

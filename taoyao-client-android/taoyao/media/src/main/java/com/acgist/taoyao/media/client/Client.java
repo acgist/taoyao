@@ -20,7 +20,7 @@ import java.io.Closeable;
  *
  * @author acgist
  */
-public abstract class Client implements Closeable {
+public abstract class Client extends CloseableClient {
 
     /**
      * 终端名称
@@ -31,28 +31,14 @@ public abstract class Client implements Closeable {
      */
     protected final String clientId;
     /**
-     * Handler
-     */
-    protected final Handler handler;
-    /**
-     * 信令通道
-     */
-    protected final ITaoyao taoyao;
-    /**
-     * 媒体服务
-     */
-    protected final MediaManager mediaManager;
-    /**
      * 视频预览
      */
     protected SurfaceViewRenderer surfaceViewRenderer;
 
-    public Client(String name, String clientId, Handler handler, ITaoyao taoyao) {
+    public Client(String name, String clientId, ITaoyao taoyao, Handler handler) {
+        super(taoyao, handler);
         this.name = name;
         this.clientId = clientId;
-        this.taoyao = taoyao;
-        this.handler = handler;
-        this.mediaManager = MediaManager.getInstance();
     }
 
     /**
@@ -86,8 +72,15 @@ public abstract class Client implements Closeable {
         }
     }
 
+    public void pause() {
+    }
+
+    public void resume() {
+    }
+
     @Override
     public void close() {
+        super.close();
         Log.i(this.getClass().getSimpleName(), "关闭终端：" + this.clientId);
         if(this.surfaceViewRenderer != null) {
             this.surfaceViewRenderer.release();

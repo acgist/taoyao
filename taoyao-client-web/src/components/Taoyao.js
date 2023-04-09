@@ -237,6 +237,8 @@ class Session {
   name;
   // 远程终端ID
   clientId;
+  // 本地媒体流
+  localStream;
   // 本地音频
   localAudioTrack;
   // 本地视频
@@ -256,6 +258,27 @@ class Session {
     this.id = id;
     this.name = name;
     this.clientId = clientId;
+  }
+
+  async pause() {
+    this.localAudioTrack.enabled = false;
+    this.localVideoTrack.enabled = false;
+    this.localStream.active = false;
+  }
+  
+  async resume() {
+    this.localAudioTrack.enabled = true;
+    this.localVideoTrack.enabled = true;
+    this.localStream.active = true;
+  }
+
+  async close() {
+    this.localStream.active = false;
+    this.localAudioTrack.stop();
+    this.localVideoTrack.stop();
+    this.remoteAudioTrack.stop();
+    this.remoteVideoTrack.stop();
+    this.peerConnection.close();
   }
 
 }
@@ -599,11 +622,17 @@ class Taoyao extends RemoteClient {
       case "session::call":
         me.defaultSessionCall(message);
         break;
-        case "session::close":
-          me.defaultSessionClose(message);
-          break;
+      case "session::close":
+        me.defaultSessionClose(message);
+        break;
       case "session::exchange":
         me.defaultSessionExchange(message);
+        break;
+      case "session::pause":
+        me.defaultSessionPause(message);
+        break;
+      case "session::resume":
+        me.defaultSessionResume(message);
         break;
       case "room::client::list":
         me.defaultRoomClientList(message);
@@ -2122,6 +2151,7 @@ class Taoyao extends RemoteClient {
     this.sessionClients.set(sessionId, session);
     session.peerConnection = await me.buildPeerConnection(session, sessionId);
     const localStream = await me.getStream();
+    session.localStream = localStream;
     session.localAudioTrack = localStream.getAudioTracks()[0];
     session.localVideoTrack = localStream.getVideoTracks()[0];
     // 相同Stream音视频同步
@@ -2139,10 +2169,24 @@ class Taoyao extends RemoteClient {
     });
   }
 
-  async sessionClose() {
+  async sessionClose(sessionId) {
+    const me = this;
+    me.push(protocol.buildMessage("session::close", {
+      sessionId
+    }));
   }
 
   async defaultSessionClose(message) {
+    const me = this;
+    const { sessionId } = message.body;
+    const session = me.sessionClients.get(sessionId);
+    if(session) {
+      console.debug("会话关闭", sessionId);
+      session.close();
+      me.sessionClients.delete(sessionId);
+    } else {
+      console.debug("关闭会话无效", sessionId);
+    }
   }
 
   async defaultSessionExchange(message) {
@@ -2167,6 +2211,24 @@ class Taoyao extends RemoteClient {
       if(candidate) {
         await session.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
       }
+    }
+  }
+
+  async defaultSessionPause(message) {
+    const me = this;
+    const { sessionId } = message.body;
+    const session = me.sessionClients.get(sessionId);
+    if(session) {
+      session.pause();
+    }
+  }
+
+  async defaultSessionResume(message) {
+    const me = this;
+    const { sessionId } = message.body;
+    const session = me.sessionClients.get(sessionId);
+    if(session) {
+      session.resume();
     }
   }
   

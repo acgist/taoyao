@@ -25,8 +25,8 @@ public class RemoteClient extends RoomClient {
      */
     protected final Map<String, MediaStreamTrack> tracks;
 
-    public RemoteClient(String name, String clientId, Handler handler, ITaoyao taoyao) {
-        super(name, clientId, handler, taoyao);
+    public RemoteClient(String name, String clientId, ITaoyao taoyao, Handler handler) {
+        super(name, clientId, taoyao, handler);
         this.tracks = new ConcurrentHashMap<>();
     }
 

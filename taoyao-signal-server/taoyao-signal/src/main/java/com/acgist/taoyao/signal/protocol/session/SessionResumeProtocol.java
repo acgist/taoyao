@@ -35,7 +35,7 @@ public class SessionResumeProtocol extends ProtocolSessionAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Session session, Client client, Message message, Map<String, Object> body) {
-        session.pushRemote(clientId, message);
+        session.pushOther(clientId, message);
     }
 
 }
