@@ -156,16 +156,8 @@ public class Message implements Cloneable, Serializable {
     /**
      * @return Map消息主体
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    public Map<String, Object> body() {
-        if (this.body instanceof Map) {
-            return (Map<String, Object>) this.body;
-        } else if (this.body == null) {
-            return new HashMap<>();
-        } else {
-            Log.w(Message.class.getSimpleName(), "信令主体类型错误：" + this.body);
-            return new HashMap<>();
-        }
+    public <T> T body() {
+        return (T) this.body;
     }
 
     @Override

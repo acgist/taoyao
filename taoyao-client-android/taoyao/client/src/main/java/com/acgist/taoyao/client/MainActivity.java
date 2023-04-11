@@ -147,7 +147,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         final Resources resources = this.getResources();
         MediaManager.getInstance().initContext(
             this.mainHandler, this.getApplicationContext(),
-            resources.getBoolean(R.bool.preview),
             resources.getBoolean(R.bool.playAudio),
             resources.getBoolean(R.bool.playVideo),
             resources.getBoolean(R.bool.audioConsume),
@@ -210,7 +209,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     private void action(View view) {
         this.threadHandler.post(() -> {
             // 进入房间
-            Taoyao.taoyao.roomEnter("d8f1e91c-58d0-4e58-ad67-decc0fd61df2", null);
+            Taoyao.taoyao.roomEnter("022a16bd-94b9-4d40-889e-d364da065bd2", null);
         });
     }
 

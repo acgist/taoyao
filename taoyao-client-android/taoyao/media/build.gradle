@@ -53,11 +53,7 @@ android {
 }
 
 dependencies {
-    implementation project(path: ':boot')
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'org.apache.commons:commons-lang3:3.12.0'
-    implementation 'org.apache.commons:commons-collections4:4.4'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.14.2'
+    api project(path: ':boot')
+    api fileTree(dir: 'libs', include: ['*.jar'])
     testImplementation 'junit:junit:4.13.2'
 }

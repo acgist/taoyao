@@ -28,6 +28,7 @@ set(
     ${SOURCE_DIR}/include/Log.hpp
     ${SOURCE_DIR}/include/MediaManager.hpp
     ${SOURCE_DIR}/include/Room.hpp
+    ${SOURCE_DIR}/include/RouterCallback.hpp
     ${SOURCE_DIR}/include/RtpAudioPublisher.hpp
     ${SOURCE_DIR}/include/RtpClient.hpp
     ${SOURCE_DIR}/include/RtpVideoPublisher.hpp
@@ -36,6 +37,7 @@ set(
     ${SOURCE_DIR}/rtp/RtpVideoPublisher.cpp
     ${SOURCE_DIR}/webrtc/MediaManager.cpp
     ${SOURCE_DIR}/webrtc/Room.cpp
+    ${SOURCE_DIR}/webrtc/RouterCallback.cpp
 )
 
 set(LIBWEBRTC_BINARY_PATH ${LIBWEBRTC_BINARY_PATH}/${ANDROID_ABI} CACHE STRING "libwebrtc binary path" FORCE)

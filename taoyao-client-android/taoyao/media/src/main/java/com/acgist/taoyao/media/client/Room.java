@@ -36,6 +36,7 @@ public class Room extends CloseableClient implements RouterCallback {
     private final String clientId;
     private final String roomId;
     private final String password;
+    private final boolean preview;
     private final boolean dataConsume;
     private final boolean audioConsume;
     private final boolean videoConsume;
@@ -47,24 +48,27 @@ public class Room extends CloseableClient implements RouterCallback {
     private Map<String, RemoteClient> remoteClients;
     private PeerConnection.RTCConfiguration rtcConfiguration;
     private PeerConnectionFactory peerConnectionFactory;
+    private String rtpCapabilities;
     private String sctpCapabilities;
 
     public Room(
         String name, String clientId,
         String roomId, String password,
         ITaoyao taoyao, Handler handler,
+        boolean preview,
         boolean dataConsume, boolean audioConsume, boolean videoConsume,
         boolean dataProduce, boolean audioProduce, boolean videoProduce
     ) {
         super(taoyao, handler);
         this.name = name;
         this.clientId = clientId;
-        this.roomId = roomId;
+        this.roomId   = roomId;
         this.password = password;
-        this.dataConsume = dataConsume;
+        this.preview  = preview;
+        this.dataConsume  = dataConsume;
         this.audioConsume = audioConsume;
         this.videoConsume = videoConsume;
-        this.dataProduce = dataProduce;
+        this.dataProduce  = dataProduce;
         this.audioProduce = audioProduce;
         this.videoProduce = videoProduce;
         this.nativeRoomPointer = this.nativeNewRoom(roomId, this);
@@ -268,11 +272,13 @@ public class Room extends CloseableClient implements RouterCallback {
 
     @Override
     public void enterCallback(String rtpCapabilities, String sctpCapabilities) {
+        this.rtpCapabilities  = rtpCapabilities;
+        this.sctpCapabilities = sctpCapabilities;
         this.taoyao.request(this.taoyao.buildMessage(
             "room::enter",
-            "roomId", this.roomId,
-            "password", this.password,
-            "rtpCapabilities", rtpCapabilities,
+            "roomId",           this.roomId,
+            "password",         this.password,
+            "rtpCapabilities",  rtpCapabilities,
             "sctpCapabilities", sctpCapabilities
         ));
     }
@@ -281,8 +287,8 @@ public class Room extends CloseableClient implements RouterCallback {
     public void sendTransportConnectCallback(String transportId, String dtlsParameters) {
         this.taoyao.request(this.taoyao.buildMessage(
             "media::transport::webrtc::connect",
-            "roomId", this.roomId,
-            "transportId", transportId,
+            "roomId",         this.roomId,
+            "transportId",    transportId,
             "dtlsParameters", JSONUtils.toMap(dtlsParameters)
         ));
     }

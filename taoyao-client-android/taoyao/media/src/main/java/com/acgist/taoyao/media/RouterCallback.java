@@ -13,7 +13,7 @@ public interface RouterCallback {
     default void sendTransportConnectCallback(String transportId, String dtlsParameters) {};
     default String sendTransportProduceCallback(String kind, String transportId, String rtpParameters) { return null; };
     default void recvTransportConnectCallback(String transportId, String dtlsParameters) {};
-    default void producerNewCallback(String kind, String producerId, long producerMediaTrackPointer) { };
+    default void producerNewCallback(String kind, String producerId, long producerMediaTrackPointer) {};
     default void producerPauseCallback(String producerId) {};
     default void producerResumeCallback(String producerId) {};
     default void producerCloseCallback(String producerId) {};

@@ -107,10 +107,6 @@ public final class MediaManager {
      */
     private volatile int clientCount;
     /**
-     * 是否预览视频
-     */
-    private boolean preview;
-    /**
      * 是否打开音频播放
      */
     private boolean playAudio;
@@ -166,10 +162,13 @@ public final class MediaManager {
      * 媒体流：声音、视频
      */
     private MediaStream mediaStream;
+    private AudioSource audioSource;
+    private VideoSource videoSource;
     /**
      * 视频捕获
      */
     private VideoCapturer videoCapturer;
+    private SurfaceTextureHelper surfaceTextureHelper;
     /**
      * PeerConnectionFactory
      */
@@ -190,14 +189,14 @@ public final class MediaManager {
         for (MediaCodecInfo mediaCodecInfo : mediaCodecList.getCodecInfos()) {
 //            if (mediaCodecInfo.isEncoder()) {
                 final String[] supportedTypes = mediaCodecInfo.getSupportedTypes();
-                Log.d(RecordClient.class.getSimpleName(), "编码器名称：" + mediaCodecInfo.getName());
-                Log.d(RecordClient.class.getSimpleName(), "编码器类型：" + String.join(" , ", supportedTypes));
+                Log.d(MediaManager.class.getSimpleName(), "编码器名称：" + mediaCodecInfo.getName());
+                Log.d(MediaManager.class.getSimpleName(), "编码器类型：" + String.join(" , ", supportedTypes));
                 for (String supportType : supportedTypes) {
                     final MediaCodecInfo.CodecCapabilities codecCapabilities = mediaCodecInfo.getCapabilitiesForType(supportType);
-                    final int[] colorFormats = codecCapabilities.colorFormats;
-                    Log.d(RecordClient.class.getSimpleName(), "编码器格式：" + codecCapabilities.getMimeType());
+                    Log.d(MediaManager.class.getSimpleName(), "编码器支持的文件格式：" + codecCapabilities.getMimeType());
 //                  MediaCodecInfo.CodecCapabilities.COLOR_*
-                    Log.d(RecordClient.class.getSimpleName(), "编码器支持格式：" + IntStream.of(colorFormats).boxed().map(String::valueOf).collect(Collectors.joining(" , ")));
+//                  final int[] colorFormats = codecCapabilities.colorFormats;
+//                  Log.d(MediaManager.class.getSimpleName(), "编码器支持的色彩格式：" + IntStream.of(colorFormats).boxed().map(String::valueOf).collect(Collectors.joining(" , ")));
                 }
 //            }
         }
@@ -210,7 +209,6 @@ public final class MediaManager {
     /**
      * @param handler      Handler
      * @param context      上下文
-     * @param preview      是否预览视频
      * @param playAudio    是否播放音频
      * @param playVideo    是否播放视频
      * @param audioConsume 是否消费音频
@@ -220,14 +218,13 @@ public final class MediaManager {
      */
     public void initContext(
         Handler handler, Context context,
-        boolean preview, boolean playAudio, boolean playVideo,
+        boolean playAudio, boolean playVideo,
         boolean audioConsume, boolean videoConsume,
         boolean audioProduce, boolean videoProduce,
         TransportType transportType
     ) {
         this.handler = handler;
         this.context = context;
-        this.preview = preview;
         this.playAudio = playAudio;
         this.playVideo = playVideo;
         this.audioConsume = audioConsume;
@@ -355,7 +352,7 @@ public final class MediaManager {
             .setVideoDecoderFactory(videoDecoderFactory)
             .setVideoEncoderFactory(videoEncoderFactory)
             .createPeerConnectionFactory();
-        this.mediaStream = this.peerConnectionFactory.createLocalMediaStream("ARDAMS");
+        this.mediaStream = this.peerConnectionFactory.createLocalMediaStream("Taoyao");
         Arrays.stream(videoEncoderFactory.getSupportedCodecs()).forEach(v -> {
             Log.d(MediaManager.class.getSimpleName(), "支持的视频解码器：" + v.name);
         });
@@ -412,8 +409,8 @@ public final class MediaManager {
         mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googNoiseSuppression", "true"));
 //      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googNoiseSuppression2", "true"));
 //      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googTypingNoiseDetection", "true"));
-        final AudioSource audioSource = this.peerConnectionFactory.createAudioSource(mediaConstraints);
-        final AudioTrack audioTrack = this.peerConnectionFactory.createAudioTrack("ARDAMSa0", audioSource);
+        this.audioSource = this.peerConnectionFactory.createAudioSource(mediaConstraints);
+        final AudioTrack audioTrack = this.peerConnectionFactory.createAudioTrack("TaoyaoA0", this.audioSource);
 //      audioTrack.setVolume(100);
         audioTrack.setEnabled(true);
         this.mediaStream.addTrack(audioTrack);
@@ -473,15 +470,15 @@ public final class MediaManager {
      */
     private void initVideoTrack() {
         // 加载视频
-        final SurfaceTextureHelper surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", this.eglBase.getEglBaseContext());
-//      surfaceTextureHelper.setTextureSize();
-//      surfaceTextureHelper.setFrameRotation();
-        final VideoSource videoSource = this.peerConnectionFactory.createVideoSource(this.videoCapturer.isScreencast());
+        this.surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", this.eglBase.getEglBaseContext());
+//      this.surfaceTextureHelper.setTextureSize();
+//      this.surfaceTextureHelper.setFrameRotation();
+        this.videoSource = this.peerConnectionFactory.createVideoSource(this.videoCapturer.isScreencast());
         // 美颜水印
-//      videoSource.setVideoProcessor();
-        this.videoCapturer.initialize(surfaceTextureHelper, this.context, videoSource.getCapturerObserver());
+//      this.videoSource.setVideoProcessor();
+        this.videoCapturer.initialize(this.surfaceTextureHelper, this.context, this.videoSource.getCapturerObserver());
         this.videoCapturer.startCapture(480, 640, 30);
-        final VideoTrack videoTrack = this.peerConnectionFactory.createVideoTrack("ARDAMSv0", videoSource);
+        final VideoTrack videoTrack = this.peerConnectionFactory.createVideoTrack("TaoyaoV0", this.videoSource);
         videoTrack.addSink(videoFrame -> {
             if(this.recordClient != null) {
                 this.recordClient.putVideo(videoFrame);
@@ -492,17 +489,12 @@ public final class MediaManager {
         Log.i(MediaManager.class.getSimpleName(), "加载视频：" + videoTrack.id());
     }
 
-    public boolean isPreview() {
-        return this.preview;
-    }
-
     public MediaStream getMediaStream() {
         return this.mediaStream;
     }
 
     /**
      * @param flag         Config.WHAT_*
-     * @param forceEnabled 是否强制播放
      * @param videoTrack   视频媒体流Track
      *
      * @return 播放控件
@@ -575,8 +567,8 @@ public final class MediaManager {
             final Iterator<AudioTrack> iterator = this.mediaStream.audioTracks.iterator();
             while (iterator.hasNext()) {
                 track = iterator.next();
-                iterator.remove();
                 track.dispose();
+                iterator.remove();
             }
         }
     }
@@ -585,9 +577,7 @@ public final class MediaManager {
      * 关闭视频
      */
     private void closeVideoTrack() {
-        // 次码流
         this.closeVideoTrack(this.mediaStream.videoTracks);
-        // 主码流
         this.closeVideoTrack(this.mediaStream.preservedVideoTracks);
     }
 
@@ -602,8 +592,8 @@ public final class MediaManager {
             final Iterator<VideoTrack> iterator = list.iterator();
             while (iterator.hasNext()) {
                 track = iterator.next();
-                iterator.remove();
                 track.dispose();
+                iterator.remove();
             }
         }
     }
@@ -618,13 +608,25 @@ public final class MediaManager {
             this.eglBase.release();
             this.eglBase = null;
         }
-        if (this.videoCapturer != null) {
-            this.videoCapturer.dispose();
-            this.videoCapturer = null;
+        if(this.audioSource != null) {
+            this.audioSource.dispose();
+            this.audioSource = null;
+        }
+        if(this.videoSource != null) {
+            this.videoSource.dispose();
+            this.videoSource = null;
         }
         if (this.mediaStream != null) {
             this.mediaStream.dispose();
             this.mediaStream = null;
+        }
+        if (this.videoCapturer != null) {
+            this.videoCapturer.dispose();
+            this.videoCapturer = null;
+        }
+        if(this.surfaceTextureHelper != null) {
+            this.surfaceTextureHelper.dispose();
+            this.surfaceTextureHelper = null;
         }
         if (this.peerConnectionFactory != null) {
             this.peerConnectionFactory.dispose();

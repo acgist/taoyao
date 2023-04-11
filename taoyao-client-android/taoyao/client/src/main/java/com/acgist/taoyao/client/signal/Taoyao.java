@@ -30,6 +30,7 @@ import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.client.Room;
 import com.acgist.taoyao.media.client.SessionClient;
 import com.acgist.taoyao.media.signal.ITaoyao;
+import com.acgist.taoyao.media.signal.ITaoyaoListener;
 
 import org.apache.commons.lang3.ArrayUtils;
 
@@ -131,6 +132,10 @@ public final class Taoyao implements ITaoyao {
      */
     private final Context context;
     /**
+     * 信令监听
+     */
+    private final ITaoyaoListener taoyaoListener;
+    /**
      * Wifi管理器
      */
     private final WifiManager wifiManager;
@@ -175,7 +180,7 @@ public final class Taoyao implements ITaoyao {
         int port, String host, String version,
         String name, String clientId, String clientType, String username, String password,
         int timeout, String algo, String secret,
-        Handler mainHandler, Context context
+        Handler mainHandler, Context context, ITaoyaoListener taoyaoListener
     ) {
         this.close = false;
         this.connect = false;
@@ -193,6 +198,7 @@ public final class Taoyao implements ITaoyao {
         this.decrypt = plaintext ? null : this.buildCipher(Cipher.DECRYPT_MODE, algo, secret);
         this.mainHandler = mainHandler;
         this.context = context;
+        this.taoyaoListener = taoyaoListener;
         this.wifiManager = context.getSystemService(WifiManager.class);
         this.powerManager = context.getSystemService(PowerManager.class);
         this.batteryManager = context.getSystemService(BatteryManager.class);
@@ -246,6 +252,7 @@ public final class Taoyao implements ITaoyao {
         // 开始连接
         Log.d(Taoyao.class.getSimpleName(), "连接信令：" + this.host + ":" + this.port);
         this.socket = new Socket();
+        this.taoyaoListener.onConnect();
         try {
             // 设置读取超时时间：不要设置一直阻塞
 //          socket.setSoTimeout(this.timeout);
@@ -255,6 +262,7 @@ public final class Taoyao implements ITaoyao {
                 this.output = this.socket.getOutputStream();
                 this.clientRegister();
                 this.connect = true;
+                this.taoyaoListener.onConnected();
                 synchronized (this) {
                     this.notifyAll();
                 }
@@ -320,6 +328,7 @@ public final class Taoyao implements ITaoyao {
                                     Taoyao.this.on(content);
                                 } catch (Exception e) {
                                     Log.e(Taoyao.class.getSimpleName(), "处理信令异常：" + content, e);
+                                    this.taoyaoListener.onError(e);
                                 }
                             }
                         }
@@ -407,6 +416,7 @@ public final class Taoyao implements ITaoyao {
         if(!this.connect) {
             return;
         }
+        this.taoyaoListener.onDisconnect();
         Log.d(Taoyao.class.getSimpleName(), "释放信令：" + this.host + ":" + this.port);
         this.connect = false;
         CloseableUtils.close(this.input);
@@ -497,36 +507,39 @@ public final class Taoyao implements ITaoyao {
     }
 
     private void dispatch(final String content, final Header header, final Message message) {
-        final Map<String, Object> body = message.body();
+        if(this.taoyaoListener.preOnMessage(message)) {
+            return;
+        }
         switch (header.getSignal()) {
-            case "client::config"                             -> this.clientConfig(message, body);
-            case "client::register"                           -> this.clientRegister(message, body);
-            case "client::reboot"                             -> this.clientReboot(message, body);
-            case "client::shutdown"                           -> this.clientShutdown(message, body);
-            case "media::consume"                             -> this.mediaConsume(message, body);
-//            case "media::audio::volume"                       -> this.mediaAudioVolume(message, body);
-            case "media::consumer::close"                     -> this.mediaConsumerClose(message, body);
-            case "media::consumer::pause"                     -> this.mediaConsumerPause(message, body);
-//            case "media::consumer::request::key::frame"       -> this.mediaConsumerRequestKeyFrame(message, body);
-            case "media::consumer::resume"                    -> this.mediaConsumerResume(message, body);
-//            case "media::consumer::set::preferred::layers"    -> this.mediaConsumerSetPreferredLayers(message, body);
-//            case "media::consumer::status"                    -> this.mediaConsumerStatus(message, body);
-            case "media::producer::close"                     -> this.mediaProducerClose(message, body);
-            case "media::producer::pause"                     -> this.mediaProducerPause(message, body);
-            case "media::producer::resume"                    -> this.mediaProducerResume(message, body);
-//            case "media::producer::video::orientation:change" -> this.mediaVideoOrientationChange(message, body);
-            case "room::close"                                -> this.roomClose(message, body);
-            case "room::enter"                                -> this.roomEnter(message, body);
-            case "room::expel"                                -> this.roomExpel(message, body);
-            case "room::invite"                               -> this.roomInivte(message, body);
-            case "room::leave"                                -> this.roomLeave(message, body);
-            case "session::call"                              -> this.sessionCall(message, body);
-            case "session::close"                             -> this.sessionClose(message, body);
-            case "session::exchange"                          -> this.sessionExchange(message, body);
-            case "session::pause"                             -> this.sessionPause(message, body);
-            case "session::resume"                            -> this.sessionResume(message, body);
+            case "client::config"                             -> this.clientConfig(message, message.body());
+            case "client::register"                           -> this.clientRegister(message, message.body());
+            case "client::reboot"                             -> this.clientReboot(message, message.body());
+            case "client::shutdown"                           -> this.clientShutdown(message, message.body());
+            case "media::consume"                             -> this.mediaConsume(message, message.body());
+//            case "media::audio::volume"                       -> this.mediaAudioVolume(message, message.body());
+            case "media::consumer::close"                     -> this.mediaConsumerClose(message, message.body());
+            case "media::consumer::pause"                     -> this.mediaConsumerPause(message, message.body());
+//            case "media::consumer::request::key::frame"       -> this.mediaConsumerRequestKeyFrame(message, message.body());
+            case "media::consumer::resume"                    -> this.mediaConsumerResume(message, message.body());
+//            case "media::consumer::set::preferred::layers"    -> this.mediaConsumerSetPreferredLayers(message, message.body());
+//            case "media::consumer::status"                    -> this.mediaConsumerStatus(message, message.body());
+            case "media::producer::close"                     -> this.mediaProducerClose(message, message.body());
+            case "media::producer::pause"                     -> this.mediaProducerPause(message, message.body());
+            case "media::producer::resume"                    -> this.mediaProducerResume(message, message.body());
+//            case "media::producer::video::orientation:change" -> this.mediaVideoOrientationChange(message, message.body());
+            case "room::close"                                -> this.roomClose(message, message.body());
+            case "room::enter"                                -> this.roomEnter(message, message.body());
+            case "room::expel"                                -> this.roomExpel(message, message.body());
+            case "room::invite"                               -> this.roomInivte(message, message.body());
+            case "room::leave"                                -> this.roomLeave(message, message.body());
+            case "session::call"                              -> this.sessionCall(message, message.body());
+            case "session::close"                             -> this.sessionClose(message, message.body());
+            case "session::exchange"                          -> this.sessionExchange(message, message.body());
+            case "session::pause"                             -> this.sessionPause(message, message.body());
+            case "session::resume"                            -> this.sessionResume(message, message.body());
             default                                           -> Log.d(Taoyao.class.getSimpleName(), "没有适配信令：" + content);
         }
+        this.taoyaoListener.postOnMessage(message);
     }
 
     /**
@@ -672,6 +685,7 @@ public final class Taoyao implements ITaoyao {
                 this.name, this.clientId,
                 key, password,
                 this, this.mainHandler,
+                resources.getBoolean(R.bool.preview),
                 resources.getBoolean(R.bool.dataConsume),
                 resources.getBoolean(R.bool.audioConsume),
                 resources.getBoolean(R.bool.videoConsume),

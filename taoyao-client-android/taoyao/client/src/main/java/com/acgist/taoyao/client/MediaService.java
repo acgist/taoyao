@@ -18,8 +18,12 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
+import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.client.signal.Taoyao;
 import com.acgist.taoyao.media.MediaManager;
+import com.acgist.taoyao.media.signal.ITaoyaoListener;
+
+import java.util.Map;
 
 /**
  * 媒体服务
@@ -53,6 +57,8 @@ public class MediaService extends Service {
 
     private Taoyao taoyao;
     private Handler mainHandler;
+    private final ITaoyaoListener taoyaoListener = new ITaoyaoListener() {
+    };
 
     @Override
     public void onCreate() {
@@ -154,7 +160,7 @@ public class MediaService extends Service {
             port, host, resources.getString(R.string.version),
             name, clientId, resources.getString(R.string.clientType), username, password,
             resources.getInteger(R.integer.timeout), resources.getString(R.string.encrypt), resources.getString(R.string.encryptSecret),
-            this.mainHandler, context
+            this.mainHandler, context, this.taoyaoListener
         );
         MediaManager.getInstance().initTaoyao(this.taoyao);
         Toast.makeText(this.getApplicationContext(), "连接信令", Toast.LENGTH_SHORT).show();

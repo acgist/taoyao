@@ -1,11 +1,11 @@
-#include "Room.hpp"
 #include "MediaManager.hpp"
 
 namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
-    Java_com_acgist_taoyao_media_MediaManager_nativeInit(JNIEnv *env, jobject me) {
-        LOG_I("加载MediasoupClient：", mediasoupclient::Version().data());
+    Java_com_acgist_taoyao_media_MediaManager_nativeInit(JNIEnv* env, jobject me) {
+        std::string version = mediasoupclient::Version();
+        LOG_I("加载MediasoupClient", version.data());
         mediasoupclient::Initialize();
         // => { spatialLayers: 2, temporalLayers: 3 }
         // mediasoupclient::parseScalabilityMode("L2T3");
@@ -14,8 +14,8 @@ namespace acgist {
     }
 
     extern "C" JNIEXPORT void JNICALL
-    Java_com_acgist_taoyao_media_MediaManager_nativeStop(JNIEnv *env, jobject me) {
-        std::cout << "释放mediasoupclient" << std::endl;
+    Java_com_acgist_taoyao_media_MediaManager_nativeStop(JNIEnv* env, jobject me) {
+        LOG_I("释放mediasoupclient");
         mediasoupclient::Cleanup();
     }
 
