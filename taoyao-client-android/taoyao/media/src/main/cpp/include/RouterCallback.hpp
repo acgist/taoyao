@@ -9,21 +9,21 @@ namespace acgist {
 
     class RouterCallback {
     public:
-        JNIEnv* env;
+        JavaVM* javaVM;
         jobject routerCallback;
     public:
-        void enterCallback(std::string rtpCapabilities, std::string sctpCapabilities);
-        void sendTransportConnectCallback(std::string transportId, std::string dtlsParameters);
-        std::string sendTransportProduceCallback(std::string kind, std::string transportId, std::string rtpParameters);
-        void recvTransportConnectCallback(std::string transportId, std::string dtlsParameters);
-        void producerNewCallback(std::string kind, std::string producerId, webrtc::MediaStreamTrackInterface* producerMediaTrackPointer);
-        void producerPauseCallback(std::string producerId);
-        void producerResumeCallback(std::string producerId);
-        void producerCloseCallback(std::string producerId);
-        void consumerNewCallback(std::string message, webrtc::MediaStreamTrackInterface* consumerMediaTrackPointer);
-        void consumerPauseCallback(std::string consumerId);
-        void consumerResumeCallback(std::string consumerId);
-        void consumerCloseCallback(std::string consumerId);
+        void enterRoomCallback(JNIEnv* env, std::string rtpCapabilities, std::string sctpCapabilities);
+        void sendTransportConnectCallback(JNIEnv* env, std::string transportId, std::string dtlsParameters);
+        void recvTransportConnectCallback(JNIEnv* env, std::string transportId, std::string dtlsParameters);
+        std::string sendTransportProduceCallback(JNIEnv* env, std::string kind, std::string transportId, std::string rtpParameters);
+        void producerNewCallback(JNIEnv* env, std::string kind, std::string producerId, mediasoupclient::Producer* producerPointer, webrtc::MediaStreamTrackInterface* producerMediaTrackPointer);
+        void producerCloseCallback(JNIEnv* env, std::string producerId);
+        void producerPauseCallback(JNIEnv* env, std::string producerId);
+        void producerResumeCallback(JNIEnv* env, std::string producerId);
+        void consumerNewCallback(JNIEnv* env, std::string message, mediasoupclient::Consumer* consumerPointer, webrtc::MediaStreamTrackInterface* consumerMediaTrackPointer);
+        void consumerCloseCallback(JNIEnv* env, std::string consumerId);
+        void consumerPauseCallback(JNIEnv* env, std::string consumerId);
+        void consumerResumeCallback(JNIEnv* env, std::string consumerId);
     };
 
 }

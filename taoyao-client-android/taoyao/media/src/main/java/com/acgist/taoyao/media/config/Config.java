@@ -27,5 +27,9 @@ public class Config {
      * 新建远程视频
      */
     public static final int WHAT_NEW_REMOTE_VIDEO = 2003;
+    /**
+     * 默认声音大小
+     */
+    public static final double DEFAULT_VOLUME = 100.0D;
 
 }

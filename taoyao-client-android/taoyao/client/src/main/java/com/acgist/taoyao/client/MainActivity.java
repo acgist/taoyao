@@ -153,6 +153,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             resources.getBoolean(R.bool.videoConsume),
             resources.getBoolean(R.bool.audioProduce),
             resources.getBoolean(R.bool.videoProduce),
+            resources.getString(R.string.storagePathImage),
+            resources.getString(R.string.storagePathVideo),
             TransportType.valueOf(resources.getString(R.string.transportType))
         );
         final Display display = this.getWindow().getContext().getDisplay();
@@ -209,19 +211,16 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     private void action(View view) {
         this.threadHandler.post(() -> {
             // 进入房间
-            Taoyao.taoyao.roomEnter("022a16bd-94b9-4d40-889e-d364da065bd2", null);
+            Taoyao.taoyao.roomEnter("1e6707a5-6846-405e-95de-632aa01569aa", null);
         });
     }
 
     private void switchRecord(View view) {
         final MediaManager mediaManager = MediaManager.getInstance();
         if (mediaManager.isRecording()) {
-            mediaManager.stopRecord();
+            mediaManager.stopRecordVideoCapture();
         } else {
-            mediaManager.startRecord(
-                this.getResources().getString(R.string.storagePathVideo),
-                DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".mp4"
-            );
+            mediaManager.startRecordVideoCapture();
         }
     }
 

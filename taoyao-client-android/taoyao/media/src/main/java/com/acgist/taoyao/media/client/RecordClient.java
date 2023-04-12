@@ -10,7 +10,9 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
 
+import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.media.MediaManager;
+import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.TextureBufferImpl;
@@ -23,13 +25,21 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
  * 录像机
- * <p>
+ *
+ * https://blog.csdn.net/nanoage/article/details/127406494
+ * https://webrtc.org.cn/20190419_tutorial3_webrtc_android
+ * https://blog.csdn.net/CSDN_Mew/article/details/103406781
+ * https://blog.csdn.net/Tong_Hou/article/details/112116349
+ * https://blog.csdn.net/u011418943/article/details/127108642
  * https://blog.csdn.net/m0_60259116/article/details/126875532
+ * https://blog.csdn.net/csdn_shen0221/article/details/120331004
+ * https://blog.csdn.net/csdn_shen0221/article/details/119982257
  *
  * @author acgist
  */
@@ -88,9 +98,9 @@ public class RecordClient extends Client {
      */
     private final ExecutorService executorService;
 
-    public RecordClient(String path, String filename, ITaoyao taoyao, Handler handler) {
+    public RecordClient(String path, ITaoyao taoyao, Handler handler) {
         super("本地录像", "LocalRecordClient", taoyao, handler);
-        this.filename = filename;
+        this.filename = DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".mp4";
         final Path filePath   = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, filename);
         final File parentFile = filePath.getParent().toFile();
         if(!parentFile.exists()) {
@@ -107,7 +117,7 @@ public class RecordClient extends Client {
                 return;
             }
             super.init();
-            this.mediaManager.newClient(MediaManager.Type.BACK);
+            this.mediaManager.newClient(VideoSourceType.BACK);
             this.record(null, null, 1, 1);
         }
     }

@@ -9,6 +9,7 @@ import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.boot.utils.PointerUtils;
 import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.RouterCallback;
+import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
@@ -19,7 +20,6 @@ import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.VideoTrack;
 
-import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +81,8 @@ public class Room extends CloseableClient implements RouterCallback {
                 return true;
             }
             super.init();
-            this.peerConnectionFactory = this.mediaManager.newClient(MediaManager.Type.BACK);
+            this.peerConnectionFactory = this.mediaManager.newClient(VideoSourceType.BACK);
+            this.mediaManager.startVideoCapture();
             this.localClient = new LocalClient(this.name, this.clientId, this.taoyao, this.handler);
             this.localClient.setMediaStream(this.mediaManager.getMediaStream());
             // STUN | TURN
@@ -96,7 +97,7 @@ public class Room extends CloseableClient implements RouterCallback {
                 return false;
             }
             final Object rtpCapabilities = MapUtils.get(response.body(), "rtpCapabilities");
-            this.nativeEnter(this.nativeRoomPointer, JSONUtils.toJSON(rtpCapabilities), this.peerConnectionFactory.getNativePeerConnectionFactory(), this.rtcConfiguration);
+            this.nativeEnterRoom(this.nativeRoomPointer, JSONUtils.toJSON(rtpCapabilities), this.peerConnectionFactory.getNativePeerConnectionFactory(), this.rtcConfiguration);
             return true;
         }
     }
@@ -194,6 +195,7 @@ public class Room extends CloseableClient implements RouterCallback {
             this.remoteClients.values().forEach(v -> this.closeRemoteClient(v.clientId));
             this.remoteClients.clear();
             this.localClient.close();
+            this.mediaManager.stopVideoCapture();
             this.mediaManager.closeClient();
         }
     }
@@ -207,7 +209,7 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     public void mediaConsumerClose(Map<String, Object> body) {
-
+        this.nativeMediaConsumerClose(this.nativeRoomPointer, MapUtils.get(body, "consumerId"));
     }
 
     public void mediaConsumerPause(String consumerId) {
@@ -219,7 +221,7 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     public void mediaConsumerPause(Map<String, Object> body) {
-
+        this.nativeMediaConsumerPause(this.nativeRoomPointer, MapUtils.get(body, "consumerId"));
     }
 
     public void mediaConsumerResume(String consumerId) {
@@ -231,7 +233,7 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     public void mediaConsumerResume(Map<String, Object> body) {
-
+        this.nativeMediaConsumerResume(this.nativeRoomPointer, MapUtils.get(body, "consumerId"));
     }
 
     public void mediaProducerClose(String producerId) {
@@ -243,7 +245,7 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     public void mediaProducerClose(Map<String, Object> body) {
-
+        this.nativeMediaProducerClose(this.nativeRoomPointer, MapUtils.get(body, "producerId"));
     }
 
     public void mediaProducerPause(String producerId) {
@@ -255,7 +257,7 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     public void mediaProducerPause(Map<String, Object> body) {
-
+        this.nativeMediaProducerPause(this.nativeRoomPointer, MapUtils.get(body, "producerId"));
     }
 
     public void mediaProducerResume(String producerId) {
@@ -267,11 +269,11 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     public void mediaProducerResume(Map<String, Object> body) {
-
+        this.nativeMediaProducerResume(this.nativeRoomPointer, MapUtils.get(body, "producerId"));
     }
 
     @Override
-    public void enterCallback(String rtpCapabilities, String sctpCapabilities) {
+    public void enterRoomCallback(String rtpCapabilities, String sctpCapabilities) {
         this.rtpCapabilities  = rtpCapabilities;
         this.sctpCapabilities = sctpCapabilities;
         this.taoyao.request(this.taoyao.buildMessage(
@@ -294,12 +296,22 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     @Override
+    public void recvTransportConnectCallback(String transportId, String dtlsParameters) {
+        this.taoyao.request(this.taoyao.buildMessage(
+            "media::transport::webrtc::connect",
+            "roomId",         this.roomId,
+            "transportId",    transportId,
+            "dtlsParameters", JSONUtils.toMap(dtlsParameters)
+        ));
+    }
+
+    @Override
     public String sendTransportProduceCallback(String kind, String transportId, String rtpParameters) {
         final Message response = this.taoyao.request(this.taoyao.buildMessage(
             "media::produce",
-            "kind", kind,
-            "roomId", this.roomId,
-            "transportId", transportId,
+            "kind",          kind,
+            "roomId",        this.roomId,
+            "transportId",   transportId,
             "rtpParameters", JSONUtils.toMap(rtpParameters)
         ));
         final Map<String, Object> body = response.body();
@@ -307,17 +319,18 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     @Override
-    public void recvTransportConnectCallback(String transportId, String dtlsParameters) {
-        this.taoyao.request(this.taoyao.buildMessage(
-            "media::transport::webrtc::connect",
-            "roomId", this.roomId,
-            "transportId", transportId,
-            "dtlsParameters", JSONUtils.toMap(dtlsParameters)
-        ));
+    public void producerNewCallback(String kind, String producerId, long producerPointer, long producerMediaTrackPointer) {
+        this.localClient.tracks.put(producerId, producerMediaTrackPointer);
+        if(MediaStreamTrack.AUDIO_TRACK_KIND.equals(kind)) {
+            this.localClient.audioProducerPointer = producerPointer;
+        } else if(MediaStreamTrack.VIDEO_TRACK_KIND.equals(kind)) {
+            this.localClient.videoProducerPointer = producerPointer;
+        } else {
+        }
     }
 
     @Override
-    public void consumerNewCallback(String message, long consumerMediaTrackPointer) {
+    public void consumerNewCallback(String message, long consumerPointer, long consumerMediaTrackPointer) {
         final Message response = JSONUtils.toJava(message, Message.class);
         final Map<String, Object> body = response.body();
         final String kind       = MapUtils.get(body, "kind");
@@ -331,10 +344,14 @@ public class Room extends CloseableClient implements RouterCallback {
         if(MediaStreamTrack.AUDIO_TRACK_KIND.equals(kind)) {
 //          WebRtcAudioTrack
             final AudioTrack audioTrack = new AudioTrack(consumerMediaTrackPointer);
+            audioTrack.setVolume(Config.DEFAULT_VOLUME);
             remoteClient.tracks.put(consumerId, audioTrack);
+            remoteClient.audioConsumerPointer = consumerPointer;
+            remoteClient.playAudio();
         } else if(MediaStreamTrack.VIDEO_TRACK_KIND.equals(kind)) {
             final VideoTrack videoTrack = new VideoTrack(consumerMediaTrackPointer);
             remoteClient.tracks.put(consumerId, videoTrack);
+            remoteClient.videoConsumerPointer = consumerPointer;
             remoteClient.playVideo();
         } else {
             Log.w(Room.class.getSimpleName(), "未知媒体类型：" + kind);
@@ -344,8 +361,8 @@ public class Room extends CloseableClient implements RouterCallback {
         this.taoyao.push(response);
     }
 
-    private native void nativeEnter(long nativePointer, String rtpCapabilities, long peerConnectionFactoryPointer, PeerConnection.RTCConfiguration rtcConfiguration);
     private native long nativeNewRoom(String roomId, RouterCallback routerCallback);
+    private native void nativeEnterRoom(long nativePointer, String rtpCapabilities, long peerConnectionFactoryPointer, PeerConnection.RTCConfiguration rtcConfiguration);
     private native void nativeCloseRoom(long nativePointer);
     private native void nativeCreateSendTransport(long nativeRoomPointer, String body);
     private native void nativeCreateRecvTransport(long nativeRoomPointer, String body);

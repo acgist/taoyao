@@ -25,10 +25,13 @@ import com.acgist.taoyao.boot.utils.IdUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.client.R;
+import com.acgist.taoyao.media.config.MediaAudioProperties;
 import com.acgist.taoyao.media.config.MediaProperties;
 import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.client.Room;
 import com.acgist.taoyao.media.client.SessionClient;
+import com.acgist.taoyao.media.config.MediaVideoProperties;
+import com.acgist.taoyao.media.config.WebrtcProperties;
 import com.acgist.taoyao.media.signal.ITaoyao;
 import com.acgist.taoyao.media.signal.ITaoyaoListener;
 
@@ -162,10 +165,6 @@ public final class Taoyao implements ITaoyao {
     private final Handler executeMessageHandler;
     private final HandlerThread executeMessageThread;
     private final MediaManager mediaManager;
-    /**
-     * 媒体配置
-     */
-    private MediaProperties mediaProperties;
     /**
      * 房间列表
      */
@@ -511,6 +510,8 @@ public final class Taoyao implements ITaoyao {
             return;
         }
         switch (header.getSignal()) {
+            case "control::config::audio"                     -> this.controlConfigAudio(message, message.body());
+            case "control::config::video"                     -> this.controlConfigVideo(message, message.body());
             case "client::config"                             -> this.clientConfig(message, message.body());
             case "client::register"                           -> this.clientRegister(message, message.body());
             case "client::reboot"                             -> this.clientReboot(message, message.body());
@@ -563,12 +564,26 @@ public final class Taoyao implements ITaoyao {
         ));
     }
 
+    private void controlConfigAudio(Message message, Map<String, Object> body) {
+        final MediaAudioProperties mediaAudioProperties = JSONUtils.toJava(JSONUtils.toJSON(body), MediaAudioProperties.class);
+        this.mediaManager.updateAudioConfig(mediaAudioProperties);
+
+    }
+
+    private void controlConfigVideo(Message message, Map<String, Object> body) {
+        final MediaVideoProperties mediaVideoProperties = JSONUtils.toJava(JSONUtils.toJSON(body), MediaVideoProperties.class);
+        this.mediaManager.updateVideoConfig(mediaVideoProperties);
+    }
+
     /**
      * @param message 消息
      * @param body    消息主体
      */
     private void clientConfig(Message message, Map<String, Object> body) {
-        this.mediaProperties = JSONUtils.toJava(JSONUtils.toJSON(body), MediaProperties.class);
+        final MediaProperties mediaProperties = JSONUtils.toJava(JSONUtils.toJSON(body.get("media")), MediaProperties.class);
+        this.mediaManager.updateMediaConfig(mediaProperties, mediaProperties.getAudio(), mediaProperties.getVideo());
+        final WebrtcProperties webrtcProperties = JSONUtils.toJava(JSONUtils.toJSON(body.get("webrtc")), WebrtcProperties.class);
+        this.mediaManager.updateWebrtcConfig(webrtcProperties);
     }
 
     /**

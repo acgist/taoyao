@@ -4,8 +4,10 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.utils.ListUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.media.MediaManager;
+import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
@@ -74,7 +76,8 @@ public class SessionClient extends Client {
                 return;
             }
             super.init();
-            this.peerConnectionFactory = this.mediaManager.newClient(MediaManager.Type.BACK);
+            this.peerConnectionFactory = this.mediaManager.newClient(VideoSourceType.BACK);
+            this.mediaManager.startVideoCapture();
             // STUN | TURN
             final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
             // TODO：读取配置
@@ -86,6 +89,16 @@ public class SessionClient extends Client {
             this.sdpObserver    = this.sdpObserver();
             this.peerConnection = this.peerConnectionFactory.createPeerConnection(configuration, this.observer);
             this.peerConnection.addStream(this.mediaStream);
+            // TODO：连接streamId作用同步
+//          final List<String> streamIds = new ArrayList<>();
+//          ListUtils.getOnlyOne(this.mediaStream.audioTracks, audioTrack -> {
+//              this.peerConnection.addTrack(audioTrack, streamIds);
+//              return audioTrack;
+//          });
+//          ListUtils.getOnlyOne(this.mediaStream.videoTracks, videoTrack -> {
+//              this.peerConnection.addTrack(videoTrack, streamIds);
+//              return videoTrack;
+//          });
         }
     }
 
@@ -164,19 +177,28 @@ public class SessionClient extends Client {
         if(this.remoteMediaStream == null) {
             return;
         }
-        this.remoteMediaStream.audioTracks.forEach(v -> v.setEnabled(true));
+        ListUtils.getOnlyOne(this.remoteMediaStream.audioTracks, audioTrack -> {
+            audioTrack.setEnabled(true);
+            return audioTrack;
+        });
     }
 
     @Override
     public void pauseAudio() {
         super.pauseAudio();
-        this.remoteMediaStream.audioTracks.forEach(v -> v.setEnabled(false));
+        ListUtils.getOnlyOne(this.remoteMediaStream.audioTracks, audioTrack -> {
+            audioTrack.setEnabled(false);
+            return audioTrack;
+        });
     }
 
     @Override
     public void resumeAudio() {
         super.resumeAudio();
-        this.remoteMediaStream.audioTracks.forEach(v -> v.setEnabled(true));
+        ListUtils.getOnlyOne(this.remoteMediaStream.audioTracks, audioTrack -> {
+            audioTrack.setEnabled(true);
+            return audioTrack;
+        });
     }
 
     @Override
@@ -185,24 +207,32 @@ public class SessionClient extends Client {
         if(this.remoteMediaStream == null) {
             return;
         }
-        final VideoTrack videoTrack = this.remoteMediaStream.videoTracks.get(0);
-        if(this.surfaceViewRenderer == null) {
-            this.surfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(Config.WHAT_NEW_REMOTE_VIDEO, videoTrack);
-        } else {
-            videoTrack.setEnabled(true);
-        }
+        ListUtils.getOnlyOne(this.remoteMediaStream.videoTracks, videoTrack -> {
+            if(this.surfaceViewRenderer == null) {
+                this.surfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(Config.WHAT_NEW_REMOTE_VIDEO, videoTrack);
+            } else {
+                videoTrack.setEnabled(true);
+            }
+            return videoTrack;
+        });
     }
 
     @Override
     public void pauseVideo() {
         super.pauseVideo();
-        this.mediaStream.videoTracks.forEach(v -> v.setEnabled(false));
+        ListUtils.getOnlyOne(this.remoteMediaStream.videoTracks, videoTrack -> {
+            videoTrack.setEnabled(false);
+            return videoTrack;
+        });
     }
 
     @Override
     public void resumeVideo() {
         super.resumeVideo();
-        this.mediaStream.videoTracks.forEach(v -> v.setEnabled(true));
+        ListUtils.getOnlyOne(this.remoteMediaStream.videoTracks, videoTrack -> {
+            videoTrack.setEnabled(true);
+            return videoTrack;
+        });
     }
 
     @Override
@@ -227,6 +257,7 @@ public class SessionClient extends Client {
             }
             super.close();
             this.remoteMediaStream.dispose();
+            this.mediaManager.stopVideoCapture();
             this.mediaManager.closeClient();
         }
     }
@@ -294,8 +325,8 @@ public class SessionClient extends Client {
             public void onRenegotiationNeeded() {
                 Log.d(SessionClient.class.getSimpleName(), "重新协商媒体：" + SessionClient.this.sessionId);
                 if(peerConnection.connectionState() == PeerConnection.PeerConnectionState.CONNECTED) {
-                    // TODO：重写协商
-//                SessionClient.this.offer();
+                // TODO：重新协商
+//                  SessionClient.this.offer();
                 }
             }
 

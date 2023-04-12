@@ -18,12 +18,9 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
-import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.client.signal.Taoyao;
 import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.signal.ITaoyaoListener;
-
-import java.util.Map;
 
 /**
  * 媒体服务
@@ -191,7 +188,7 @@ public class MediaService extends Service {
         final NotificationManager notificationManager = this.getSystemService(NotificationManager.class);
         notificationManager.createNotificationChannel(channel);
         this.startForeground((int) System.currentTimeMillis(), notification);
-        MediaManager.getInstance().screenRecord(intent.getParcelableExtra("data"));
+        MediaManager.getInstance().initScreen(intent.getParcelableExtra("data"));
     }
 
 }
