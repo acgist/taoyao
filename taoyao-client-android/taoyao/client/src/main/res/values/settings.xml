@@ -33,4 +33,6 @@
     <bool name="audioProduce">true</bool>
     <!-- 媒体配置：是否生产视频 -->
     <bool name="videoProduce">true</bool>
+    <integer name="imageQuantity">100</integer>
+    <string name="videoQuantity">fd-video</string>
 </resources>

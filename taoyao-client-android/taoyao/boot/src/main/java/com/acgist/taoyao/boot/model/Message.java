@@ -1,15 +1,11 @@
 package com.acgist.taoyao.boot.model;
 
-import android.util.Log;
-
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 
 /**

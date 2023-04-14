@@ -7,7 +7,6 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.boot.utils.PointerUtils;
-import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.RouterCallback;
 import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
@@ -54,12 +53,12 @@ public class Room extends CloseableClient implements RouterCallback {
     public Room(
         String name, String clientId,
         String roomId, String password,
-        ITaoyao taoyao, Handler handler,
+        ITaoyao taoyao, Handler mainHandler,
         boolean preview,
         boolean dataConsume, boolean audioConsume, boolean videoConsume,
         boolean dataProduce, boolean audioProduce, boolean videoProduce
     ) {
-        super(taoyao, handler);
+        super(taoyao, mainHandler);
         this.name = name;
         this.clientId = clientId;
         this.roomId   = roomId;
@@ -83,7 +82,7 @@ public class Room extends CloseableClient implements RouterCallback {
             super.init();
             this.peerConnectionFactory = this.mediaManager.newClient(VideoSourceType.BACK);
             this.mediaManager.startVideoCapture();
-            this.localClient = new LocalClient(this.name, this.clientId, this.taoyao, this.handler);
+            this.localClient = new LocalClient(this.name, this.clientId, this.taoyao, this.mainHandler);
             this.localClient.setMediaStream(this.mediaManager.getMediaStream());
             // STUN | TURN
             final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
@@ -164,7 +163,7 @@ public class Room extends CloseableClient implements RouterCallback {
             final String clientId = MapUtils.get(body, "clientId");
             final Map<String, Object> status = MapUtils.get(body, "status");
             final String name = MapUtils.get(status, "name");
-            final RemoteClient remoteClient = new RemoteClient(name, clientId, this.taoyao, this.handler);
+            final RemoteClient remoteClient = new RemoteClient(name, clientId, this.taoyao, this.mainHandler);
             final RemoteClient old = this.remoteClients.put(clientId, remoteClient);
             if(old != null) {
                 // 关闭旧的资源
@@ -283,6 +282,11 @@ public class Room extends CloseableClient implements RouterCallback {
             "rtpCapabilities",  rtpCapabilities,
             "sctpCapabilities", sctpCapabilities
         ));
+    }
+
+    @Override
+    public void closeRoomCallback() {
+
     }
 
     @Override

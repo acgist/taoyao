@@ -6,9 +6,7 @@ import com.acgist.taoyao.boot.utils.ListUtils;
 import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
-import org.webrtc.AudioTrack;
 import org.webrtc.MediaStream;
-import org.webrtc.VideoTrack;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -32,8 +30,8 @@ public class LocalClient extends RoomClient {
     protected long audioProducerPointer;
     protected long videoProducerPointer;
 
-    public LocalClient(String name, String clientId, ITaoyao taoyao, Handler handler) {
-        super(name, clientId, taoyao, handler);
+    public LocalClient(String name, String clientId, ITaoyao taoyao, Handler mainHandler) {
+        super(name, clientId, taoyao, mainHandler);
         this.tracks = new ConcurrentHashMap<>();
     }
 

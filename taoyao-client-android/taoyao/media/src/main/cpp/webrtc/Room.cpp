@@ -154,7 +154,7 @@ namespace acgist {
         this->javaVM->DetachCurrentThread();
     }
 
-    void Room::enter(
+    void Room::enterRoom(
         JNIEnv* env,
         std::string rtpCapabilities,
         webrtc::PeerConnectionFactoryInterface* factory,
@@ -325,16 +325,23 @@ namespace acgist {
         this->consumerCloseCallback(env, consumerId);
     }
 
-    void Room::close() {
+    void Room::closeRoom() {
         this->audioProducer->Close();
         this->videoProducer->Close();
         std::map<std::string, mediasoupclient::Consumer *>::iterator iterator;
         for (iterator = this->consumers.begin(); iterator != this->consumers.end(); iterator++) {
             iterator->second->Close();
         }
+//        std::for_each(this->consumers.begin(), this->consumers.end(), [](mediasoupclient::Consumer* consumer) {
+//            consumer->Close();
+//        });
         this->consumers.clear();
         this->sendTransport->Close();
         this->recvTransport->Close();
+        JNIEnv* env;
+        this->javaVM->AttachCurrentThread(&env, nullptr);
+        this->closeRoomCallback(env);
+        this->javaVM->DetachCurrentThread();
     }
 
     extern "C" JNIEXPORT jlong JNICALL
@@ -365,7 +372,7 @@ namespace acgist {
 //      webrtc::jni::JavaToNativeMediaConstraints()
 //      webrtc::jni::JavaToNativeRTCConfiguration(env, jRtcConfigurationRef, &rtcConfiguration);
         const char* rtpCapabilities = env->GetStringUTFChars(jRtpCapabilities, nullptr);
-        room->enter(
+        room->enterRoom(
             env,
             rtpCapabilities,
             reinterpret_cast<webrtc::PeerConnectionFactoryInterface*>(factoryPointer),
@@ -380,7 +387,7 @@ namespace acgist {
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeCloseRoom(JNIEnv* env, jobject me, jlong nativeRoomPointer) {
         Room* room = (Room*) nativeRoomPointer;
-        room->close();
+        room->closeRoom();
         delete room;
     }
 

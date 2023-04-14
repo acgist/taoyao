@@ -2,15 +2,16 @@ package com.acgist.taoyao.media;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioAttributes;
+import android.media.ImageReader;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
+import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.os.Handler;
 import android.os.Message;
-import android.provider.MediaStore;
 import android.util.Log;
 
-import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.media.client.PhotographClient;
 import com.acgist.taoyao.media.client.RecordClient;
 import com.acgist.taoyao.media.config.Config;
@@ -38,17 +39,17 @@ import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoDecoderFactory;
 import org.webrtc.VideoEncoderFactory;
-import org.webrtc.VideoFrame;
+import org.webrtc.VideoFileRenderer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 import org.webrtc.audio.JavaAudioDeviceModule;
 
-import java.time.LocalDateTime;
 import java.util.Arrays;
-import java.util.function.Consumer;
 
 /**
  * 媒体来源管理器
+ *
+ * 注意：镜头选择可以使用代码实现，如果可以经理直接进行物理旋转。
  *
  * @author acgist
  *
@@ -117,7 +118,7 @@ public final class MediaManager {
     /**
      * Handler
      */
-    private Handler handler;
+    private Handler mainHandler;
     /**
      * 上下文
      */
@@ -142,6 +143,10 @@ public final class MediaManager {
      * EGL
      */
     private EglBase eglBase;
+    /**
+     * EGL共享上下文
+     */
+    private EglBase.Context shareEglContext;
     /**
      * 媒体流：声音、视频
      */
@@ -232,11 +237,11 @@ public final class MediaManager {
      * @return 是否可用
      */
     public boolean available() {
-        return this.handler != null && this.context != null && this.taoyao != null;
+        return this.mainHandler != null && this.context != null && this.taoyao != null;
     }
 
     /**
-     * @param handler      Handler
+     * @param mainHandler   Handler
      * @param context      上下文
      * @param playAudio    是否播放音频
      * @param playVideo    是否播放视频
@@ -246,14 +251,14 @@ public final class MediaManager {
      * @param videoProduce 是否生产视频
      */
     public void initContext(
-        Handler handler, Context context,
+        Handler mainHandler, Context context,
         boolean playAudio, boolean playVideo,
         boolean audioConsume, boolean videoConsume,
         boolean audioProduce, boolean videoProduce,
         String imagePath, String videoPath,
         TransportType transportType
     ) {
-        this.handler = handler;
+        this.mainHandler = mainHandler;
         this.context = context;
         this.playAudio = playAudio;
         this.playVideo = playVideo;
@@ -266,9 +271,10 @@ public final class MediaManager {
         this.transportType = transportType;
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(this.context)
-//             .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
-//             .setEnableInternalTracer(true)
-               .createInitializationOptions()
+//              .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
+//              .setNativeLibraryName("jingle_peerconnection_so")
+//              .setEnableInternalTracer(true)
+                .createInitializationOptions()
         );
     }
 
@@ -333,34 +339,19 @@ public final class MediaManager {
      */
     private void initMedia(VideoSourceType videoSourceType) {
         Log.i(MediaManager.class.getSimpleName(), "加载媒体：" + videoSourceType);
-        this.videoSourceType = videoSourceType;
         this.eglBase = EglBase.create();
-        final VideoDecoderFactory videoDecoderFactory = new DefaultVideoDecoderFactory(this.eglBase.getEglBaseContext());
-        final VideoEncoderFactory videoEncoderFactory = new DefaultVideoEncoderFactory(this.eglBase.getEglBaseContext(), true, true);
-        final JavaAudioDeviceModule javaAudioDeviceModule = JavaAudioDeviceModule.builder(this.context)
-//          .setAudioSource(android.media.MediaRecorder.AudioSource.MIC)
-            // 本地音频
-            .setSamplesReadyCallback(audioSamples -> {
-                if(this.recordClient != null) {
-                    this.recordClient.putAudio(audioSamples);
-                }
-            })
-            // 超低延迟
-//          .setUseLowLatency()
-            // 远程音频
-//          .setAudioTrackStateCallback()
-//          .setAudioFormat(AudioFormat.ENCODING_PCM_32BIT)
-//          .setUseHardwareNoiseSuppressor(true)
-//          .setUseHardwareAcousticEchoCanceler(true)
-            .createAudioDeviceModule();
+        this.shareEglContext = this.eglBase.getEglBaseContext();
+        this.videoSourceType = videoSourceType;
+        final VideoDecoderFactory videoDecoderFactory = new DefaultVideoDecoderFactory(this.shareEglContext);
+        final VideoEncoderFactory videoEncoderFactory = new DefaultVideoEncoderFactory(this.shareEglContext, true, true);
+        final JavaAudioDeviceModule javaAudioDeviceModule = this.javaAudioDeviceModule();
         this.peerConnectionFactory = PeerConnectionFactory.builder()
+            .setVideoDecoderFactory(videoDecoderFactory)
+            .setVideoEncoderFactory(videoEncoderFactory)
             .setAudioDeviceModule(javaAudioDeviceModule)
-            // 变声
 //          .setAudioProcessingFactory()
 //          .setAudioEncoderFactoryFactory(new BuiltinAudioEncoderFactoryFactory())
 //          .setAudioDecoderFactoryFactory(new BuiltinAudioDecoderFactoryFactory())
-            .setVideoDecoderFactory(videoDecoderFactory)
-            .setVideoEncoderFactory(videoEncoderFactory)
             .createPeerConnectionFactory();
         this.mediaStream = this.peerConnectionFactory.createLocalMediaStream("Taoyao");
         Arrays.stream(videoEncoderFactory.getSupportedCodecs()).forEach(v -> {
@@ -370,12 +361,58 @@ public final class MediaManager {
         this.initVideo();
     }
 
+    private JavaAudioDeviceModule javaAudioDeviceModule() {
+//      final AudioAttributes audioAttributes = new AudioAttributes.Builder()
+//          .setFlags(AudioAttributes.FLAG_AUDIBILITY_ENFORCED)
+//          .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
+//          .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
+//          .build();
+        final JavaAudioDeviceModule javaAudioDeviceModule = JavaAudioDeviceModule.builder(this.context)
+//          .setSampleRate()
+//          .setAudioSource(MediaRecorder.AudioSource.MIC)
+//          .setAudioFormat(AudioFormat.ENCODING_PCM_16BIT)
+//          .setAudioAttributes(audioAttributes)
+//          .setUseStereoInput()
+//          .setUseStereoOutput()
+            // 超低延迟
+//          .setUseLowLatency()
+            .setSamplesReadyCallback(audioSamples -> {
+                if(this.recordClient != null) {
+                    this.recordClient.putAudio(audioSamples);
+                }
+            })
+            .setAudioTrackStateCallback(new JavaAudioDeviceModule.AudioTrackStateCallback() {
+                @Override
+                public void onWebRtcAudioTrackStart() {
+                    Log.i(MediaManager.class.getSimpleName(), "WebRTC声音Track开始");
+                }
+                @Override
+                public void onWebRtcAudioTrackStop() {
+                    Log.i(MediaManager.class.getSimpleName(), "WebRTC声音Track结束");
+                }
+            })
+            .setAudioRecordStateCallback(new JavaAudioDeviceModule.AudioRecordStateCallback() {
+                @Override
+                public void onWebRtcAudioRecordStart() {
+                    Log.i(MediaManager.class.getSimpleName(), "WebRTC声音录制开始");
+                }
+                @Override
+                public void onWebRtcAudioRecordStop() {
+                    Log.i(MediaManager.class.getSimpleName(), "WebRTC声音录制结束");
+                }
+            })
+//          .setUseHardwareNoiseSuppressor(true)
+//          .setUseHardwareAcousticEchoCanceler(true)
+            .createAudioDeviceModule();
+//          javaAudioDeviceModule.setSpeakerMute(false);
+//          javaAudioDeviceModule.setMicrophoneMute(false);
+        return javaAudioDeviceModule;
+    }
+
     /**
      * 加载音频
      */
     private void initAudio() {
-        // 关闭音频
-        this.closeAudio();
         // 加载音频
         final MediaConstraints mediaConstraints = new MediaConstraints();
         // 高音过滤
@@ -404,20 +441,20 @@ public final class MediaManager {
      * 加载视频
      */
     private void initVideo() {
-        // 关闭视频
-        this.closeVideo();
         // 加载视频
         Log.i(MediaManager.class.getSimpleName(), "加载视频：" + this.videoSourceType);
-        if (this.videoSourceType.isCamera()) {
+        if (this.videoSourceType == VideoSourceType.FILE) {
+            this.initFile();
+        } else if (this.videoSourceType.isCamera()) {
             this.initCamera();
-        } else if (this.videoSourceType == VideoSourceType.FILE) {
         } else if (this.videoSourceType == VideoSourceType.SCREEN) {
-            final Message message = new Message();
-            message.what = Config.WHAT_SCREEN_CAPTURE;
-            this.handler.sendMessage(message);
+            this.initSharePromise();
         } else {
             // 其他来源
         }
+    }
+
+    private void initFile() {
     }
 
     /**
@@ -440,6 +477,12 @@ public final class MediaManager {
         this.initVideoTrack();
     }
 
+    private void initSharePromise() {
+        final Message message = new Message();
+        message.what = Config.WHAT_SCREEN_CAPTURE;
+        this.mainHandler.sendMessage(message);
+    }
+
     /**
      * 加载屏幕
      *
@@ -456,7 +499,7 @@ public final class MediaManager {
      */
     private void initVideoTrack() {
         // 加载视频
-        this.surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", this.eglBase.getEglBaseContext());
+        this.surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", this.shareEglContext);
 //      this.surfaceTextureHelper.setTextureSize();
 //      this.surfaceTextureHelper.setFrameRotation();
         // 次码流
@@ -471,14 +514,15 @@ public final class MediaManager {
         this.recordVideoCapturer.initialize(this.surfaceTextureHelper, this.context, this.recordVideoSource.getCapturerObserver());
         this.recordVideoTrack = this.peerConnectionFactory.createVideoTrack("TaoyaoV1", this.recordVideoSource);
         this.recordVideoTrack.addSink(videoFrame -> {
-            if(this.recordClient != null) {
+            // 录制
+            if (this.recordClient != null) {
+                videoFrame.retain();
                 this.recordClient.putVideo(videoFrame);
             }
-            if(this.photographClient != null) {
-                synchronized (this.photographClient) {
-                    this.photographClient.photograph(videoFrame);
-                    this.photographClient = null;
-                }
+            // 拍照
+            if (this.photographClient != null) {
+                videoFrame.retain();
+                this.photographClient.photograph(videoFrame);
             }
         });
         this.recordVideoTrack.setEnabled(true);
@@ -515,7 +559,7 @@ public final class MediaManager {
             } catch (InterruptedException e) {
                 Log.e(MediaManager.class.getSimpleName(), "暂停视频捕获异常", e);
             }
-            this.videoCapturer.startCapture(this.mediaVideoProperties.getHeight(), this.mediaVideoProperties.getWidth(), this.mediaVideoProperties.getFrameRate());
+            this.videoCapturer.startCapture(this.mediaVideoProperties.getWidth(), this.mediaVideoProperties.getHeight(), this.mediaVideoProperties.getFrameRate());
         }
     }
 
@@ -532,9 +576,10 @@ public final class MediaManager {
         if (this.videoSourceType == videoSourceType) {
             return;
         }
-        this.videoSourceType = videoSourceType;
         Log.i(MediaManager.class.getSimpleName(), "设置视频来源：" + videoSourceType);
-        if (this.videoSourceType.isCamera() && videoSourceType.isCamera()) {
+        final VideoSourceType old = this.videoSourceType;
+        this.videoSourceType = videoSourceType;
+        if (old.isCamera() && videoSourceType.isCamera()) {
             // TODO：测试是否需要完全重置
             final CameraVideoCapturer cameraVideoCapturer = (CameraVideoCapturer) this.videoCapturer;
             cameraVideoCapturer.switchCamera(new CameraVideoCapturer.CameraSwitchHandler() {
@@ -564,7 +609,7 @@ public final class MediaManager {
                 return;
             } else {
                 this.shareClientCount++;
-                this.videoCapturer.startCapture(this.mediaVideoProperties.getHeight(), this.mediaVideoProperties.getWidth(), this.mediaVideoProperties.getFrameRate());
+                this.videoCapturer.startCapture(this.mediaVideoProperties.getWidth(), this.mediaVideoProperties.getHeight(), this.mediaVideoProperties.getFrameRate());
             }
         }
     }
@@ -595,10 +640,12 @@ public final class MediaManager {
                 return null;
             }
             String filepath;
+            // TODO：质量读取
+            this.photographClient = new PhotographClient(100, this.imagePath);
             if(this.recordClient == null) {
+                // TODO：质量读取
                 final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get("fd-video");
-                this.recordVideoCapturer.startCapture(mediaVideoProperties.getHeight(), mediaVideoProperties.getWidth(), mediaVideoProperties.getFrameRate());
-                this.photographClient = new PhotographClient(this.imagePath);
+                this.recordVideoCapturer.startCapture(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate());
                 filepath = this.photographClient.waitForPhotograph();
                 try {
                     this.recordVideoCapturer.stopCapture();
@@ -606,9 +653,9 @@ public final class MediaManager {
                     Log.e(MediaManager.class.getSimpleName(), "关闭视频捕获（主码流）异常", e);
                 }
             } else {
-                this.photographClient = new PhotographClient(this.imagePath);
                 filepath = this.photographClient.waitForPhotograph();
             }
+            this.photographClient = null;
             return filepath;
         }
     }
@@ -621,11 +668,12 @@ public final class MediaManager {
             this.recordClient = new RecordClient(
                 this.videoPath,
                 this.taoyao,
-                this.handler
+                this.mainHandler
             );
             this.recordClient.start();
+            // TODO：质量读取
             final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get("fd-video");
-            this.recordVideoCapturer.startCapture(mediaVideoProperties.getHeight(), mediaVideoProperties.getWidth(), mediaVideoProperties.getFrameRate());
+            this.recordVideoCapturer.startCapture(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate());
             return this.recordClient;
         }
     }
@@ -635,13 +683,13 @@ public final class MediaManager {
             if(this.recordClient == null) {
                 return;
             } else {
-                this.recordClient.close();
-                this.recordClient = null;
                 try {
                     this.recordVideoCapturer.stopCapture();
                 } catch (InterruptedException e) {
                     Log.e(MediaManager.class.getSimpleName(), "关闭视频捕获（主码流）异常", e);
                 }
+                this.recordClient.close();
+                this.recordClient = null;
             }
         }
     }
@@ -658,7 +706,7 @@ public final class MediaManager {
     ) {
         // 预览控件
         final SurfaceViewRenderer surfaceViewRenderer = new SurfaceViewRenderer(this.context);
-        this.handler.post(() -> {
+        this.mainHandler.post(() -> {
             // 视频反转
             surfaceViewRenderer.setMirror(false);
             // 视频拉伸
@@ -666,7 +714,7 @@ public final class MediaManager {
             // 硬件拉伸
             surfaceViewRenderer.setEnableHardwareScaler(true);
             // 加载OpenSL ES
-            surfaceViewRenderer.init(this.eglBase.getEglBaseContext(), null);
+            surfaceViewRenderer.init(this.shareEglContext, null);
             // 强制播放
             if(!videoTrack.enabled()) {
                 videoTrack.setEnabled(true);
@@ -677,7 +725,7 @@ public final class MediaManager {
         final Message message = new Message();
         message.obj = surfaceViewRenderer;
         message.what = flag;
-        this.handler.sendMessage(message);
+        this.mainHandler.sendMessage(message);
         return surfaceViewRenderer;
     }
 
@@ -729,8 +777,6 @@ public final class MediaManager {
      * 关闭视频
      */
     private void closeVideo() {
-        this.stopVideoCapture();
-        this.stopRecordVideoCapture();
         if(this.videoTrack != null) {
             this.videoTrack.dispose();
             this.videoTrack = null;
@@ -765,11 +811,12 @@ public final class MediaManager {
         if (this.eglBase != null) {
             this.eglBase.release();
             this.eglBase = null;
+            this.shareEglContext = null;
         }
-        if (this.mediaStream != null) {
-            this.mediaStream.dispose();
-            this.mediaStream = null;
-        }
+//        if (this.mediaStream != null) {
+//            this.mediaStream.dispose();
+//            this.mediaStream = null;
+//        }
         if (this.peerConnectionFactory != null) {
             this.peerConnectionFactory.dispose();
             this.peerConnectionFactory = null;
@@ -792,7 +839,7 @@ public final class MediaManager {
      *
      * @author acgist
      */
-    private static class MediaCameraEventsHandler implements CameraVideoCapturer.CameraEventsHandler {
+    private class MediaCameraEventsHandler implements CameraVideoCapturer.CameraEventsHandler {
 
         @Override
         public void onCameraError(String message) {
@@ -825,13 +872,14 @@ public final class MediaManager {
     /**
      * 屏幕录制回调
      */
-    private static class ScreenCallback extends MediaProjection.Callback {
+    private class ScreenCallback extends MediaProjection.Callback {
 
         @Override
         public void onStop() {
             super.onStop();
             Log.i(MediaManager.class.getSimpleName(), "停止屏幕捕获");
         }
+
     }
 
     private native void nativeInit();

@@ -18,7 +18,6 @@ public class TaoyaoReceiver extends BroadcastReceiver {
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
             this.launchPreview(context);
         } else {
-            // TODO：重启关机释放资源（录像）
         }
     }
 

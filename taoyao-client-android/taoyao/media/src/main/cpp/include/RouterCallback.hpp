@@ -13,6 +13,7 @@ namespace acgist {
         jobject routerCallback;
     public:
         void enterRoomCallback(JNIEnv* env, std::string rtpCapabilities, std::string sctpCapabilities);
+        void closeRoomCallback(JNIEnv* env);
         void sendTransportConnectCallback(JNIEnv* env, std::string transportId, std::string dtlsParameters);
         void recvTransportConnectCallback(JNIEnv* env, std::string transportId, std::string dtlsParameters);
         std::string sendTransportProduceCallback(JNIEnv* env, std::string kind, std::string transportId, std::string rtpParameters);

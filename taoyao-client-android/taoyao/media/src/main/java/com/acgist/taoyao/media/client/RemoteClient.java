@@ -9,7 +9,6 @@ import com.acgist.taoyao.media.signal.ITaoyao;
 import org.webrtc.MediaStreamTrack;
 import org.webrtc.VideoTrack;
 
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -29,8 +28,8 @@ public class RemoteClient extends RoomClient {
     protected long audioConsumerPointer;
     protected long videoConsumerPointer;
 
-    public RemoteClient(String name, String clientId, ITaoyao taoyao, Handler handler) {
-        super(name, clientId, taoyao, handler);
+    public RemoteClient(String name, String clientId, ITaoyao taoyao, Handler mainHandler) {
+        super(name, clientId, taoyao, mainHandler);
         this.tracks = new ConcurrentHashMap<>();
     }
 

@@ -6,7 +6,6 @@ import android.util.Log;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.ListUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
-import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.signal.ITaoyao;
@@ -19,7 +18,6 @@ import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
-import org.webrtc.VideoTrack;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -64,8 +62,8 @@ public class SessionClient extends Client {
      */
     private PeerConnectionFactory peerConnectionFactory;
 
-    public SessionClient(String sessionId, String name, String clientId, ITaoyao taoyao, Handler handler) {
-        super(name, clientId, taoyao, handler);
+    public SessionClient(String sessionId, String name, String clientId, ITaoyao taoyao, Handler mainHandler) {
+        super(name, clientId, taoyao, mainHandler);
         this.sessionId = sessionId;
     }
 

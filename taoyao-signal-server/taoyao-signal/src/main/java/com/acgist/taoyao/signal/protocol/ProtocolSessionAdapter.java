@@ -10,7 +10,6 @@ import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.party.session.Session;
 import com.acgist.taoyao.signal.party.session.SessionManager;
 

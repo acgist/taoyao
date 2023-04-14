@@ -5,8 +5,6 @@ import android.os.Handler;
 import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
-import org.webrtc.PeerConnectionFactory;
-
 import java.io.Closeable;
 
 /**
@@ -32,17 +30,17 @@ public abstract class CloseableClient implements Closeable {
     /**
      * Handler
      */
-    protected final Handler handler;
+    protected final Handler mainHandler;
     /**
      * 媒体服务
      */
     protected final MediaManager mediaManager;
 
-    public CloseableClient(ITaoyao taoyao, Handler handler) {
+    public CloseableClient(ITaoyao taoyao, Handler mainHandler) {
         this.init = false;
         this.close = false;
         this.taoyao = taoyao;
-        this.handler = handler;
+        this.mainHandler = mainHandler;
         this.mediaManager = MediaManager.getInstance();
     }
 

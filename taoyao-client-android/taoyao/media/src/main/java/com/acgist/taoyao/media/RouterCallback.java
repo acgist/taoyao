@@ -8,6 +8,7 @@ package com.acgist.taoyao.media;
 public interface RouterCallback {
 
     default void enterRoomCallback(String rtpCapabilities, String sctpCapabilities) {};
+    default void closeRoomCallback() {};
     default void sendTransportConnectCallback(String transportId, String dtlsParameters) {};
     default void recvTransportConnectCallback(String transportId, String dtlsParameters) {};
     default String sendTransportProduceCallback(String kind, String transportId, String rtpParameters) { return null; };

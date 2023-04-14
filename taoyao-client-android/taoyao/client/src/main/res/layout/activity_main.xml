@@ -7,6 +7,27 @@
     android:layout_height="match_parent"
     tools:context="com.acgist.taoyao.client.MainActivity">
 
+    <GridLayout
+        android:id="@+id/video"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:columnCount="2"
+        android:rowCount="2" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/settings"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:layout_marginLeft="16dp"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="@string/button_setting"
+        android:src="@drawable/settings"
+        app:borderWidth="16dp"
+        app:fabSize="normal"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent" />
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/action"
         android:layout_width="wrap_content"
@@ -20,20 +41,6 @@
         app:fabSize="normal"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/settings" />
-
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/photograph"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="end|bottom"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="16dp"
-        android:contentDescription="@string/button_photograph"
-        android:src="@drawable/photograph"
-        app:borderWidth="16dp"
-        app:fabSize="normal"
-        app:layout_constraintBottom_toTopOf="@+id/action"
-        app:layout_constraintStart_toEndOf="@+id/record" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/record"
@@ -51,17 +58,17 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/settings"
+        android:id="@+id/photograph"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end|bottom"
-        android:layout_marginLeft="16dp"
+        android:layout_marginStart="16dp"
         android:layout_marginBottom="16dp"
-        android:contentDescription="@string/button_setting"
-        android:src="@drawable/settings"
+        android:contentDescription="@string/button_photograph"
+        android:src="@drawable/photograph"
         app:borderWidth="16dp"
         app:fabSize="normal"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintLeft_toLeftOf="parent" />
+        app:layout_constraintBottom_toTopOf="@+id/action"
+        app:layout_constraintStart_toEndOf="@+id/record" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

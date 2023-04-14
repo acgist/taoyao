@@ -1,19 +1,11 @@
 package com.acgist.taoyao.media.client;
 
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
-import com.acgist.taoyao.media.MediaManager;
-import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
-import org.webrtc.MediaStreamTrack;
-import org.webrtc.RendererCommon;
 import org.webrtc.SurfaceViewRenderer;
-import org.webrtc.VideoTrack;
-
-import java.io.Closeable;
 
 /**
  * 终端
@@ -35,8 +27,8 @@ public abstract class Client extends CloseableClient {
      */
     protected SurfaceViewRenderer surfaceViewRenderer;
 
-    public Client(String name, String clientId, ITaoyao taoyao, Handler handler) {
-        super(taoyao, handler);
+    public Client(String name, String clientId, ITaoyao taoyao, Handler mainHandler) {
+        super(taoyao, mainHandler);
         this.name = name;
         this.clientId = clientId;
     }

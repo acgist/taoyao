@@ -25,11 +25,11 @@ import com.acgist.taoyao.boot.utils.IdUtils;
 import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.client.R;
-import com.acgist.taoyao.media.config.MediaAudioProperties;
-import com.acgist.taoyao.media.config.MediaProperties;
 import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.client.Room;
 import com.acgist.taoyao.media.client.SessionClient;
+import com.acgist.taoyao.media.config.MediaAudioProperties;
+import com.acgist.taoyao.media.config.MediaProperties;
 import com.acgist.taoyao.media.config.MediaVideoProperties;
 import com.acgist.taoyao.media.config.WebrtcProperties;
 import com.acgist.taoyao.media.signal.ITaoyao;
@@ -158,12 +158,33 @@ public final class Taoyao implements ITaoyao {
      * 请求消息：同步消息
      */
     private final Map<Long, Message> requestMessage;
+    /**
+     * 循环消息Handler
+     */
     private final Handler loopMessageHandler;
+    /**
+     * 循环消息线程
+     */
     private final HandlerThread loopMessageThread;
-    private final Handler heartbeatHandler;
-    private final HandlerThread heartbeatThread;
+    /**
+     * 消息处理Handler
+     */
     private final Handler executeMessageHandler;
+    /**
+     * 消息处理线程
+     */
     private final HandlerThread executeMessageThread;
+    /**
+     * 心跳Handler
+     */
+    private final Handler heartbeatHandler;
+    /**
+     * 心跳线程
+     */
+    private final HandlerThread heartbeatThread;
+    /**
+     * 媒体来源管理器
+     */
     private final MediaManager mediaManager;
     /**
      * 房间列表
@@ -173,6 +194,9 @@ public final class Taoyao implements ITaoyao {
      * 会话终端列表
      */
     private final Map<String, SessionClient> sessionClients;
+    /**
+     * 全局静态变量
+     */
     public static Taoyao taoyao;
 
     public Taoyao(
@@ -203,17 +227,20 @@ public final class Taoyao implements ITaoyao {
         this.batteryManager = context.getSystemService(BatteryManager.class);
         this.locationManager = context.getSystemService(LocationManager.class);
         this.requestMessage = new ConcurrentHashMap<>();
-        this.loopMessageThread = new HandlerThread("TaoyaoLoopMessageThread");
+        this.loopMessageThread = new HandlerThread("LoopMessageThread");
+        this.loopMessageThread.setDaemon(true);
         this.loopMessageThread.start();
         this.loopMessageHandler = new Handler(this.loopMessageThread.getLooper());
         this.loopMessageHandler.post(this::loopMessage);
-        this.heartbeatThread = new HandlerThread("TaoyaoHeartbeatThread");
+        this.executeMessageThread = new HandlerThread("ExecuteMessageThread");
+        this.executeMessageThread.setDaemon(true);
+        this.executeMessageThread.start();
+        this.executeMessageHandler = new Handler(this.executeMessageThread.getLooper());
+        this.heartbeatThread = new HandlerThread("HeartbeatThread");
+        this.heartbeatThread.setDaemon(true);
         this.heartbeatThread.start();
         this.heartbeatHandler = new Handler(this.heartbeatThread.getLooper());
         this.heartbeatHandler.postDelayed(this::heartbeat, 30L * 1000);
-        this.executeMessageThread = new HandlerThread("TaoyaoExecuteMessageThread");
-        this.executeMessageThread.start();
-        this.executeMessageHandler = new Handler(this.executeMessageThread.getLooper());
         this.mediaManager = MediaManager.getInstance();
         this.rooms = new ConcurrentHashMap<>();
         this.sessionClients = new ConcurrentHashMap<>();

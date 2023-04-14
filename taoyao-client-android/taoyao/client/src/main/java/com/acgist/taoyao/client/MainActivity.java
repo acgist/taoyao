@@ -16,9 +16,8 @@ import android.util.Log;
 import android.view.Display;
 import android.view.SurfaceView;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.widget.LinearLayout;
+import android.widget.GridLayout;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -26,15 +25,13 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
-import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.client.databinding.ActivityMainBinding;
 import com.acgist.taoyao.client.signal.Taoyao;
+import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.TransportType;
 import com.acgist.taoyao.media.config.Config;
-import com.acgist.taoyao.media.MediaManager;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.stream.Stream;
 
 /**
@@ -46,7 +43,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
 
     private Handler threadHandler;
     private MainHandler mainHandler;
-    private HandlerThread handlerThread;
     private ActivityMainBinding binding;
     private MediaProjectionManager mediaProjectionManager;
     private ActivityResultLauncher<Intent> activityResultLauncher;
@@ -55,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     protected void onCreate(Bundle bundle) {
         Log.i(MainActivity.class.getSimpleName(), "onCreate");
         super.onCreate(bundle);
-        this.catchAllException();
         this.requestPermission();
         this.launchMediaService();
         this.setTurnScreenOn(true);
@@ -64,11 +59,10 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         this.binding = ActivityMainBinding.inflate(this.getLayoutInflater());
         this.setContentView(this.binding.getRoot());
         this.binding.getRoot().setZ(100F);
-        this.buildHandlerThread();
         this.registerMediaProjection();
         this.binding.action.setOnClickListener(this::action);
-        this.binding.record.setOnClickListener(this::switchRecord);
-        this.binding.settings.setOnClickListener(this::launchSettings);
+        this.binding.record.setOnClickListener(this::record);
+        this.binding.settings.setOnClickListener(this::settings);
         this.binding.photograph.setOnClickListener(this::photograph);
     }
 
@@ -88,25 +82,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     protected void onDestroy() {
         Log.i(MainActivity.class.getSimpleName(), "onDestroy");
         super.onDestroy();
-    }
-
-    private void catchAllException() {
-        Log.i(MainActivity.class.getSimpleName(), "全局异常捕获");
-        final Thread.UncaughtExceptionHandler old = Thread.getDefaultUncaughtExceptionHandler();
-        Thread.setDefaultUncaughtExceptionHandler(new Thread.UncaughtExceptionHandler() {
-            @Override
-            public void uncaughtException(Thread t, Throwable e) {
-                Log.e(MediaService.class.getSimpleName(), "系统异常：" + t.getName(), e);
-                final Looper looper = Looper.myLooper();
-                if (looper == Looper.getMainLooper()) {
-//              if(t.getId() == Looper.getMainLooper().getThread().getId()) {
-                    // TODO：重启应用
-                    old.uncaughtException(t, e);
-                } else {
-                    // 子线程
-                }
-            }
-        });
     }
 
     /**
@@ -143,7 +118,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         }
         int waitCount = 0;
         this.mainHandler = new MainHandler(this);
-        // 不能写在service里面： Attempt to invoke virtual method 'android.view.View android.view.Window.getDecorView()' on a null object reference
         final Resources resources = this.getResources();
         MediaManager.getInstance().initContext(
             this.mainHandler, this.getApplicationContext(),
@@ -170,15 +144,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         } else {
             Log.w(MainActivity.class.getSimpleName(), "拉起媒体服务失败");
         }
-    }
-
-    private void buildHandlerThread() {
-        if (this.handlerThread != null) {
-            return;
-        }
-        this.handlerThread = new HandlerThread("MainHandleThread");
-        this.handlerThread.start();
-        this.threadHandler = new Handler(this.handlerThread.getLooper());
     }
 
     private void registerMediaProjection() {
@@ -209,13 +174,18 @@ public class MainActivity extends AppCompatActivity implements Serializable {
      * @param view View
      */
     private void action(View view) {
+        if (this.threadHandler == null) {
+            final HandlerThread handlerThread = new HandlerThread("ActionThread");
+            handlerThread.start();
+            this.threadHandler = new Handler(handlerThread.getLooper());
+        }
         this.threadHandler.post(() -> {
             // 进入房间
             Taoyao.taoyao.roomEnter("1e6707a5-6846-405e-95de-632aa01569aa", null);
         });
     }
 
-    private void switchRecord(View view) {
+    private void record(View view) {
         final MediaManager mediaManager = MediaManager.getInstance();
         if (mediaManager.isRecording()) {
             mediaManager.stopRecordVideoCapture();
@@ -224,17 +194,13 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         }
     }
 
-    /**
-     * 拉起设置页面
-     *
-     * @param view View
-     */
-    private void launchSettings(View view) {
+    private void settings(View view) {
         final Intent intent = new Intent(this, SettingsActivity.class);
         this.startActivity(intent);
     }
 
     private void photograph(View view) {
+        MediaManager.getInstance().photograph();
     }
 
     /**
@@ -256,8 +222,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             Log.d(MainHandler.class.getSimpleName(), "Handler消息：" + message.what + " - " + message.obj);
             switch (message.what) {
                 case Config.WHAT_SCREEN_CAPTURE -> this.mainActivity.screenCapture(message);
-                case Config.WHAT_NEW_LOCAL_VIDEO -> this.mainActivity.newLocalVideo(message);
-                case Config.WHAT_NEW_REMOTE_VIDEO -> this.mainActivity.newRemoteVideo(message);
+                case Config.WHAT_NEW_LOCAL_VIDEO,
+                    Config.WHAT_NEW_REMOTE_VIDEO -> this.mainActivity.previewVideo(message);
             }
         }
 
@@ -273,24 +239,21 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     }
 
     /**
-     * 新建用户视频
+     * 预览用户视频
      *
      * @param message 消息
      */
-    private void newLocalVideo(Message message) {
+    private void previewVideo(Message message) {
+        final GridLayout video = this.binding.video;
+        final int count = video.getChildCount();
+        final GridLayout.Spec rowSpec    = GridLayout.spec(count / 2);
+        final GridLayout.Spec columnSpec = GridLayout.spec(count % 2);
+        GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams(rowSpec, columnSpec);
+        layoutParams.width  = 0;
+        layoutParams.height = 0;
         final SurfaceView surfaceView = (SurfaceView) message.obj;
-        final LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParams.weight = 1;
         surfaceView.setZ(0F);
-        this.addContentView(surfaceView, layoutParams);
-    }
-
-    private void newRemoteVideo(Message message) {
-        final SurfaceView surfaceView = (SurfaceView) message.obj;
-        final LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        layoutParams.weight = 1;
-        surfaceView.setZ(0F);
-        this.addContentView(surfaceView, layoutParams);
+        video.addView(surfaceView, layoutParams);
     }
 
 }

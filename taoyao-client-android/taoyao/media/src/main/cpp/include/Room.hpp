@@ -29,7 +29,7 @@ namespace acgist {
         Room(std::string roomId, JavaVM* javaVM, jobject routerCallback);
         virtual ~Room();
     public:
-        void enter(JNIEnv* env, std::string rtpCapabilities, webrtc::PeerConnectionFactoryInterface* factory, webrtc::PeerConnectionInterface::RTCConfiguration& rtcConfiguration);
+        void enterRoom(JNIEnv* env, std::string rtpCapabilities, webrtc::PeerConnectionFactoryInterface* factory, webrtc::PeerConnectionInterface::RTCConfiguration& rtcConfiguration);
         void createSendTransport(JNIEnv* env, std::string body);
         void createRecvTransport(JNIEnv* env, std::string body);
         void mediaProduceAudio(JNIEnv* env, webrtc::MediaStreamInterface* mediaStream);
@@ -41,7 +41,7 @@ namespace acgist {
         void mediaConsumerPause(JNIEnv* env, std::string consumerId);
         void mediaConsumerResume(JNIEnv* env, std::string consumerId);
         void mediaConsumerClose(JNIEnv* env, std::string consumerId);
-        void close();
+        void closeRoom();
     };
 
 }

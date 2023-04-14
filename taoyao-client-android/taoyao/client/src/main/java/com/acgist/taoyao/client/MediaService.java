@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.BitmapFactory;
 import android.os.Binder;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.util.Log;
@@ -21,6 +22,10 @@ import androidx.core.app.NotificationCompat;
 import com.acgist.taoyao.client.signal.Taoyao;
 import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.signal.ITaoyaoListener;
+
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * 媒体服务
@@ -70,6 +75,8 @@ public class MediaService extends Service {
         :: https://gitee.com/acgist/taoyao
         """);
         super.onCreate();
+        this.mkdir(R.string.storagePathImage);
+        this.mkdir(R.string.storagePathVideo);
     }
 
     @Override
@@ -189,6 +196,17 @@ public class MediaService extends Service {
         notificationManager.createNotificationChannel(channel);
         this.startForeground((int) System.currentTimeMillis(), notification);
         MediaManager.getInstance().initScreen(intent.getParcelableExtra("data"));
+    }
+
+    private void mkdir(int id) {
+        final Path imagePath = Paths.get(
+            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(),
+            this.getResources().getString(id)
+        );
+        final File file = imagePath.toFile();
+        if(!file.exists()) {
+            file.mkdirs();
+        }
     }
 
 }
