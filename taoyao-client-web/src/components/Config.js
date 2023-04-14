@@ -8,7 +8,7 @@ const defaultAudioConfig = {
   volume: 0.5,
   // 延迟大小（单位毫秒）：500毫秒以内较好
   latency: 0.4,
-  // 采样数：8|16|32
+  // 采样位数：8|16|32
   sampleSize: { min: 8, ideal: 16, max: 32 },
   // 采样率：8000|16000|32000|48000
   sampleRate: { min: 8000, ideal: 32000, max: 48000 },

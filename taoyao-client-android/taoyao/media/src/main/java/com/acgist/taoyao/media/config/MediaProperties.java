@@ -26,14 +26,6 @@ public class MediaProperties {
      */
     private Integer maxHeight;
     /**
-     * 最小视频码率
-     */
-    private Integer minBitrate;
-    /**
-     * 最大视频码率
-     */
-    private Integer maxBitrate;
-    /**
      * 最小视频帧率
      */
     private Integer minFrameRate;
@@ -42,11 +34,19 @@ public class MediaProperties {
      */
     private Integer maxFrameRate;
     /**
-     * 最小音频采样数
+     * 最小视频码率
+     */
+    private Integer minVideoBitrate;
+    /**
+     * 最大视频码率
+     */
+    private Integer maxVideoBitrate;
+    /**
+     * 最小音频采样位数
      */
     private Integer minSampleSize;
     /**
-     * 最大音频采样数
+     * 最大音频采样位数
      */
     private Integer maxSampleSize;
     /**
@@ -57,6 +57,14 @@ public class MediaProperties {
      * 最大音频采样率
      */
     private Integer maxSampleRate;
+    /**
+     * 最小音频码率
+     */
+    private Integer minAudioBitrate;
+    /**
+     * 最大音频码率
+     */
+    private Integer maxAudioBitrate;
     /**
      * 音频默认配置
      */
@@ -106,22 +114,6 @@ public class MediaProperties {
         this.maxHeight = maxHeight;
     }
 
-    public Integer getMinBitrate() {
-        return minBitrate;
-    }
-
-    public void setMinBitrate(Integer minBitrate) {
-        this.minBitrate = minBitrate;
-    }
-
-    public Integer getMaxBitrate() {
-        return maxBitrate;
-    }
-
-    public void setMaxBitrate(Integer maxBitrate) {
-        this.maxBitrate = maxBitrate;
-    }
-
     public Integer getMinFrameRate() {
         return minFrameRate;
     }
@@ -136,6 +128,22 @@ public class MediaProperties {
 
     public void setMaxFrameRate(Integer maxFrameRate) {
         this.maxFrameRate = maxFrameRate;
+    }
+
+    public Integer getMinVideoBitrate() {
+        return minVideoBitrate;
+    }
+
+    public void setMinVideoBitrate(Integer minVideoBitrate) {
+        this.minVideoBitrate = minVideoBitrate;
+    }
+
+    public Integer getMaxVideoBitrate() {
+        return maxVideoBitrate;
+    }
+
+    public void setMaxVideoBitrate(Integer maxVideoBitrate) {
+        this.maxVideoBitrate = maxVideoBitrate;
     }
 
     public Integer getMinSampleSize() {
@@ -170,6 +178,22 @@ public class MediaProperties {
         this.maxSampleRate = maxSampleRate;
     }
 
+    public Integer getMinAudioBitrate() {
+        return minAudioBitrate;
+    }
+
+    public void setMinAudioBitrate(Integer minAudioBitrate) {
+        this.minAudioBitrate = minAudioBitrate;
+    }
+
+    public Integer getMaxAudioBitrate() {
+        return maxAudioBitrate;
+    }
+
+    public void setMaxAudioBitrate(Integer maxAudioBitrate) {
+        this.maxAudioBitrate = maxAudioBitrate;
+    }
+
     public MediaAudioProperties getAudio() {
         return audio;
     }
@@ -201,4 +225,5 @@ public class MediaProperties {
     public void setVideos(Map<String, MediaVideoProperties> videos) {
         this.videos = videos;
     }
+
 }

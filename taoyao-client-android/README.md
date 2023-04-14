@@ -45,26 +45,19 @@
 * `org.webrtc:google-webrtc`
 * `io.github.haiyangwu:mediasoup-client`
 
+## YUV
 
 ```
-/**
- * YUV终端
- *
- * Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y
- * Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y
- * Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y
- * Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y
- * U U U U U U      V V V V V V      U V U V U V      V U V U V U
- * V V V V V V      U U U U U U      U V U V U V      V U V U V U
- * - I420 -          - YV12 -         - NV12 -         - NV21 -
- *
- * I420 = YUV420P = YU12
- * NV12 = YUV420SP
- *
- * RGB和YUV转换算法：BT.601（标清）、BT.709（高清）、BT.2020（超高清）
- *
- * YuvHelper
- *
- * @author acgist
- */
+Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y
+Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y
+Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y
+Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y      Y Y Y Y Y Y
+U U U U U U      V V V V V V      U V U V U V      V U V U V U
+V V V V V V      U U U U U U      U V U V U V      V U V U V U
+- I420 -          - YV12 -         - NV12 -         - NV21 -
+
+I420 = YUV420P = YU12
+NV12 = YUV420SP
+
+RGB和YUV转换算法：BT.601（标清）、BT.709（高清）、BT.2020（超高清）
 ```

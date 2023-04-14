@@ -10,6 +10,9 @@ import com.acgist.taoyao.boot.utils.PointerUtils;
 import com.acgist.taoyao.media.RouterCallback;
 import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
+import com.acgist.taoyao.media.config.MediaAudioProperties;
+import com.acgist.taoyao.media.config.MediaProperties;
+import com.acgist.taoyao.media.config.MediaVideoProperties;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.AudioTrack;
@@ -36,27 +39,49 @@ public class Room extends CloseableClient implements RouterCallback {
     private final String roomId;
     private final String password;
     private final boolean preview;
+    private final boolean playAudio;
+    private final boolean playVideo;
     private final boolean dataConsume;
     private final boolean audioConsume;
     private final boolean videoConsume;
     private final boolean dataProduce;
     private final boolean audioProduce;
     private final boolean videoProduce;
+    private final MediaProperties mediaProperties;
+    private final Map<String, RemoteClient> remoteClients;
     private final long nativeRoomPointer;
     private LocalClient localClient;
-    private Map<String, RemoteClient> remoteClients;
     private PeerConnection.RTCConfiguration rtcConfiguration;
     private PeerConnectionFactory peerConnectionFactory;
     private String rtpCapabilities;
     private String sctpCapabilities;
 
+    /**
+     *
+     * @param name
+     * @param clientId
+     * @param roomId
+     * @param password
+     * @param taoyao
+     * @param mainHandler
+     * @param preview      是否预览视频
+     * @param playAudio    是否播放音频
+     * @param playVideo    是否播放视频
+     * @param dataConsume  是否消费数据
+     * @param audioConsume 是否消费音频
+     * @param videoConsume 是否消费视频
+     * @param dataProduce  是否生产数据
+     * @param audioProduce 是否生产音频
+     * @param videoProduce 是否生产视频
+     */
     public Room(
         String name, String clientId,
         String roomId, String password,
         ITaoyao taoyao, Handler mainHandler,
-        boolean preview,
+        boolean preview, boolean playAudio, boolean playVideo,
         boolean dataConsume, boolean audioConsume, boolean videoConsume,
-        boolean dataProduce, boolean audioProduce, boolean videoProduce
+        boolean dataProduce, boolean audioProduce, boolean videoProduce,
+        MediaProperties mediaProperties
     ) {
         super(taoyao, mainHandler);
         this.name = name;
@@ -64,14 +89,17 @@ public class Room extends CloseableClient implements RouterCallback {
         this.roomId   = roomId;
         this.password = password;
         this.preview  = preview;
+        this.playAudio = playAudio;
+        this.playVideo = playVideo;
         this.dataConsume  = dataConsume;
         this.audioConsume = audioConsume;
         this.videoConsume = videoConsume;
         this.dataProduce  = dataProduce;
         this.audioProduce = audioProduce;
         this.videoProduce = videoProduce;
-        this.nativeRoomPointer = this.nativeNewRoom(roomId, this);
+        this.mediaProperties = mediaProperties;
         this.remoteClients = new ConcurrentHashMap<>();
+        this.nativeRoomPointer = this.nativeNewRoom(roomId, this);
     }
 
     public boolean enter() {

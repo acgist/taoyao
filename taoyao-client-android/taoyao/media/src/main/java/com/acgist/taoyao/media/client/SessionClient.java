@@ -8,6 +8,7 @@ import com.acgist.taoyao.boot.utils.ListUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
+import com.acgist.taoyao.media.config.MediaProperties;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.DataChannel;
@@ -37,6 +38,16 @@ public class SessionClient extends Client {
      * 会话ID
      */
     private final String sessionId;
+    private final boolean preview;
+    private final boolean playAudio;
+    private final boolean playVideo;
+    private final boolean dataConsume;
+    private final boolean audioConsume;
+    private final boolean videoConsume;
+    private final boolean dataProduce;
+    private final boolean audioProduce;
+    private final boolean videoProduce;
+    private final MediaProperties mediaProperties;
     /**
      * 本地媒体
      */
@@ -62,9 +73,25 @@ public class SessionClient extends Client {
      */
     private PeerConnectionFactory peerConnectionFactory;
 
-    public SessionClient(String sessionId, String name, String clientId, ITaoyao taoyao, Handler mainHandler) {
+    public SessionClient(
+        String sessionId, String name, String clientId, ITaoyao taoyao, Handler mainHandler,
+        boolean preview, boolean playAudio, boolean playVideo,
+        boolean dataConsume, boolean audioConsume, boolean videoConsume,
+        boolean dataProduce, boolean audioProduce, boolean videoProduce,
+        MediaProperties mediaProperties
+    ) {
         super(name, clientId, taoyao, mainHandler);
         this.sessionId = sessionId;
+        this.preview  = preview;
+        this.playAudio = playAudio;
+        this.playVideo = playVideo;
+        this.dataConsume  = dataConsume;
+        this.audioConsume = audioConsume;
+        this.videoConsume = videoConsume;
+        this.dataProduce  = dataProduce;
+        this.audioProduce = audioProduce;
+        this.videoProduce = videoProduce;
+        this.mediaProperties = mediaProperties;
     }
 
     @Override

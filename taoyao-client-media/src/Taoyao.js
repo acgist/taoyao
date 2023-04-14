@@ -1507,7 +1507,7 @@ class Taoyao {
       interval: 2000,
       // 范围：-127~0
       threshold: -80,
-      // 采样数量
+      // 监控数量
       maxEntries: 2,
     });
     // 采样监控

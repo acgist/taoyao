@@ -1,7 +1,5 @@
 package com.acgist.taoyao.media.client;
 
-import android.graphics.YuvImage;
-import android.media.AudioFormat;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
@@ -10,18 +8,13 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.util.Log;
-import android.view.Surface;
 
 import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
-import org.webrtc.EglBase;
-import org.webrtc.GlRectDrawer;
-import org.webrtc.TextureBufferImpl;
 import org.webrtc.VideoFrame;
-import org.webrtc.VideoFrameDrawer;
 import org.webrtc.VideoSink;
 import org.webrtc.YuvHelper;
 import org.webrtc.audio.JavaAudioDeviceModule;
@@ -29,33 +22,21 @@ import org.webrtc.audio.JavaAudioDeviceModule;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.Queue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
 /**
  * 录像机
  *
- * https://www.freesion.com/article/448330501/
- * https://blog.csdn.net/nanoage/article/details/127406494
- * https://webrtc.org.cn/20190419_tutorial3_webrtc_android
- * https://blog.csdn.net/CSDN_Mew/article/details/103406781
- * https://blog.csdn.net/Tong_Hou/article/details/112116349
- * https://blog.csdn.net/u011418943/article/details/127108642
- * https://blog.csdn.net/m0_60259116/article/details/126875532
- * https://blog.csdn.net/csdn_shen0221/article/details/119982257
- * https://blog.csdn.net/csdn_shen0221/article/details/120331004
- * https://github.com/flutter-webrtc/flutter-webrtc/blob/main/android/src/main/java/com/cloudwebrtc/webrtc/record/VideoFileRenderer.java
- *
  * @author acgist
  */
 public class RecordClient extends Client implements VideoSink, JavaAudioDeviceModule.SamplesReadyCallback {
+
+    private static final long WAIT_TIME_MS = 50;
+    private static final long WAIT_TIME_US = WAIT_TIME_MS * 1000;
 
     /**
      * 音频准备录制
@@ -73,6 +54,40 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
      * 录制文件路径
      */
     private final String filepath;
+    /**
+     * 比特率：96 * 1000 | 128 * 1000 | 256 * 1000
+     * 比特率：96 * 1024 | 128 * 1024 | 256 * 1024
+     */
+    private final int audioBitRate;
+    /**
+     * 采样率：32000 | 44100 | 48000
+     */
+    private final int sampleRate;
+    /**
+     * 通道数量：1 | 2
+     */
+    private final int channelCount;
+    /**
+     * 比特率：800 * 1000 | 1600 * 1000 | 2500 * 1000
+     * 比特率：800 * 1024 | 1600 * 1024 | 2500 * 1024
+     */
+    private final int videoBitRate;
+    /**
+     * 帧率：15 | 20 | 25 | 30
+     */
+    private final int frameRate;
+    /**
+     * 关键帧频率：1 ~ 5
+     */
+    private final int iFrameInterval;
+    /**
+     * 宽度：1920
+     */
+    private final int width;
+    /**
+     * 高度：1080
+     */
+    private final int height;
     /**
      * 音频编码
      */
@@ -101,11 +116,29 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
      * 媒体合成器
      */
     private MediaMuxer mediaMuxer;
+    /**
+     * 音频队列
+     */
     private final BlockingQueue<JavaAudioDeviceModule.AudioSamples> audioSamplesQueue;
+    /**
+     * 视频队列
+     */
     private final BlockingQueue<VideoFrame> videoFrameQueue;
 
-    public RecordClient(String path, ITaoyao taoyao, Handler mainHandler) {
+    public RecordClient(
+        int audioBitRate, int sampleRate, int channelCount,
+        int videoBitRate, int frameRate, int iFrameInterval, int width, int height,
+        String path, ITaoyao taoyao, Handler mainHandler
+    ) {
         super("本地录像", "LocalRecordClient", taoyao, mainHandler);
+        this.audioBitRate   = audioBitRate * 1024;
+        this.sampleRate     = sampleRate;
+        this.channelCount   = channelCount;
+        this.videoBitRate   = videoBitRate * 1024;
+        this.frameRate      = frameRate;
+        this.iFrameInterval = iFrameInterval;
+        this.width          = width;
+        this.height         = height;
         this.filename = DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".mp4";
         this.filepath = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, this.filename).toString();
         this.audioSamplesQueue = new LinkedBlockingQueue<>();
@@ -119,36 +152,29 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
             }
             Log.i(RecordClient.class.getSimpleName(), "录制视频文件：" + this.filepath);
             super.init();
-            this.mediaManager.newClient(VideoSourceType.BACK);
-            this.record(null, null, 1, 1);
-        }
-    }
-
-    private void record(String audioFormat, String videoFormat, int width, int height) {
-        if (
-            this.audioThread == null || !this.audioThread.isAlive() ||
-            this.videoThread == null || !this.videoThread.isAlive()
-        ) {
-            this.initMediaMuxer();
-            this.initAudioThread(MediaFormat.MIMETYPE_AUDIO_AAC, 96000, 44100, 1);
-            this.initVideoThread(MediaFormat.MIMETYPE_VIDEO_AVC, 2500 * 1000, 30, 1, 1920, 1080);
+            if (
+                this.audioThread == null || !this.audioThread.isAlive() ||
+                this.videoThread == null || !this.videoThread.isAlive()
+            ) {
+                this.initMediaMuxer();
+                this.initAudioThread(MediaFormat.MIMETYPE_AUDIO_AAC);
+                this.initVideoThread(MediaFormat.MIMETYPE_VIDEO_AVC);
+            }
         }
     }
 
     /**
-     * @param audioType    类型
-     * @param bitRate      比特率：96 * 1000 | 128 * 1000 | 256 * 1000
-     * @param sampleRate   采样率：32000 | 44100 | 48000
-     * @param channelCount 通道数量
+     * @param audioType 类型
      */
-    private void initAudioThread(String audioType, int bitRate, int sampleRate, int channelCount) {
+    private void initAudioThread(String audioType) {
         try {
-            final MediaFormat audioFormat = MediaFormat.createAudioFormat(audioType, sampleRate, channelCount);
-//          audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, bitRate);
-            audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, AudioFormat.ENCODING_PCM_16BIT);
+            final MediaFormat audioFormat = MediaFormat.createAudioFormat(audioType, this.sampleRate, this.channelCount);
+//          audioFormat.setString(MediaFormat.KEY_MIME, audioType);
+//          audioFormat.setInteger(MediaFormat.KEY_SAMPLE_RATE, this.sampleRate);
+//          audioFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, this.channelCount);
+            audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, this.audioBitRate);
             audioFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
-//            audioFormat.setInteger(MediaFormat.KEY_BITRATE_MODE, MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR);
-            audioFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 8 * 1024);
+//          audioFormat.setInteger(MediaFormat.KEY_BITRATE_MODE, MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR);
             this.audioCodec = MediaCodec.createEncoderByType(audioType);
             this.audioCodec.configure(audioFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         } catch (Exception e) {
@@ -160,48 +186,45 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         this.audioHandler.post(this::audioCodec);
     }
 
+    private volatile long audioPts = 0;
+
     private void audioCodec() {
+        long pts       = 0L;
         int trackIndex = -1;
         int outputIndex;
-        long pts = 0L;
         this.audioCodec.start();
         this.audioActive = true;
         JavaAudioDeviceModule.AudioSamples audioSamples = null;
         final MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
         while (!this.close) {
-
-
             try {
-                audioSamples = this.audioSamplesQueue.poll(1000, TimeUnit.MILLISECONDS);
+                audioSamples = this.audioSamplesQueue.poll(WAIT_TIME_MS, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 Log.e(RecordClient.class.getSimpleName(), "录制线程等待异常", e);
             }
             if(audioSamples == null) {
                 continue;
             }
-            int index = this.audioCodec.dequeueInputBuffer(1000L * 1000);
+            int index = this.audioCodec.dequeueInputBuffer(WAIT_TIME_US);
             if (index >= 0) {
                 final byte[] data = audioSamples.getData();
                 final ByteBuffer buffer = this.audioCodec.getInputBuffer(index);
                 buffer.put(data);
                 this.audioCodec.queueInputBuffer(index, 0, data.length, this.audioPts, 0);
-                this.audioPts += data.length * 125 / 12; // 1000000 microseconds / 48000hz / 2 bytes
-//                presTime += data.length * 125 / 12; // 1000000 microseconds / 48000hz / 2 bytes
-//                presTime += data.length * (1_000_000 / audioSamples.getSampleRate() / 2); //16位最后那个数字是2，8位是1
+                // 1000000 microseconds / 48000 hz / 2 bytes
+                this.audioPts += data.length * (1_000_000 / audioSamples.getSampleRate() / 2);
             } else {
                 // WARN
             }
             audioSamples = null;
-
-
-            outputIndex = this.audioCodec.dequeueOutputBuffer(bufferInfo, 1000L * 1000);
+            outputIndex = this.audioCodec.dequeueOutputBuffer(bufferInfo, WAIT_TIME_US);
             if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
 //          } else if (outputIndex == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
             } else if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                 synchronized (this) {
                     trackIndex = this.mediaMuxer.addTrack(this.audioCodec.getOutputFormat());
                     Log.i(RecordClient.class.getSimpleName(), "开始录制音频：" + trackIndex);
-                    if (this.videoActive) {
+                    if (!this.close && this.videoActive) {
                         Log.i(RecordClient.class.getSimpleName(), "开始录制文件：" + this.filename);
                         this.mediaMuxer.start();
                         this.notifyAll();
@@ -230,15 +253,15 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
 //              } else if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_PARTIAL_FRAME == MediaCodec.BUFFER_FLAG_PARTIAL_FRAME) {
 //              }
                 if((bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
-//                  this.close();
+                    this.close();
                     break;
                 }
             } else {
-
+                // WARN
             }
         }
         synchronized (this) {
-            if (this.audioCodec != null) {
+            if (this.audioCodec != null && this.audioActive) {
                 Log.i(RecordClient.class.getSimpleName(), "结束录制音频");
                 this.audioCodec.stop();
                 this.audioCodec.release();
@@ -247,14 +270,12 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
             this.audioActive = false;
             if (this.mediaMuxer != null && !this.videoActive) {
                 Log.i(RecordClient.class.getSimpleName(), "结束录制文件：" + this.filename);
-                this.mediaMuxer.stop();
+//              this.mediaMuxer.stop();
                 this.mediaMuxer.release();
                 this.mediaMuxer = null;
             }
         }
     }
-
-    private volatile long audioPts = 0;
 
     /**
      * @param audioSamples PCM数据
@@ -272,25 +293,18 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
     }
 
     /**
-     * @param videoType      视频格式
-     * @param bitRate        比特率：800 * 1000 | 1600 * 1000 | 2500 * 1000
-     * @param frameRate      帧率：30
-     * @param iFrameInterval 关键帧频率：1 ~ 5
-     * @param width          宽度：1920
-     * @param height         高度：1080
+     * @param videoType 视频格式
      */
-    private void initVideoThread(String videoType, int bitRate, int frameRate, int iFrameInterval, int width, int height) {
+    private void initVideoThread(String videoType) {
         try {
-            final MediaFormat videoFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, 1920, 1080);
+            final MediaFormat videoFormat = MediaFormat.createVideoFormat(MediaFormat.MIMETYPE_VIDEO_AVC, this.width, this.height);
 //          videoFormat.setInteger(MediaFormat.KEY_LEVEL, MediaCodecInfo.CodecProfileLevel.AVCLevel31);
 //          videoFormat.setInteger(MediaFormat.KEY_PROFILE, MediaCodecInfo.CodecProfileLevel.AVCProfileHigh);
-//            videoFormat.setInteger(MediaFormat.KEY_BIT_RATE, 1920 * 1080 * 5);
-            videoFormat.setInteger(MediaFormat.KEY_BIT_RATE, 6_000_000);
-//          videoFormat.setInteger(MediaFormat.KEY_BIT_RATE, 800 * 1000);
-            videoFormat.setInteger(MediaFormat.KEY_FRAME_RATE, 30);
-//            videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
-          videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
-            videoFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, 1);
+            videoFormat.setInteger(MediaFormat.KEY_BIT_RATE, this.videoBitRate);
+            videoFormat.setInteger(MediaFormat.KEY_FRAME_RATE, this.frameRate);
+//          videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatSurface);
+            videoFormat.setInteger(MediaFormat.KEY_COLOR_FORMAT, MediaCodecInfo.CodecCapabilities.COLOR_FormatYUV420Flexible);
+            videoFormat.setInteger(MediaFormat.KEY_I_FRAME_INTERVAL, this.iFrameInterval);
             this.videoCodec = MediaCodec.createEncoderByType(videoType);
             this.videoCodec.configure(videoFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         } catch (Exception e) {
@@ -303,52 +317,39 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
     }
 
     private void videoCodec() {
-        int trackIndex = -1;
+        long pts        = 0L;
+        int trackIndex  = -1;
         int outputIndex;
-        long pts = 0L;
-
+        VideoFrame videoFrame = null;
         this.videoCodec.start();
         this.videoActive = true;
         final MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
-        VideoFrame videoFrame = null;
         while (!this.close) {
             try {
-                videoFrame = this.videoFrameQueue.poll(1000, TimeUnit.MILLISECONDS);
+                videoFrame = this.videoFrameQueue.poll(WAIT_TIME_MS, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 Log.e(RecordClient.class.getSimpleName(), "录制线程等待异常", e);
             }
             if(videoFrame == null) {
                 continue;
             }
-
-
-            final TextureBufferImpl buffer = (TextureBufferImpl) videoFrame.getBuffer();
-            final int outputFrameSize = videoFrame.getRotatedWidth() * videoFrame.getRotatedHeight() * 3 / 2;
-//            final ByteBuffer outputFrameBuffer = ByteBuffer.allocateDirect(outputFrameSize);
-            final int index = this.videoCodec.dequeueInputBuffer(1000L * 1000);
-            VideoFrame.I420Buffer i420 = buffer.toI420();
-            final ByteBuffer bufferx = this.videoCodec.getInputBuffer(index);
-//            YuvHelper.I420Copy(i420.getDataY(), i420.getStrideY(), i420.getDataU(), i420.getStrideU(), i420.getDataV(), i420.getStrideV(), outputFrameBuffer, i420.getWidth(), i420.getHeight());
-//            YuvHelper.I420Rotate(i420.getDataY(), i420.getStrideY(), i420.getDataU(), i420.getStrideU(), i420.getDataV(), i420.getStrideV(), outputFrameBuffer, i420.getWidth(), i420.getHeight(), videoFrame.getRotation());
-            YuvHelper.I420ToNV12(i420.getDataY(), i420.getStrideY(), i420.getDataU(), i420.getStrideU(), i420.getDataV(), i420.getStrideV(), bufferx, i420.getWidth(), i420.getHeight());
+            final int videoFrameSize = videoFrame.getRotatedWidth() * videoFrame.getRotatedHeight() * 3 / 2;
+            final int index = this.videoCodec.dequeueInputBuffer(WAIT_TIME_US);
+            final VideoFrame.I420Buffer i420 = videoFrame.getBuffer().toI420();
+            final ByteBuffer inputByteBuffer = this.videoCodec.getInputBuffer(index);
+            YuvHelper.I420ToNV12(i420.getDataY(), i420.getStrideY(), i420.getDataU(), i420.getStrideU(), i420.getDataV(), i420.getStrideV(), inputByteBuffer, i420.getWidth(), i420.getHeight());
             i420.release();
             videoFrame.release();
-//            bufferx.put(outputFrameBuffer.array());
-            this.videoCodec.queueInputBuffer(index, 0, outputFrameSize, videoFrame.getTimestampNs(), 0);
-
-
-//            this.videoFrameDrawer.drawFrame(videoFrame, this.glRectDrawer, null, 0, 0, videoFrame.getRotatedWidth(), videoFrame.getRotatedHeight());
-//            videoFrame.release();
-//            videoFrame = null;
-//            this.eglBase.swapBuffers();
-            outputIndex = this.videoCodec.dequeueOutputBuffer(bufferInfo, 1000L * 1000);
+            this.videoCodec.queueInputBuffer(index, 0, videoFrameSize, videoFrame.getTimestampNs(), 0);
+            videoFrame = null;
+            outputIndex = this.videoCodec.dequeueOutputBuffer(bufferInfo, WAIT_TIME_US);
             if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
 //          } else if (outputIndex == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
             } else if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                 synchronized (this) {
                     trackIndex = this.mediaMuxer.addTrack(this.videoCodec.getOutputFormat());
                     Log.i(RecordClient.class.getSimpleName(), "开始录制视频：" + trackIndex);
-                    if (this.audioActive) {
+                    if (!this.close && this.audioActive) {
                         Log.i(RecordClient.class.getSimpleName(), "开始录制文件：" + this.filename);
                         this.mediaMuxer.start();
                         this.notifyAll();
@@ -358,6 +359,7 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
                         } catch (InterruptedException e) {
                             Log.e(RecordClient.class.getSimpleName(), "录制线程等待异常", e);
                         }
+                    } else {
                     }
                 }
             } else if (outputIndex >= 0) {
@@ -378,14 +380,15 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
 //              } else if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_PARTIAL_FRAME == MediaCodec.BUFFER_FLAG_PARTIAL_FRAME) {
 //              }
                 if((bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
-//                  this.close();
+                    this.close();
                     break;
                 }
             } else {
+                // WARN
             }
         }
         synchronized (this) {
-            if (this.videoCodec != null) {
+            if (this.videoCodec != null && this.videoActive) {
                 Log.i(RecordClient.class.getSimpleName(), "结束录制视频");
                 this.videoCodec.stop();
                 this.videoCodec.release();
@@ -394,7 +397,7 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
             this.videoActive = false;
             if (this.mediaMuxer != null && !this.audioActive) {
                 Log.i(RecordClient.class.getSimpleName(), "结束录制文件：" + this.filename);
-                this.mediaMuxer.stop();
+//              this.mediaMuxer.stop();
                 this.mediaMuxer.release();
                 this.mediaMuxer = null;
             }
@@ -440,8 +443,12 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
             if (this.videoThread != null) {
                 this.videoThread.quitSafely();
             }
+            final File file = new File(this.filepath);
+            if(file.length() <= 0) {
+                Log.i(RecordClient.class.getSimpleName(), "删除没有录制数据文件：" + this.filepath);
+                file.delete();
+            }
             this.notifyAll();
-            this.mediaManager.closeClient();
         }
     }
 

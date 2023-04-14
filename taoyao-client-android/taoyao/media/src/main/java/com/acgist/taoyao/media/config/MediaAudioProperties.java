@@ -26,7 +26,11 @@ public class MediaAudioProperties {
 	 */
 	private Format format;
 	/**
-	 * 采样数：8|16|32
+	 * 比特率：96|128|256
+	 */
+	private Integer bitrate;
+	/**
+	 * 采样位数：8|16|32
 	 */
 	private Integer sampleSize;
 	/**
@@ -40,6 +44,14 @@ public class MediaAudioProperties {
 
 	public void setFormat(Format format) {
 		this.format = format;
+	}
+
+	public Integer getBitrate() {
+		return bitrate;
+	}
+
+	public void setBitrate(Integer bitrate) {
+		this.bitrate = bitrate;
 	}
 
 	public Integer getSampleSize() {

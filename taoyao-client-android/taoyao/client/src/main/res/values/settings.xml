@@ -34,5 +34,8 @@
     <!-- 媒体配置：是否生产视频 -->
     <bool name="videoProduce">true</bool>
     <integer name="imageQuantity">100</integer>
+    <string name="audioQuantity">fd-audio</string>
     <string name="videoQuantity">fd-video</string>
+    <integer name="channelCount">1</integer>
+    <integer name="iFrameInterval">1</integer>
 </resources>

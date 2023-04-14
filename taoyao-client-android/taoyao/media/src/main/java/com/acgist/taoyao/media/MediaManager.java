@@ -2,11 +2,8 @@ package com.acgist.taoyao.media;
 
 import android.content.Context;
 import android.content.Intent;
-import android.media.AudioAttributes;
-import android.media.ImageReader;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
-import android.media.MediaRecorder;
 import android.media.projection.MediaProjection;
 import android.os.Handler;
 import android.os.Message;
@@ -39,7 +36,6 @@ import org.webrtc.SurfaceViewRenderer;
 import org.webrtc.VideoCapturer;
 import org.webrtc.VideoDecoderFactory;
 import org.webrtc.VideoEncoderFactory;
-import org.webrtc.VideoFileRenderer;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 import org.webrtc.audio.JavaAudioDeviceModule;
@@ -72,30 +68,6 @@ public final class MediaManager {
      */
     private volatile int shareClientCount;
     /**
-     * 是否打开音频播放
-     */
-    private boolean playAudio;
-    /**
-     * 是否打开视频播放
-     */
-    private boolean playVideo;
-    /**
-     * 是否消费音频
-     */
-    private boolean audioConsume;
-    /**
-     * 是否消费视频
-     */
-    private boolean videoConsume;
-    /**
-     * 是否生产音频
-     */
-    private boolean audioProduce;
-    /**
-     * 是否生产视频
-     */
-    private boolean videoProduce;
-    /**
      * 视频路径
      */
     private String imagePath;
@@ -103,6 +75,20 @@ public final class MediaManager {
      * 图片路径
      */
     private String videoPath;
+    /**
+     * 图片质量
+     */
+    private int imageQuantity;
+    /**
+     * 音频质量
+     */
+    private String audioQuantity;
+    /**
+     * 视频质量
+     */
+    private String videoQuantity;
+    private int channelCount;
+    private int iFrameInterval;
     /**
      * 视频来源类型
      */
@@ -243,39 +229,24 @@ public final class MediaManager {
     /**
      * @param mainHandler   Handler
      * @param context      上下文
-     * @param playAudio    是否播放音频
-     * @param playVideo    是否播放视频
-     * @param audioConsume 是否消费音频
-     * @param videoConsume 是否消费视频
-     * @param audioProduce 是否生产音频
-     * @param videoProduce 是否生产视频
      */
     public void initContext(
         Handler mainHandler, Context context,
-        boolean playAudio, boolean playVideo,
-        boolean audioConsume, boolean videoConsume,
-        boolean audioProduce, boolean videoProduce,
+        int imageQuantity, String audioQuantity, String videoQuantity,
+        int channelCount, int iFrameInterval,
         String imagePath, String videoPath,
         TransportType transportType
     ) {
         this.mainHandler = mainHandler;
-        this.context = context;
-        this.playAudio = playAudio;
-        this.playVideo = playVideo;
-        this.audioConsume = audioConsume;
-        this.videoConsume = videoConsume;
-        this.audioProduce = audioProduce;
-        this.videoProduce = videoProduce;
+        this.context   = context;
+        this.imageQuantity = imageQuantity;
+        this.audioQuantity = audioQuantity;
+        this.videoQuantity = videoQuantity;
+        this.channelCount = channelCount;
+        this.iFrameInterval = iFrameInterval;
         this.imagePath = imagePath;
         this.videoPath = videoPath;
         this.transportType = transportType;
-        PeerConnectionFactory.initialize(
-            PeerConnectionFactory.InitializationOptions.builder(this.context)
-//              .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
-//              .setNativeLibraryName("jingle_peerconnection_so")
-//              .setEnableInternalTracer(true)
-                .createInitializationOptions()
-        );
     }
 
     /**
@@ -302,6 +273,7 @@ public final class MediaManager {
                 }
             }
             if (this.clientCount <= 0) {
+                this.initPeerConnectionFactory();
                 this.initMedia(videoSourceType);
                 this.nativeInit();
             }
@@ -323,6 +295,7 @@ public final class MediaManager {
             if (this.clientCount <= 0) {
                 this.close();
                 this.nativeStop();
+                this.stopPeerConnectionFactory();
             }
             return this.clientCount;
         }
@@ -330,6 +303,24 @@ public final class MediaManager {
 
     public boolean isRecording() {
         return this.recordClient != null;
+    }
+
+    public MediaProperties getMediaProperties() {
+        return this.mediaProperties;
+    }
+
+    private void initPeerConnectionFactory() {
+        PeerConnectionFactory.initialize(
+            PeerConnectionFactory.InitializationOptions.builder(this.context)
+//              .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
+//              .setNativeLibraryName("jingle_peerconnection_so")
+//              .setEnableInternalTracer(true)
+                .createInitializationOptions()
+        );
+    }
+
+    private void stopPeerConnectionFactory() {
+        PeerConnectionFactory.shutdownInternalTracer();
     }
 
     /**
@@ -635,16 +626,16 @@ public final class MediaManager {
 
     public String photograph() {
         synchronized (this) {
-            if(this.recordVideoCapturer == null) {
-                // 如果没有拉流不能拍照
-                return null;
-            }
             String filepath;
-            // TODO：质量读取
-            this.photographClient = new PhotographClient(100, this.imagePath);
+            if(this.clientCount <= 0) {
+                final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get(this.videoQuantity);
+                final PhotographClient photographClient = new PhotographClient(this.imageQuantity, this.imagePath);
+                filepath = photographClient.photograph(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), VideoSourceType.BACK, this.context);
+                return filepath;
+            }
+            this.photographClient = new PhotographClient(this.imageQuantity, this.imagePath);
             if(this.recordClient == null) {
-                // TODO：质量读取
-                final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get("fd-video");
+                final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get(this.videoQuantity);
                 this.recordVideoCapturer.startCapture(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate());
                 filepath = this.photographClient.waitForPhotograph();
                 try {
@@ -665,15 +656,16 @@ public final class MediaManager {
             if(this.recordClient != null) {
                 return this.recordClient;
             }
+            final MediaAudioProperties mediaAudioProperties = this.mediaProperties.getAudios().get(this.audioQuantity);
+            final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get(this.videoQuantity);
             this.recordClient = new RecordClient(
-                this.videoPath,
-                this.taoyao,
-                this.mainHandler
+                mediaAudioProperties.getBitrate(), mediaAudioProperties.getSampleRate(), this.channelCount,
+                mediaVideoProperties.getBitrate(), mediaVideoProperties.getFrameRate(), this.iFrameInterval, mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(),
+                this.videoPath, this.taoyao, this.mainHandler
             );
-            this.recordClient.start();
-            // TODO：质量读取
-            final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get("fd-video");
+            this.newClient(VideoSourceType.BACK);
             this.recordVideoCapturer.startCapture(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate());
+            this.recordClient.start();
             return this.recordClient;
         }
     }
@@ -683,27 +675,25 @@ public final class MediaManager {
             if(this.recordClient == null) {
                 return;
             } else {
+                this.recordClient.close();
+                this.recordClient = null;
                 try {
                     this.recordVideoCapturer.stopCapture();
                 } catch (InterruptedException e) {
                     Log.e(MediaManager.class.getSimpleName(), "关闭视频捕获（主码流）异常", e);
                 }
-                this.recordClient.close();
-                this.recordClient = null;
+                this.closeClient();
             }
         }
     }
 
     /**
-     * @param flag         Config.WHAT_*
-     * @param videoTrack   视频媒体流Track
+     * @param flag       Config.WHAT_*
+     * @param videoTrack 视频媒体流Track
      *
      * @return 播放控件
      */
-    public SurfaceViewRenderer buildSurfaceViewRenderer(
-        final int flag,
-        final VideoTrack videoTrack
-    ) {
+    public SurfaceViewRenderer buildSurfaceViewRenderer(final int flag, final VideoTrack videoTrack) {
         // 预览控件
         final SurfaceViewRenderer surfaceViewRenderer = new SurfaceViewRenderer(this.context);
         this.mainHandler.post(() -> {
@@ -729,44 +719,14 @@ public final class MediaManager {
         return surfaceViewRenderer;
     }
 
-    public void pauseAudio() {
-        synchronized (this.mediaStream.audioTracks) {
-            this.mediaStream.audioTracks.forEach(a -> a.setEnabled(false));
-        }
-    }
-
-    public void resumeAudio() {
-        synchronized (this.mediaStream.audioTracks) {
-            this.mediaStream.audioTracks.forEach(a -> a.setEnabled(true));
-        }
-    }
-
-    public void pauseVideo() {
-        synchronized (this.mediaStream.videoTracks) {
-            this.mediaStream.videoTracks.forEach(v -> v.setEnabled(false));
-        }
-        synchronized (this.mediaStream.preservedVideoTracks) {
-            this.mediaStream.preservedVideoTracks.forEach(v -> v.setEnabled(false));
-        }
-    }
-
-    public void resumeVideo() {
-        synchronized (this.mediaStream.videoTracks) {
-            this.mediaStream.videoTracks.forEach(v -> v.setEnabled(true));
-        }
-        synchronized (this.mediaStream.preservedVideoTracks) {
-            this.mediaStream.preservedVideoTracks.forEach(v -> v.setEnabled(true));
-        }
-    }
-
     /**
      * 关闭声音
      */
     private void closeAudio() {
-        if(this.audioTrack != null) {
-            this.audioTrack.dispose();
-            this.audioTrack = null;
-        }
+//      if(this.audioTrack != null) {
+//          this.audioTrack.dispose();
+//          this.audioTrack = null;
+//      }
         if(this.audioSource != null) {
             this.audioSource.dispose();
             this.audioSource = null;
@@ -777,10 +737,10 @@ public final class MediaManager {
      * 关闭视频
      */
     private void closeVideo() {
-        if(this.videoTrack != null) {
-            this.videoTrack.dispose();
-            this.videoTrack = null;
-        }
+//      if(this.videoTrack != null) {
+//          this.videoTrack.dispose();
+//          this.videoTrack = null;
+//      }
         if(this.videoSource != null) {
             this.videoSource.dispose();
             this.videoSource = null;
@@ -789,6 +749,9 @@ public final class MediaManager {
             this.videoCapturer.dispose();
             this.videoCapturer = null;
         }
+    }
+
+    private void closeRecord() {
         if(this.recordVideoTrack != null) {
             this.recordVideoTrack.dispose();
             this.recordVideoTrack = null;
@@ -801,10 +764,6 @@ public final class MediaManager {
             this.recordVideoCapturer.dispose();
             this.recordVideoCapturer = null;
         }
-        if(this.surfaceTextureHelper != null) {
-            this.surfaceTextureHelper.dispose();
-            this.surfaceTextureHelper = null;
-        }
     }
 
     private void closeMedia() {
@@ -813,10 +772,14 @@ public final class MediaManager {
             this.eglBase = null;
             this.shareEglContext = null;
         }
-//        if (this.mediaStream != null) {
-//            this.mediaStream.dispose();
-//            this.mediaStream = null;
-//        }
+        if (this.mediaStream != null) {
+            this.mediaStream.dispose();
+            this.mediaStream = null;
+        }
+        if(this.surfaceTextureHelper != null) {
+            this.surfaceTextureHelper.dispose();
+            this.surfaceTextureHelper = null;
+        }
         if (this.peerConnectionFactory != null) {
             this.peerConnectionFactory.dispose();
             this.peerConnectionFactory = null;
@@ -829,9 +792,8 @@ public final class MediaManager {
     private void close() {
         this.closeAudio();
         this.closeVideo();
+        this.closeRecord();
         this.closeMedia();
-//      PeerConnectionFactory.shutdownInternalTracer();
-//      PeerConnectionFactory.stopInternalTracingCapture();
     }
 
     /**

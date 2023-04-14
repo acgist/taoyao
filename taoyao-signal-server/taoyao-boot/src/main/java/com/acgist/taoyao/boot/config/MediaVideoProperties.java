@@ -6,6 +6,10 @@ import lombok.Setter;
 
 /**
  * 视频配置
+ * 原始数据 = 宽 * 高 * 3 / 2 * 8 * 帧率 / 1024 / 1024
+ * 视频编码 = 压缩
+ * 8     = 颜色位数  
+ * 3 / 2 = YUV | RGB
  * 
  * @author acgist
  */

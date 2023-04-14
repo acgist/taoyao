@@ -1,8 +1,7 @@
 package com.acgist.taoyao.client.signal;
 
-import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.location.Criteria;
 import android.location.Location;
@@ -15,8 +14,6 @@ import android.os.HandlerThread;
 import android.os.PowerManager;
 import android.os.Process;
 import android.util.Log;
-
-import androidx.core.app.ActivityCompat;
 
 import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
@@ -728,12 +725,15 @@ public final class Taoyao implements ITaoyao {
                 key, password,
                 this, this.mainHandler,
                 resources.getBoolean(R.bool.preview),
+                resources.getBoolean(R.bool.playAudio),
+                resources.getBoolean(R.bool.playVideo),
                 resources.getBoolean(R.bool.dataConsume),
                 resources.getBoolean(R.bool.audioConsume),
                 resources.getBoolean(R.bool.videoConsume),
                 resources.getBoolean(R.bool.audioProduce),
                 resources.getBoolean(R.bool.dataProduce),
-                resources.getBoolean(R.bool.videoProduce)
+                resources.getBoolean(R.bool.videoProduce),
+                this.mediaManager.getMediaProperties()
             )
         );
         final boolean success = room.enter();
@@ -783,7 +783,20 @@ public final class Taoyao implements ITaoyao {
         final String name      = MapUtils.get(body, "name");
         final String clientId  = MapUtils.get(body, "clientId");
         final String sessionId = MapUtils.get(body, "sessionId");
-        final SessionClient sessionClient = new SessionClient(sessionId, name, clientId, this, this.mainHandler);
+        final Resources resources = this.context.getResources();
+        final SessionClient sessionClient = new SessionClient(
+            sessionId, name, clientId, this, this.mainHandler,
+            resources.getBoolean(R.bool.preview),
+            resources.getBoolean(R.bool.playAudio),
+            resources.getBoolean(R.bool.playVideo),
+            resources.getBoolean(R.bool.dataConsume),
+            resources.getBoolean(R.bool.audioConsume),
+            resources.getBoolean(R.bool.videoConsume),
+            resources.getBoolean(R.bool.audioProduce),
+            resources.getBoolean(R.bool.dataProduce),
+            resources.getBoolean(R.bool.videoProduce),
+            this.mediaManager.getMediaProperties()
+        );
         this.sessionClients.put(sessionId, sessionClient);
         sessionClient.init();
         sessionClient.offer();
@@ -884,14 +897,9 @@ public final class Taoyao implements ITaoyao {
     /**
      * @return 位置
      */
+    @SuppressLint("MissingPermission")
     private Location location() {
         if (this.locationManager == null) {
-            return null;
-        }
-        if (
-            ActivityCompat.checkSelfPermission(this.context, Manifest.permission.ACCESS_FINE_LOCATION)   != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(this.context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-        ) {
             return null;
         }
         final Criteria criteria = new Criteria();

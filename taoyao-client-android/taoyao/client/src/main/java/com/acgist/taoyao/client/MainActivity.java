@@ -121,12 +121,11 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         final Resources resources = this.getResources();
         MediaManager.getInstance().initContext(
             this.mainHandler, this.getApplicationContext(),
-            resources.getBoolean(R.bool.playAudio),
-            resources.getBoolean(R.bool.playVideo),
-            resources.getBoolean(R.bool.audioConsume),
-            resources.getBoolean(R.bool.videoConsume),
-            resources.getBoolean(R.bool.audioProduce),
-            resources.getBoolean(R.bool.videoProduce),
+            resources.getInteger(R.integer.imageQuantity),
+            resources.getString(R.string.audioQuantity),
+            resources.getString(R.string.videoQuantity),
+            resources.getInteger(R.integer.channelCount),
+            resources.getInteger(R.integer.iFrameInterval),
             resources.getString(R.string.storagePathImage),
             resources.getString(R.string.storagePathVideo),
             TransportType.valueOf(resources.getString(R.string.transportType))

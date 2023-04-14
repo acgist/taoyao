@@ -27,22 +27,26 @@ public class MediaProperties {
     private Integer minHeight;
     @Schema(title = "最大视频高度", description = "最大视频高度")
     private Integer maxHeight;
-    @Schema(title = "最小视频码率", description = "最小视频码率")
-    private Integer minBitrate;
-    @Schema(title = "最大视频码率", description = "最大视频码率")
-    private Integer maxBitrate;
     @Schema(title = "最小视频帧率", description = "最小视频帧率")
     private Integer minFrameRate;
     @Schema(title = "最大视频帧率", description = "最大视频帧率")
     private Integer maxFrameRate;
-    @Schema(title = "最小音频采样数", description = "最小音频采样数")
+    @Schema(title = "最小视频码率", description = "最小视频码率")
+    private Integer minVideoBitrate;
+    @Schema(title = "最大视频码率", description = "最大视频码率")
+    private Integer maxVideoBitrate;
+    @Schema(title = "最小音频采样位数", description = "最小音频采样位数")
     private Integer minSampleSize;
-    @Schema(title = "最大音频采样数", description = "最大音频采样数")
+    @Schema(title = "最大音频采样位数", description = "最大音频采样位数")
     private Integer maxSampleSize;
     @Schema(title = "最小音频采样率", description = "最小音频采样率")
     private Integer minSampleRate;
     @Schema(title = "最大音频采样率", description = "最大音频采样率")
     private Integer maxSampleRate;
+    @Schema(title = "最小音频码率", description = "最小音频码率")
+    private Integer minAudioBitrate;
+    @Schema(title = "最大音频码率", description = "最大音频码率")
+    private Integer maxAudioBitrate;
 	@Schema(title = "音频默认配置", description = "音频默认配置")
 	private MediaAudioProperties audio;
 	@Schema(title = "视频默认配置", description = "视频默认配置")

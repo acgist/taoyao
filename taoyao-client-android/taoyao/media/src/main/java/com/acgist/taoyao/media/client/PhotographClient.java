@@ -1,24 +1,42 @@
 package com.acgist.taoyao.media.client;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
+import android.hardware.camera2.CameraAccessException;
+import android.hardware.camera2.CameraCaptureSession;
+import android.hardware.camera2.CameraCharacteristics;
+import android.hardware.camera2.CameraDevice;
+import android.hardware.camera2.CameraManager;
+import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.TotalCaptureResult;
+import android.hardware.camera2.params.OutputConfiguration;
+import android.hardware.camera2.params.SessionConfiguration;
+import android.media.Image;
+import android.media.ImageReader;
 import android.os.Environment;
 import android.util.Log;
+import android.view.Surface;
 
 import com.acgist.taoyao.boot.utils.DateUtils;
+import com.acgist.taoyao.media.VideoSourceType;
 
 import org.webrtc.VideoFrame;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 拍照终端
@@ -30,19 +48,35 @@ public class PhotographClient {
     private final int quantity;
     private final String filename;
     private final String filepath;
+    private volatile boolean wait;
+    private volatile boolean finish;
+    private Surface surface;
+    private ImageReader imageReader;
+    private CameraDevice cameraDevice;
+    private CameraManager cameraManager;
+    private CameraCaptureSession cameraCaptureSession;
 
     public PhotographClient(int quantity, String path) {
         this.quantity = quantity;
         this.filename = DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".jpg";
         this.filepath = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, this.filename).toString();
+        this.wait     = true;
+        this.finish   = false;
         Log.i(RecordClient.class.getSimpleName(), "拍摄照片文件：" + this.filepath);
     }
 
+    // ================ 拉流拍照 ================ //
+
     public String photograph(VideoFrame videoFrame) {
-        final Thread thread = new Thread(() -> this.photographBackground(videoFrame));
-        thread.setName("PhotographThread");
-        thread.setDaemon(true);
-        thread.start();
+        if(this.wait) {
+            this.wait = false;
+            final Thread thread = new Thread(() -> this.photographBackground(videoFrame));
+            thread.setName("PhotographThread");
+            thread.setDaemon(true);
+            thread.start();
+        } else {
+            videoFrame.release();
+        }
         return this.filepath;
     }
 
@@ -59,7 +93,8 @@ public class PhotographClient {
             final YuvImage image = this.i420ToYuvImage(i420, width, height);
             i420.release();
             videoFrame.release();
-            image.compressToJpeg(new Rect(0, 0, width, height), this.quantity, byteArray);
+            final Rect rect = new Rect(0, 0, width, height);
+            image.compressToJpeg(rect, this.quantity, byteArray);
             final byte[] array = byteArray.toByteArray();
             final Bitmap bitmap = BitmapFactory.decodeByteArray(array, 0, array.length);
 //          final Matrix matrix = new Matrix();
@@ -69,13 +104,21 @@ public class PhotographClient {
         } catch (Exception e) {
             Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
         }
+        this.notifyWait();
+    }
+
+    private void notifyWait() {
         synchronized (this) {
+            this.finish = true;
             this.notifyAll();
         }
     }
 
     public String waitForPhotograph() {
         synchronized (this) {
+            if(this.finish) {
+                return this.filepath;
+            }
             try {
                 this.wait(5000);
             } catch (InterruptedException e) {
@@ -86,60 +129,133 @@ public class PhotographClient {
     }
 
     private YuvImage i420ToYuvImage(VideoFrame.I420Buffer i420, int width, int height) {
-        final ByteBuffer[] yuvPlanes = new ByteBuffer[] {
-            i420.getDataY(), i420.getDataU(), i420.getDataV()
-        };
-        final int[] yuvStrides = new int[] {
-            i420.getStrideY(), i420.getStrideU(), i420.getStrideV()
-        };
-        if (
-            yuvStrides[0] != width     ||
-            yuvStrides[1] != width / 2 ||
-            yuvStrides[2] != width / 2
-        ) {
-            return i420ToYuvImage(yuvPlanes, yuvStrides, width, height);
-        }
-        final byte[] bytes = new byte[yuvStrides[0] * height + yuvStrides[1] * height / 2 + yuvStrides[2] * height / 2];
-        final ByteBuffer yBuffer = ByteBuffer.wrap(bytes, 0, width * height);
-        this.copyPlane(yuvPlanes[0], yBuffer);
-        final byte[] uvBytes = new byte[width / 2 * height / 2];
-        final ByteBuffer uvBuffer = ByteBuffer.wrap(uvBytes, 0, uvBytes.length);
-        this.copyPlane(yuvPlanes[2], uvBuffer);
-        for (int row = 0; row < height / 2; row++) {
-            for (int col = 0; col < width / 2; col++) {
-                bytes[width * height + row * width + col * 2] = uvBytes[row * width / 2 + col];
-            }
-        }
-        this.copyPlane(yuvPlanes[1], uvBuffer);
-        for (int row = 0; row < height / 2; row++) {
-            for (int col = 0; col < width / 2; col++) {
-                bytes[width * height + row * width + col * 2 + 1] = uvBytes[row * width / 2 + col];
-            }
-        }
-        return new YuvImage(bytes, ImageFormat.NV21, width, height, null);
-    }
-
-    private YuvImage i420ToYuvImage(ByteBuffer[] yuvPlanes, int[] yuvStrides, int width, int height) {
-        int i = 0;
-        final byte[] bytes = new byte[width * height * 3 / 2];
+        int index = 0;
+        final int yy = i420.getStrideY();
+        final int uu = i420.getStrideU();
+        final int vv = i420.getStrideV();
+        final ByteBuffer y = i420.getDataY();
+        final ByteBuffer u = i420.getDataU();
+        final ByteBuffer v = i420.getDataV();
+        final byte[] nv21 = new byte[width * height * 3 / 2];
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
-                bytes[i++] = yuvPlanes[0].get(col + row * yuvStrides[0]);
+                nv21[index++] = y.get(col + row * yy);
             }
         }
-        for (int row = 0; row < height / 2; row++) {
-            for (int col = 0; col < width / 2; col++) {
-                bytes[i++] = yuvPlanes[2].get(col + row * yuvStrides[2]);
-                bytes[i++] = yuvPlanes[1].get(col + row * yuvStrides[1]);
+        final int halfWidth = width / 2;
+        final int halfHeight = height / 2;
+        for (int row = 0; row < halfHeight; row++) {
+            for (int col = 0; col < halfWidth; col++) {
+                nv21[index++] = v.get(col + row * vv);
+                nv21[index++] = u.get(col + row * uu);
             }
         }
-        return new YuvImage(bytes, ImageFormat.NV21, width, height, null);
+        return new YuvImage(nv21, ImageFormat.NV21, width, height, null);
     }
 
-    private void copyPlane(ByteBuffer src, ByteBuffer dst) {
-        src.position(0).limit(src.capacity());
-        dst.put(src);
-        dst.position(0).limit(dst.capacity());
+    // ================ Camera2拍照 ================ //
+
+    @SuppressLint("MissingPermission")
+    public String photograph(int width, int height, VideoSourceType type, Context context) {
+        this.cameraManager = context.getSystemService(CameraManager.class);
+        this.imageReader   = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+        this.surface       = this.imageReader.getSurface();
+        this.imageReader.setOnImageAvailableListener(this.imageAvailableListener, null);
+        try {
+            final String cameraId = String.valueOf(type == VideoSourceType.BACK ? CameraCharacteristics.LENS_FACING_BACK : CameraCharacteristics.LENS_FACING_FRONT);
+            this.cameraManager.openCamera(cameraId, this.cameraDeviceStateCallback, null);
+        } catch (CameraAccessException e) {
+            Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
+            PhotographClient.this.closeCamera();
+        }
+        return this.filepath;
+    }
+
+    private ImageReader.OnImageAvailableListener imageAvailableListener = new ImageReader.OnImageAvailableListener() {
+        @Override
+        public void onImageAvailable(ImageReader imageReader) {
+            final Image image = imageReader.acquireLatestImage();
+            final ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
+            final byte[] bytes = new byte[byteBuffer.remaining()];
+            byteBuffer.get(bytes);
+            final File file = new File(PhotographClient.this.filepath);
+            try (
+                final OutputStream output = new FileOutputStream(file);
+            ) {
+                output.write(bytes,0,bytes.length);
+            } catch (IOException e) {
+                Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
+                PhotographClient.this.closeCamera();
+            } finally {
+                image.close();
+                PhotographClient.this.closeCamera();
+            }
+        }
+    };
+
+    private CameraDevice.StateCallback cameraDeviceStateCallback = new CameraDevice.StateCallback() {
+        @Override
+        public void onOpened(CameraDevice cameraDevice) {
+            PhotographClient.this.cameraDevice = cameraDevice;
+            try {
+                PhotographClient.this.cameraDevice.createCaptureSession(new SessionConfiguration(
+                    SessionConfiguration.SESSION_REGULAR,
+                    List.of(new OutputConfiguration(PhotographClient.this.surface)),
+                    Runnable::run,
+                    PhotographClient.this.cameraCaptureSessionStateCallback
+                ));
+            } catch (CameraAccessException e) {
+                Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
+                PhotographClient.this.closeCamera();
+            }
+        }
+        @Override
+        public void onDisconnected(CameraDevice cameraDevice) {
+            PhotographClient.this.closeCamera();
+        }
+        @Override
+        public void onError(CameraDevice cameraDevice, int error) {
+            PhotographClient.this.closeCamera();
+        }
+    };
+
+    private CameraCaptureSession.StateCallback cameraCaptureSessionStateCallback = new CameraCaptureSession.StateCallback() {
+        @Override
+        public void onConfigured(CameraCaptureSession cameraCaptureSession) {
+            try {
+                PhotographClient.this.cameraCaptureSession = cameraCaptureSession;
+                final CaptureRequest.Builder builder = PhotographClient.this.cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                builder.addTarget(PhotographClient.this.surface);
+                cameraCaptureSession.setRepeatingRequest(builder.build(), null, null);
+            } catch (CameraAccessException e) {
+                Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
+                PhotographClient.this.closeCamera();
+            }
+        }
+        @Override
+        public void onConfigureFailed(CameraCaptureSession session) {
+            PhotographClient.this.closeCamera();
+        }
+    };
+
+    private void closeCamera() {
+        if(this.cameraCaptureSession != null) {
+            this.cameraCaptureSession.close();
+            this.cameraCaptureSession = null;
+        }
+        if(this.cameraDevice != null) {
+            this.cameraDevice.close();
+            this.cameraDevice = null;
+        }
+        // 最后释放ImageReader
+        if(this.surface != null) {
+            this.surface.release();
+            this.surface = null;
+        }
+        if(this.imageReader != null) {
+            this.imageReader.close();
+            this.imageReader = null;
+        }
     }
 
 }

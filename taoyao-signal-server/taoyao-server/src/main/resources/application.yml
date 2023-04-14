@@ -67,28 +67,34 @@ taoyao:
     max-client-index: 99999
   # 媒体配置
   media:
+    # =============== 视频配置 ===============
     # 宽度
     min-width: 720
     max-width: 4096
     # 高度
     min-height: 480
     max-height: 2160
-    # 码率
-    min-bitrate: 800
-    max-bitrate: 1600
     # 帧率
     min-frame-rate: 15
     max-frame-rate: 45
-    # 采样数
+    # 视频码率
+    min-video-bitrate: 800
+    max-video-bitrate: 1600
+    # =============== 音频配置 ===============
+    # 采样位数
     min-sample-size: 8
     max-sample-size: 32
     # 采样率
     min-sample-rate: 8000
     max-sample-rate: 48000
+    # 音频码率
+    min-audio-bitrate: 96
+    max-audio-bitrate: 256
     # ABR CBR VBR
     # 默认音频
     audio:
       format: OPUS
+      bitrate: 96
       sample-size: 32
       sample-rate: 44100
     # 默认视频
@@ -101,16 +107,19 @@ taoyao:
       # 超清
       fd-audio:
         format: OPUS
+        bitrate: 256
         sample-size: 32
         sample-rate: 48000
       # 高清
       hd-audio:
         format: OPUS
+        bitrate: 128
         sample-size: 24
         sample-rate: 44100
       # 标清
       sd-audio:
         format: OPUS
+        bitrate: 96
         sample-size: 24
         sample-rate: 32000
     videos:
