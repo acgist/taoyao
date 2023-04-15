@@ -78,7 +78,11 @@ jobs:
         uses: android-actions/setup-android@v2
       - name: Build with Gradle
         if: runner.os != 'windows'
-        run: sh ./taoyao-client-android/taoyao/gradlew   --no-daemon assembleRelease
+        run: |
+          cd ./taoyao-client-android/taoyao
+          sh ./gradlew  --no-daemon assembleRelease
       - name: Build with Gradle
         if: runner.os == 'windows'
-        run: ./taoyao-client-android/taoyao/gradlew.bat --no-daemon assembleRelease
+        run: |
+          cd ./taoyao-client-android/taoyao
+          ./gradlew.bat --no-daemon assembleRelease
