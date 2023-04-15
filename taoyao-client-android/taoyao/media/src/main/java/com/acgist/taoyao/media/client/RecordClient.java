@@ -1,5 +1,6 @@
 package com.acgist.taoyao.media.client;
 
+import android.media.AudioFormat;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
@@ -152,6 +153,7 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
             }
             Log.i(RecordClient.class.getSimpleName(), "录制视频文件：" + this.filepath);
             super.init();
+            this.mediaManager.newClient(VideoSourceType.BACK);
             if (
                 this.audioThread == null || !this.audioThread.isAlive() ||
                 this.videoThread == null || !this.videoThread.isAlive()
@@ -173,8 +175,10 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
 //          audioFormat.setInteger(MediaFormat.KEY_SAMPLE_RATE, this.sampleRate);
 //          audioFormat.setInteger(MediaFormat.KEY_CHANNEL_COUNT, this.channelCount);
             audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, this.audioBitRate);
+//          audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, AudioFormat.ENCODING_PCM_16BIT);
             audioFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
 //          audioFormat.setInteger(MediaFormat.KEY_BITRATE_MODE, MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR);
+//          audioFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 1024 * 8 * 8); // 设置缓冲大小
             this.audioCodec = MediaCodec.createEncoderByType(audioType);
             this.audioCodec.configure(audioFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         } catch (Exception e) {
@@ -449,6 +453,7 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
                 file.delete();
             }
             this.notifyAll();
+            this.mediaManager.closeClient();
         }
     }
 

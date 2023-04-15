@@ -8,6 +8,7 @@ import android.media.projection.MediaProjection;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.acgist.taoyao.media.client.PhotographClient;
 import com.acgist.taoyao.media.client.RecordClient;
@@ -87,7 +88,13 @@ public final class MediaManager {
      * 视频质量
      */
     private String videoQuantity;
+    /**
+     * 通道数量
+     */
     private int channelCount;
+    /**
+     * 关键帧频率
+     */
     private int iFrameInterval;
     /**
      * 视频来源类型
@@ -220,10 +227,13 @@ public final class MediaManager {
     }
 
     /**
-     * @return 是否可用
+     * @return 是否可用：所有配置加载完成
      */
     public boolean available() {
-        return this.mainHandler != null && this.context != null && this.taoyao != null;
+        return
+            this.taoyao          != null &&
+            this.context         != null &&
+            this.mediaProperties != null;
     }
 
     /**
@@ -265,7 +275,8 @@ public final class MediaManager {
      */
     public PeerConnectionFactory newClient(VideoSourceType videoSourceType) {
         synchronized (this) {
-            while(this.mediaProperties == null) {
+            while(!this.available()) {
+                Log.i(MediaManager.class.getSimpleName(), "等待配置");
                 try {
                     this.wait(1000);
                 } catch (InterruptedException e) {
@@ -409,14 +420,14 @@ public final class MediaManager {
         // 高音过滤
         mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googHighpassFilter", "true"));
 //      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googAudioMirroring", "false"));
-        // 自动增益
+        // 自动增益：AGC
         mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googAutoGainControl", "true"));
 //      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googAutoGainControl2", "true"));
-        // 回声消除
+        // 回声消除：AEC
         mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googEchoCancellation", "true"));
 //      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googEchoCancellation2", "true"));
 //      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googDAEchoCancellation", "true"));
-        // 噪音处理
+        // 噪音处理：NS
         mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googNoiseSuppression", "true"));
 //      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googNoiseSuppression2", "true"));
 //      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("googTypingNoiseDetection", "true"));
@@ -545,11 +556,7 @@ public final class MediaManager {
     public void updateVideoConfig(MediaVideoProperties mediaVideoProperties) {
         this.mediaVideoProperties = mediaVideoProperties;
         if(this.videoCapturer != null) {
-            try {
-                this.videoCapturer.stopCapture();
-            } catch (InterruptedException e) {
-                Log.e(MediaManager.class.getSimpleName(), "暂停视频捕获异常", e);
-            }
+            this.stopCapture("次码流", this.videoCapturer);
             this.videoCapturer.startCapture(this.mediaVideoProperties.getWidth(), this.mediaVideoProperties.getHeight(), this.mediaVideoProperties.getFrameRate());
         }
     }
@@ -615,11 +622,7 @@ public final class MediaManager {
             }
             this.shareClientCount--;
             if(this.shareClientCount <= 0) {
-                try {
-                    this.videoCapturer.stopCapture();
-                } catch (InterruptedException e) {
-                    Log.e(MediaManager.class.getSimpleName(), "关闭视频捕获（次码流）异常", e);
-                }
+                this.stopCapture("次码流", this.videoCapturer);
             }
         }
     }
@@ -627,24 +630,18 @@ public final class MediaManager {
     public String photograph() {
         synchronized (this) {
             String filepath;
+            final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get(this.videoQuantity);
+            final PhotographClient photographClient = new PhotographClient(this.imageQuantity, this.imagePath);
             if(this.clientCount <= 0) {
-                final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get(this.videoQuantity);
-                final PhotographClient photographClient = new PhotographClient(this.imageQuantity, this.imagePath);
                 filepath = photographClient.photograph(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), VideoSourceType.BACK, this.context);
-                return filepath;
-            }
-            this.photographClient = new PhotographClient(this.imageQuantity, this.imagePath);
-            if(this.recordClient == null) {
-                final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get(this.videoQuantity);
-                this.recordVideoCapturer.startCapture(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate());
+            } else if(this.recordClient != null) {
+                this.photographClient = photographClient;
                 filepath = this.photographClient.waitForPhotograph();
-                try {
-                    this.recordVideoCapturer.stopCapture();
-                } catch (InterruptedException e) {
-                    Log.e(MediaManager.class.getSimpleName(), "关闭视频捕获（主码流）异常", e);
-                }
             } else {
+                this.photographClient = photographClient;
+                this.recordVideoCapturer.startCapture(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), PhotographClient.CAPTURER_SIZE);
                 filepath = this.photographClient.waitForPhotograph();
+                this.stopCapture("主码流", this.recordVideoCapturer);
             }
             this.photographClient = null;
             return filepath;
@@ -663,9 +660,8 @@ public final class MediaManager {
                 mediaVideoProperties.getBitrate(), mediaVideoProperties.getFrameRate(), this.iFrameInterval, mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(),
                 this.videoPath, this.taoyao, this.mainHandler
             );
-            this.newClient(VideoSourceType.BACK);
-            this.recordVideoCapturer.startCapture(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate());
             this.recordClient.start();
+            this.recordVideoCapturer.startCapture(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate());
             return this.recordClient;
         }
     }
@@ -677,13 +673,19 @@ public final class MediaManager {
             } else {
                 this.recordClient.close();
                 this.recordClient = null;
-                try {
-                    this.recordVideoCapturer.stopCapture();
-                } catch (InterruptedException e) {
-                    Log.e(MediaManager.class.getSimpleName(), "关闭视频捕获（主码流）异常", e);
-                }
-                this.closeClient();
+                this.stopCapture("主码流", this.recordVideoCapturer);
             }
+        }
+    }
+
+    private void stopCapture(String name, VideoCapturer videoCapturer) {
+        if(this.videoCapturer == null) {
+            return;
+        }
+        try {
+            videoCapturer.stopCapture();
+        } catch (InterruptedException e) {
+            Log.e(MediaManager.class.getSimpleName(), "关闭视频捕获异常：" + name, e);
         }
     }
 
@@ -703,12 +705,10 @@ public final class MediaManager {
             surfaceViewRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
             // 硬件拉伸
             surfaceViewRenderer.setEnableHardwareScaler(true);
+//          surfaceViewRenderer.setFpsReduction();
             // 加载OpenSL ES
             surfaceViewRenderer.init(this.shareEglContext, null);
-            // 强制播放
-            if(!videoTrack.enabled()) {
-                videoTrack.setEnabled(true);
-            }
+            // 添加播放
             videoTrack.addSink(surfaceViewRenderer);
         });
         // 页面加载

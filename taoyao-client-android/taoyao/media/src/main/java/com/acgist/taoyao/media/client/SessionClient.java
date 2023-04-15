@@ -233,10 +233,9 @@ public class SessionClient extends Client {
             return;
         }
         ListUtils.getOnlyOne(this.remoteMediaStream.videoTracks, videoTrack -> {
+            videoTrack.setEnabled(true);
             if(this.surfaceViewRenderer == null) {
                 this.surfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(Config.WHAT_NEW_REMOTE_VIDEO, videoTrack);
-            } else {
-                videoTrack.setEnabled(true);
             }
             return videoTrack;
         });

@@ -156,21 +156,21 @@ public final class Taoyao implements ITaoyao {
      */
     private final Map<Long, Message> requestMessage;
     /**
-     * 循环消息Handler
+     * 消息Handler
      */
-    private final Handler loopMessageHandler;
+    private final Handler messageHandler;
     /**
-     * 循环消息线程
+     * 消息线程
      */
-    private final HandlerThread loopMessageThread;
+    private final HandlerThread messageThread;
     /**
-     * 消息处理Handler
+     * 执行Handler
      */
-    private final Handler executeMessageHandler;
+    private final Handler executeHandler;
     /**
-     * 消息处理线程
+     * 执行线程
      */
-    private final HandlerThread executeMessageThread;
+    private final HandlerThread executeThread;
     /**
      * 心跳Handler
      */
@@ -224,15 +224,15 @@ public final class Taoyao implements ITaoyao {
         this.batteryManager = context.getSystemService(BatteryManager.class);
         this.locationManager = context.getSystemService(LocationManager.class);
         this.requestMessage = new ConcurrentHashMap<>();
-        this.loopMessageThread = new HandlerThread("LoopMessageThread");
-        this.loopMessageThread.setDaemon(true);
-        this.loopMessageThread.start();
-        this.loopMessageHandler = new Handler(this.loopMessageThread.getLooper());
-        this.loopMessageHandler.post(this::loopMessage);
-        this.executeMessageThread = new HandlerThread("ExecuteMessageThread");
-        this.executeMessageThread.setDaemon(true);
-        this.executeMessageThread.start();
-        this.executeMessageHandler = new Handler(this.executeMessageThread.getLooper());
+        this.messageThread = new HandlerThread("MessageThread");
+        this.messageThread.setDaemon(true);
+        this.messageThread.start();
+        this.messageHandler = new Handler(this.messageThread.getLooper());
+        this.messageHandler.post(this::connect);
+        this.executeThread = new HandlerThread("ExecuteThread");
+        this.executeThread.setDaemon(true);
+        this.executeThread.start();
+        this.executeHandler = new Handler(this.executeThread.getLooper());
         this.heartbeatThread = new HandlerThread("HeartbeatThread");
         this.heartbeatThread.setDaemon(true);
         this.heartbeatThread.start();
@@ -281,26 +281,20 @@ public final class Taoyao implements ITaoyao {
 //          socket.setSoTimeout(this.timeout);
             this.socket.connect(new InetSocketAddress(this.host, this.port), this.timeout);
             if (this.socket.isConnected()) {
+                this.connect = true;
                 this.input = this.socket.getInputStream();
                 this.output = this.socket.getOutputStream();
                 this.clientRegister();
-                this.connect = true;
                 this.taoyaoListener.onConnected();
-                synchronized (this) {
-                    this.notifyAll();
-                }
+                this.messageHandler.post(this::pull);
             } else {
                 this.connect = false;
-                synchronized (this) {
-                    try {
-                        this.wait(this.timeout);
-                    } catch (InterruptedException e) {
-                        Log.d(Taoyao.class.getSimpleName(), "信令等待异常", e);
-                    }
-                }
+                this.messageHandler.postDelayed(this::connect, this.timeout);
             }
         } catch (Exception e) {
             Log.e(Taoyao.class.getSimpleName(), "连接信令异常：" + this.host + ":" + this.port, e);
+            this.connect = false;
+            this.messageHandler.postDelayed(this::connect, this.timeout);
         }
         return this.connect;
     }
@@ -308,17 +302,13 @@ public final class Taoyao implements ITaoyao {
     /**
      * 循环读取信令消息
      */
-    private void loopMessage() {
+    private void pull() {
         int length = 0;
         short messageLength = 0;
         final byte[] bytes = new byte[1024];
         final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
-        while (!this.close) {
+        while (!this.close && this.connect) {
             try {
-                // 重连
-                while (!this.close && !this.connect) {
-                    this.connect();
-                }
                 // 读取
                 while (!this.close && (length = this.input.read(bytes)) >= 0) {
                     buffer.put(bytes, 0, length);
@@ -361,6 +351,9 @@ public final class Taoyao implements ITaoyao {
                 Log.e(Taoyao.class.getSimpleName(), "接收信令异常", e);
                 this.disconnect();
             }
+        }
+        if (!this.close && !this.connect) {
+            this.messageHandler.post(this::connect);
         }
     }
 
@@ -461,8 +454,8 @@ public final class Taoyao implements ITaoyao {
         this.close = true;
         this.disconnect();
         this.heartbeatThread.quitSafely();
-        this.loopMessageThread.quitSafely();
-        this.executeMessageThread.quitSafely();
+        this.messageThread.quitSafely();
+        this.executeThread.quitSafely();
         this.rooms.values().forEach(Room::close);
         this.sessionClients.values().forEach(SessionClient::close);
     }
@@ -525,7 +518,7 @@ public final class Taoyao implements ITaoyao {
                 request.notifyAll();
             }
         } else {
-            this.executeMessageHandler.post(() -> this.dispatch(content, header, message));
+            this.executeHandler.post(() -> this.dispatch(content, header, message));
         }
     }
 

@@ -2,6 +2,7 @@ package com.acgist.taoyao.media.client;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
@@ -13,7 +14,6 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
-import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.OutputConfiguration;
 import android.hardware.camera2.params.SessionConfiguration;
 import android.media.Image;
@@ -36,7 +36,6 @@ import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 拍照终端
@@ -44,6 +43,8 @@ import java.util.concurrent.TimeUnit;
  * @author acgist
  */
 public class PhotographClient {
+
+    public static final int CAPTURER_SIZE = 1;
 
     private final int quantity;
     private final String filename;
@@ -53,7 +54,6 @@ public class PhotographClient {
     private Surface surface;
     private ImageReader imageReader;
     private CameraDevice cameraDevice;
-    private CameraManager cameraManager;
     private CameraCaptureSession cameraCaptureSession;
 
     public PhotographClient(int quantity, String path) {
@@ -64,8 +64,6 @@ public class PhotographClient {
         this.finish   = false;
         Log.i(RecordClient.class.getSimpleName(), "拍摄照片文件：" + this.filepath);
     }
-
-    // ================ 拉流拍照 ================ //
 
     public String photograph(VideoFrame videoFrame) {
         if(this.wait) {
@@ -153,17 +151,31 @@ public class PhotographClient {
         return new YuvImage(nv21, ImageFormat.NV21, width, height, null);
     }
 
-    // ================ Camera2拍照 ================ //
-
     @SuppressLint("MissingPermission")
     public String photograph(int width, int height, VideoSourceType type, Context context) {
-        this.cameraManager = context.getSystemService(CameraManager.class);
-        this.imageReader   = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+        final CameraManager cameraManager = context.getSystemService(CameraManager.class);
+        this.imageReader   = ImageReader.newInstance(width, height, ImageFormat.JPEG, PhotographClient.CAPTURER_SIZE);
         this.surface       = this.imageReader.getSurface();
         this.imageReader.setOnImageAvailableListener(this.imageAvailableListener, null);
         try {
-            final String cameraId = String.valueOf(type == VideoSourceType.BACK ? CameraCharacteristics.LENS_FACING_BACK : CameraCharacteristics.LENS_FACING_FRONT);
-            this.cameraManager.openCamera(cameraId, this.cameraDeviceStateCallback, null);
+            String cameraId = null;
+            final String[] cameraIdList = cameraManager.getCameraIdList();
+            for (String id : cameraIdList) {
+                final CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(id);
+                if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK && type == VideoSourceType.BACK) {
+                    cameraId = id;
+                    break;
+                } else if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT && type == VideoSourceType.FRONT) {
+                    cameraId = id;
+                    break;
+                } else {
+                }
+            }
+            if(cameraId == null) {
+                PhotographClient.this.closeCamera();
+                return null;
+            }
+            cameraManager.openCamera(cameraId, this.cameraDeviceStateCallback, null);
         } catch (CameraAccessException e) {
             Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
             PhotographClient.this.closeCamera();
@@ -171,25 +183,22 @@ public class PhotographClient {
         return this.filepath;
     }
 
-    private ImageReader.OnImageAvailableListener imageAvailableListener = new ImageReader.OnImageAvailableListener() {
-        @Override
-        public void onImageAvailable(ImageReader imageReader) {
-            final Image image = imageReader.acquireLatestImage();
-            final ByteBuffer byteBuffer = image.getPlanes()[0].getBuffer();
-            final byte[] bytes = new byte[byteBuffer.remaining()];
-            byteBuffer.get(bytes);
-            final File file = new File(PhotographClient.this.filepath);
-            try (
-                final OutputStream output = new FileOutputStream(file);
-            ) {
-                output.write(bytes,0,bytes.length);
-            } catch (IOException e) {
-                Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
-                PhotographClient.this.closeCamera();
-            } finally {
-                image.close();
-                PhotographClient.this.closeCamera();
-            }
+    private ImageReader.OnImageAvailableListener imageAvailableListener = (ImageReader imageReader) -> {
+        final Image image = imageReader.acquireLatestImage();
+        final Image.Plane[] planes = image.getPlanes();
+        final ByteBuffer byteBuffer = planes[0].getBuffer();
+        final byte[] bytes = new byte[byteBuffer.remaining()];
+        byteBuffer.get(bytes);
+        final File file = new File(PhotographClient.this.filepath);
+        try (
+            final OutputStream output = new FileOutputStream(file);
+        ) {
+            output.write(bytes,0,bytes.length);
+        } catch (IOException e) {
+            Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
+        } finally {
+            image.close();
+            PhotographClient.this.closeCamera();
         }
     };
 

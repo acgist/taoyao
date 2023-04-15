@@ -54,10 +54,9 @@ public class RemoteClient extends RoomClient {
                 .map(v -> (VideoTrack) v)
                 .collect(Collectors.toList()),
             videoTrack -> {
+                videoTrack.setEnabled(true);
                 if(this.surfaceViewRenderer == null) {
                     this.surfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(Config.WHAT_NEW_REMOTE_VIDEO, videoTrack);
-                } else {
-                    videoTrack.setEnabled(true);
                 }
                 return videoTrack;
             }
