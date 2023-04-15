@@ -64,10 +64,10 @@ jobs:
     strategy:
       matrix:
         runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
-    runs-on: ${{ matrix.runs-on }}
+    runs-on: ubuntu-latest
     steps:
-      - name: Git config longpaths
-        run: sudo git config --system core.longpaths true
+#      - name: Git config longpaths
+#        run: sudo git config --system core.longpaths true
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Checkout WebRTC
@@ -75,6 +75,7 @@ jobs:
         with:
           repository: acgist/webrtc
           path: ./taoyao-client-android/taoyao/media/deps/webrtc
+          lfs: true
       - name: Checkout libmediasoupclient
         uses: actions/checkout@v3
         with:
@@ -87,7 +88,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
       - name: Build with Gradle
-        if: runner.os != 'windows'
+#        if: runner.os != 'windows'
         run: |
           echo "======"
           ls ./taoyao-client-android/taoyao/media/deps/webrtc
