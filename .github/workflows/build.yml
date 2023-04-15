@@ -95,8 +95,8 @@ jobs:
           ls ./taoyao-client-android/taoyao/media/deps/libmediasoupclient
           cd ./taoyao-client-android/taoyao
           sh ./gradlew --no-daemon assembleRelease
-      - name: Build with Gradle
-        if: runner.os == 'windows'
-        run: |
-          cd ./taoyao-client-android/taoyao
-          ./gradlew.bat --no-daemon assembleRelease
+#      - name: Build with Gradle
+#        if: runner.os == 'windows'
+#        run: |
+#          cd ./taoyao-client-android/taoyao
+#          ./gradlew.bat --no-daemon assembleRelease
