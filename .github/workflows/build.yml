@@ -5,69 +5,70 @@ on:
     branches: [ master ]
 
 jobs:
-#  taoyao-signal-server:
-#    name: Build taoyao signal server
-#    strategy:
-#      matrix:
-#        runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
-#    runs-on: ${{ matrix.runs-on }}
-#    steps:
-#    - name: Checkout repository
-#      uses: actions/checkout@v3
-#    - name: Set up JDK
-#      uses: actions/setup-java@v1
-#      with:
-#        java-version: 17
-#    - name: Build with Maven
-#      run: mvn clean package -P prd -D maven.test.skip=true -B -V --file ./taoyao-signal-server/pom.xml
-#  taoyao-client-web:
-#    name: Build taoyao client web
-#    strategy:
-#      matrix:
-#        runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
-#    runs-on: ${{ matrix.runs-on }}
-#    steps:
-#    - name: Checkout repository
-#      uses: actions/checkout@v3
-#    - name: Use Node.js 16.x
-#      uses: actions/setup-node@v3
-#      with:
-#        cache: npm
-#        node-version:  16.x
-#        cache-dependency-path: ./taoyao-client-web
-#    - name: Build with NodeJS
-#      run: |
-#        npm install
-#        npm run build
-#      working-directory: ./taoyao-client-web
-#  taoyao-client-media:
-#    name: Build taoyao client media
-#    strategy:
-#      matrix:
-#        runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
-#    runs-on: ${{ matrix.runs-on }}
-#    steps:
-#    - name: Checkout repository
-#      uses: actions/checkout@v3
-#    - name: Use Node.js 16.x
-#      uses: actions/setup-node@v3
-#      with:
-#        cache: npm
-#        node-version:  16.x
-#        cache-dependency-path: ./taoyao-client-media
-#    - name: Build with NodeJS
-#      run: |
-#        npm install
-#      working-directory: ./taoyao-client-media
+  taoyao-signal-server:
+    name: Build taoyao signal server
+    strategy:
+      matrix:
+        runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Set up JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: 17
+    - name: Build with Maven
+      run: mvn clean package -P prd -D maven.test.skip=true -B -V --file ./taoyao-signal-server/pom.xml
+  taoyao-client-web:
+    name: Build taoyao client web
+    strategy:
+      matrix:
+        runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Use Node.js 16.x
+      uses: actions/setup-node@v3
+      with:
+        cache: npm
+        node-version:  16.x
+        cache-dependency-path: ./taoyao-client-web
+    - name: Build with NodeJS
+      run: |
+        npm install
+        npm run build
+      working-directory: ./taoyao-client-web
+  taoyao-client-media:
+    name: Build taoyao client media
+    strategy:
+      matrix:
+        runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+    - name: Use Node.js 16.x
+      uses: actions/setup-node@v3
+      with:
+        cache: npm
+        node-version:  16.x
+        cache-dependency-path: ./taoyao-client-media
+    - name: Build with NodeJS
+      run: |
+        npm install
+      working-directory: ./taoyao-client-media
   taoyao-client-android:
     name: Build taoyao client android
-#    strategy:
-#      matrix:
-#        runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.runs-on }}
     steps:
-#      - name: Git config longpaths
-#        run: sudo git config --system core.longpaths true
+      - name: Git config longpaths
+        if: runner.os == 'windows'
+        run: git config --system core.longpaths true
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Checkout WebRTC
@@ -88,17 +89,12 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v2
       - name: Build with Gradle
-#        if: runner.os != 'windows'
+        if: runner.os != 'windows'
         run: |
-          echo "======"
-          ls ./taoyao-client-android/taoyao/media/deps/webrtc
-          ls ./taoyao-client-android/taoyao/media/deps/webrtc/lib
-          echo "======"
-          ls ./taoyao-client-android/taoyao/media/deps/libmediasoupclient
           cd ./taoyao-client-android/taoyao
           sh ./gradlew --no-daemon assembleRelease
-#      - name: Build with Gradle
-#        if: runner.os == 'windows'
-#        run: |
-#          cd ./taoyao-client-android/taoyao
-#          ./gradlew.bat --no-daemon assembleRelease
+      - name: Build with Gradle
+        if: runner.os == 'windows'
+        run: |
+          cd ./taoyao-client-android/taoyao
+          ./gradlew.bat --no-daemon assembleRelease
