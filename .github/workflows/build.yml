@@ -67,7 +67,7 @@ jobs:
     runs-on: ${{ matrix.runs-on }}
     steps:
       - name: Git config longpaths
-        run: git config --system core.longpaths true
+        run: sudo git config --system core.longpaths true
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Checkout WebRTC
