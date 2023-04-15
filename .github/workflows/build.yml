@@ -58,8 +58,6 @@ jobs:
 #    - name: Build with NodeJS
 #      run: |
 #        npm install
-#        # 不能直接运行
-#        # npm run dev
 #      working-directory: ./taoyao-client-media
   taoyao-client-android:
     name: Build taoyao client android
@@ -94,9 +92,10 @@ jobs:
           echo "======"
           ls ./taoyao-client-android/taoyao/media/deps/libmediasoupclient
           cd ./taoyao-client-android/taoyao
-          sh ./gradlew  --no-daemon assembleRelease
+          sh ./gradlew --no-daemon assembleRelease
       - name: Build with Gradle
         if: runner.os == 'windows'
         run: |
+          git config –global core.longpaths true
           cd ./taoyao-client-android/taoyao
           ./gradlew.bat --no-daemon assembleRelease
