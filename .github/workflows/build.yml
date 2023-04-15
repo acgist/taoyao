@@ -70,6 +70,17 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+      - name: Checkout WebRTC
+        uses: actions/checkout@v3
+        with:
+          repository: acgist/webrtc
+          path: ./taoyao-client-android/taoyao/media/deps
+#          ref:
+      - name: Checkout libmediasoupclient
+        uses: actions/checkout@v3
+        with:
+          repository: acgist/libmediasoupclient
+          path: ./taoyao-client-android/taoyao/media/deps
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
@@ -79,6 +90,8 @@ jobs:
       - name: Build with Gradle
         if: runner.os != 'windows'
         run: |
+          echo "======"
+          ls ./taoyao-client-android/taoyao/media/deps
           cd ./taoyao-client-android/taoyao
           sh ./gradlew  --no-daemon assembleRelease
       - name: Build with Gradle
