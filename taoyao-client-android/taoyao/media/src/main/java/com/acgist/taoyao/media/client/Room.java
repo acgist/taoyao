@@ -109,7 +109,6 @@ public class Room extends CloseableClient implements RouterCallback {
             }
             super.init();
             this.peerConnectionFactory = this.mediaManager.newClient(VideoSourceType.BACK);
-            this.mediaManager.startVideoCapture();
             this.localClient = new LocalClient(this.name, this.clientId, this.taoyao, this.mainHandler);
             this.localClient.setMediaStream(this.mediaManager.getMediaStream());
             // STUN | TURN
@@ -222,7 +221,6 @@ public class Room extends CloseableClient implements RouterCallback {
             this.remoteClients.values().forEach(v -> this.closeRemoteClient(v.clientId));
             this.remoteClients.clear();
             this.localClient.close();
-            this.mediaManager.stopVideoCapture();
             this.mediaManager.closeClient();
         }
     }

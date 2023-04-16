@@ -8,6 +8,7 @@ import android.media.MediaMuxer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
+import android.provider.MediaStore;
 import android.util.Log;
 
 import com.acgist.taoyao.boot.utils.DateUtils;
@@ -117,14 +118,6 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
      * 媒体合成器
      */
     private MediaMuxer mediaMuxer;
-    /**
-     * 音频队列
-     */
-    private final BlockingQueue<JavaAudioDeviceModule.AudioSamples> audioSamplesQueue;
-    /**
-     * 视频队列
-     */
-    private final BlockingQueue<VideoFrame> videoFrameQueue;
 
     public RecordClient(
         int audioBitRate, int sampleRate, int channelCount,
@@ -142,8 +135,6 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         this.height         = height;
         this.filename = DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".mp4";
         this.filepath = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, this.filename).toString();
-        this.audioSamplesQueue = new LinkedBlockingQueue<>();
-        this.videoFrameQueue = new LinkedBlockingQueue<>();
     }
 
     public void start() {
@@ -201,26 +192,6 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         JavaAudioDeviceModule.AudioSamples audioSamples = null;
         final MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
         while (!this.close) {
-            try {
-                audioSamples = this.audioSamplesQueue.poll(WAIT_TIME_MS, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                Log.e(RecordClient.class.getSimpleName(), "录制线程等待异常", e);
-            }
-            if(audioSamples == null) {
-                continue;
-            }
-            int index = this.audioCodec.dequeueInputBuffer(WAIT_TIME_US);
-            if (index >= 0) {
-                final byte[] data = audioSamples.getData();
-                final ByteBuffer buffer = this.audioCodec.getInputBuffer(index);
-                buffer.put(data);
-                this.audioCodec.queueInputBuffer(index, 0, data.length, this.audioPts, 0);
-                // 1000000 microseconds / 48000 hz / 2 bytes
-                this.audioPts += data.length * (1_000_000 / audioSamples.getSampleRate() / 2);
-            } else {
-                // WARN
-            }
-            audioSamples = null;
             outputIndex = this.audioCodec.dequeueOutputBuffer(bufferInfo, WAIT_TIME_US);
             if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
 //          } else if (outputIndex == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
@@ -282,21 +253,6 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
     }
 
     /**
-     * @param audioSamples PCM数据
-     */
-    public void putAudio(JavaAudioDeviceModule.AudioSamples audioSamples) {
-        if(this.close || !this.audioActive) {
-            return;
-        }
-        Log.i(RecordClient.class.getSimpleName(), "音频信息：" + audioSamples.getAudioFormat());
-        try {
-            this.audioSamplesQueue.put(audioSamples);
-        } catch (InterruptedException e) {
-            Log.e(RecordClient.class.getSimpleName(), "录制线程等待异常", e);
-        }
-    }
-
-    /**
      * @param videoType 视频格式
      */
     private void initVideoThread(String videoType) {
@@ -330,7 +286,7 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         final MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
         while (!this.close) {
             try {
-                videoFrame = this.videoFrameQueue.poll(WAIT_TIME_MS, TimeUnit.MILLISECONDS);
+                videoFrame = this.vq.poll(WAIT_TIME_MS, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 Log.e(RecordClient.class.getSimpleName(), "录制线程等待异常", e);
             }
@@ -408,18 +364,6 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         }
     }
 
-    public void putVideo(VideoFrame videoFrame) {
-        if (this.close || !this.videoActive) {
-            return;
-        }
-        Log.i(RecordClient.class.getSimpleName(), "视频信息：" + videoFrame.getRotatedWidth() + " - " + videoFrame.getRotatedHeight());
-        try {
-            this.videoFrameQueue.put(videoFrame);
-        } catch (InterruptedException e) {
-            Log.e(RecordClient.class.getSimpleName(), "录制线程等待异常", e);
-        }
-    }
-
     private void initMediaMuxer() {
         try {
             this.mediaMuxer = new MediaMuxer(
@@ -465,12 +409,57 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         return this.filepath;
     }
 
+    /**
+     * @param audioSamples PCM数据
+     */
     @Override
-    public void onFrame(VideoFrame videoFrame) {
+    public void onWebRtcAudioRecordSamplesReady(JavaAudioDeviceModule.AudioSamples audioSamples) {
+        if(this.close || !this.audioActive) {
+            return;
+        }
+        Log.i(RecordClient.class.getSimpleName(), "音频信息：" + audioSamples.getAudioFormat());
+        int index = this.audioCodec.dequeueInputBuffer(WAIT_TIME_US);
+        if (index >= 0) {
+            final byte[] data = audioSamples.getData();
+            final ByteBuffer buffer = this.audioCodec.getInputBuffer(index);
+            buffer.put(data);
+            this.audioCodec.queueInputBuffer(index, 0, data.length, this.audioPts, 0);
+            // 1000000 microseconds / 48000 hz / 2 bytes
+            this.audioPts += data.length * (1_000_000 / audioSamples.getSampleRate() / 2);
+        } else {
+            // WARN
+        }
+        audioSamples = null;
     }
 
     @Override
-    public void onWebRtcAudioRecordSamplesReady(JavaAudioDeviceModule.AudioSamples audioSamples) {
+    public void onFrame(VideoFrame videoFrame) {
+        videoFrame.retain();
+        if (this.close || !this.videoActive) {
+            videoFrame.release();
+            return;
+        }
+        Log.i(RecordClient.class.getSimpleName(), "视频信息：" + videoFrame.getRotatedWidth() + " - " + videoFrame.getRotatedHeight());
+        try {
+            vq.put(videoFrame);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+//        final int videoFrameSize = videoFrame.getRotatedWidth() * videoFrame.getRotatedHeight() * 3 / 2;
+//        final int index = this.videoCodec.dequeueInputBuffer(WAIT_TIME_US);
+//        if(index < 0) {
+//            videoFrame.retain();
+//            return;
+//        }
+//        final VideoFrame.I420Buffer i420 = videoFrame.getBuffer().toI420();
+//        final ByteBuffer inputByteBuffer = this.videoCodec.getInputBuffer(index);
+//        YuvHelper.I420ToNV12(i420.getDataY(), i420.getStrideY(), i420.getDataU(), i420.getStrideU(), i420.getDataV(), i420.getStrideV(), inputByteBuffer, i420.getWidth(), i420.getHeight());
+//        i420.release();
+//        videoFrame.release();
+//        this.videoCodec.queueInputBuffer(index, 0, videoFrameSize, videoFrame.getTimestampNs(), 0);
+//        videoFrame = null;
     }
+
+    private BlockingQueue<VideoFrame> vq = new LinkedBlockingQueue<>();
 
 }

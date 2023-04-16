@@ -102,7 +102,6 @@ public class SessionClient extends Client {
             }
             super.init();
             this.peerConnectionFactory = this.mediaManager.newClient(VideoSourceType.BACK);
-            this.mediaManager.startVideoCapture();
             // STUN | TURN
             final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
             // TODO：读取配置
@@ -281,7 +280,6 @@ public class SessionClient extends Client {
             }
             super.close();
             this.remoteMediaStream.dispose();
-            this.mediaManager.stopVideoCapture();
             this.mediaManager.closeClient();
         }
     }

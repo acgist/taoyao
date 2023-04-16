@@ -9,7 +9,6 @@ import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
 import android.util.Log;
@@ -187,9 +186,9 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     private void record(View view) {
         final MediaManager mediaManager = MediaManager.getInstance();
         if (mediaManager.isRecording()) {
-            mediaManager.stopRecordVideoCapture();
+            mediaManager.stopRecord();
         } else {
-            mediaManager.startRecordVideoCapture();
+            mediaManager.startRecord();
         }
     }
 

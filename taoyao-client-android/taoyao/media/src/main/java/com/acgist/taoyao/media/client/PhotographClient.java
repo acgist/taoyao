@@ -23,9 +23,11 @@ import android.util.Log;
 import android.view.Surface;
 
 import com.acgist.taoyao.boot.utils.DateUtils;
+import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.VideoSourceType;
 
 import org.webrtc.VideoFrame;
+import org.webrtc.VideoSink;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -42,7 +44,7 @@ import java.util.List;
  *
  * @author acgist
  */
-public class PhotographClient {
+public class PhotographClient implements VideoSink {
 
     public static final int CAPTURER_SIZE = 1;
 
@@ -63,6 +65,12 @@ public class PhotographClient {
         this.wait     = true;
         this.finish   = false;
         Log.i(RecordClient.class.getSimpleName(), "拍摄照片文件：" + this.filepath);
+    }
+
+    @Override
+    public void onFrame(VideoFrame videoFrame) {
+        videoFrame.retain();
+        this.photograph(videoFrame);
     }
 
     public String photograph(VideoFrame videoFrame) {
