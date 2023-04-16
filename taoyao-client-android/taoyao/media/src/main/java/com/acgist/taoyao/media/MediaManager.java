@@ -172,10 +172,6 @@ public final class MediaManager {
      */
     private RecordClient recordClient;
     /**
-     * 拍照终端
-     */
-    private PhotographClient photographClient;
-    /**
      * 视频来源
      */
     private SurfaceTextureHelper surfaceTextureHelper;
@@ -287,7 +283,6 @@ public final class MediaManager {
 
     /**
      * 关闭一个终端
-     * 最后一个终端关闭时，释放所有资源。
      *
      * @return 剩余终端数量
      */
@@ -296,11 +291,12 @@ public final class MediaManager {
             this.clientCount--;
             if (this.clientCount <= 0) {
                 Log.i(MediaManager.class.getSimpleName(), "释放PeerConnectionFactory");
+                // 注意顺序
+                this.stopVideoCapture();
                 this.closeAudio();
                 this.closeMainVideo();
                 this.closeShareVideo();
                 this.closeMedia();
-                this.stopVideoCapture();
                 this.nativeStop();
                 this.stopPeerConnectionFactory();
             }
@@ -602,17 +598,16 @@ public final class MediaManager {
     public String photograph() {
         synchronized (this) {
             String filepath;
-            final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get(this.videoQuantity);
             final PhotographClient photographClient = new PhotographClient(this.imageQuantity, this.imagePath);
             if(this.clientCount <= 0) {
-                filepath = photographClient.photograph(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), VideoSourceType.BACK, this.context);
+                final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get(this.videoQuantity);
+                photographClient.photograph(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate(), VideoSourceType.BACK, this.context);
+                filepath = photographClient.waitForPhotograph();
             } else {
-                this.photographClient = photographClient;
-                this.mainVideoTrack.addSink(this.photographClient);
-                filepath = this.photographClient.waitForPhotograph();
-                this.mainVideoTrack.removeSink(this.photographClient);
+                this.mainVideoTrack.addSink(photographClient);
+                filepath = photographClient.waitForPhotograph();
+                this.mainVideoTrack.removeSink(photographClient);
             }
-            this.photographClient = null;
             return filepath;
         }
     }
@@ -765,6 +760,7 @@ public final class MediaManager {
 
         @Override
         public void onFrameCaptured(VideoFrame videoFrame) {
+            // 注意：VideoFrame必须释放，如果分开线程需要调用retain和release方法，否则不要调用。
             this.mainObserver.onFrameCaptured(videoFrame);
             this.shareObserver.onFrameCaptured(videoFrame);
         }

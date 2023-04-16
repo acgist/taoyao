@@ -91,6 +91,10 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
      */
     private final int height;
     /**
+     * YUV数据大小
+     */
+    private final int yuvSize;
+    /**
      * 音频编码
      */
     private MediaCodec audioCodec;
@@ -133,6 +137,7 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         this.iFrameInterval = iFrameInterval;
         this.width          = width;
         this.height         = height;
+        this.yuvSize        = width * height * 3 / 2;
         this.filename = DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".mp4";
         this.filepath = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, this.filename).toString();
     }
@@ -219,7 +224,7 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
                 outputBuffer.position(bufferInfo.offset);
                 outputBuffer.limit(bufferInfo.offset + bufferInfo.size);
                 bufferInfo.presentationTimeUs -= pts;
-//              this.mediaMuxer.writeSampleData(trackIndex, outputBuffer, info);
+                this.mediaMuxer.writeSampleData(trackIndex, outputBuffer, bufferInfo);
                 this.audioCodec.releaseOutputBuffer(outputIndex, false);
                 Log.d(RecordClient.class.getSimpleName(), "录制音频帧（时间戳）：" + bufferInfo.flags + " - " + (bufferInfo.presentationTimeUs / 1_000_000F));
 //              if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME == MediaCodec.BUFFER_FLAG_KEY_FRAME) {
@@ -280,28 +285,10 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         long pts        = 0L;
         int trackIndex  = -1;
         int outputIndex;
-        VideoFrame videoFrame = null;
         this.videoCodec.start();
         this.videoActive = true;
         final MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
         while (!this.close) {
-            try {
-                videoFrame = this.vq.poll(WAIT_TIME_MS, TimeUnit.MILLISECONDS);
-            } catch (InterruptedException e) {
-                Log.e(RecordClient.class.getSimpleName(), "录制线程等待异常", e);
-            }
-            if(videoFrame == null) {
-                continue;
-            }
-            final int videoFrameSize = videoFrame.getRotatedWidth() * videoFrame.getRotatedHeight() * 3 / 2;
-            final int index = this.videoCodec.dequeueInputBuffer(WAIT_TIME_US);
-            final VideoFrame.I420Buffer i420 = videoFrame.getBuffer().toI420();
-            final ByteBuffer inputByteBuffer = this.videoCodec.getInputBuffer(index);
-            YuvHelper.I420ToNV12(i420.getDataY(), i420.getStrideY(), i420.getDataU(), i420.getStrideU(), i420.getDataV(), i420.getStrideV(), inputByteBuffer, i420.getWidth(), i420.getHeight());
-            i420.release();
-            videoFrame.release();
-            this.videoCodec.queueInputBuffer(index, 0, videoFrameSize, videoFrame.getTimestampNs(), 0);
-            videoFrame = null;
             outputIndex = this.videoCodec.dequeueOutputBuffer(bufferInfo, WAIT_TIME_US);
             if (outputIndex == MediaCodec.INFO_TRY_AGAIN_LATER) {
 //          } else if (outputIndex == MediaCodec.INFO_OUTPUT_BUFFERS_CHANGED) {
@@ -333,7 +320,7 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
                 bufferInfo.presentationTimeUs -= pts;
                 this.mediaMuxer.writeSampleData(trackIndex, outputBuffer, bufferInfo);
                 this.videoCodec.releaseOutputBuffer(outputIndex, false);
-                Log.d(RecordClient.class.getSimpleName(), "录制视频帧（时间戳）：" + bufferInfo.flags + " - " + (bufferInfo.presentationTimeUs / 1_000_000F));
+                Log.d(RecordClient.class.getSimpleName(), "录制视频帧（时间戳）：" + (bufferInfo.presentationTimeUs / 1_000_000F));
 //              if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME == MediaCodec.BUFFER_FLAG_KEY_FRAME) {
 //              } else if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
 //              } else if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
@@ -434,32 +421,22 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
 
     @Override
     public void onFrame(VideoFrame videoFrame) {
-        videoFrame.retain();
         if (this.close || !this.videoActive) {
-            videoFrame.release();
             return;
         }
         Log.i(RecordClient.class.getSimpleName(), "视频信息：" + videoFrame.getRotatedWidth() + " - " + videoFrame.getRotatedHeight());
-        try {
-            vq.put(videoFrame);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        final int index = this.videoCodec.dequeueInputBuffer(WAIT_TIME_US);
+        if(index < 0) {
+            return;
         }
-//        final int videoFrameSize = videoFrame.getRotatedWidth() * videoFrame.getRotatedHeight() * 3 / 2;
-//        final int index = this.videoCodec.dequeueInputBuffer(WAIT_TIME_US);
-//        if(index < 0) {
-//            videoFrame.retain();
-//            return;
-//        }
-//        final VideoFrame.I420Buffer i420 = videoFrame.getBuffer().toI420();
-//        final ByteBuffer inputByteBuffer = this.videoCodec.getInputBuffer(index);
-//        YuvHelper.I420ToNV12(i420.getDataY(), i420.getStrideY(), i420.getDataU(), i420.getStrideU(), i420.getDataV(), i420.getStrideV(), inputByteBuffer, i420.getWidth(), i420.getHeight());
-//        i420.release();
-//        videoFrame.release();
-//        this.videoCodec.queueInputBuffer(index, 0, videoFrameSize, videoFrame.getTimestampNs(), 0);
-//        videoFrame = null;
+        // 内存抖动未提
+        final ByteBuffer inputBuffer = this.videoCodec.getInputBuffer(index);
+        final VideoFrame.I420Buffer i420 = videoFrame.getBuffer().toI420();
+        YuvHelper.I420ToNV12(i420.getDataY(), i420.getStrideY(), i420.getDataU(), i420.getStrideU(), i420.getDataV(), i420.getStrideV(), inputBuffer, i420.getWidth(), i420.getHeight());
+        i420.release();
+        this.videoCodec.queueInputBuffer(index, 0, this.yuvSize, videoFrame.getTimestampNs(), 0);
+//      final int videoFrameSize = videoFrame.getRotatedWidth() * videoFrame.getRotatedHeight() * 3 / 2;
+//      this.videoCodec.queueInputBuffer(index, 0, this.videoFrameSize, videoFrame.getTimestampNs(), 0);
     }
-
-    private BlockingQueue<VideoFrame> vq = new LinkedBlockingQueue<>();
 
 }

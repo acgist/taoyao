@@ -2,7 +2,6 @@ package com.acgist.taoyao.media.client;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
@@ -14,16 +13,18 @@ import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraDevice;
 import android.hardware.camera2.CameraManager;
 import android.hardware.camera2.CaptureRequest;
+import android.hardware.camera2.TotalCaptureResult;
 import android.hardware.camera2.params.OutputConfiguration;
 import android.hardware.camera2.params.SessionConfiguration;
 import android.media.Image;
 import android.media.ImageReader;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.util.Log;
 import android.view.Surface;
 
 import com.acgist.taoyao.boot.utils.DateUtils;
-import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.VideoSourceType;
 
 import org.webrtc.VideoFrame;
@@ -46,71 +47,24 @@ import java.util.List;
  */
 public class PhotographClient implements VideoSink {
 
-    public static final int CAPTURER_SIZE = 1;
-
     private final int quantity;
     private final String filename;
     private final String filepath;
-    private volatile boolean wait;
+    private volatile boolean done;
     private volatile boolean finish;
     private Surface surface;
     private ImageReader imageReader;
     private CameraDevice cameraDevice;
+    private HandlerThread handlerThread;
     private CameraCaptureSession cameraCaptureSession;
 
     public PhotographClient(int quantity, String path) {
         this.quantity = quantity;
         this.filename = DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".jpg";
         this.filepath = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, this.filename).toString();
-        this.wait     = true;
+        this.done     = false;
         this.finish   = false;
         Log.i(RecordClient.class.getSimpleName(), "拍摄照片文件：" + this.filepath);
-    }
-
-    @Override
-    public void onFrame(VideoFrame videoFrame) {
-        videoFrame.retain();
-        this.photograph(videoFrame);
-    }
-
-    public String photograph(VideoFrame videoFrame) {
-        if(this.wait) {
-            this.wait = false;
-            final Thread thread = new Thread(() -> this.photographBackground(videoFrame));
-            thread.setName("PhotographThread");
-            thread.setDaemon(true);
-            thread.start();
-        } else {
-            videoFrame.release();
-        }
-        return this.filepath;
-    }
-
-    private void photographBackground(VideoFrame videoFrame) {
-        final File file = new File(this.filepath);
-        try (
-            final OutputStream output = new FileOutputStream(file);
-            final ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
-        ) {
-            final VideoFrame.I420Buffer i420 = videoFrame.getBuffer().toI420();
-            final int width = i420.getWidth();
-            final int height = i420.getHeight();
-            // YuvHelper转换颜色溢出
-            final YuvImage image = this.i420ToYuvImage(i420, width, height);
-            i420.release();
-            videoFrame.release();
-            final Rect rect = new Rect(0, 0, width, height);
-            image.compressToJpeg(rect, this.quantity, byteArray);
-            final byte[] array = byteArray.toByteArray();
-            final Bitmap bitmap = BitmapFactory.decodeByteArray(array, 0, array.length);
-//          final Matrix matrix = new Matrix();
-//          matrix.setRotate(90);
-//          final Bitmap matrixBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, false);
-            bitmap.compress(Bitmap.CompressFormat.JPEG, this.quantity, output);
-        } catch (Exception e) {
-            Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
-        }
-        this.notifyWait();
     }
 
     private void notifyWait() {
@@ -122,16 +76,60 @@ public class PhotographClient implements VideoSink {
 
     public String waitForPhotograph() {
         synchronized (this) {
-            if(this.finish) {
-                return this.filepath;
-            }
             try {
+                if(this.finish) {
+                    return this.filepath;
+                }
                 this.wait(5000);
             } catch (InterruptedException e) {
                 Log.e(PhotographClient.class.getSimpleName(), "拍照等待异常", e);
+            } finally {
+                this.handlerThread.quitSafely();
             }
         }
         return this.filepath;
+    }
+
+    @Override
+    public void onFrame(VideoFrame videoFrame) {
+        if(this.done) {
+            // 已经完成忽略
+        } else {
+            this.done = true;
+            this.handlerThread = new HandlerThread("PhotographThread");
+            this.handlerThread.start();
+            final Handler handler = new Handler(this.handlerThread.getLooper());
+            videoFrame.retain();
+            handler.post(() -> this.photograph(videoFrame));
+        }
+    }
+
+    private void photograph(VideoFrame videoFrame) {
+        final VideoFrame.I420Buffer i420 = videoFrame.getBuffer().toI420();
+        videoFrame.release();
+        final File file = new File(this.filepath);
+        final int width = i420.getWidth();
+        final int height = i420.getHeight();
+        // YuvHelper转换颜色溢出
+        final YuvImage image = this.i420ToYuvImage(i420, width, height);
+        i420.release();
+        final Rect rect = new Rect(0, 0, width, height);
+        try (
+            final OutputStream output = new FileOutputStream(file);
+            final ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
+        ) {
+            image.compressToJpeg(rect, this.quantity, byteArray);
+            final byte[] array = byteArray.toByteArray();
+            final Bitmap bitmap = BitmapFactory.decodeByteArray(array, 0, array.length);
+//          final Matrix matrix = new Matrix();
+//          matrix.setRotate(90);
+//          final Bitmap matrixBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, false);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, this.quantity, output);
+        } catch (Exception e) {
+            Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
+        } finally {
+            this.notifyWait();
+        }
     }
 
     private YuvImage i420ToYuvImage(VideoFrame.I420Buffer i420, int width, int height) {
@@ -160,57 +158,37 @@ public class PhotographClient implements VideoSink {
     }
 
     @SuppressLint("MissingPermission")
-    public String photograph(int width, int height, VideoSourceType type, Context context) {
-        final CameraManager cameraManager = context.getSystemService(CameraManager.class);
-        this.imageReader   = ImageReader.newInstance(width, height, ImageFormat.JPEG, PhotographClient.CAPTURER_SIZE);
-        this.surface       = this.imageReader.getSurface();
-        this.imageReader.setOnImageAvailableListener(this.imageAvailableListener, null);
-        try {
-            String cameraId = null;
-            final String[] cameraIdList = cameraManager.getCameraIdList();
-            for (String id : cameraIdList) {
-                final CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(id);
-                if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK && type == VideoSourceType.BACK) {
-                    cameraId = id;
-                    break;
-                } else if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT && type == VideoSourceType.FRONT) {
-                    cameraId = id;
-                    break;
-                } else {
+    public void photograph(int width, int height, int fps, VideoSourceType type, Context context) {
+        this.handlerThread = new HandlerThread("PhotographThread");
+        this.handlerThread.start();
+        final Handler handler = new Handler(this.handlerThread.getLooper());
+        handler.post(() -> {
+            final CameraManager cameraManager = context.getSystemService(CameraManager.class);
+            PhotographClient.this.imageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, fps);
+            PhotographClient.this.surface     = PhotographClient.this.imageReader.getSurface();
+            try {
+                String cameraId = null;
+                final String[] cameraIdList = cameraManager.getCameraIdList();
+                for (String id : cameraIdList) {
+                    final CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(id);
+                    if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK && type == VideoSourceType.BACK) {
+                        cameraId = id;
+                        break;
+                    } else if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT && type == VideoSourceType.FRONT) {
+                        cameraId = id;
+                        break;
+                    } else {
+                    }
                 }
+                cameraManager.openCamera(cameraId, this.cameraDeviceStateCallback, null);
+            } catch (CameraAccessException e) {
+                Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
             }
-            if(cameraId == null) {
-                PhotographClient.this.closeCamera();
-                return null;
-            }
-            cameraManager.openCamera(cameraId, this.cameraDeviceStateCallback, null);
-        } catch (CameraAccessException e) {
-            Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
-            PhotographClient.this.closeCamera();
-        }
-        return this.filepath;
+        });
     }
 
-    private ImageReader.OnImageAvailableListener imageAvailableListener = (ImageReader imageReader) -> {
-        final Image image = imageReader.acquireLatestImage();
-        final Image.Plane[] planes = image.getPlanes();
-        final ByteBuffer byteBuffer = planes[0].getBuffer();
-        final byte[] bytes = new byte[byteBuffer.remaining()];
-        byteBuffer.get(bytes);
-        final File file = new File(PhotographClient.this.filepath);
-        try (
-            final OutputStream output = new FileOutputStream(file);
-        ) {
-            output.write(bytes,0,bytes.length);
-        } catch (IOException e) {
-            Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
-        } finally {
-            image.close();
-            PhotographClient.this.closeCamera();
-        }
-    };
-
     private CameraDevice.StateCallback cameraDeviceStateCallback = new CameraDevice.StateCallback() {
+
         @Override
         public void onOpened(CameraDevice cameraDevice) {
             PhotographClient.this.cameraDevice = cameraDevice;
@@ -223,36 +201,75 @@ public class PhotographClient implements VideoSink {
                 ));
             } catch (CameraAccessException e) {
                 Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
-                PhotographClient.this.closeCamera();
             }
         }
+
         @Override
         public void onDisconnected(CameraDevice cameraDevice) {
-            PhotographClient.this.closeCamera();
         }
+
         @Override
         public void onError(CameraDevice cameraDevice, int error) {
-            PhotographClient.this.closeCamera();
         }
+
     };
 
     private CameraCaptureSession.StateCallback cameraCaptureSessionStateCallback = new CameraCaptureSession.StateCallback() {
+
         @Override
         public void onConfigured(CameraCaptureSession cameraCaptureSession) {
             try {
                 PhotographClient.this.cameraCaptureSession = cameraCaptureSession;
                 final CaptureRequest.Builder builder = PhotographClient.this.cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                builder.set(CaptureRequest.JPEG_QUALITY, (byte) PhotographClient.this.quantity);
+//              builder.set(CaptureRequest.JPEG_ORIENTATION, 90);
                 builder.addTarget(PhotographClient.this.surface);
-                cameraCaptureSession.setRepeatingRequest(builder.build(), null, null);
+                cameraCaptureSession.setRepeatingRequest(builder.build(), PhotographClient.this.cameraCaptureSessionCaptureCallback, null);
             } catch (CameraAccessException e) {
                 Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
-                PhotographClient.this.closeCamera();
             }
         }
+
         @Override
         public void onConfigureFailed(CameraCaptureSession session) {
-            PhotographClient.this.closeCamera();
         }
+
+    };
+
+    private CameraCaptureSession.CaptureCallback cameraCaptureSessionCaptureCallback = new CameraCaptureSession.CaptureCallback() {
+
+        private volatile int index = 0;
+
+        @Override
+        public void onCaptureCompleted(CameraCaptureSession cameraCaptureSession, CaptureRequest captureRequest, TotalCaptureResult totalCaptureResult) {
+            final Image image = PhotographClient.this.imageReader.acquireNextImage();
+            if(image == null) {
+                return;
+            }
+            if(this.index++ <= 4 || PhotographClient.this.done) {
+                image.close();
+                return;
+            }
+            PhotographClient.this.done = true;
+            final Image.Plane[] planes = image.getPlanes();
+            final ByteBuffer byteBuffer = planes[0].getBuffer();
+            final byte[] bytes = new byte[byteBuffer.remaining()];
+            byteBuffer.get(bytes);
+            final File file = new File(PhotographClient.this.filepath);
+            try (final OutputStream output = new FileOutputStream(file)) {
+//              final Bitmap bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+//              bitmap.compress(Bitmap.CompressFormat.JPEG, PhotographClient.this.quantity, output);
+                output.write(bytes, 0, bytes.length);
+                cameraCaptureSession.stopRepeating();
+            } catch (IOException | CameraAccessException e) {
+                Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
+            } finally {
+                image.close();
+                PhotographClient.this.closeCamera();
+                PhotographClient.this.notifyWait();
+            }
+        }
+
     };
 
     private void closeCamera() {
@@ -263,11 +280,6 @@ public class PhotographClient implements VideoSink {
         if(this.cameraDevice != null) {
             this.cameraDevice.close();
             this.cameraDevice = null;
-        }
-        // 最后释放ImageReader
-        if(this.surface != null) {
-            this.surface.release();
-            this.surface = null;
         }
         if(this.imageReader != null) {
             this.imageReader.close();
