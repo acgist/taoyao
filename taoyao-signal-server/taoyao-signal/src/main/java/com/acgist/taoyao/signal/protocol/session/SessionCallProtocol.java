@@ -12,11 +12,14 @@ import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.party.session.Session;
 import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 发起会话信令
  * 
  * @author acgist
  */
+@Slf4j
 @Protocol
 @Description(
     body = """
@@ -43,6 +46,10 @@ public class SessionCallProtocol extends ProtocolSessionAdapter {
     public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
         final String targetId = MapUtils.get(body, Constant.CLIENT_ID);
         final Client target   = this.clientManager.clients(targetId);
+        if(target == null) {
+            log.warn("邀请对象无效：{}", clientId);
+            return;
+        }
         final Session session = this.sessionManager.call(client, target);
         message.setBody(Map.of(
             Constant.NAME,       target.status().getName(),

@@ -4,11 +4,13 @@ import java.io.Closeable;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
+import com.acgist.taoyao.signal.event.EventPublisher;
+import com.acgist.taoyao.signal.event.session.SessionCloseEvent;
 
 import lombok.Getter;
 
 /**
- * P2P会话
+ * 视频会话
  * 
  * @author acgist
  */
@@ -27,16 +29,11 @@ public class Session implements Closeable {
      * 接收者
      */
     private final Client target;
-    /**
-     * P2P会话管理器
-     */
-    private final SessionManager sessionManager;
     
-    public Session(String id, Client source, Client target, SessionManager sessionManager) {
+    public Session(String id, Client source, Client target) {
         this.id = id;
         this.source = source;
         this.target = target;
-        this.sessionManager = sessionManager;
     }
     
     /**
@@ -63,10 +60,18 @@ public class Session implements Closeable {
         }
     }
     
+    /**
+     * @param client 终端
+     * 
+     * @return 是否含有终端
+     */
+    public boolean hasClient(Client client) {
+        return this.source == client || this.target == client;
+    }
+    
     @Override
     public void close() {
-        this.sessionManager.remove(this.id);
+        EventPublisher.publishEvent(new SessionCloseEvent(this));
     }
-
 
 }

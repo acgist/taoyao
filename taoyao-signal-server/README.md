@@ -12,3 +12,7 @@
 ## 信令格式
 
 [信令格式](https://localhost:8888/protocol/list)
+
+## STUN/TURN
+
+视频房间不用`STUN/TURN`服务，视频会话需要自己搭建`coturn`服务。

@@ -70,7 +70,6 @@ export default {
       this.taoyao.sessionClose(this.client.id);
     },
     media(track) {
-      console.log(track);
       if(track.kind === 'audio') {
         if (this.audioStream) {
           // TODO：资源释放

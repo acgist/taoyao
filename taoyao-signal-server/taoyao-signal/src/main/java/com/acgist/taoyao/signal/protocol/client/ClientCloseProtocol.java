@@ -69,6 +69,8 @@ public class ClientCloseProtocol extends ProtocolClientAdapter implements Applic
         log.info("关闭终端：{}", clientId);
         // 释放房间终端
         this.roomManager.leave(client);
+        // 释放会话终端
+        this.sessionManager.close(client);
         // 终端下线事件
         this.publishEvent(new ClientOfflineEvent(client));
 	}

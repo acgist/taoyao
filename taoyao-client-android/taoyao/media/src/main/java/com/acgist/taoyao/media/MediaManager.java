@@ -2,6 +2,7 @@ package com.acgist.taoyao.media;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.AudioRecord;
 import android.media.MediaCodecInfo;
 import android.media.MediaCodecList;
 import android.media.projection.MediaProjection;
@@ -41,6 +42,9 @@ import org.webrtc.VideoFrame;
 import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 import org.webrtc.audio.JavaAudioDeviceModule;
+import org.webrtc.voiceengine.WebRtcAudioManager;
+import org.webrtc.voiceengine.WebRtcAudioRecord;
+import org.webrtc.voiceengine.WebRtcAudioUtils;
 
 import java.util.Arrays;
 
@@ -361,6 +365,11 @@ public final class MediaManager {
 //          .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
 //          .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
 //          .build();
+//        WebRtcAudioRecord.setOnAudioSamplesReady(audioSamples -> {
+//            if(this.recordClient != null) {
+//                this.recordClient.onWebRtcAudioRecordSamplesReady(audioSamples);
+//            }
+//        });
         final JavaAudioDeviceModule javaAudioDeviceModule = JavaAudioDeviceModule.builder(this.context)
 //          .setSampleRate()
 //          .setAudioSource(MediaRecorder.AudioSource.MIC)

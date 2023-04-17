@@ -139,6 +139,7 @@ public class Room extends OperatorAdapter {
 		synchronized (this.clients) {
 		    final ClientWrapper wrapper = this.clients.remove(client);
 			if(wrapper != null) {
+			    log.info("终端离开房间：{} - {}", this.roomId, client.clientId());
 			    try {
                     wrapper.close();
                 } catch (Exception e) {

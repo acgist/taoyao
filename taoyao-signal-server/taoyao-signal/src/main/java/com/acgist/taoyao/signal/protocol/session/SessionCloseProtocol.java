@@ -2,11 +2,15 @@ package com.acgist.taoyao.signal.protocol.session;
 
 import java.util.Map;
 
+import org.springframework.context.ApplicationListener;
+
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
+import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
+import com.acgist.taoyao.signal.event.session.SessionCloseEvent;
 import com.acgist.taoyao.signal.party.session.Session;
 import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
 
@@ -23,12 +27,20 @@ import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
     """,
     flow = "终端->信令服务+)终端"
 )
-public class SessionCloseProtocol extends ProtocolSessionAdapter {
+public class SessionCloseProtocol extends ProtocolSessionAdapter implements ApplicationListener<SessionCloseEvent> {
     
     public static final String SIGNAL = "session::close";
     
     public SessionCloseProtocol() {
         super("关闭媒体信令", SIGNAL);
+    }
+    
+    @Override
+    public void onApplicationEvent(SessionCloseEvent event) {
+        final Session session = event.getSession();
+        final Map<String, String> body = Map.of(Constant.SESSION_ID, event.getSessionId());
+        session.push(this.build(body));
+        this.sessionManager.remove(session.getId());
     }
     
     @Override

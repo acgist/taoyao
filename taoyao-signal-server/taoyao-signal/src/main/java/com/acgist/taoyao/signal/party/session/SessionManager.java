@@ -7,11 +7,14 @@ import com.acgist.taoyao.boot.annotation.Manager;
 import com.acgist.taoyao.boot.service.IdService;
 import com.acgist.taoyao.signal.client.Client;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
- * P2P会话管理器
+ * 视频会话管理器
  * 
  * @author acgist
  */
+@Slf4j
 @Manager
 public class SessionManager {
 
@@ -30,8 +33,9 @@ public class SessionManager {
      * @return 会话
      */
     public Session call(Client source, Client target) {
-        final Session session = new Session(this.idService.buildUuid(), source, target, this);
+        final Session session = new Session(this.idService.buildUuid(), source, target);
         this.sessions.put(session.getId(), session);
+        log.info("创建视频会话：{} - {} - {}", session.getId(), session.getSource().clientId(), session.getTarget().clientId());
         return session;
     }
     
@@ -50,7 +54,22 @@ public class SessionManager {
      * @return 会话
      */
     public Session remove(String sessionId) {
-        return this.sessions.remove(sessionId);
+        final Session session = this.sessions.remove(sessionId);
+        if(session != null) {
+            log.info("视频会话关闭：{} - {} - {}", sessionId, session.getSource().clientId(), session.getTarget().clientId());
+        }
+        return session;
+    }
+    
+    /**
+     * 关闭所有资源
+     * 
+     * @param client 终端
+     */
+    public void close(Client client) {
+        this.sessions.values().stream()
+        .filter(v -> v.hasClient(client))
+        .forEach(Session::close);
     }
     
 }

@@ -2,8 +2,6 @@ package com.acgist.taoyao.signal.protocol;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
@@ -11,7 +9,6 @@ import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.party.session.Session;
-import com.acgist.taoyao.signal.party.session.SessionManager;
 
 /**
  * 会话信令适配器
@@ -20,9 +17,6 @@ import com.acgist.taoyao.signal.party.session.SessionManager;
  */
 public abstract class ProtocolSessionAdapter extends ProtocolClientAdapter {
 
-    @Autowired
-    protected SessionManager sessionManager;
-    
 	protected ProtocolSessionAdapter(String name, String signal) {
 		super(name, signal);
 	}

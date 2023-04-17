@@ -244,8 +244,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     private void previewVideo(Message message) {
         final GridLayout video = this.binding.video;
         final int count = video.getChildCount();
-        final GridLayout.Spec rowSpec    = GridLayout.spec(count / 2);
-        final GridLayout.Spec columnSpec = GridLayout.spec(count % 2);
+        final GridLayout.Spec rowSpec    = GridLayout.spec(count / 2, 1, 0);
+        final GridLayout.Spec columnSpec = GridLayout.spec(count % 2, 1, 0);
         GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams(rowSpec, columnSpec);
         layoutParams.width  = 0;
         layoutParams.height = 0;
