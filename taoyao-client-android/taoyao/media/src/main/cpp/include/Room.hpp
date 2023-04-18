@@ -14,6 +14,7 @@ namespace acgist {
     class Room : public RouterCallback {
     public:
         std::string roomId;
+        webrtc::PeerConnectionFactoryInterface* factory;
         mediasoupclient::Device* device;
         mediasoupclient::PeerConnection* peerConnection;
         mediasoupclient::SendTransport* sendTransport;

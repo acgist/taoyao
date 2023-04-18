@@ -1603,6 +1603,7 @@ class Taoyao extends RemoteClient {
     /**
      * 解决浏览器的自动播放策略问题
      */
+	// TODO：完全关闭以后释放资源
     {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getAudioTracks().forEach((audioTrack) => {

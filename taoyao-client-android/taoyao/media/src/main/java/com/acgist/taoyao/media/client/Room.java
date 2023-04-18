@@ -153,7 +153,7 @@ public class Room extends CloseableClient implements RouterCallback {
             "producing", true,
             "consuming", false,
             "sctpCapabilities", this.dataProduce ? this.sctpCapabilities : null
-        ));
+            ));
         if (response == null) {
             Log.w(Room.class.getSimpleName(), "创建发送通道失败");
             return;
@@ -164,6 +164,7 @@ public class Room extends CloseableClient implements RouterCallback {
     private void createRecvTransport() {
         final Message response = this.taoyao.request(this.taoyao.buildMessage(
             "media::transport::webrtc::create",
+            "roomId", this.roomId,
             "forceTcp", false,
             "producing", false,
             "consuming", true,

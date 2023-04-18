@@ -30,6 +30,6 @@ public class Config {
     /**
      * 默认声音大小
      */
-    public static final double DEFAULT_VOLUME = 100.0D;
+    public static final double DEFAULT_VOLUME = 10.0D;
 
 }

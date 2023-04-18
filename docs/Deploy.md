@@ -373,23 +373,31 @@ nginx -s reload
 ## 安装Android终端
 
 ```
-# Android Studio
+cd /data/taoyao/taoyao-client-android/taoyao
+
+# Mac | Linux
+sh ./gradlew --no-daemon assembleRelease
+
+# Windows
+./gradlew.bat --no-daemon assembleRelease
 ```
 
 ## 配置防火墙
 
 ```
-# 终端服务：建议使用Nginx代理
+# Nginx端口
 firewall-cmd --zone=public --add-port=443/tcp --permanent
+# 终端服务：建议使用Nginx代理
 firewall-cmd --zone=public --add-port=8443/tcp --permanent
 # 信令服务（WebSocket）
 firewall-cmd --zone=public --add-port=8888/tcp --permanent
 # 信令服务（Socket）：没有启用不用添加规则
 firewall-cmd --zone=public --add-port=9999/tcp --permanent
-# 媒体服务（数据）
+# 媒体服务
 firewall-cmd --zone=public --add-port=40000-49999/udp --permanent
 
 firewall-cmd --reload
+firewall-cmd --list-all
 firewall-cmd --list-ports
 
 # 删除端口

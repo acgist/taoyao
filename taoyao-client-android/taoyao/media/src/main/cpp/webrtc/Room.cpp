@@ -160,6 +160,7 @@ namespace acgist {
         webrtc::PeerConnectionFactoryInterface* factory,
         webrtc::PeerConnectionInterface::RTCConfiguration& rtcConfiguration
     ) {
+        this->factory = factory;
         nlohmann::json json;
         // TODO：全局
         mediasoupclient::PeerConnection::Options options;
@@ -174,26 +175,32 @@ namespace acgist {
 
     void Room::createSendTransport(JNIEnv* env, std::string body) {
         nlohmann::json json = nlohmann::json::parse(body);
+        mediasoupclient::PeerConnection::Options options;
+        options.factory = this->factory;
         this->sendTransport = this->device->CreateSendTransport(
             this->sendListener,
             json["transportId"],
-            json["iceCandidates"],
             json["iceParameters"],
+            json["iceCandidates"],
             json["dtlsParameters"],
-            json["sctpParameters"]
+            json["sctpParameters"],
+            &options
             // TODO：全局options
         );
     }
 
     void Room::createRecvTransport(JNIEnv* env, std::string body) {
         nlohmann::json json = nlohmann::json::parse(body);
+        mediasoupclient::PeerConnection::Options options;
+        options.factory = this->factory;
         this->recvTransport = this->device->CreateRecvTransport(
             this->recvListener,
             json["transportId"],
-            json["iceCandidates"],
             json["iceParameters"],
+            json["iceCandidates"],
             json["dtlsParameters"],
-            json["sctpParameters"]
+            json["sctpParameters"],
+            &options
             // TODO：全局options
         );
     }
