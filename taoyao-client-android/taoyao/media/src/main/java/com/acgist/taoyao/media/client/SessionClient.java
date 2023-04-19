@@ -9,8 +9,11 @@ import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.config.MediaProperties;
+import com.acgist.taoyao.media.config.WebrtcProperties;
+import com.acgist.taoyao.media.config.WebrtcStunProperties;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
@@ -23,6 +26,7 @@ import org.webrtc.SessionDescription;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * P2P终端
@@ -48,18 +52,27 @@ public class SessionClient extends Client {
     private final boolean audioProduce;
     private final boolean videoProduce;
     private final MediaProperties mediaProperties;
+    private final WebrtcProperties webrtcProperties;
     /**
      * 本地媒体
      */
     private MediaStream mediaStream;
     /**
+     * 数据通道
+     */
+    private DataChannel dataChannel;
+    /**
      * 远程媒体
      */
     private MediaStream remoteMediaStream;
     /**
-     * SDPObserver
+     * OfferSdpObserver
      */
-    private SdpObserver sdpObserver;
+    private SdpObserver offerSdpObserver;
+    /**
+     * AnswerSdpObserver
+     */
+    private SdpObserver answerSdpObserver;
     /**
      * Peer连接
      */
@@ -73,12 +86,31 @@ public class SessionClient extends Client {
      */
     private PeerConnectionFactory peerConnectionFactory;
 
+    /**
+     *
+     * @param sessionId    会话ID
+     * @param name         远程终端名称
+     * @param clientId     远程终端ID
+     * @param taoyao       信令
+     * @param mainHandler  MainHandler
+     * @param preview      是否预览视频
+     * @param playAudio    是否播放音频
+     * @param playVideo    是否播放视频
+     * @param dataConsume  是否消费数据
+     * @param audioConsume 是否消费音频
+     * @param videoConsume 是否消费视频
+     * @param dataProduce  是否生产数据
+     * @param audioProduce 是否生产音频
+     * @param videoProduce 是否生产视频
+     * @param mediaProperties  媒体配置
+     * @param webrtcProperties WebRTC配置
+     */
     public SessionClient(
         String sessionId, String name, String clientId, ITaoyao taoyao, Handler mainHandler,
         boolean preview, boolean playAudio, boolean playVideo,
         boolean dataConsume, boolean audioConsume, boolean videoConsume,
         boolean dataProduce, boolean audioProduce, boolean videoProduce,
-        MediaProperties mediaProperties
+        MediaProperties mediaProperties, WebrtcProperties webrtcProperties
     ) {
         super(name, clientId, taoyao, mainHandler);
         this.sessionId = sessionId;
@@ -92,6 +124,7 @@ public class SessionClient extends Client {
         this.audioProduce = audioProduce;
         this.videoProduce = videoProduce;
         this.mediaProperties = mediaProperties;
+        this.webrtcProperties = webrtcProperties;
     }
 
     @Override
@@ -101,19 +134,17 @@ public class SessionClient extends Client {
                 return;
             }
             super.init();
-            this.peerConnectionFactory = this.mediaManager.newClient(VideoSourceType.BACK);
+            this.peerConnectionFactory = this.mediaManager.newClient();
             // STUN | TURN
-            final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
-            // TODO：读取配置
-            final PeerConnection.IceServer iceServer = PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer();
-            iceServers.add(iceServer);
+            final List<PeerConnection.IceServer> iceServers = this.webrtcProperties.getIceServers();
             final PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(iceServers);
-            this.observer       = this.observer();
-            this.mediaStream    = this.mediaManager.getMediaStream();
-            this.sdpObserver    = this.sdpObserver();
-            this.peerConnection = this.peerConnectionFactory.createPeerConnection(configuration, this.observer);
+            this.observer          = this.observer();
+            this.mediaStream       = this.mediaManager.buildLocalMediaStream(this.audioProduce, this.videoProduce);
+            this.offerSdpObserver  = this.offerSdpObserver();
+            this.answerSdpObserver = this.answerSdpObserver();
+            this.peerConnection    = this.peerConnectionFactory.createPeerConnection(configuration, this.observer);
             this.peerConnection.addStream(this.mediaStream);
-            // TODO：连接streamId作用同步
+            // 设置streamId同步
 //          final List<String> streamIds = new ArrayList<>();
 //          ListUtils.getOnlyOne(this.mediaStream.audioTracks, audioTrack -> {
 //              this.peerConnection.addTrack(audioTrack, streamIds);
@@ -136,32 +167,12 @@ public class SessionClient extends Client {
         }
     }
 
-    public void call(String clientId) {
-        final MediaConstraints mediaConstraints = new MediaConstraints();
-        this.peerConnection.createOffer(this.sdpObserver, mediaConstraints);
-        // TODO：实现主动拉取别人
-    }
-
     /**
      * 提供媒体服务
      */
     public void offer() {
-        final MediaConstraints mediaConstraints = new MediaConstraints();
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minWidth", Integer.toString(640)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minHeight", Integer.toString(480)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(1920)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(1080)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(15)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(30)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googHighpassFilter", "true"));
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googAutoGainControl", "true"));
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googEchoCancellation", "true"));
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googNoiseSuppression", "true"));
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("internalSctpDataChannels", "true"));
-        this.peerConnection.createOffer(this.sdpObserver, mediaConstraints);
+        final MediaConstraints mediaConstraints = this.mediaManager.buildMediaConstraints();
+        this.peerConnection.createOffer(this.offerSdpObserver, mediaConstraints);
     }
 
     private void offer(Message message, Map<String, Object> body) {
@@ -169,26 +180,13 @@ public class SessionClient extends Client {
         final String type = MapUtils.get(body, "type");
         final SessionDescription.Type sdpType = SessionDescription.Type.valueOf(type.toUpperCase());
         final SessionDescription sessionDescription = new SessionDescription(sdpType, sdp);
-        this.peerConnection.setRemoteDescription(this.sdpObserver, sessionDescription);
-        final MediaConstraints mediaConstraints = new MediaConstraints();
-        // PC
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
-        // audio
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googHighpassFilter", "true"));
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googAutoGainControl", "true"));
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googEchoCancellation", "true"));
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googNoiseSuppression", "true"));
-        // video
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minWidth", Integer.toString(640)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minHeight", Integer.toString(480)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(1920)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(1080)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(15)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(30)));
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("internalSctpDataChannels", "true"));
-        this.peerConnection.createAnswer(this.sdpObserver, mediaConstraints);
+        this.peerConnection.setRemoteDescription(this.offerSdpObserver, sessionDescription);
+        this.answer();
+    }
+
+    private void answer() {
+        final MediaConstraints mediaConstraints = this.mediaManager.buildMediaConstraints();
+        this.peerConnection.createAnswer(this.answerSdpObserver, mediaConstraints);
     }
 
     private void answer(Message message, Map<String, Object> body) {
@@ -196,7 +194,7 @@ public class SessionClient extends Client {
         final String type = MapUtils.get(body, "type");
         final SessionDescription.Type sdpType = SessionDescription.Type.valueOf(type.toUpperCase());
         final SessionDescription sessionDescription = new SessionDescription(sdpType, sdp);
-        this.peerConnection.setRemoteDescription(this.sdpObserver, sessionDescription);
+        this.peerConnection.setRemoteDescription(this.answerSdpObserver, sessionDescription);
     }
 
     private void candidate(Message message, Map<String, Object> body) {
@@ -296,7 +294,15 @@ public class SessionClient extends Client {
                 return;
             }
             super.close();
-            this.remoteMediaStream.dispose();
+//          if(this.mediaStream != null) {
+//              this.mediaStream.dispose();
+//          }
+            if(this.remoteMediaStream != null) {
+                this.remoteMediaStream.dispose();
+            }
+            if(this.peerConnection != null) {
+                this.peerConnection.dispose();
+            }
             this.mediaManager.closeClient();
         }
     }
@@ -309,18 +315,21 @@ public class SessionClient extends Client {
 
             @Override
             public void onSignalingChange(PeerConnection.SignalingState signalingState) {
-            }
-
-            @Override
-            public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
-            }
-
-            @Override
-            public void onIceConnectionReceivingChange(boolean result) {
+                Log.d(SessionClient.class.getSimpleName(), "SignalingState状态改变：" + signalingState);
             }
 
             @Override
             public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
+                Log.d(SessionClient.class.getSimpleName(), "IceGatheringState状态改变：" + iceGatheringState);
+            }
+
+            @Override
+            public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
+                Log.d(SessionClient.class.getSimpleName(), "IceConnectionState状态改变：" + iceConnectionState);
+            }
+
+            @Override
+            public void onIceConnectionReceivingChange(boolean result) {
             }
 
             @Override
@@ -342,22 +351,26 @@ public class SessionClient extends Client {
             public void onAddStream(MediaStream mediaStream) {
                 Log.i(SessionClient.class.getSimpleName(), "添加远程媒体：" + SessionClient.this.clientId);
                 if(SessionClient.this.remoteMediaStream != null) {
-                    // TODO：验证音频视频是否合在一起
+                    SessionClient.this.remoteMediaStream.dispose();
                 }
                 SessionClient.this.remoteMediaStream = mediaStream;
-                SessionClient.this.playVideo();
                 SessionClient.this.playAudio();
+                SessionClient.this.playVideo();
             }
 
             @Override
             public void onRemoveStream(MediaStream mediaStream) {
-                if(SessionClient.this.remoteMediaStream == mediaStream) {
-
-                }
+                Log.i(SessionClient.class.getSimpleName(), "删除远程媒体：" + SessionClient.this.clientId);
+                mediaStream.dispose();
             }
 
             @Override
             public void onDataChannel(DataChannel dataChannel) {
+                Log.i(SessionClient.class.getSimpleName(), "添加数据通道：" + SessionClient.this.clientId);
+                if(SessionClient.this.dataChannel != null) {
+                    SessionClient.this.dataChannel.dispose();
+                }
+                SessionClient.this.dataChannel = dataChannel;
             }
 
             @Override
@@ -372,12 +385,12 @@ public class SessionClient extends Client {
         };
     }
 
-    private SdpObserver sdpObserver() {
+    private SdpObserver offerSdpObserver() {
         return new SdpObserver() {
 
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
-                Log.d(SessionClient.class.getSimpleName(), "创建SDP成功：" + SessionClient.this.sessionId);
+                Log.d(SessionClient.class.getSimpleName(), "创建OfferSDP成功：" + SessionClient.this.sessionId);
                 SessionClient.this.peerConnection.setLocalDescription(this, sessionDescription);
                 SessionClient.this.taoyao.push(SessionClient.this.taoyao.buildMessage(
                     "session::exchange",
@@ -389,17 +402,50 @@ public class SessionClient extends Client {
 
             @Override
             public void onSetSuccess() {
-                Log.d(SessionClient.class.getSimpleName(), "设置SDP成功：" + SessionClient.this.sessionId);
+                Log.d(SessionClient.class.getSimpleName(), "设置OfferSDP成功：" + SessionClient.this.sessionId);
             }
 
             @Override
             public void onCreateFailure(String message) {
-                Log.w(SessionClient.class.getSimpleName(), "创建SDP失败：" + message);
+                Log.w(SessionClient.class.getSimpleName(), "创建OfferSDP失败：" + message);
             }
 
             @Override
             public void onSetFailure(String message) {
-                Log.w(SessionClient.class.getSimpleName(), "设置SDP失败：" + message);
+                Log.w(SessionClient.class.getSimpleName(), "设置OfferSDP失败：" + message);
+            }
+
+        };
+    }
+
+    private SdpObserver answerSdpObserver() {
+        return new SdpObserver() {
+
+            @Override
+            public void onCreateSuccess(SessionDescription sessionDescription) {
+                Log.d(SessionClient.class.getSimpleName(), "创建AnswerSDP成功：" + SessionClient.this.sessionId);
+                SessionClient.this.peerConnection.setLocalDescription(this, sessionDescription);
+                SessionClient.this.taoyao.push(SessionClient.this.taoyao.buildMessage(
+                    "session::exchange",
+                    "sdp",       sessionDescription.description,
+                    "type",      sessionDescription.type.toString().toLowerCase(),
+                    "sessionId", SessionClient.this.sessionId
+                ));
+            }
+
+            @Override
+            public void onSetSuccess() {
+                Log.d(SessionClient.class.getSimpleName(), "设置AnswerSDP成功：" + SessionClient.this.sessionId);
+            }
+
+            @Override
+            public void onCreateFailure(String message) {
+                Log.w(SessionClient.class.getSimpleName(), "创建AnswerSDP失败：" + message);
+            }
+
+            @Override
+            public void onSetFailure(String message) {
+                Log.w(SessionClient.class.getSimpleName(), "设置AnswerSDP失败：" + message);
             }
 
         };

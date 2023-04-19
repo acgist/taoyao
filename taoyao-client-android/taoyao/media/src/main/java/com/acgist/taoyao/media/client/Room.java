@@ -13,6 +13,7 @@ import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.config.MediaAudioProperties;
 import com.acgist.taoyao.media.config.MediaProperties;
 import com.acgist.taoyao.media.config.MediaVideoProperties;
+import com.acgist.taoyao.media.config.WebrtcProperties;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.AudioTrack;
@@ -35,8 +36,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class Room extends CloseableClient implements RouterCallback {
 
     private final String name;
-    private final String clientId;
     private final String roomId;
+    private final String clientId;
     private final String password;
     private final boolean preview;
     private final boolean playAudio;
@@ -48,6 +49,7 @@ public class Room extends CloseableClient implements RouterCallback {
     private final boolean audioProduce;
     private final boolean videoProduce;
     private final MediaProperties mediaProperties;
+    private final WebrtcProperties webrtcProperties;
     private final Map<String, RemoteClient> remoteClients;
     private final long nativeRoomPointer;
     private LocalClient localClient;
@@ -58,12 +60,12 @@ public class Room extends CloseableClient implements RouterCallback {
 
     /**
      *
-     * @param name
-     * @param clientId
-     * @param roomId
-     * @param password
-     * @param taoyao
-     * @param mainHandler
+     * @param name         房间名称
+     * @param roomId       房间ID
+     * @param clientId     当前终端ID
+     * @param password     房间密码
+     * @param taoyao       信令
+     * @param mainHandler  MainHandler
      * @param preview      是否预览视频
      * @param playAudio    是否播放音频
      * @param playVideo    是否播放视频
@@ -73,20 +75,22 @@ public class Room extends CloseableClient implements RouterCallback {
      * @param dataProduce  是否生产数据
      * @param audioProduce 是否生产音频
      * @param videoProduce 是否生产视频
+     * @param mediaProperties  媒体配置
+     * @param webrtcProperties WebRTC配置
      */
     public Room(
-        String name, String clientId,
-        String roomId, String password,
+        String name, String roomId,
+        String clientId, String password,
         ITaoyao taoyao, Handler mainHandler,
         boolean preview, boolean playAudio, boolean playVideo,
         boolean dataConsume, boolean audioConsume, boolean videoConsume,
         boolean dataProduce, boolean audioProduce, boolean videoProduce,
-        MediaProperties mediaProperties
+        MediaProperties mediaProperties, WebrtcProperties webrtcProperties
     ) {
         super(taoyao, mainHandler);
         this.name = name;
-        this.clientId = clientId;
         this.roomId   = roomId;
+        this.clientId = clientId;
         this.password = password;
         this.preview  = preview;
         this.playAudio = playAudio;
@@ -98,6 +102,7 @@ public class Room extends CloseableClient implements RouterCallback {
         this.audioProduce = audioProduce;
         this.videoProduce = videoProduce;
         this.mediaProperties = mediaProperties;
+        this.webrtcProperties = webrtcProperties;
         this.remoteClients = new ConcurrentHashMap<>();
         this.nativeRoomPointer = this.nativeNewRoom(roomId, this);
     }
@@ -108,23 +113,26 @@ public class Room extends CloseableClient implements RouterCallback {
                 return true;
             }
             super.init();
-            this.peerConnectionFactory = this.mediaManager.newClient(VideoSourceType.BACK);
+            this.peerConnectionFactory = this.mediaManager.newClient();
             this.localClient = new LocalClient(this.name, this.clientId, this.taoyao, this.mainHandler);
-            this.localClient.setMediaStream(this.mediaManager.getMediaStream());
+            this.localClient.setMediaStream(this.mediaManager.buildLocalMediaStream(this.audioProduce, this.videoProduce));
             // STUN | TURN
             final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
-            // TODO：读取配置
-            final PeerConnection.IceServer iceServer = PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer();
-            iceServers.add(iceServer);
+            // 不用配置
+//          final List<PeerConnection.IceServer> iceServers = this.webrtcProperties.getIceServers();
             this.rtcConfiguration = new PeerConnection.RTCConfiguration(iceServers);
-            final Message response = this.taoyao.request(this.taoyao.buildMessage("media::router::rtp::capabilities", "roomId", this.roomId));
-            if(response == null) {
-                this.close();
-                return false;
-            }
-            final Object rtpCapabilities = MapUtils.get(response.body(), "rtpCapabilities");
-            this.nativeEnterRoom(this.nativeRoomPointer, JSONUtils.toJSON(rtpCapabilities), this.peerConnectionFactory.getNativePeerConnectionFactory(), this.rtcConfiguration);
-            return true;
+            return this.taoyao.requestFuture(
+                this.taoyao.buildMessage("media::router::rtp::capabilities", "roomId", this.roomId),
+                response -> {
+                    final Object rtpCapabilities = MapUtils.get(response.body(), "rtpCapabilities");
+                    this.nativeEnterRoom(this.nativeRoomPointer, JSONUtils.toJSON(rtpCapabilities), this.peerConnectionFactory.getNativePeerConnectionFactory(), this.rtcConfiguration);
+                    return true;
+                },
+                response -> {
+                    this.close();
+                    return false;
+                }
+            );
         }
     }
 
@@ -146,35 +154,41 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     private void createSendTransport() {
-        final Message response = this.taoyao.request(this.taoyao.buildMessage(
-            "media::transport::webrtc::create",
-            "roomId", this.roomId,
-            "forceTcp", false,
-            "producing", true,
-            "consuming", false,
-            "sctpCapabilities", this.dataProduce ? this.sctpCapabilities : null
-            ));
-        if (response == null) {
-            Log.w(Room.class.getSimpleName(), "创建发送通道失败");
-            return;
-        }
-        this.nativeCreateSendTransport(this.nativeRoomPointer, JSONUtils.toJSON(response.body()));
+        this.taoyao.requestFuture(
+            this.taoyao.buildMessage(
+                "media::transport::webrtc::create",
+                "roomId", this.roomId,
+                "forceTcp", false,
+                "producing", true,
+                "consuming", false,
+                "sctpCapabilities", this.dataProduce ? this.sctpCapabilities : null
+            ),
+            response -> {
+                this.nativeCreateSendTransport(this.nativeRoomPointer, JSONUtils.toJSON(response.body()));
+            },
+            response -> {
+                Log.w(Room.class.getSimpleName(), "创建发送通道失败");
+            }
+        );
     }
 
     private void createRecvTransport() {
-        final Message response = this.taoyao.request(this.taoyao.buildMessage(
-            "media::transport::webrtc::create",
-            "roomId", this.roomId,
-            "forceTcp", false,
-            "producing", false,
-            "consuming", true,
-            "sctpCapabilities", this.dataProduce ? this.sctpCapabilities : null
-        ));
-        if (response == null) {
-            Log.w(Room.class.getSimpleName(), "创建接收通道失败");
-            return;
-        }
-        this.nativeCreateRecvTransport(this.nativeRoomPointer, JSONUtils.toJSON(response.body()));
+        this.taoyao.requestFuture(
+            this.taoyao.buildMessage(
+                "media::transport::webrtc::create",
+                "roomId", this.roomId,
+                "forceTcp", false,
+                "producing", false,
+                "consuming", true,
+                "sctpCapabilities", this.dataProduce ? this.sctpCapabilities : null
+            ),
+            response -> {
+                this.nativeCreateRecvTransport(this.nativeRoomPointer, JSONUtils.toJSON(response.body()));
+            },
+            response -> {
+                Log.w(Room.class.getSimpleName(), "创建接收通道失败");
+            }
+        );
     }
 
     public void mediaConsume(Message message, Map<String, Object> body) {
@@ -302,7 +316,7 @@ public class Room extends CloseableClient implements RouterCallback {
     public void enterRoomCallback(String rtpCapabilities, String sctpCapabilities) {
         this.rtpCapabilities  = rtpCapabilities;
         this.sctpCapabilities = sctpCapabilities;
-        this.taoyao.request(this.taoyao.buildMessage(
+        this.taoyao.push(this.taoyao.buildMessage(
             "room::enter",
             "roomId",           this.roomId,
             "password",         this.password,
@@ -318,7 +332,7 @@ public class Room extends CloseableClient implements RouterCallback {
 
     @Override
     public void sendTransportConnectCallback(String transportId, String dtlsParameters) {
-        this.taoyao.request(this.taoyao.buildMessage(
+        this.taoyao.push(this.taoyao.buildMessage(
             "media::transport::webrtc::connect",
             "roomId",         this.roomId,
             "transportId",    transportId,
@@ -328,7 +342,7 @@ public class Room extends CloseableClient implements RouterCallback {
 
     @Override
     public void recvTransportConnectCallback(String transportId, String dtlsParameters) {
-        this.taoyao.request(this.taoyao.buildMessage(
+        this.taoyao.push(this.taoyao.buildMessage(
             "media::transport::webrtc::connect",
             "roomId",         this.roomId,
             "transportId",    transportId,
@@ -338,15 +352,19 @@ public class Room extends CloseableClient implements RouterCallback {
 
     @Override
     public String sendTransportProduceCallback(String kind, String transportId, String rtpParameters) {
-        final Message response = this.taoyao.request(this.taoyao.buildMessage(
-            "media::produce",
-            "kind",          kind,
-            "roomId",        this.roomId,
-            "transportId",   transportId,
-            "rtpParameters", JSONUtils.toMap(rtpParameters)
-        ));
-        final Map<String, Object> body = response.body();
-        return MapUtils.get(body, "producerId");
+        return this.taoyao.requestFuture(
+            this.taoyao.buildMessage(
+                "media::produce",
+                "kind",          kind,
+                "roomId",        this.roomId,
+                "transportId",   transportId,
+                "rtpParameters", JSONUtils.toMap(rtpParameters)
+            ),
+            response -> {
+                final Map<String, Object> body = response.body();
+                return MapUtils.get(body, "producerId");
+            }
+        );
     }
 
     @Override

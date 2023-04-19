@@ -1,7 +1,5 @@
 package com.acgist.taoyao.media.client;
 
-import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.MediaCodec;
 import android.media.MediaCodecInfo;
 import android.media.MediaFormat;
@@ -9,7 +7,6 @@ import android.media.MediaMuxer;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.provider.MediaStore;
 import android.util.Log;
 
 import com.acgist.taoyao.boot.utils.DateUtils;
@@ -19,6 +16,7 @@ import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
+import org.webrtc.VideoTrack;
 import org.webrtc.YuvHelper;
 import org.webrtc.audio.JavaAudioDeviceModule;
 
@@ -27,9 +25,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 录像机
@@ -123,6 +118,7 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
      * 媒体合成器
      */
     private MediaMuxer mediaMuxer;
+    private VideoTrack videoTrack;
 
     public RecordClient(
         int audioBitRate, int sampleRate, int channelCount,
@@ -150,7 +146,7 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
             }
             Log.i(RecordClient.class.getSimpleName(), "录制视频文件：" + this.filepath);
             super.init();
-            this.mediaManager.newClient(VideoSourceType.BACK);
+            this.mediaManager.newClient();
             if (
                 this.audioThread == null || !this.audioThread.isAlive() ||
                 this.videoThread == null || !this.videoThread.isAlive()
@@ -365,6 +361,12 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         }
     }
 
+    public void source(VideoTrack videoTrack) {
+        this.videoTrack = videoTrack;
+        this.videoTrack.setEnabled(true);
+        this.videoTrack.addSink(this);
+    }
+
     @Override
     public void close() {
         synchronized (this) {
@@ -373,7 +375,9 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
             }
             super.close();
             Log.i(RecordClient.class.getSimpleName(), "结束录制：" + this.filepath);
-            if (audioThread != null) {
+            this.videoTrack.removeSink(this);
+            this.videoTrack.dispose();
+            if (this.audioThread != null) {
                 this.audioThread.quitSafely();
             }
             if (this.videoThread != null) {

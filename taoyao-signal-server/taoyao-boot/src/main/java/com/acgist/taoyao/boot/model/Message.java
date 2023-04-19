@@ -9,10 +9,8 @@ import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.fasterxml.jackson.annotation.JsonIncludeProperties;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
@@ -25,12 +23,15 @@ import lombok.Setter;
 @Setter
 @Schema(title = "消息", description = "消息")
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @JsonIncludeProperties(value = { "code", "message", "header", "body" })
 public class Message implements Cloneable, Serializable {
 
 	private static final long serialVersionUID = 1L;
+	
+    /**
+     * 成功标识
+     */
+    public static final String CODE_0000 = "0000";
 
 	/**
 	 * 状态编码
@@ -53,6 +54,20 @@ public class Message implements Cloneable, Serializable {
 	@Schema(title = "消息主体", description = "消息主体")
 	private Object body;
 	
+    public Message() {
+        // 默认消息都是成功
+        final MessageCode messageCode = MessageCode.CODE_0000;
+        this.code    = messageCode.getCode();
+        this.message = messageCode.getMessage();
+    }
+
+    public Message(String code, String message, Header header, Object body) {
+        this.code = code;
+        this.message = message;
+        this.header = header;
+        this.body = body;
+    }
+	
 	/**
 	 * @param code 状态编码
 	 */
@@ -61,21 +76,21 @@ public class Message implements Cloneable, Serializable {
 	}
 	
 	/**
-	 * @param code 状态编码
+	 * @param messageCode 状态编码
 	 */
-	public void setCode(MessageCode code) {
-		this.setCode(code, null);
+	public void setCode(MessageCode messageCode) {
+		this.setCode(messageCode, null);
 	}
 	
 	/**
-	 * @param code 状态编码
-	 * @param message 状态描述
+	 * @param messageCode 状态编码
+	 * @param message     状态描述
 	 * 
 	 * @return this
 	 */
-	public Message setCode(MessageCode code, String message) {
-		this.code = code.getCode();
-		this.message = StringUtils.isEmpty(message) ? code.getMessage() : message;
+	public Message setCode(MessageCode messageCode, String message) {
+		this.code = messageCode.getCode();
+		this.message = StringUtils.isEmpty(message) ? messageCode.getMessage() : message;
 		return this;
 	}
 
@@ -106,22 +121,22 @@ public class Message implements Cloneable, Serializable {
 	}
 
 	/**
-	 * @param code 状态编码
+	 * @param messageCode 状态编码
 	 * 
 	 * @return 失败消息
 	 */
-	public static final Message fail(MessageCode code) {
-		return fail(code, null, null);
+	public static final Message fail(MessageCode messageCode) {
+		return fail(messageCode, null, null);
 	}
 
 	/**
-	 * @param code 状态编码
-	 * @param body 消息主体
+	 * @param messageCode 状态编码
+	 * @param body        消息主体
 	 * 
 	 * @return 失败消息
 	 */
-	public static final Message fail(MessageCode code, Object body) {
-		return fail(code, null, body);
+	public static final Message fail(MessageCode messageCode, Object body) {
+		return fail(messageCode, null, body);
 	}
 	
 	/**
@@ -135,7 +150,7 @@ public class Message implements Cloneable, Serializable {
 	
 	/**
 	 * @param message 状态描述
-	 * @param body 消息主体
+	 * @param body    消息主体
 	 * 
 	 * @return 失败消息
 	 */
@@ -144,25 +159,25 @@ public class Message implements Cloneable, Serializable {
 	}
 	
 	/**
-	 * @param code 状态编码
-	 * @param message 状态描述
+	 * @param messageCode 状态编码
+	 * @param message     状态描述
 	 * 
 	 * @return 失败消息
 	 */
-	public static final Message fail(MessageCode code, String message) {
-		return fail(code, message, null);
+	public static final Message fail(MessageCode messageCode, String message) {
+		return fail(messageCode, message, null);
 	}
 
 	/**
-	 * @param code 状态编码
-	 * @param message 状态描述
-	 * @param body 消息主体
+	 * @param messageCode 状态编码
+	 * @param message     状态描述
+	 * @param body        消息主体
 	 * 
 	 * @return 失败消息
 	 */
-	public static final Message fail(MessageCode code, String message, Object body) {
+	public static final Message fail(MessageCode messageCode, String message, Object body) {
 		final Message failMessage = new Message();
-		failMessage.setCode(code == null ? MessageCode.CODE_9999 : code, message);
+		failMessage.setCode(messageCode == null ? MessageCode.CODE_9999 : messageCode, message);
 		failMessage.body = body;
 		return failMessage;
 	}
@@ -195,9 +210,13 @@ public class Message implements Cloneable, Serializable {
         }
 	}
 	
+    public boolean isSuccess() {
+        return CODE_0000.equals(this.code);
+    }
+	
 	@Override
 	public String toString() {
 		return JSONUtils.toJSON(this);
 	}
-	
+
 }

@@ -32,7 +32,7 @@ public class PlatformErrorProtocol extends ProtocolClientAdapter {
 	}
 
 	@Override
-	public Message build(Long id, MessageCode code, String message, Object body) {
+	public Message build(Long id, MessageCode messageCode, String message, Object body) {
 		final Long oldId = this.idLocal.get();
 		if(oldId == null) {
 			id = this.idService.buildId();
@@ -41,7 +41,7 @@ public class PlatformErrorProtocol extends ProtocolClientAdapter {
 			this.idLocal.remove();
 		}
 		// 默认设置失败状态
-		return super.build(id, code == null ? MessageCode.CODE_9999 : code, message, body);
+		return super.build(id, messageCode == null ? MessageCode.CODE_9999 : messageCode, message, body);
 	}
 	
 	/**
@@ -61,7 +61,7 @@ public class PlatformErrorProtocol extends ProtocolClientAdapter {
 	    final String exceptionMessage = e.getMessage();
 	    if(e instanceof MessageCodeException messageCodeException) {
 	        // 自定义的异常
-	        message.setCode(messageCodeException.getCode(), messageCodeException.getMessage());
+	        message.setCode(messageCodeException.getMessageCode(), messageCodeException.getMessage());
 	    } else if(StringUtils.isNotEmpty(exceptionMessage) && exceptionMessage.length() <= Byte.MAX_VALUE) {
 	        // 少量信息返回异常信息
 	        message.setMessage(exceptionMessage);

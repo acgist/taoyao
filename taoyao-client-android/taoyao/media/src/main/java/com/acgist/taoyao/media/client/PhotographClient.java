@@ -29,6 +29,7 @@ import com.acgist.taoyao.media.VideoSourceType;
 
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
+import org.webrtc.VideoTrack;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -53,6 +54,7 @@ public class PhotographClient implements VideoSink {
     private volatile boolean done;
     private volatile boolean finish;
     private Surface surface;
+    private VideoTrack videoTrack;
     private ImageReader imageReader;
     private CameraDevice cameraDevice;
     private HandlerThread handlerThread;
@@ -84,10 +86,18 @@ public class PhotographClient implements VideoSink {
             } catch (InterruptedException e) {
                 Log.e(PhotographClient.class.getSimpleName(), "拍照等待异常", e);
             } finally {
+                this.closeVideoTrack();
+                this.closeCamera();
                 this.handlerThread.quitSafely();
             }
         }
         return this.filepath;
+    }
+
+    public void photograph(VideoTrack videoTrack) {
+        videoTrack.setEnabled(true);
+        videoTrack.addSink(this);
+        this.videoTrack = videoTrack;
     }
 
     @Override
@@ -157,8 +167,16 @@ public class PhotographClient implements VideoSink {
         return new YuvImage(nv21, ImageFormat.NV21, width, height, null);
     }
 
+    private void closeVideoTrack() {
+        if(this.videoTrack != null) {
+            this.videoTrack.removeSink(this);
+            this.videoTrack.dispose();
+            this.videoTrack = null;
+        }
+    }
+
     @SuppressLint("MissingPermission")
-    public void photograph(int width, int height, int fps, VideoSourceType type, Context context) {
+    public void photograph(int width, int height, int fps, VideoSourceType videoSourceType, Context context) {
         this.handlerThread = new HandlerThread("PhotographThread");
         this.handlerThread.start();
         final Handler handler = new Handler(this.handlerThread.getLooper());
@@ -171,13 +189,14 @@ public class PhotographClient implements VideoSink {
                 final String[] cameraIdList = cameraManager.getCameraIdList();
                 for (String id : cameraIdList) {
                     final CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(id);
-                    if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK && type == VideoSourceType.BACK) {
+                    if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK && videoSourceType == VideoSourceType.BACK) {
                         cameraId = id;
                         break;
-                    } else if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT && type == VideoSourceType.FRONT) {
+                    } else if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT && videoSourceType == VideoSourceType.FRONT) {
                         cameraId = id;
                         break;
                     } else {
+                        // TODO：截屏
                     }
                 }
                 cameraManager.openCamera(cameraId, this.cameraDeviceStateCallback, null);
@@ -265,7 +284,6 @@ public class PhotographClient implements VideoSink {
                 Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
             } finally {
                 image.close();
-                PhotographClient.this.closeCamera();
                 PhotographClient.this.notifyWait();
             }
         }

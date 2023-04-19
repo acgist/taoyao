@@ -77,10 +77,12 @@ public abstract class Client extends CloseableClient {
         super.close();
         Log.i(this.getClass().getSimpleName(), "关闭终端：" + this.clientId);
         if(this.surfaceViewRenderer != null) {
+            // 移除
             final Message message = new Message();
             message.obj = surfaceViewRenderer;
             message.what = Config.WHAT_REMOVE_VIDEO;
             this.mainHandler.sendMessage(message);
+            // 销毁
             this.surfaceViewRenderer.release();
             this.surfaceViewRenderer = null;
         }

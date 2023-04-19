@@ -1,5 +1,8 @@
 package com.acgist.taoyao.media.config;
 
+import org.apache.commons.lang3.ArrayUtils;
+import org.webrtc.PeerConnection;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,25 +20,51 @@ public class WebrtcProperties {
 	private WebrtcStunProperties[] stun;
 	private WebrtcTurnProperties[] turn;
 	
-    public List<Map<String, String>> getIceServers() {
-        final List<Map<String, String>> list = new ArrayList<>();
-        if(this.stun != null) {
+    public List<PeerConnection.IceServer> getIceServers() {
+        final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
+        if(ArrayUtils.isNotEmpty(this.stun)) {
             for (WebrtcStunProperties stun : this.stun) {
-                final Map<String, String> map = new HashMap<>();
-                map.put("urls", stun.getAddress());
-                list.add(map);
+                final PeerConnection.IceServer iceServer = PeerConnection.IceServer
+                    .builder(stun.getAddress())
+                    .createIceServer();
+                iceServers.add(iceServer);
             }
         }
-        if(this.turn != null) {
+        if(ArrayUtils.isNotEmpty(this.turn)) {
             for (WebrtcTurnProperties turn : this.turn) {
-                final Map<String, String> map = new HashMap<>();
-                map.put("urls", turn.getAddress());
-                map.put("username", turn.getUsername());
-                map.put("credential", turn.getPassword());
-                list.add(map);
+                final PeerConnection.IceServer iceServer = PeerConnection.IceServer
+                    .builder(turn.getAddress())
+                    .setUsername(turn.getUsername())
+                    .setPassword(turn.getPassword())
+                    .createIceServer();
+                iceServers.add(iceServer);
             }
         }
-        return list;
+        return iceServers;
     }
-	
+
+    public Boolean getEncrypt() {
+        return this.encrypt;
+    }
+
+    public void setEncrypt(Boolean encrypt) {
+        this.encrypt = encrypt;
+    }
+
+    public WebrtcStunProperties[] getStun() {
+        return this.stun;
+    }
+
+    public void setStun(WebrtcStunProperties[] stun) {
+        this.stun = stun;
+    }
+
+    public WebrtcTurnProperties[] getTurn() {
+        return this.turn;
+    }
+
+    public void setTurn(WebrtcTurnProperties[] turn) {
+        this.turn = turn;
+    }
+
 }

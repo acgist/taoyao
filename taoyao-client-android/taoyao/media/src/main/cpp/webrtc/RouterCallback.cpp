@@ -82,6 +82,10 @@ namespace acgist {
             jTransportId,
             jRtpParameters
         );
+        if(jResult == nullptr) {
+            // TODO：处理空指针
+            return "";
+        }
         const char* result = env->GetStringUTFChars(jResult, nullptr);
         env->DeleteLocalRef(jResult);
         env->ReleaseStringUTFChars(jResult, result);

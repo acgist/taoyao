@@ -13,6 +13,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.PowerManager;
 import android.os.Process;
+import android.se.omapi.Session;
 import android.util.Log;
 
 import com.acgist.taoyao.boot.model.Header;
@@ -405,6 +406,7 @@ public final class Taoyao implements ITaoyao {
      *
      * @return 信令响应消息
      */
+    @Override
     public Message request(Message request) {
         final Header header = request.getHeader();
         final Long id = header.getId();
@@ -714,8 +716,8 @@ public final class Taoyao implements ITaoyao {
         final Room room = this.rooms.computeIfAbsent(
             roomId,
             key -> new Room(
-                this.name, this.clientId,
-                key, password,
+                this.name, key,
+                this.clientId, password,
                 this, this.mainHandler,
                 resources.getBoolean(R.bool.preview),
                 resources.getBoolean(R.bool.playAudio),
@@ -726,7 +728,8 @@ public final class Taoyao implements ITaoyao {
                 resources.getBoolean(R.bool.audioProduce),
                 resources.getBoolean(R.bool.dataProduce),
                 resources.getBoolean(R.bool.videoProduce),
-                this.mediaManager.getMediaProperties()
+                this.mediaManager.getMediaProperties(),
+                this.mediaManager.getWebrtcProperties()
             )
         );
         final boolean success = room.enter();
@@ -772,6 +775,37 @@ public final class Taoyao implements ITaoyao {
         room.closeRemoteClient(clientId);
     }
 
+    private void sessionCall(String clientId) {
+        this.requestFuture(
+            this.buildMessage(
+                "session::call",
+                "clientId", clientId
+            ),
+            response -> {
+                final Map<String, Object> body = response.body();
+                final String name      = MapUtils.get(body, "name");
+                final String sessionId = MapUtils.get(body, "sessionId");
+                final Resources resources = this.context.getResources();
+                final SessionClient sessionClient = new SessionClient(
+                    sessionId, name, MapUtils.get(body, "clientId"), this, this.mainHandler,
+                    resources.getBoolean(R.bool.preview),
+                    resources.getBoolean(R.bool.playAudio),
+                    resources.getBoolean(R.bool.playVideo),
+                    resources.getBoolean(R.bool.dataConsume),
+                    resources.getBoolean(R.bool.audioConsume),
+                    resources.getBoolean(R.bool.videoConsume),
+                    resources.getBoolean(R.bool.audioProduce),
+                    resources.getBoolean(R.bool.dataProduce),
+                    resources.getBoolean(R.bool.videoProduce),
+                    this.mediaManager.getMediaProperties(),
+                    this.mediaManager.getWebrtcProperties()
+                );
+                sessionClient.init();
+                sessionClient.offer();
+            }
+        );
+    }
+
     private void sessionCall(Message message, Map<String, Object> body) {
         final String name      = MapUtils.get(body, "name");
         final String clientId  = MapUtils.get(body, "clientId");
@@ -788,7 +822,8 @@ public final class Taoyao implements ITaoyao {
             resources.getBoolean(R.bool.audioProduce),
             resources.getBoolean(R.bool.dataProduce),
             resources.getBoolean(R.bool.videoProduce),
-            this.mediaManager.getMediaProperties()
+            this.mediaManager.getMediaProperties(),
+            this.mediaManager.getWebrtcProperties()
         );
         this.sessionClients.put(sessionId, sessionClient);
         sessionClient.init();

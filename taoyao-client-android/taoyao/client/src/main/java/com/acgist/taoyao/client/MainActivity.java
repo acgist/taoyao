@@ -28,6 +28,7 @@ import com.acgist.taoyao.client.databinding.ActivityMainBinding;
 import com.acgist.taoyao.client.signal.Taoyao;
 import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.TransportType;
+import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
 
 import java.io.Serializable;
@@ -127,7 +128,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             resources.getInteger(R.integer.iFrameInterval),
             resources.getString(R.string.storagePathImage),
             resources.getString(R.string.storagePathVideo),
-            TransportType.valueOf(resources.getString(R.string.transportType))
+            TransportType.valueOf(resources.getString(R.string.transportType)),
+            VideoSourceType.valueOf(resources.getString(R.string.videoSourceType))
         );
         final Display display = this.getWindow().getContext().getDisplay();
         while (Display.STATE_ON != display.getState() && waitCount++ < 10) {

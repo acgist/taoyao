@@ -20,6 +20,11 @@ public class Message implements Cloneable, Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
+     * 成功标识
+     */
+    public static final String CODE_0000 = "0000";
+
+    /**
      * 状态编码
      */
     private String code;
@@ -37,20 +42,21 @@ public class Message implements Cloneable, Serializable {
     private Object body;
 
     /**
-     * @param code 状态编码
+     * @param messageCode 状态编码
      */
-    public void setCode(MessageCode code) {
-        this.setCode(code, null);
+    public void setCode(MessageCode messageCode) {
+        this.setCode(messageCode, null);
     }
 
     /**
-     * @param code    状态编码
-     * @param message 状态描述
+     * @param messageCode 状态编码
+     * @param message     状态描述
+     *
      * @return this
      */
-    public Message setCode(MessageCode code, String message) {
-        this.code = code.getCode();
-        this.message = StringUtils.isEmpty(message) ? code.getMessage() : message;
+    public Message setCode(MessageCode messageCode, String message) {
+        this.code = messageCode.getCode();
+        this.message = StringUtils.isEmpty(message) ? messageCode.getMessage() : message;
         return this;
     }
 
@@ -63,6 +69,7 @@ public class Message implements Cloneable, Serializable {
 
     /**
      * @param body 消息主体
+     *
      * @return 成功消息
      */
     public static final Message success(Object body) {
@@ -80,20 +87,22 @@ public class Message implements Cloneable, Serializable {
     }
 
     /**
-     * @param code 状态编码
+     * @param messageCode 状态编码
+     *
      * @return 失败消息
      */
-    public static final Message fail(MessageCode code) {
-        return fail(code, null, null);
+    public static final Message fail(MessageCode messageCode) {
+        return fail(messageCode, null, null);
     }
 
     /**
-     * @param code 状态编码
-     * @param body 消息主体
+     * @param messageCode 状态编码
+     * @param body        消息主体
+     *
      * @return 失败消息
      */
-    public static final Message fail(MessageCode code, Object body) {
-        return fail(code, null, body);
+    public static final Message fail(MessageCode messageCode, Object body) {
+        return fail(messageCode, null, body);
     }
 
     /**
@@ -107,6 +116,7 @@ public class Message implements Cloneable, Serializable {
     /**
      * @param message 状态描述
      * @param body    消息主体
+     *
      * @return 失败消息
      */
     public static final Message fail(String message, Object body) {
@@ -114,23 +124,25 @@ public class Message implements Cloneable, Serializable {
     }
 
     /**
-     * @param code    状态编码
-     * @param message 状态描述
+     * @param messageCode 状态编码
+     * @param message     状态描述
+     *
      * @return 失败消息
      */
-    public static final Message fail(MessageCode code, String message) {
-        return fail(code, message, null);
+    public static final Message fail(MessageCode messageCode, String message) {
+        return fail(messageCode, message, null);
     }
 
     /**
-     * @param code    状态编码
-     * @param message 状态描述
-     * @param body    消息主体
+     * @param messageCode 状态编码
+     * @param message     状态描述
+     * @param body        消息主体
+     *
      * @return 失败消息
      */
-    public static final Message fail(MessageCode code, String message, Object body) {
+    public static final Message fail(MessageCode messageCode, String message, Object body) {
         final Message failMessage = new Message();
-        failMessage.setCode(code == null ? MessageCode.CODE_9999 : code, message);
+        failMessage.setCode(messageCode == null ? MessageCode.CODE_9999 : messageCode, message);
         failMessage.body = body;
         return failMessage;
     }
@@ -169,6 +181,10 @@ public class Message implements Cloneable, Serializable {
         this.message = message;
         this.header = header;
         this.body = body;
+    }
+
+    public boolean isSuccess() {
+        return CODE_0000.equals(this.code);
     }
 
     public String getCode() {

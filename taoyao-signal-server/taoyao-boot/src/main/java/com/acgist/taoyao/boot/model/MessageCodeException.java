@@ -19,7 +19,7 @@ public class MessageCodeException extends RuntimeException {
 	/**
 	 * 状态编码
 	 */
-	private final MessageCode code;
+	private final MessageCode messageCode;
 
 	/**
 	 * @param message 异常消息
@@ -41,40 +41,40 @@ public class MessageCodeException extends RuntimeException {
 	}
 	
 	/**
-	 * @param code 状态编码
+	 * @param messageCode 状态编码
 	 * @param message 异常消息
 	 * 
 	 * @return 状态编码异常
 	 */
-	public static final MessageCodeException of(MessageCode code, String message) {
-		return of(null, code, message);
+	public static final MessageCodeException of(MessageCode messageCode, String message) {
+		return of(null, messageCode, message);
 	}
 	
 	/**
 	 * @param t 异常
-	 * @param code 状态编码
+	 * @param messageCode 状态编码
 	 * @param message 异常消息
 	 * 
 	 * @return 状态编码异常
 	 */
-	public static final MessageCodeException of(Throwable t, MessageCode code, String message) {
-		if(code == null) {
-			code = MessageCode.CODE_9999;
+	public static final MessageCodeException of(Throwable t, MessageCode messageCode, String message) {
+		if(messageCode == null) {
+			messageCode = MessageCode.CODE_9999;
 		}
 		if(StringUtils.isEmpty(message)) {
-			message = Objects.isNull(t) ? code.getMessage() : t.getMessage();
+			message = Objects.isNull(t) ? messageCode.getMessage() : t.getMessage();
 		}
-		return new MessageCodeException(t, code, message);
+		return new MessageCodeException(t, messageCode, message);
 	}
 
 	/**
 	 * @param t 异常
-	 * @param code 状态编码
+	 * @param messageCode 状态编码
 	 * @param message 异常消息
 	 */
-	public MessageCodeException(Throwable t, MessageCode code, String message) {
+	public MessageCodeException(Throwable t, MessageCode messageCode, String message) {
 		super(message, t);
-		this.code = code;
+		this.messageCode = messageCode;
 	}
 
 }

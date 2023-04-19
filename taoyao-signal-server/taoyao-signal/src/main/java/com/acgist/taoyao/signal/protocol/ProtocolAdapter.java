@@ -79,8 +79,8 @@ public abstract class ProtocolAdapter implements Protocol {
 	}
 	
 	@Override
-	public Message build(MessageCode code, Object body) {
-		return this.build(null, code, null, body);
+	public Message build(MessageCode messageCode, Object body) {
+		return this.build(null, messageCode, null, body);
 	}
 	
 	@Override
@@ -89,12 +89,12 @@ public abstract class ProtocolAdapter implements Protocol {
 	}
 	
 	@Override
-	public Message build(MessageCode code, String message, Object body) {
-		return this.build(null, code, message, body);
+	public Message build(MessageCode messageCode, String message, Object body) {
+		return this.build(null, messageCode, message, body);
 	}
 	
 	@Override
-	public Message build(Long id, MessageCode code, String message, Object body) {
+	public Message build(Long id, MessageCode messageCode, String message, Object body) {
 	    // 消息标识
 		if(id == null) {
 			id = this.idService.buildId();
@@ -107,7 +107,7 @@ public abstract class ProtocolAdapter implements Protocol {
 			.build();
 		final Message build = Message.builder().build();
 		// 设置状态编码、状态描述：默认成功
-		build.setCode(code == null ? MessageCode.CODE_0000 : code, message);
+		build.setCode(messageCode == null ? MessageCode.CODE_0000 : messageCode, message);
 		// 设置消息头部
 		build.setHeader(header);
 		// 设置消息主体

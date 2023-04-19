@@ -61,13 +61,13 @@ public final class ErrorUtils {
 	/**
 	 * 注册异常（注意继承顺序）
 	 * 
-	 * @param code 状态编码
+	 * @param messageCode 状态编码
 	 * @param clazz 异常类型
 	 */
-	public static final void register(MessageCode code, Class<?> clazz) {
-		log.debug("注册状态编码异常映射：{} - {}", code, clazz);
+	public static final void register(MessageCode messageCode, Class<?> clazz) {
+		log.debug("注册状态编码异常映射：{} - {}", messageCode, clazz);
 		synchronized (CODE_MAPPING) {
-		    CODE_MAPPING.put(clazz, code);
+		    CODE_MAPPING.put(clazz, messageCode);
         }
 	}
 	
@@ -98,7 +98,7 @@ public final class ErrorUtils {
 		final Object rootError = rootException(globalError);
 		if(rootError instanceof MessageCodeException messageCodeException) {
 			// 状态编码异常
-			final MessageCode messageCode = messageCodeException.getCode();
+			final MessageCode messageCode = messageCodeException.getMessageCode();
 			status = messageCode.getStatus();
 			message = Message.fail(messageCode, messageCodeException.getMessage());
 		} else if(rootError instanceof Throwable throwable) {

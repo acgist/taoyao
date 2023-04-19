@@ -21,6 +21,8 @@
     <string name="storagePathVideo">/taoyao/video</string>
     <!-- 传输类型：RTP|WEBRTC -->
     <string name="transportType">WEBRTC</string>
+    <!-- 视频来源：FILE|BACK|FRONT|SCREEN -->
+    <string name="videoSourceType">BACK</string>
     <!-- 媒体配置：是否消费数据 -->
     <bool name="dataConsume">false</bool>
     <!-- 媒体配置：是否消费音频 -->

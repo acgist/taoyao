@@ -70,12 +70,12 @@ public interface Protocol {
 	Message build(Object body);
 	
 	/**
-	 * @param code 状态编码
+	 * @param messageCode 状态编码
 	 * @param body 消息主体
 	 * 
 	 * @return 信令消息
 	 */
-	Message build(MessageCode code, Object body);
+	Message build(MessageCode messageCode, Object body);
 	
 	/**
 	 * @param message 状态描述
@@ -86,22 +86,22 @@ public interface Protocol {
 	Message build(String message, Object body);
 	
 	/**
-	 * @param code 状态编码
+	 * @param messageCode 状态编码
 	 * @param message 状态描述
 	 * @param body 消息主体
 	 * 
 	 * @return 信令消息
 	 */
-	Message build(MessageCode code, String message, Object body);
+	Message build(MessageCode messageCode, String message, Object body);
 	
 	/**
 	 * @param id 消息标识
-	 * @param code 状态编码
+	 * @param messageCode 状态编码
 	 * @param message 状态描述
 	 * @param body 消息主体
 	 * 
 	 * @return 信令消息
 	 */
-	Message build(Long id, MessageCode code, String message, Object body);
+	Message build(Long id, MessageCode messageCode, String message, Object body);
 	
 }
