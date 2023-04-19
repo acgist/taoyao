@@ -23,10 +23,12 @@ public class MediaAudioProperties {
 	 */
 	public enum Format {
 		
-	    G722,
-		PCMA,
-		PCMU,
-		OPUS;
+        G722,
+        // G711A
+        PCMA,
+        // G711U
+        PCMU,
+        OPUS;
 		
 	}
 	

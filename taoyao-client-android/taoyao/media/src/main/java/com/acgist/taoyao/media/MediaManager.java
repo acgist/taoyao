@@ -315,6 +315,7 @@ public final class MediaManager {
     private void initPeerConnectionFactory() {
         PeerConnectionFactory.initialize(
             PeerConnectionFactory.InitializationOptions.builder(this.context)
+//              .setFieldTrials("WebRTC-IntelVP8/Enabled/")
 //              .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
 //              .setNativeLibraryName("jingle_peerconnection_so")
 //              .setEnableInternalTracer(true)

@@ -1,8 +1,10 @@
 package com.acgist.taoyao.media.client;
 
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
+import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.SurfaceViewRenderer;
@@ -75,6 +77,10 @@ public abstract class Client extends CloseableClient {
         super.close();
         Log.i(this.getClass().getSimpleName(), "关闭终端：" + this.clientId);
         if(this.surfaceViewRenderer != null) {
+            final Message message = new Message();
+            message.obj = surfaceViewRenderer;
+            message.what = Config.WHAT_REMOVE_VIDEO;
+            this.mainHandler.sendMessage(message);
             this.surfaceViewRenderer.release();
             this.surfaceViewRenderer = null;
         }

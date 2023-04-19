@@ -57,8 +57,9 @@ public class MediaService extends Service {
 
     }
 
+    public static Handler mainHandler;
+
     private Taoyao taoyao;
-    private Handler mainHandler;
     private final ITaoyaoListener taoyaoListener = new ITaoyaoListener() {
     };
 
@@ -131,7 +132,6 @@ public class MediaService extends Service {
     private void openConnect(Intent intent) {
         if (this.taoyao == null) {
             Log.d(MediaService.class.getSimpleName(), "打开信令连接");
-            this.mainHandler = (Handler) intent.getSerializableExtra("mainHandler");
             this.connect();
         } else {
             Log.d(MediaService.class.getSimpleName(), "信令已经连接");

@@ -116,7 +116,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             return;
         }
         int waitCount = 0;
-        this.mainHandler = new MainHandler(this);
+        this.mainHandler = new MainHandler();
         final Resources resources = this.getResources();
         MediaManager.getInstance().initContext(
             this.mainHandler, this.getApplicationContext(),
@@ -137,7 +137,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             Log.i(MainActivity.class.getSimpleName(), "拉起媒体服务");
             final Intent intent = new Intent(this, MediaService.class);
             intent.setAction(MediaService.Action.CONNECT.name());
-            intent.putExtra("mainHandler", this.mainHandler);
+            // 注意：不能使用intent传递
+            MediaService.mainHandler = this.mainHandler;
             this.startService(intent);
         } else {
             Log.w(MainActivity.class.getSimpleName(), "拉起媒体服务失败");
@@ -206,22 +207,17 @@ public class MainActivity extends AppCompatActivity implements Serializable {
      *
      * @author acgist
      */
-    public static class MainHandler extends Handler implements Serializable {
-
-        private final MainActivity mainActivity;
-
-        public MainHandler(MainActivity mainActivity) {
-            this.mainActivity = mainActivity;
-        }
+    public class MainHandler extends Handler implements Serializable {
 
         @Override
         public void handleMessage(@NonNull Message message) {
             super.handleMessage(message);
             Log.d(MainHandler.class.getSimpleName(), "Handler消息：" + message.what + " - " + message.obj);
             switch (message.what) {
-                case Config.WHAT_SCREEN_CAPTURE -> this.mainActivity.screenCapture(message);
+                case Config.WHAT_SCREEN_CAPTURE   -> MainActivity.this.screenCapture(message);
                 case Config.WHAT_NEW_LOCAL_VIDEO,
-                    Config.WHAT_NEW_REMOTE_VIDEO -> this.mainActivity.previewVideo(message);
+                     Config.WHAT_NEW_REMOTE_VIDEO -> MainActivity.this.previewVideo(message);
+                case Config.WHAT_REMOVE_VIDEO     -> MainActivity.this.removeVideo(message);
             }
         }
 
@@ -252,6 +248,12 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         final SurfaceView surfaceView = (SurfaceView) message.obj;
         surfaceView.setZ(0F);
         video.addView(surfaceView, layoutParams);
+    }
+
+    private void removeVideo(Message message) {
+        final GridLayout video = this.binding.video;
+        final SurfaceView surfaceView = (SurfaceView) message.obj;
+        video.removeView(surfaceView);
     }
 
 }

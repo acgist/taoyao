@@ -15,7 +15,7 @@
 * 四核`CPU`
 * 硬盘`100G`
 * 系统`Ubuntu 20.xx`
-* 宽带按需`100Mbps/s`（不要固定宽带）
+* 宽带按需`100Mbps/s`
 * 整个下载过程大概需要半到一个小时
 * 整个编译过程大概需要一到两个小时
 
@@ -27,7 +27,7 @@ git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 # 源码
 mkdir -p /data/webrtc
 cd /data/webrtc
-fetch --nohooks webrtc_android
+/data/depot_tools/fetch --nohooks webrtc_android
 /data/depot_tools/gclient sync
 
 # 分支
@@ -56,17 +56,66 @@ source ./build/android/envsetup.sh
 ---
 
 # 编译项目
-./tools_webrtc/android/build_aar.py --build-dir ./out/release-build/
-# 指定CPU架构：--arch x86 x86_64 arm64-v8a armeabi-v7a
+./tools_webrtc/android/build_aar.py --build-dir ./out/release-build/ --arch x86 x86_64 arm64-v8a armeabi-v7a
+
+# 安装工具
+cd /data
+wget https://github.com/skvadrik/re2c/releases/download/3.0/re2c-3.0.tar.xz
+tar -xJf re2c-3.0.tar.xz
+cd re2c-3.0
+./configure
+cd /data
+git clone https://github.com/ninja-build/ninja.git
+cd ninja
+./configure.py --bootstrap
+ln -sf /data/ninja/ninja /usr/bin/ninja
 
 # 生成静态库
-/data/depot_tools/autoninja -C ./out/release-build/x86 webrtc
-/data/depot_tools/autoninja -C ./out/release-build/x86_64 webrtc
-/data/depot_tools/autoninja -C ./out/release-build/arm64-v8a webrtc
+cd /data/webrtc/src
+/data/depot_tools/autoninja -C ./out/release-build/x86 webrtc         &&
+/data/depot_tools/autoninja -C ./out/release-build/x86_64 webrtc      &&
+/data/depot_tools/autoninja -C ./out/release-build/arm64-v8a webrtc   &&
 /data/depot_tools/autoninja -C ./out/release-build/armeabi-v7a webrtc
 
-# 打包
-zip -r webrtc.zip out libwebrtc.aar
+# 打包文件
+zip -r lib.zip out libwebrtc.aar
+
+# 提取源代码
+zip -r java.zip \
+sdk/android/api/ \
+sdk/android/src/ \
+rtc_base/java/src/ \
+modules/audio_device/android/java/src/ \
+out/release-build/arm64-v8a/gen/sdk/android/video_api_java/generated_java/input_srcjars/ \
+out/release-build/arm64-v8a/gen/sdk/android/peerconnection_java/generated_java/input_srcjars/
+
+# 提取头文件
+mkdir linux-include
+---
+#!/bin/bash
+ 
+src=`find ./ -name "*.h"`
+for header in $src
+do
+    echo "cp header file $header"
+    cp --parents $header linux-include
+done
+
+src=`find ./ -name "*.hpp"`
+for header in $src
+do
+    echo "cp header file $header"
+    cp --parents $header linux-include
+done
+
+src=`find ./ -name "*.hxx"`
+for header in $src
+do
+    echo "cp header file $header"
+    cp --parents $header linux-include
+done
+---
+zip -r src.zip linux-include
 ```
 
 [WebRTC](https://pan.baidu.com/s/1E_DXv32D9ODyj5J-o-ji_g?pwd=hudc)
@@ -86,42 +135,4 @@ cmake . -B build \
 -DLIBWEBRTC_BINARY_PATH:PATH=PATH_TO_LIBWEBRTC_BINARY
 make -C build
 make install -C build
-```
-
-## licenses
-
-```
-List of licenses:
-webrtc,
-abseil-cpp,
-android_deps,
-android_deps:com_android_support_support_annotations.*,
-android_ndk,
-android_sdk,
-androidx,
-base64,
-boringssl,
-crc32c,
-fft,
-fiat,
-g711,
-g722,
-ijar,
-jdk,
-libaom,
-libevent,
-libjpeg_turbo,
-libsrtp,
-libvpx,
-libyuv,
-nasm,
-ooura,
-opus,
-pffft,
-protobuf,
-rnnoise,
-sigslot,
-spl_sqrt_floor,
-usrsctp,
-zlib
 ```

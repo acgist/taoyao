@@ -16,7 +16,6 @@ namespace acgist {
         std::string roomId;
         webrtc::PeerConnectionFactoryInterface* factory;
         mediasoupclient::Device* device;
-        mediasoupclient::PeerConnection* peerConnection;
         mediasoupclient::SendTransport* sendTransport;
         mediasoupclient::RecvTransport* recvTransport;
         mediasoupclient::SendTransport::Listener* sendListener;
@@ -27,21 +26,21 @@ namespace acgist {
         mediasoupclient::Consumer::Listener* consumerListener;
         std::map<std::string, mediasoupclient::Consumer*> consumers;
     public:
-        Room(std::string roomId, JavaVM* javaVM, jobject routerCallback);
+        Room(JavaVM* javaVM, const std::string& roomId, const jobject& routerCallback);
         virtual ~Room();
     public:
-        void enterRoom(JNIEnv* env, std::string rtpCapabilities, webrtc::PeerConnectionFactoryInterface* factory, webrtc::PeerConnectionInterface::RTCConfiguration& rtcConfiguration);
-        void createSendTransport(JNIEnv* env, std::string body);
-        void createRecvTransport(JNIEnv* env, std::string body);
+        void enterRoom(JNIEnv* env, const std::string& rtpCapabilities, webrtc::PeerConnectionFactoryInterface* factory, webrtc::PeerConnectionInterface::RTCConfiguration& rtcConfiguration);
+        void createSendTransport(JNIEnv* env, const std::string& body);
+        void createRecvTransport(JNIEnv* env, const std::string& body);
         void mediaProduceAudio(JNIEnv* env, webrtc::MediaStreamInterface* mediaStream);
         void mediaProduceVideo(JNIEnv* env, webrtc::MediaStreamInterface* mediaStream);
-        void mediaConsume(JNIEnv* env, std::string message);
-        void mediaProducerPause(JNIEnv* env, std::string producerId);
-        void mediaProducerResume(JNIEnv* env, std::string producerId);
-        void mediaProducerClose(JNIEnv* env, std::string producerId);
-        void mediaConsumerPause(JNIEnv* env, std::string consumerId);
-        void mediaConsumerResume(JNIEnv* env, std::string consumerId);
-        void mediaConsumerClose(JNIEnv* env, std::string consumerId);
+        void mediaConsume(JNIEnv* env, const std::string& message);
+        void mediaProducerPause(JNIEnv* env, const std::string& producerId);
+        void mediaProducerResume(JNIEnv* env, const std::string& producerId);
+        void mediaProducerClose(JNIEnv* env, const std::string& producerId);
+        void mediaConsumerPause(JNIEnv* env, const std::string& consumerId);
+        void mediaConsumerResume(JNIEnv* env, const std::string& consumerId);
+        void mediaConsumerClose(JNIEnv* env, const std::string& consumerId);
         void closeRoom();
     };
 

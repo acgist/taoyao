@@ -28,6 +28,10 @@ public class Config {
      */
     public static final int WHAT_NEW_REMOTE_VIDEO = 2003;
     /**
+     * 移除远程视频
+     */
+    public static final int WHAT_REMOVE_VIDEO = 2999;
+    /**
      * 默认声音大小
      */
     public static final double DEFAULT_VOLUME = 10.0D;

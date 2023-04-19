@@ -147,13 +147,20 @@ public class SessionClient extends Client {
      */
     public void offer() {
         final MediaConstraints mediaConstraints = new MediaConstraints();
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(1920)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(1080)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(15)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(30)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minWidth", Integer.toString(640)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minHeight", Integer.toString(480)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(1920)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(1080)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(15)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(30)));
 //      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
 //      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googHighpassFilter", "true"));
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googAutoGainControl", "true"));
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googEchoCancellation", "true"));
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googNoiseSuppression", "true"));
 //      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("internalSctpDataChannels", "true"));
         this.peerConnection.createOffer(this.sdpObserver, mediaConstraints);
     }
 
@@ -164,13 +171,23 @@ public class SessionClient extends Client {
         final SessionDescription sessionDescription = new SessionDescription(sdpType, sdp);
         this.peerConnection.setRemoteDescription(this.sdpObserver, sessionDescription);
         final MediaConstraints mediaConstraints = new MediaConstraints();
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(1920)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(1080)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(15)));
-//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(30)));
+        // PC
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
 //      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveAudio", "true"));
 //      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("OfferToReceiveVideo", "true"));
-//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("DtlsSrtpKeyAgreement", "true"));
+        // audio
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googHighpassFilter", "true"));
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googAutoGainControl", "true"));
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googEchoCancellation", "true"));
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("googNoiseSuppression", "true"));
+        // video
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minWidth", Integer.toString(640)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minHeight", Integer.toString(480)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxWidth", Integer.toString(1920)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxHeight", Integer.toString(1080)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("minFrameRate", Integer.toString(15)));
+//      mediaConstraints.mandatory.add(new MediaConstraints.KeyValuePair("maxFrameRate", Integer.toString(30)));
+//      mediaConstraints.optional.add(new MediaConstraints.KeyValuePair("internalSctpDataChannels", "true"));
         this.peerConnection.createAnswer(this.sdpObserver, mediaConstraints);
     }
 
