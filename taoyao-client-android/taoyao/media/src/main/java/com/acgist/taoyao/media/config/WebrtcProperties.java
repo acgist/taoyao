@@ -1,5 +1,7 @@
 package com.acgist.taoyao.media.config;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import org.apache.commons.lang3.ArrayUtils;
 import org.webrtc.PeerConnection;
 
@@ -11,7 +13,7 @@ import java.util.Map;
 /**
  * WebRTC配置
  * P2P视频监控会用，正常会议不会使用，需要自己搭建`coturn`服务。
- * 
+ *
  * @author acgist
  */
 public class WebrtcProperties {
@@ -19,7 +21,8 @@ public class WebrtcProperties {
     private Boolean encrypt;
 	private WebrtcStunProperties[] stun;
 	private WebrtcTurnProperties[] turn;
-	
+
+    @JsonIgnore
     public List<PeerConnection.IceServer> getIceServers() {
         final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
         if(ArrayUtils.isNotEmpty(this.stun)) {

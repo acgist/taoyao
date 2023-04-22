@@ -182,7 +182,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         }
         this.threadHandler.post(() -> {
             // 进入房间
-            Taoyao.taoyao.roomEnter("91f81c0a-0556-4087-b9a4-5889fac36fb6", null);
+//          Taoyao.taoyao.roomEnter("91f81c0a-0556-4087-b9a4-5889fac36fb6", null);
+            Taoyao.taoyao.sessionCall("taoyao");
         });
     }
 
@@ -253,9 +254,12 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     }
 
     private void removeVideo(Message message) {
-        final GridLayout video = this.binding.video;
-        final SurfaceView surfaceView = (SurfaceView) message.obj;
-        video.removeView(surfaceView);
+        synchronized (this) {
+            final GridLayout video = this.binding.video;
+            final SurfaceView surfaceView = (SurfaceView) message.obj;
+            final int index = video.indexOfChild(surfaceView);
+            video.removeViewAt(index);
+        }
     }
 
 }

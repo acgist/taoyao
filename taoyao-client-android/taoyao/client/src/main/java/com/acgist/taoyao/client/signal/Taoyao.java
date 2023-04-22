@@ -520,7 +520,13 @@ public final class Taoyao implements ITaoyao {
                 request.notifyAll();
             }
         } else {
-            this.executeHandler.post(() -> this.dispatch(content, header, message));
+            this.executeHandler.post(() -> {
+                try {
+                    this.dispatch(content, header, message);
+                } catch (Exception e) {
+                    Log.e(Taoyao.class.getSimpleName(), "处理信令异常：" + content, e);
+                }
+            });
         }
     }
 
@@ -725,8 +731,8 @@ public final class Taoyao implements ITaoyao {
                 resources.getBoolean(R.bool.dataConsume),
                 resources.getBoolean(R.bool.audioConsume),
                 resources.getBoolean(R.bool.videoConsume),
-                resources.getBoolean(R.bool.audioProduce),
                 resources.getBoolean(R.bool.dataProduce),
+                resources.getBoolean(R.bool.audioProduce),
                 resources.getBoolean(R.bool.videoProduce),
                 this.mediaManager.getMediaProperties(),
                 this.mediaManager.getWebrtcProperties()
@@ -775,7 +781,7 @@ public final class Taoyao implements ITaoyao {
         room.closeRemoteClient(clientId);
     }
 
-    private void sessionCall(String clientId) {
+    public void sessionCall(String clientId) {
         this.requestFuture(
             this.buildMessage(
                 "session::call",
@@ -794,14 +800,13 @@ public final class Taoyao implements ITaoyao {
                     resources.getBoolean(R.bool.dataConsume),
                     resources.getBoolean(R.bool.audioConsume),
                     resources.getBoolean(R.bool.videoConsume),
-                    resources.getBoolean(R.bool.audioProduce),
                     resources.getBoolean(R.bool.dataProduce),
+                    resources.getBoolean(R.bool.audioProduce),
                     resources.getBoolean(R.bool.videoProduce),
                     this.mediaManager.getMediaProperties(),
                     this.mediaManager.getWebrtcProperties()
                 );
-                sessionClient.init();
-                sessionClient.offer();
+                this.sessionClients.put(sessionId, sessionClient);
             }
         );
     }
@@ -819,8 +824,8 @@ public final class Taoyao implements ITaoyao {
             resources.getBoolean(R.bool.dataConsume),
             resources.getBoolean(R.bool.audioConsume),
             resources.getBoolean(R.bool.videoConsume),
-            resources.getBoolean(R.bool.audioProduce),
             resources.getBoolean(R.bool.dataProduce),
+            resources.getBoolean(R.bool.audioProduce),
             resources.getBoolean(R.bool.videoProduce),
             this.mediaManager.getMediaProperties(),
             this.mediaManager.getWebrtcProperties()

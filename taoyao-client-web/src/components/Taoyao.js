@@ -235,8 +235,14 @@ class Session {
   id;
   // 远程终端名称
   name;
+  // 是否关闭
+  closed;
   // 远程终端ID
   clientId;
+  // 会话ID
+  sessionId;
+  // 是否已经提供本地媒体
+  offerLocal;
   // 本地媒体流
   localStream;
   // 本地音频
@@ -251,34 +257,46 @@ class Session {
   peerConnection;
 
   constructor({
-    id,
     name,
-    clientId
+    clientId,
+    sessionId,
   }) {
-    this.id = id;
-    this.name = name;
-    this.clientId = clientId;
+    this.id         = sessionId;
+    this.name       = name;
+    this.closed     = false;
+    this.clientId   = clientId;
+    this.sessionId  = sessionId;
+    this.offerLocal = false;
   }
 
   async pause() {
     this.localAudioTrack.enabled = false;
     this.localVideoTrack.enabled = false;
-    this.localStream.active = false;
   }
   
   async resume() {
     this.localAudioTrack.enabled = true;
     this.localVideoTrack.enabled = true;
-    this.localStream.active = true;
   }
 
   async close() {
-    this.localStream.active = false;
+    this.closed = true;
     this.localAudioTrack.stop();
     this.localVideoTrack.stop();
     this.remoteAudioTrack.stop();
     this.remoteVideoTrack.stop();
     this.peerConnection.close();
+  }
+
+  async addIceCandidate(candidate) {
+    if(this.closed) {
+      return;
+    }
+    if(this.peerConnection) {
+      await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    } else {
+      setTimeout(() => this.addIceCandidate(candidate), 50);
+    }
   }
 
 }
@@ -2122,40 +2140,18 @@ class Taoyao extends RemoteClient {
       })
     );
     const { name, sessionId } = response.body;
-    const session = new Session(name, response.body.clientId, sessionId);
+    const session = new Session({name, clientId: response.body.clientId, sessionId});
     this.sessionClients.set(sessionId, session);
-    session.peerConnection = await me.buildPeerConnection(session, sessionId);
-    const localStream = await me.getStream();
-    session.localAudioTrack = localStream.getAudioTracks()[0];
-    session.localVideoTrack = localStream.getVideoTracks()[0];
-    session.peerConnection.addTrack(session.localAudioTrack, localStream);
-    session.peerConnection.addTrack(session.localVideoTrack, localStream);
-    session.peerConnection.createOffer().then(async description => {
-      await session.peerConnection.setLocalDescription(description);
-      me.push(
-        protocol.buildMessage("session::exchange", {
-          sdp      : description.sdp,
-          type     : description.type,
-          sessionId: sessionId
-        })
-      );
-    });
   }
 
   async defaultSessionCall(message) {
     const me = this;
     const { name, clientId, sessionId } = message.body;
-    const session = new Session(name, clientId, sessionId);
+    const session = new Session({name, clientId, sessionId});
     this.sessionClients.set(sessionId, session);
-    session.peerConnection = await me.buildPeerConnection(session, sessionId);
-    const localStream = await me.getStream();
-    session.localStream = localStream;
-    session.localAudioTrack = localStream.getAudioTracks()[0];
-    session.localVideoTrack = localStream.getVideoTracks()[0];
-    // 相同Stream音视频同步
-    session.peerConnection.addTrack(session.localAudioTrack, localStream);
-    session.peerConnection.addTrack(session.localVideoTrack, localStream);
+    await me.buildPeerConnection(session, sessionId);
     session.peerConnection.createOffer().then(async description => {
+      session.offerLocal = true;
       await session.peerConnection.setLocalDescription(description);
       me.push(
         protocol.buildMessage("session::exchange", {
@@ -2192,7 +2188,8 @@ class Taoyao extends RemoteClient {
     const { type, candidate, sessionId } = message.body;
     const session = this.sessionClients.get(sessionId);
     if (type === "offer") {
-      session.peerConnection.setRemoteDescription(new RTCSessionDescription(message.body));
+      await me.buildPeerConnection(session, sessionId);
+      await session.peerConnection.setRemoteDescription(new RTCSessionDescription(message.body));
       session.peerConnection.createAnswer().then(async description => {
         await session.peerConnection.setLocalDescription(description);
         me.push(
@@ -2202,13 +2199,27 @@ class Taoyao extends RemoteClient {
             sessionId: sessionId
           })
         );
+        if(!session.offerLocal) {
+          session.peerConnection.createOffer().then(async description => {
+            await session.peerConnection.setLocalDescription(description);
+            me.push(
+              protocol.buildMessage("session::exchange", {
+                sdp      : description.sdp,
+                type     : description.type,
+                sessionId: sessionId
+              })
+            );
+          });
+        }
       });
     } else if (type === "answer") {
       await session.peerConnection.setRemoteDescription(new RTCSessionDescription(message.body));
     } else if (type === "candidate") {
-      if(candidate) {
-        await session.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+      if(!candidate || candidate.sdpMid === undefined || candidate.sdpMLineIndex === undefined && candidate.candidate === undefined) {
+        return;
       }
+      await session.addIceCandidate(candidate);
+    } else {
     }
   }
 
@@ -2231,6 +2242,9 @@ class Taoyao extends RemoteClient {
   }
   
   async buildPeerConnection(session, sessionId) {
+    if(session.peerConnection)  {
+      return session.peerConnection;
+    }
     const me = this;
     const peerConnection = new RTCPeerConnection({"iceServers" : [{"url" : "stun:stun1.l.google.com:19302"}]});
     peerConnection.ontrack = event => {
@@ -2262,6 +2276,13 @@ class Taoyao extends RemoteClient {
         // TODO：重连
       }
     }
+    const localStream = await me.getStream();
+    session.localStream = localStream;
+    session.peerConnection = peerConnection;
+    session.localAudioTrack = localStream.getAudioTracks()[0];
+    session.localVideoTrack = localStream.getVideoTracks()[0];
+    await session.peerConnection.addTrack(session.localAudioTrack, localStream);
+    await session.peerConnection.addTrack(session.localVideoTrack, localStream);
     return peerConnection;
   }
 

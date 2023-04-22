@@ -4,6 +4,7 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.boot.utils.ListUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.media.VideoSourceType;
@@ -24,9 +25,11 @@ import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 /**
  * P2P终端
@@ -54,6 +57,10 @@ public class SessionClient extends Client {
     private final MediaProperties mediaProperties;
     private final WebrtcProperties webrtcProperties;
     /**
+     * 是否已经提供本地媒体
+     */
+    private volatile boolean offerLocal;
+    /**
      * 本地媒体
      */
     private MediaStream mediaStream;
@@ -65,14 +72,6 @@ public class SessionClient extends Client {
      * 远程媒体
      */
     private MediaStream remoteMediaStream;
-    /**
-     * OfferSdpObserver
-     */
-    private SdpObserver offerSdpObserver;
-    /**
-     * AnswerSdpObserver
-     */
-    private SdpObserver answerSdpObserver;
     /**
      * Peer连接
      */
@@ -107,7 +106,7 @@ public class SessionClient extends Client {
      */
     public SessionClient(
         String sessionId, String name, String clientId, ITaoyao taoyao, Handler mainHandler,
-        boolean preview, boolean playAudio, boolean playVideo,
+        boolean preview,     boolean playAudio,    boolean playVideo,
         boolean dataConsume, boolean audioConsume, boolean videoConsume,
         boolean dataProduce, boolean audioProduce, boolean videoProduce,
         MediaProperties mediaProperties, WebrtcProperties webrtcProperties
@@ -140,8 +139,6 @@ public class SessionClient extends Client {
             final PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(iceServers);
             this.observer          = this.observer();
             this.mediaStream       = this.mediaManager.buildLocalMediaStream(this.audioProduce, this.videoProduce);
-            this.offerSdpObserver  = this.offerSdpObserver();
-            this.answerSdpObserver = this.answerSdpObserver();
             this.peerConnection    = this.peerConnectionFactory.createPeerConnection(configuration, this.observer);
             this.peerConnection.addStream(this.mediaStream);
             // 设置streamId同步
@@ -170,31 +167,62 @@ public class SessionClient extends Client {
     /**
      * 提供媒体服务
      */
-    public void offer() {
+    public synchronized void offer() {
+        if(this.offerLocal) {
+            return;
+        }
+        this.offerLocal = true;
         final MediaConstraints mediaConstraints = this.mediaManager.buildMediaConstraints();
-        this.peerConnection.createOffer(this.offerSdpObserver, mediaConstraints);
+        this.peerConnection.createOffer(this.sdpObserver(
+            "主动Offer",
+            sessionDescription -> {
+                this.peerConnection.setLocalDescription(this.sdpObserver(
+                    "主动OfferExchange",
+                    null,
+                    () -> {
+                        this.exchangeSessionDescription(sessionDescription);
+                    }
+                ), sessionDescription);
+            },
+            null
+        ), mediaConstraints);
     }
 
     private void offer(Message message, Map<String, Object> body) {
+        this.init();
         final String sdp  = MapUtils.get(body, "sdp");
         final String type = MapUtils.get(body, "type");
         final SessionDescription.Type sdpType = SessionDescription.Type.valueOf(type.toUpperCase());
-        final SessionDescription sessionDescription = new SessionDescription(sdpType, sdp);
-        this.peerConnection.setRemoteDescription(this.offerSdpObserver, sessionDescription);
-        this.answer();
-    }
-
-    private void answer() {
-        final MediaConstraints mediaConstraints = this.mediaManager.buildMediaConstraints();
-        this.peerConnection.createAnswer(this.answerSdpObserver, mediaConstraints);
+        this.peerConnection.setRemoteDescription(this.sdpObserver(
+            "被动Offer",
+            null,
+            () -> this.peerConnection.createAnswer(this.sdpObserver(
+                "主动Answer",
+                sessionDescription -> {
+                    this.peerConnection.setLocalDescription(this.sdpObserver(
+                        "主动AnswerExchange",
+                        null,
+                        () -> {
+                            this.exchangeSessionDescription(sessionDescription);
+                            this.offer();
+                        }
+                    ), sessionDescription);
+                },
+                null
+            ), this.mediaManager.buildMediaConstraints())
+        ), new SessionDescription(sdpType, sdp));
     }
 
     private void answer(Message message, Map<String, Object> body) {
         final String sdp  = MapUtils.get(body, "sdp");
         final String type = MapUtils.get(body, "type");
         final SessionDescription.Type sdpType = SessionDescription.Type.valueOf(type.toUpperCase());
-        final SessionDescription sessionDescription = new SessionDescription(sdpType, sdp);
-        this.peerConnection.setRemoteDescription(this.answerSdpObserver, sessionDescription);
+        this.peerConnection.setRemoteDescription(this.sdpObserver(
+            "被动Answer",
+            null,
+            null
+//            () -> this.offer()
+        ), new SessionDescription(sdpType, sdp));
     }
 
     private void candidate(Message message, Map<String, Object> body) {
@@ -205,8 +233,7 @@ public class SessionClient extends Client {
         if(sdp == null || sdpMid == null || sdpMLineIndex == null) {
             Log.w(SessionClient.class.getSimpleName(), "无效媒体协商：" + body);
         } else {
-            final IceCandidate iceCandidate = new IceCandidate(sdpMid, sdpMLineIndex, sdp);
-            this.peerConnection.addIceCandidate(iceCandidate);
+            this.peerConnection.addIceCandidate(new IceCandidate(sdpMid, sdpMLineIndex, sdp));
         }
     }
 
@@ -294,14 +321,18 @@ public class SessionClient extends Client {
                 return;
             }
             super.close();
-//          if(this.mediaStream != null) {
-//              this.mediaStream.dispose();
-//          }
-            if(this.remoteMediaStream != null) {
-                this.remoteMediaStream.dispose();
-            }
-            if(this.peerConnection != null) {
-                this.peerConnection.dispose();
+            try {
+//             if(this.mediaStream != null) {
+//                  this.mediaStream.dispose();
+//              }
+//              if(this.remoteMediaStream != null) {
+//                  this.remoteMediaStream.dispose();
+//              }
+                if(this.peerConnection != null) {
+                    this.peerConnection.dispose();
+                }
+            } catch (Exception e) {
+                Log.e(SessionClient.class.getSimpleName(), "释放资源异常", e);
             }
             this.mediaManager.closeClient();
         }
@@ -315,17 +346,23 @@ public class SessionClient extends Client {
 
             @Override
             public void onSignalingChange(PeerConnection.SignalingState signalingState) {
-                Log.d(SessionClient.class.getSimpleName(), "SignalingState状态改变：" + signalingState);
+                Log.d(SessionClient.class.getSimpleName(), "PC信令状态改变：" + signalingState);
+                SessionClient.this.logState();
+                // TODO：处理失败
             }
 
             @Override
             public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
-                Log.d(SessionClient.class.getSimpleName(), "IceGatheringState状态改变：" + iceGatheringState);
+                Log.d(SessionClient.class.getSimpleName(), "PCIce收集状态改变：" + iceGatheringState);
+                SessionClient.this.logState();
+                // TODO：处理失败
             }
 
             @Override
             public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
-                Log.d(SessionClient.class.getSimpleName(), "IceConnectionState状态改变：" + iceConnectionState);
+                Log.d(SessionClient.class.getSimpleName(), "PCIce连接状态改变：" + iceConnectionState);
+                SessionClient.this.logState();
+                // TODO：处理失败
             }
 
             @Override
@@ -335,10 +372,14 @@ public class SessionClient extends Client {
             @Override
             public void onIceCandidate(IceCandidate iceCandidate) {
                 Log.d(SessionClient.class.getSimpleName(), "发送媒体协商：" + SessionClient.this.sessionId);
+                final Map<String, Object> candidate = new HashMap<>();
+                candidate.put("sdpMid",        iceCandidate.sdpMid);
+                candidate.put("candidate",     iceCandidate.sdp);
+                candidate.put("sdpMLineIndex", iceCandidate.sdpMLineIndex);
                 SessionClient.this.taoyao.push(SessionClient.this.taoyao.buildMessage(
                     "session::exchange",
                     "type",      "candidate",
-                    "candidate", iceCandidate,
+                    "candidate", candidate,
                     "sessionId", SessionClient.this.sessionId
                 ));
             }
@@ -376,7 +417,7 @@ public class SessionClient extends Client {
             @Override
             public void onRenegotiationNeeded() {
                 Log.d(SessionClient.class.getSimpleName(), "重新协商媒体：" + SessionClient.this.sessionId);
-                if(peerConnection.connectionState() == PeerConnection.PeerConnectionState.CONNECTED) {
+                if(SessionClient.this.peerConnection.connectionState() == PeerConnection.PeerConnectionState.CONNECTED) {
                 // TODO：重新协商
 //                  SessionClient.this.offer();
                 }
@@ -385,70 +426,75 @@ public class SessionClient extends Client {
         };
     }
 
-    private SdpObserver offerSdpObserver() {
+    /**
+     * @param tag                   标记
+     * @param createSuccessConsumer 创建成功消费者
+     * @param setSuccessRunnable    设置成功执行者
+     *
+     * @return SDP观察者
+     */
+    private SdpObserver sdpObserver(String tag, Consumer<SessionDescription> createSuccessConsumer, Runnable setSuccessRunnable) {
         return new SdpObserver() {
 
             @Override
             public void onCreateSuccess(SessionDescription sessionDescription) {
-                Log.d(SessionClient.class.getSimpleName(), "创建OfferSDP成功：" + SessionClient.this.sessionId);
-                SessionClient.this.peerConnection.setLocalDescription(this, sessionDescription);
-                SessionClient.this.taoyao.push(SessionClient.this.taoyao.buildMessage(
-                    "session::exchange",
-                    "sdp",       sessionDescription.description,
-                    "type",      sessionDescription.type.toString().toLowerCase(),
-                    "sessionId", SessionClient.this.sessionId
-                ));
+                Log.d(SessionClient.class.getSimpleName(), "创建" + tag + "SDP成功：" + SessionClient.this.sessionId);
+                SessionClient.this.logState();
+                if(createSuccessConsumer != null) {
+                    createSuccessConsumer.accept(sessionDescription);
+                }
             }
 
             @Override
             public void onSetSuccess() {
-                Log.d(SessionClient.class.getSimpleName(), "设置OfferSDP成功：" + SessionClient.this.sessionId);
+                Log.d(SessionClient.class.getSimpleName(), "设置" + tag + "SDP成功：" + SessionClient.this.sessionId);
+                SessionClient.this.logState();
+                if(setSuccessRunnable != null) {
+                    setSuccessRunnable.run();
+                }
             }
 
             @Override
             public void onCreateFailure(String message) {
-                Log.w(SessionClient.class.getSimpleName(), "创建OfferSDP失败：" + message);
+                Log.w(SessionClient.class.getSimpleName(), "创建" + tag + "SDP失败：" + message);
+                SessionClient.this.logState();
             }
 
             @Override
             public void onSetFailure(String message) {
-                Log.w(SessionClient.class.getSimpleName(), "设置OfferSDP失败：" + message);
+                Log.w(SessionClient.class.getSimpleName(), "设置" + tag + "SDP失败：" + message);
+                SessionClient.this.logState();
             }
 
         };
     }
 
-    private SdpObserver answerSdpObserver() {
-        return new SdpObserver() {
+    private void exchangeSessionDescription(SessionDescription sessionDescription) {
+        if(sessionDescription == null) {
+            return;
+        }
+        final String type = sessionDescription.type.toString().toLowerCase();
+        SessionClient.this.taoyao.push(SessionClient.this.taoyao.buildMessage(
+            "session::exchange",
+            "sdp",       sessionDescription.description,
+            "type",      type,
+            "sessionId", SessionClient.this.sessionId
+        ));
+    }
 
-            @Override
-            public void onCreateSuccess(SessionDescription sessionDescription) {
-                Log.d(SessionClient.class.getSimpleName(), "创建AnswerSDP成功：" + SessionClient.this.sessionId);
-                SessionClient.this.peerConnection.setLocalDescription(this, sessionDescription);
-                SessionClient.this.taoyao.push(SessionClient.this.taoyao.buildMessage(
-                    "session::exchange",
-                    "sdp",       sessionDescription.description,
-                    "type",      sessionDescription.type.toString().toLowerCase(),
-                    "sessionId", SessionClient.this.sessionId
-                ));
-            }
-
-            @Override
-            public void onSetSuccess() {
-                Log.d(SessionClient.class.getSimpleName(), "设置AnswerSDP成功：" + SessionClient.this.sessionId);
-            }
-
-            @Override
-            public void onCreateFailure(String message) {
-                Log.w(SessionClient.class.getSimpleName(), "创建AnswerSDP失败：" + message);
-            }
-
-            @Override
-            public void onSetFailure(String message) {
-                Log.w(SessionClient.class.getSimpleName(), "设置AnswerSDP失败：" + message);
-            }
-
-        };
+    private void logState() {
+        Log.d(SessionClient.class.getSimpleName(), String.format(
+            """
+            PC信令状态：%s
+            PC连接状态：%s
+            PCIce收集状态：%s
+            PCIce连接状态：%s
+            """,
+            this.peerConnection.signalingState().name(),
+            this.peerConnection.connectionState().name(),
+            this.peerConnection.iceGatheringState().name(),
+            this.peerConnection.iceConnectionState().name()
+        ));
     }
 
 }
