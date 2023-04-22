@@ -360,11 +360,10 @@ namespace acgist {
         jlong factoryPointer, jobject jRtcConfiguration
     ) {
         Room* room = (Room*) nativeRoomPointer;
-        webrtc::PeerConnectionInterface::RTCConfiguration rtcConfiguration(webrtc::PeerConnectionInterface::RTCConfigurationType::kSafe);
-//      webrtc::jni::JavaToNativeMediaConstraints();
-//      webrtc::PeerConnectionInterface::RTCConfiguration rtcConfiguration(webrtc::PeerConnectionInterface::RTCConfigurationType::kAggressive);
-//      TODO：为什么不能转换？测试是否因为stun配置问题
-        webrtc::JavaParamRef<jobject> jRtcConfigurationRef(jRtcConfiguration);
+//      webrtc::PeerConnectionInterface::RTCConfiguration rtcConfiguration(webrtc::PeerConnectionInterface::RTCConfigurationType::kSafe);
+        webrtc::PeerConnectionInterface::RTCConfiguration rtcConfiguration(webrtc::PeerConnectionInterface::RTCConfigurationType::kAggressive);
+        webrtc::JavaParamRef<jobject> jRtcConfigurationRef(env, jRtcConfiguration);
+        // 注意
         webrtc::jni::JavaToNativeRTCConfiguration(env, jRtcConfigurationRef, &rtcConfiguration);
         const char* rtpCapabilities = env->GetStringUTFChars(jRtpCapabilities, nullptr);
         room->enterRoom(
