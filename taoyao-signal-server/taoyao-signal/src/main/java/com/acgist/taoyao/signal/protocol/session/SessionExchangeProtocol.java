@@ -17,9 +17,31 @@ import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
  */
 @Protocol
 @Description(
-    memo = "媒体交换协商：offer/answer/candidate",
+    memo = """
+        媒体交换协商：offer/answer/candidate
+        安卓需要注意：
+            1. 交换类型大小写
+            2. candidate内容默认名称sdp
+    """,
     body = """
     {
+        "sdp": "sdp"
+        "type": "offer",
+        "sessionId": "会话ID"
+    }
+    {
+        "sdp": "sdp"
+        "type": "answer",
+        "sessionId": "会话ID"
+    }
+    {
+        "type": "candidate",
+        "sessionId": "会话ID",
+        "candidate": {
+            "sdpMid": "sdpMid",
+            "candidate": "candidate信息",
+            "sdpMLineIndex":sdpMLineIndex 
+        }
     }
     """,
     flow = "终端->信令服务->终端"

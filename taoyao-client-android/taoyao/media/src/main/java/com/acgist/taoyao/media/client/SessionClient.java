@@ -35,7 +35,9 @@ import java.util.function.Consumer;
  * P2P终端
  * 使用安卓SDK + WebRTC实现P2P会话
  *
- * https://zhuanlan.zhihu.com/p/82446482
+ * 注意：
+ * 2. offer/answer/candidate枚举大小
+ * 1. candidate格式安卓和浏览器格式不同
  *
  * @author acgist
  */
@@ -56,10 +58,6 @@ public class SessionClient extends Client {
     private final boolean videoProduce;
     private final MediaProperties mediaProperties;
     private final WebrtcProperties webrtcProperties;
-    /**
-     * 是否已经提供本地媒体
-     */
-    private volatile boolean offerLocal;
     /**
      * 本地媒体
      */
@@ -168,10 +166,6 @@ public class SessionClient extends Client {
      * 提供媒体服务
      */
     public synchronized void offer() {
-        if(this.offerLocal) {
-            return;
-        }
-        this.offerLocal = true;
         final MediaConstraints mediaConstraints = this.mediaManager.buildMediaConstraints();
         this.peerConnection.createOffer(this.sdpObserver(
             "主动Offer",
@@ -179,9 +173,7 @@ public class SessionClient extends Client {
                 this.peerConnection.setLocalDescription(this.sdpObserver(
                     "主动OfferExchange",
                     null,
-                    () -> {
-                        this.exchangeSessionDescription(sessionDescription);
-                    }
+                    () -> this.exchangeSessionDescription(sessionDescription)
                 ), sessionDescription);
             },
             null
@@ -202,10 +194,7 @@ public class SessionClient extends Client {
                     this.peerConnection.setLocalDescription(this.sdpObserver(
                         "主动AnswerExchange",
                         null,
-                        () -> {
-                            this.exchangeSessionDescription(sessionDescription);
-                            this.offer();
-                        }
+                        () -> this.exchangeSessionDescription(sessionDescription)
                     ), sessionDescription);
                 },
                 null
@@ -221,15 +210,14 @@ public class SessionClient extends Client {
             "被动Answer",
             null,
             null
-//            () -> this.offer()
         ), new SessionDescription(sdpType, sdp));
     }
 
     private void candidate(Message message, Map<String, Object> body) {
         final Map<String, Object> candidate = MapUtils.get(body, "candidate");
-        final String  sdp           = MapUtils.get(candidate, "candidate");
-        final String  sdpMid        = MapUtils.get(candidate, "sdpMid");
-        final Integer sdpMLineIndex = MapUtils.getInteger(candidate, "sdpMLineIndex");
+        final String  sdp                   = MapUtils.get(candidate, "candidate");
+        final String  sdpMid                = MapUtils.get(candidate, "sdpMid");
+        final Integer sdpMLineIndex         = MapUtils.getInteger(candidate, "sdpMLineIndex");
         if(sdp == null || sdpMid == null || sdpMLineIndex == null) {
             Log.w(SessionClient.class.getSimpleName(), "无效媒体协商：" + body);
         } else {

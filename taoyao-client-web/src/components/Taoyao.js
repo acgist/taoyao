@@ -241,8 +241,6 @@ class Session {
   clientId;
   // 会话ID
   sessionId;
-  // 是否已经提供本地媒体
-  offerLocal;
   // 本地媒体流
   localStream;
   // 本地音频
@@ -266,7 +264,6 @@ class Session {
     this.closed     = false;
     this.clientId   = clientId;
     this.sessionId  = sessionId;
-    this.offerLocal = false;
   }
 
   async pause() {
@@ -2151,7 +2148,6 @@ class Taoyao extends RemoteClient {
     this.sessionClients.set(sessionId, session);
     await me.buildPeerConnection(session, sessionId);
     session.peerConnection.createOffer().then(async description => {
-      session.offerLocal = true;
       await session.peerConnection.setLocalDescription(description);
       me.push(
         protocol.buildMessage("session::exchange", {
@@ -2199,18 +2195,6 @@ class Taoyao extends RemoteClient {
             sessionId: sessionId
           })
         );
-        if(!session.offerLocal) {
-          session.peerConnection.createOffer().then(async description => {
-            await session.peerConnection.setLocalDescription(description);
-            me.push(
-              protocol.buildMessage("session::exchange", {
-                sdp      : description.sdp,
-                type     : description.type,
-                sessionId: sessionId
-              })
-            );
-          });
-        }
       });
     } else if (type === "answer") {
       await session.peerConnection.setRemoteDescription(new RTCSessionDescription(message.body));
