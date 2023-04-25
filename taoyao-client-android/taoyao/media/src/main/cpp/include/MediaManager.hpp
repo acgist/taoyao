@@ -8,4 +8,12 @@
 
 namespace acgist {
 
+#ifndef TAOYAO_JAVA_VM
+#define TAOYAO_JAVA_VM
+    /**
+     * 全局JavaVM指针
+     */
+    extern JavaVM* taoyaoJavaVM;
+#endif
+
 }

@@ -175,10 +175,12 @@
 					<configuration>
 						<!-- Jar配置独立config目录 -->
 						<excludes>
+                            <include>*.cer</include>
                             <include>*.jks</include>
                             <include>*.p12</include>
                             <include>*.pfx</include>
 							<exclude>*.yml</exclude>
+                            <include>*.TTF</include>
 							<exclude>*.properties</exclude>
 						</excludes>
 						<archive>

@@ -2,21 +2,19 @@
 
 namespace acgist {
 
+    JavaVM* taoyaoJavaVM;
+
     /**
      * 非常重要
-     * 如果没有配置很多方法莫名其妙报错
-     *
-     * @param env JNIEnv
      */
-    void initWebrtcJni(JNIEnv* env) {
-        JavaVM* javaVM;
-        env->GetJavaVM(&javaVM);
+    extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* javaVM, void* reserved) {
+        taoyaoJavaVM = javaVM;
         webrtc::jni::InitGlobalJniVariables(javaVM);
+        return JNI_VERSION_1_6;
     }
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_MediaManager_nativeInit(JNIEnv* env, jobject me) {
-        initWebrtcJni(env);
         std::string version = mediasoupclient::Version();
         LOG_I("加载MediasoupClient", version.data());
         mediasoupclient::Initialize();

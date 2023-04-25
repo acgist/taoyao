@@ -300,6 +300,7 @@ public final class MediaManager {
             PeerConnectionFactory.InitializationOptions.builder(this.context)
 //              .setFieldTrials("WebRTC-IntelVP8/Enabled/")
 //              .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
+                // TODO：测试是否需要c++全局加载JavaVM？
 //              .setNativeLibraryName("jingle_peerconnection_so")
 //              .setEnableInternalTracer(true)
                 .createInitializationOptions()

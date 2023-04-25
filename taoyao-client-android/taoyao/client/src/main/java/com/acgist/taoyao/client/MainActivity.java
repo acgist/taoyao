@@ -182,7 +182,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         }
         this.threadHandler.post(() -> {
             // 进入房间
-            Taoyao.taoyao.roomEnter("4ca4b920-a422-473d-9954-660df424270f", null);
+            Taoyao.taoyao.roomEnter("53a5d97d-2860-4659-9531-095bdecf3745", null);
 //          Taoyao.taoyao.sessionCall("taoyao");
         });
     }

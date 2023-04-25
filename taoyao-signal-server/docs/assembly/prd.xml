@@ -37,6 +37,7 @@
 			<directory>src/main/resources</directory>
 			<outputDirectory>config</outputDirectory>
 			<includes>
+                <include>*.cer</include>
                 <include>*.jks</include>
                 <include>*.p12</include>
                 <include>*.pfx</include>

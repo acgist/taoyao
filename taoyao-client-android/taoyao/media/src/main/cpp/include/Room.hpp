@@ -7,6 +7,7 @@
 #include "sdk/android/native_api/jni/scoped_java_ref.h"
 
 #include "Log.hpp"
+#include "MediaManager.hpp"
 #include "RouterCallback.hpp"
 
 namespace acgist {
@@ -26,7 +27,7 @@ namespace acgist {
         mediasoupclient::Consumer::Listener* consumerListener;
         std::map<std::string, mediasoupclient::Consumer*> consumers;
     public:
-        Room(JavaVM* javaVM, const std::string& roomId, const jobject& routerCallback);
+        Room(const std::string& roomId, const jobject& routerCallback);
         virtual ~Room();
     public:
         void enterRoom(JNIEnv* env, const std::string& rtpCapabilities, webrtc::PeerConnectionFactoryInterface* factory, webrtc::PeerConnectionInterface::RTCConfiguration& rtcConfiguration);

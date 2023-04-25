@@ -9,7 +9,6 @@ namespace acgist {
 
     class RouterCallback {
     public:
-        JavaVM* javaVM;
         jobject routerCallback;
     public:
         void enterRoomCallback(JNIEnv* env, std::string rtpCapabilities, std::string sctpCapabilities);

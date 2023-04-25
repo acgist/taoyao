@@ -14,13 +14,22 @@ namespace acgist {
 
     public:
         std::future<void> OnConnect(mediasoupclient::Transport* transport, const nlohmann::json& dtlsParameters) override {
-            const std::string& cTransportId    = transport->GetId();
-            std::string cDtlsParameters = dtlsParameters.dump();
+            const std::string& cTransportId   = transport->GetId();
+            const std::string cDtlsParameters = dtlsParameters.dump();
             JNIEnv* env;
-            this->room->javaVM->AttachCurrentThread(&env, nullptr);
-            this->room->sendTransportConnectCallback(env, cTransportId, cDtlsParameters);
-            this->room->javaVM->DetachCurrentThread();
-            return std::future<void>();
+            if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_OK) {
+                this->room->sendTransportConnectCallback(env, cTransportId, cDtlsParameters);
+            } else {
+                JavaVMAttachArgs args;
+//              args.version = JNI_VERSION_1_6;
+//              args.name = "name";
+                taoyaoJavaVM->AttachCurrentThreadAsDaemon(&env, &args);
+                this->room->sendTransportConnectCallback(env, cTransportId, cDtlsParameters);
+                taoyaoJavaVM->DetachCurrentThread();
+            }
+            std::promise <void> promise;
+            promise.set_value();
+            return promise.get_future();
         }
 
         void OnConnectionStateChange(mediasoupclient::Transport* transport, const std::string& connectionState) override {
@@ -28,19 +37,26 @@ namespace acgist {
         }
 
         std::future<std::string> OnProduce(mediasoupclient::SendTransport* transport, const std::string& kind, nlohmann::json rtpParameters, const nlohmann::json& appData) override {
-            const std::string& cTransportId   = transport->GetId();
+            const std::string& cTransportId  = transport->GetId();
             const std::string cRtpParameters = rtpParameters.dump();
             JNIEnv* env;
-            this->room->javaVM->AttachCurrentThread(&env, nullptr);
-            std::string result = this->room->sendTransportProduceCallback(env, kind, cTransportId, cRtpParameters);
-            this->room->javaVM->DetachCurrentThread();
+            std::string result;
+            if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_OK) {
+                result = this->room->sendTransportProduceCallback(env, kind, cTransportId, cRtpParameters);
+            } else {
+                taoyaoJavaVM->AttachCurrentThreadAsDaemon(&env, nullptr);
+                result = this->room->sendTransportProduceCallback(env, kind, cTransportId, cRtpParameters);
+                taoyaoJavaVM->DetachCurrentThread();
+            }
             std::promise <std::string> promise;
             promise.set_value(result);
             return promise.get_future();
         }
 
         std::future<std::string> OnProduceData(mediasoupclient::SendTransport* transport, const nlohmann::json& sctpStreamParameters, const std::string& label, const std::string& protocol, const nlohmann::json& appData) override {
-            return std::future<std::string>();
+            std::promise <std::string> promise;
+            // TODO：实现
+            return promise.get_future();
         }
 
     };
@@ -59,10 +75,16 @@ namespace acgist {
             const std::string& cTransportId    = transport->GetId();
             const std::string& cDtlsParameters = dtlsParameters.dump();
             JNIEnv* env;
-            this->room->javaVM->AttachCurrentThread(&env, nullptr);
-            this->room->recvTransportConnectCallback(env, cTransportId, cDtlsParameters);
-            this->room->javaVM->DetachCurrentThread();
-            return std::future<void>();
+            if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_OK) {
+                this->room->recvTransportConnectCallback(env, cTransportId, cDtlsParameters);
+            } else {
+                taoyaoJavaVM->AttachCurrentThreadAsDaemon(&env, nullptr);
+                this->room->recvTransportConnectCallback(env, cTransportId, cDtlsParameters);
+                taoyaoJavaVM->DetachCurrentThread();
+            }
+            std::promise <void> promise;
+            promise.set_value();
+            return promise.get_future();
         }
 
         void OnConnectionStateChange(mediasoupclient::Transport* transport, const std::string& connectionState) override {
@@ -83,9 +105,13 @@ namespace acgist {
         void OnTransportClose(mediasoupclient::Producer* producer) override {
             producer->Close();
             JNIEnv* env;
-            this->room->javaVM->AttachCurrentThread(&env, nullptr);
-            this->room->producerCloseCallback(env, producer->GetId());
-            this->room->javaVM->DetachCurrentThread();
+            if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_OK) {
+                this->room->producerCloseCallback(env, producer->GetId());
+            } else {
+                taoyaoJavaVM->AttachCurrentThreadAsDaemon(&env, nullptr);
+                this->room->producerCloseCallback(env, producer->GetId());
+                taoyaoJavaVM->DetachCurrentThread();
+            }
         }
 
     };
@@ -103,24 +129,31 @@ namespace acgist {
         void OnTransportClose(mediasoupclient::Consumer* consumer) override {
             consumer->Close();
             JNIEnv* env;
-            this->room->javaVM->AttachCurrentThread(&env, nullptr);
-            this->room->consumerCloseCallback(env, consumer->GetId());
-            this->room->javaVM->DetachCurrentThread();
+            if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_OK) {
+                this->room->consumerCloseCallback(env, consumer->GetId());
+            } else {
+                taoyaoJavaVM->AttachCurrentThreadAsDaemon(&env, nullptr);
+                this->room->consumerCloseCallback(env, consumer->GetId());
+                taoyaoJavaVM->DetachCurrentThread();
+            }
         }
 
     };
 
     Room::Room(
-        JavaVM* javaVM,
         const std::string& roomId,
         const jobject& routerCallback
     ) {
-        this->roomId = roomId;
-        this->javaVM = javaVM;
         this->routerCallback = routerCallback;
+        this->roomId = roomId;
+        this->factory = nullptr;
         this->device = new mediasoupclient::Device();
+        this->sendTransport = nullptr;
+        this->recvTransport = nullptr;
         this->sendListener = new SendListener(this);
         this->recvListener = new RecvListener(this);
+        this->audioProducer = nullptr;
+        this->videoProducer = nullptr;
         this->producerListener = new ProducerListener(this);
         this->consumerListener = new ConsumerListener(this);
     }
@@ -136,10 +169,13 @@ namespace acgist {
         delete this->producerListener;
         delete this->consumerListener;
         JNIEnv* env;
-        this->javaVM->AttachCurrentThread(&env, nullptr);
-        env->DeleteLocalRef(this->routerCallback);
-        env->DeleteGlobalRef(this->routerCallback);
-        this->javaVM->DetachCurrentThread();
+        if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_OK) {
+            env->DeleteGlobalRef(this->routerCallback);
+        } else {
+            taoyaoJavaVM->AttachCurrentThreadAsDaemon(&env, nullptr);
+            env->DeleteGlobalRef(this->routerCallback);
+            taoyaoJavaVM->DetachCurrentThread();
+        }
     }
 
     void Room::enterRoom(
@@ -149,12 +185,11 @@ namespace acgist {
         webrtc::PeerConnectionInterface::RTCConfiguration& rtcConfiguration
     ) {
         this->factory = factory;
-        nlohmann::json json;
         // TODO：全局
         mediasoupclient::PeerConnection::Options options;
         options.config  = rtcConfiguration;
         options.factory = factory;
-        json["routerRtpCapabilities"] = nlohmann::json::parse(rtpCapabilities);
+        nlohmann::json json = nlohmann::json::parse(rtpCapabilities);
         this->device->Load(json, &options);
         const std::string cRtpCapabilities  = this->device->GetRtpCapabilities().dump();
         const std::string cSctpCapabilities = this->device->GetSctpCapabilities().dump();
@@ -320,8 +355,12 @@ namespace acgist {
     }
 
     void Room::closeRoom() {
-        this->audioProducer->Close();
-        this->videoProducer->Close();
+        if(this->audioProducer != nullptr) {
+            this->audioProducer->Close();
+        }
+        if(this->videoProducer != nullptr) {
+            this->videoProducer->Close();
+        }
         std::map<std::string, mediasoupclient::Consumer *>::iterator iterator;
         for (iterator = this->consumers.begin(); iterator != this->consumers.end(); iterator++) {
             iterator->second->Close();
@@ -330,12 +369,20 @@ namespace acgist {
 //          consumer->Close();
 //      });
         this->consumers.clear();
-        this->sendTransport->Close();
-        this->recvTransport->Close();
+        if(this->sendTransport != nullptr) {
+            this->sendTransport->Close();
+        }
+        if(this->recvTransport != nullptr) {
+            this->recvTransport->Close();
+        }
         JNIEnv* env;
-        this->javaVM->AttachCurrentThread(&env, nullptr);
-        this->closeRoomCallback(env);
-        this->javaVM->DetachCurrentThread();
+        if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_OK) {
+            this->closeRoomCallback(env);
+        } else {
+            taoyaoJavaVM->AttachCurrentThreadAsDaemon(&env, nullptr);
+            this->closeRoomCallback(env);
+            taoyaoJavaVM->DetachCurrentThread();
+        }
     }
 
     extern "C" JNIEXPORT jlong JNICALL
@@ -343,11 +390,9 @@ namespace acgist {
         JNIEnv* env, jobject me,
         jstring jRoomId, jobject jRouterCallback
     ) {
-        JavaVM* javaVM;
-        env->GetJavaVM(&javaVM);
         jobject routerCallback = env->NewGlobalRef(jRouterCallback);
         const char* roomId = env->GetStringUTFChars(jRoomId, nullptr);
-        Room* room = new Room(javaVM, roomId, routerCallback);
+        Room* room = new Room(roomId, routerCallback);
         env->DeleteLocalRef(jRoomId);
         env->ReleaseStringUTFChars(jRoomId, roomId);
         return (jlong) room;

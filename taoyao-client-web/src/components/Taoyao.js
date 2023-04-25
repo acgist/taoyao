@@ -289,6 +289,9 @@ class Session {
     if(this.closed) {
       return;
     }
+    if(!candidate || candidate.sdpMid === undefined || candidate.sdpMLineIndex === undefined && candidate.candidate === undefined) {
+      return;
+    }
     if(this.peerConnection) {
       await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
     } else {
@@ -2199,9 +2202,6 @@ class Taoyao extends RemoteClient {
     } else if (type === "answer") {
       await session.peerConnection.setRemoteDescription(new RTCSessionDescription(message.body));
     } else if (type === "candidate") {
-      if(!candidate || candidate.sdpMid === undefined || candidate.sdpMLineIndex === undefined && candidate.candidate === undefined) {
-        return;
-      }
       await session.addIceCandidate(candidate);
     } else {
     }
