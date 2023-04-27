@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <string>
 
 #include "jni.h"
 #include "sdk/android/src/jni/pc/peer_connection.h"
@@ -16,6 +17,7 @@ namespace acgist {
     public:
         std::string roomId;
         webrtc::PeerConnectionFactoryInterface* factory;
+        webrtc::PeerConnectionInterface::RTCConfiguration* rtcConfiguration;
         mediasoupclient::Device* device;
         mediasoupclient::SendTransport* sendTransport;
         mediasoupclient::RecvTransport* recvTransport;

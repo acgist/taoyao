@@ -2,7 +2,7 @@
 
 namespace acgist {
 
-    JavaVM* taoyaoJavaVM;
+    JavaVM* taoyaoJavaVM = nullptr;
 
     /**
      * 非常重要

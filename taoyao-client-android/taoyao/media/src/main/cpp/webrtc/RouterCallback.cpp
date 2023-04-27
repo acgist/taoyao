@@ -1,8 +1,10 @@
 #include "RouterCallback.hpp"
+#include <locale>
+#include <codecvt>
 
 namespace acgist {
 
-    void RouterCallback::enterRoomCallback(JNIEnv* env, std::string rtpCapabilities, std::string sctpCapabilities) {
+    void RouterCallback::enterRoomCallback(JNIEnv* env, const std::string& rtpCapabilities, const std::string& sctpCapabilities) {
         jclass jCallbackClazz = env->GetObjectClass(this->routerCallback);
         jmethodID recvTransportConnectCallback = env->GetMethodID(jCallbackClazz, "enterRoomCallback", "(Ljava/lang/String;Ljava/lang/String;)V");
         const char* cRtpCapabilities  = rtpCapabilities.data();
@@ -30,7 +32,7 @@ namespace acgist {
         env->DeleteLocalRef(jCallbackClazz);
     }
 
-    void RouterCallback::sendTransportConnectCallback(JNIEnv* env, std::string transportId, std::string dtlsParameters) {
+    void RouterCallback::sendTransportConnectCallback(JNIEnv* env, const std::string& transportId, const std::string& dtlsParameters) {
         jclass jCallbackClazz = env->GetObjectClass(this->routerCallback);
         jmethodID sendTransportConnectCallback = env->GetMethodID(jCallbackClazz, "sendTransportConnectCallback", "(Ljava/lang/String;Ljava/lang/String;)V");
         const char* cTransportId    = transportId.data();
@@ -48,7 +50,7 @@ namespace acgist {
         env->DeleteLocalRef(jCallbackClazz);
     }
 
-    void RouterCallback::recvTransportConnectCallback(JNIEnv* env, std::string transportId, std::string dtlsParameters) {
+    void RouterCallback::recvTransportConnectCallback(JNIEnv* env, const std::string& transportId, const std::string& dtlsParameters) {
         jclass jCallbackClazz = env->GetObjectClass(this->routerCallback);
         jmethodID recvTransportConnectCallback = env->GetMethodID(jCallbackClazz, "recvTransportConnectCallback", "(Ljava/lang/String;Ljava/lang/String;)V");
         const char* cTransportId    = transportId.data();
@@ -66,15 +68,15 @@ namespace acgist {
         env->DeleteLocalRef(jCallbackClazz);
     }
 
-    std::string RouterCallback::sendTransportProduceCallback(JNIEnv* env, std::string kind, std::string transportId, std::string rtpParameters) {
+    std::string RouterCallback::sendTransportProduceCallback(JNIEnv* env, const std::string& kind, const std::string& transportId, const std::string& rtpParameters) {
         jclass jCallbackClazz = env->GetObjectClass(this->routerCallback);
-        jmethodID sendTransportProduceCallback = env->GetMethodID(jCallbackClazz, "sendTransportProduceCallback", "(Ljava/lang/String;Ljava/lang/String;)V");
+        jmethodID sendTransportProduceCallback = env->GetMethodID(jCallbackClazz, "sendTransportProduceCallback", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Ljava/lang/String;");
         const char* cKind          = kind.data();
         const char* cTransportId   = transportId.data();
         const char* cRtpParameters = rtpParameters.data();
-        jstring jKind          = env->NewStringUTF(cKind);
-        jstring jTransportId   = env->NewStringUTF(cTransportId);
-        jstring jRtpParameters = env->NewStringUTF(cRtpParameters);
+        jstring jTransportId       = env->NewStringUTF(cTransportId);
+        jstring jKind              = env->NewStringUTF(cKind);
+        jstring jRtpParameters     = env->NewStringUTF(cRtpParameters);
         jstring jResult = (jstring) env->CallObjectMethod(
             this->routerCallback,
             sendTransportProduceCallback,
@@ -88,7 +90,7 @@ namespace acgist {
         }
         const char* result = env->GetStringUTFChars(jResult, nullptr);
         env->DeleteLocalRef(jResult);
-        env->ReleaseStringUTFChars(jResult, result);
+//        env->ReleaseStringUTFChars(jResult, result);
         env->DeleteLocalRef(jKind);
         env->DeleteLocalRef(jTransportId);
         env->DeleteLocalRef(jRtpParameters);
@@ -96,9 +98,9 @@ namespace acgist {
         return result;
     }
 
-    void RouterCallback::producerNewCallback(JNIEnv* env, std::string kind, std::string producerId, mediasoupclient::Producer* producerPointer, webrtc::MediaStreamTrackInterface* producerMediaTrackPointer) {
+    void RouterCallback::producerNewCallback(JNIEnv* env, const std::string& kind, const std::string& producerId, mediasoupclient::Producer* producerPointer, webrtc::MediaStreamTrackInterface* producerMediaTrackPointer) {
         jclass jCallbackClazz = env->GetObjectClass(this->routerCallback);
-        jmethodID producerNewCallback = env->GetMethodID(jCallbackClazz, "producerNewCallback", "(Ljava/lang/String;java/lang/String;J;J;)V");
+        jmethodID producerNewCallback = env->GetMethodID(jCallbackClazz, "producerNewCallback", "(Ljava/lang/String;Ljava/lang/String;JJ)V");
         const char* cKind = kind.data();
         jstring jKind     = env->NewStringUTF(cKind);
         const char* cProducerId = producerId.data();
@@ -113,18 +115,18 @@ namespace acgist {
         );
         env->DeleteLocalRef(jKind);
         env->DeleteLocalRef(jProducerId);
-        env->DeleteLocalRef(jCallbackClazz);
+//        env->DeleteLocalRef(jCallbackClazz);
     }
 
-    void RouterCallback::producerCloseCallback(JNIEnv* env, std::string producerId) {}
+    void RouterCallback::producerCloseCallback(JNIEnv* env, const std::string& producerId) {}
 
-    void RouterCallback::producerPauseCallback(JNIEnv* env, std::string producerId) {}
+    void RouterCallback::producerPauseCallback(JNIEnv* env, const std::string& producerId) {}
 
-    void RouterCallback::producerResumeCallback(JNIEnv* env, std::string producerId) {}
+    void RouterCallback::producerResumeCallback(JNIEnv* env, const std::string& producerId) {}
 
-    void RouterCallback::consumerNewCallback(JNIEnv* env, std::string message, mediasoupclient::Consumer* consumerPointer, webrtc::MediaStreamTrackInterface* consumerMediaTrackPointer) {
+    void RouterCallback::consumerNewCallback(JNIEnv* env, const std::string& message, mediasoupclient::Consumer* consumerPointer, webrtc::MediaStreamTrackInterface* consumerMediaTrackPointer) {
         jclass jCallbackClazz = env->GetObjectClass(this->routerCallback);
-        jmethodID consumerNewCallback = env->GetMethodID(jCallbackClazz, "consumerNewCallback", "(Ljava/lang/String;J;J;)V");
+        jmethodID consumerNewCallback = env->GetMethodID(jCallbackClazz, "consumerNewCallback", "(Ljava/lang/String;JJ)V");
         const char* cMessage = message.data();
         jstring jMessage     = env->NewStringUTF(cMessage);
         env->CallVoidMethod(
@@ -138,10 +140,10 @@ namespace acgist {
         env->DeleteLocalRef(jCallbackClazz);
     }
 
-    void RouterCallback::consumerCloseCallback(JNIEnv* env, std::string producerId) {}
+    void RouterCallback::consumerCloseCallback(JNIEnv* env, const std::string& producerId) {}
 
-    void RouterCallback::consumerPauseCallback(JNIEnv* env, std::string producerId) {}
+    void RouterCallback::consumerPauseCallback(JNIEnv* env, const std::string& producerId) {}
 
-    void RouterCallback::consumerResumeCallback(JNIEnv* env, std::string producerId) {}
+    void RouterCallback::consumerResumeCallback(JNIEnv* env, const std::string& producerId) {}
 
 }
