@@ -4,11 +4,23 @@ namespace acgist {
 
     JavaVM* taoyaoJavaVM = nullptr;
 
+    void bindJavaThread(JNIEnv** env, const char* name) {
+        JavaVMAttachArgs args;
+        args.name    = name;
+        args.version = JNI_VERSION_1_6;
+        taoyaoJavaVM->AttachCurrentThreadAsDaemon(env, &args);
+    }
+
+    void unbindJavaThread() {
+        taoyaoJavaVM->DetachCurrentThread();
+    }
+
     /**
      * 非常重要
      */
     extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM* javaVM, void* reserved) {
         taoyaoJavaVM = javaVM;
+    //  JNIEnv* env = webrtc::jni::GetEnv();
         webrtc::jni::InitGlobalJniVariables(javaVM);
         return JNI_VERSION_1_6;
     }

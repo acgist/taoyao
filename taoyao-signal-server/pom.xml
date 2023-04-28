@@ -17,7 +17,7 @@
 
 	<url>https://gitee.com/acgist/taoyao</url>
 	<name>taoyao</name>
-	<description>桃夭：桃夭是套基于`Mediasoup`开发的`WebRTC`音视频信令服务</description>
+	<description>桃夭：桃夭是套基于`Mediasoup`开发的`WebRTC`音视频信令服务，可以非常方便的扩展信令接入更多智能终端。</description>
 	<inceptionYear>2022</inceptionYear>
 
 	<properties>
@@ -180,7 +180,6 @@
                             <include>*.p12</include>
                             <include>*.pfx</include>
 							<exclude>*.yml</exclude>
-                            <include>*.TTF</include>
 							<exclude>*.properties</exclude>
 						</excludes>
 						<archive>

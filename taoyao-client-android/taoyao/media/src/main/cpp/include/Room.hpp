@@ -8,7 +8,6 @@
 #include "sdk/android/native_api/jni/scoped_java_ref.h"
 
 #include "Log.hpp"
-#include "MediaManager.hpp"
 #include "RouterCallback.hpp"
 
 namespace acgist {
@@ -44,7 +43,7 @@ namespace acgist {
         void mediaConsumerPause(JNIEnv* env, const std::string& consumerId);
         void mediaConsumerResume(JNIEnv* env, const std::string& consumerId);
         void mediaConsumerClose(JNIEnv* env, const std::string& consumerId);
-        void closeRoom();
+        void closeRoom(JNIEnv* env);
     };
 
 }

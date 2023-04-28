@@ -3,6 +3,7 @@
 #include <string>
 
 #include "jni.h"
+#include "MediaManager.hpp"
 #include "mediasoupclient.hpp"
 
 namespace acgist {
@@ -10,6 +11,9 @@ namespace acgist {
     class RouterCallback {
     public:
         jobject routerCallback;
+    public:
+        RouterCallback(jobject routerCallback);
+        virtual ~RouterCallback();
     public:
         void enterRoomCallback(JNIEnv* env, const std::string& rtpCapabilities, const std::string& sctpCapabilities);
         void closeRoomCallback(JNIEnv* env);

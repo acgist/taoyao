@@ -8,12 +8,13 @@
 
 namespace acgist {
 
-#ifndef TAOYAO_JAVA_VM
-#define TAOYAO_JAVA_VM
     /**
      * 全局JavaVM指针
      */
     extern JavaVM* taoyaoJavaVM;
-#endif
+
+    extern void bindJavaThread(JNIEnv** env, const char* name = "C++Thread");
+
+    extern void unbindJavaThread();
 
 }

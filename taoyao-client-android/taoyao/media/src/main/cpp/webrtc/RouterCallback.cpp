@@ -4,6 +4,21 @@
 
 namespace acgist {
 
+    RouterCallback::RouterCallback(jobject routerCallback) {
+        this->routerCallback = routerCallback;
+    }
+
+    RouterCallback::~RouterCallback() {
+        JNIEnv* env = nullptr;
+        if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_EDETACHED) {
+            bindJavaThread(&env);
+            env->DeleteGlobalRef(this->routerCallback);
+            unbindJavaThread();
+        } else {
+            env->DeleteGlobalRef(this->routerCallback);
+        }
+    }
+
     void RouterCallback::enterRoomCallback(JNIEnv* env, const std::string& rtpCapabilities, const std::string& sctpCapabilities) {
         jclass jCallbackClazz = env->GetObjectClass(this->routerCallback);
         jmethodID recvTransportConnectCallback = env->GetMethodID(jCallbackClazz, "enterRoomCallback", "(Ljava/lang/String;Ljava/lang/String;)V");
@@ -115,7 +130,7 @@ namespace acgist {
         );
         env->DeleteLocalRef(jKind);
         env->DeleteLocalRef(jProducerId);
-//        env->DeleteLocalRef(jCallbackClazz);
+        env->DeleteLocalRef(jCallbackClazz);
     }
 
     void RouterCallback::producerCloseCallback(JNIEnv* env, const std::string& producerId) {}
