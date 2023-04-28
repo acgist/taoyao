@@ -6,7 +6,7 @@ import com.acgist.taoyao.media.signal.ITaoyao;
 
 /**
  * 房间终端
- * 使用SDK + NDK + Mediasoup实现多人会话
+ * SDK + NDK + Mediasoup实现视频房间会话
  *
  * @author acgist
  */

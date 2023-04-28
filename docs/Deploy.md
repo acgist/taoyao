@@ -8,6 +8,7 @@ git >= 1.8.0
 pm2 >= 5.2.0
 Java >= 17.0.0
 Maven >= 3.8.0
+Android >= 10
 gcc/g++ >= 10.2.0
 node version >= v16.18.0
 python version >= 3.8.0 with PIP
@@ -285,6 +286,31 @@ cd /data
 git clone https://gitee.com/acgist/taoyao.git --recursive
 ```
 
+## 安装信令
+
+```
+# 编译代码
+cd /data/taoyao/taoyao-signal-server
+mvn clean package -D skipTests
+#mvn clean package -D skipTests -P prd
+
+# 拷贝脚本
+cp taoyao-server/target/taoyao-server-1.0.0/bin/deploy.sh ./
+
+# 配置服务
+cp /data/taoyao/docs/etc/taoyao-signal-server.service /usr/lib/systemd/system/taoyao-signal-server.service
+
+# 配置自启
+systemctl daemon-reload
+systemctl enable taoyao-signal-server
+
+# 执行脚本
+./deploy.sh
+
+# 管理服务
+systemctl start | stop | restart taoyao-signal-server
+```
+
 ## 安装媒体
 
 ```
@@ -320,31 +346,6 @@ make
 
 # 清理结果
 make clean
-```
-
-## 安装信令
-
-```
-# 编译代码
-cd /data/taoyao/taoyao-signal-server
-mvn clean package -D skipTests
-#mvn clean package -D skipTests -P prd
-
-# 拷贝脚本
-cp taoyao-server/target/taoyao-server-1.0.0/bin/deploy.sh ./
-
-# 配置服务
-cp /data/taoyao/docs/etc/taoyao-signal-server.service /usr/lib/systemd/system/taoyao-signal-server.service
-
-# 配置自启
-systemctl daemon-reload
-systemctl enable taoyao-signal-server
-
-# 执行脚本
-./deploy.sh
-
-# 管理服务
-systemctl start | stop | restart taoyao-signal-server
 ```
 
 ## 安装Web终端

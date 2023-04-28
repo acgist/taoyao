@@ -10,7 +10,6 @@ import java.util.List;
 
 /**
  * WebRTC配置
- * P2P视频监控会用，正常会议不会使用，需要自己搭建`coturn`服务。
  *
  * @author acgist
  */

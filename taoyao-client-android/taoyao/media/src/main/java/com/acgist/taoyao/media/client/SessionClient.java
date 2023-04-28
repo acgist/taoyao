@@ -26,8 +26,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 /**
- * P2P终端
- * 使用安卓SDK + WebRTC实现P2P会话
+ * 视频会话
+ * SDK + WebRTC实现视频会话
  *
  * 注意：
  * 2. offer/answer/candidate枚举大小

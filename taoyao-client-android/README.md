@@ -40,7 +40,7 @@
 * https://github.com/haiyangwu/mediasoup-demo-android
 * https://github.com/haiyangwu/mediasoup-client-android
 
-## 其他实现
+## 现有实现
 
 * `org.webrtc:google-webrtc`
 * `io.github.haiyangwu:mediasoup-client`
