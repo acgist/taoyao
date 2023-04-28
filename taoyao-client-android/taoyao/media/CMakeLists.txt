@@ -29,12 +29,6 @@ set(
     ${SOURCE_DIR}/include/MediaManager.hpp
     ${SOURCE_DIR}/include/Room.hpp
     ${SOURCE_DIR}/include/RouterCallback.hpp
-    ${SOURCE_DIR}/include/RtpAudioPublisher.hpp
-    ${SOURCE_DIR}/include/RtpClient.hpp
-    ${SOURCE_DIR}/include/RtpVideoPublisher.hpp
-    ${SOURCE_DIR}/rtp/RtpAudioPublisher.cpp
-    ${SOURCE_DIR}/rtp/RtpClient.cpp
-    ${SOURCE_DIR}/rtp/RtpVideoPublisher.cpp
     ${SOURCE_DIR}/webrtc/MediaManager.cpp
     ${SOURCE_DIR}/webrtc/Room.cpp
     ${SOURCE_DIR}/webrtc/RouterCallback.cpp

@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal;
+package com.acgist.taoyao.rtp;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -19,7 +19,7 @@ import com.acgist.taoyao.signal.utils.CipherUtils;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class SocketSignalTest {
+public class RtpTest {
 	
 	@Test
 	void testSocket() throws Exception {

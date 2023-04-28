@@ -70,6 +70,10 @@ make -C worker
 * [Medooze](https://github.com/medooze/media-server)
 * [Mediasoup](https://github.com/versatica/mediasoup)
 
+## RTP裸流
+
+媒体服务主要使用`WebRTC`协议，同时支持接入`RTP`裸流，可以参考[RtpTest.java](../taoyao-signal-server/taoyao-server/src/test/java/com/acgist/taoyao/rtp/RtpTest.java)配合`ffmpeg`使用`RTP`推拉流，具体代码需要自行实现。
+
 ## 协议
 
 * https://www.ortc.org

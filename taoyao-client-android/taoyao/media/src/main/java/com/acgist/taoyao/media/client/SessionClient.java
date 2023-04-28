@@ -4,17 +4,13 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.boot.utils.ListUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
-import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.config.MediaProperties;
 import com.acgist.taoyao.media.config.WebrtcProperties;
-import com.acgist.taoyao.media.config.WebrtcStunProperties;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
-import org.apache.commons.lang3.ArrayUtils;
 import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
@@ -24,11 +20,9 @@ import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 /**

@@ -2,8 +2,6 @@ package com.acgist.taoyao.media;
 
 import android.content.Context;
 import android.content.Intent;
-import android.media.MediaCodecInfo;
-import android.media.MediaCodecList;
 import android.media.projection.MediaProjection;
 import android.os.Handler;
 import android.os.Message;
@@ -43,8 +41,6 @@ import org.webrtc.VideoTrack;
 import org.webrtc.audio.JavaAudioDeviceModule;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * 媒体来源管理器
@@ -93,10 +89,6 @@ public final class MediaManager {
      * 关键帧频率
      */
     private int iFrameInterval;
-    /**
-     * 传输通道类型
-     */
-    private TransportType transportType;
     /**
      * 视频来源类型
      */
@@ -214,7 +206,7 @@ public final class MediaManager {
         int imageQuantity, String audioQuantity, String videoQuantity,
         int channelCount, int iFrameInterval,
         String imagePath, String videoPath,
-        TransportType transportType, VideoSourceType videoSourceType
+        VideoSourceType videoSourceType
     ) {
         this.mainHandler = mainHandler;
         this.context   = context;
@@ -225,7 +217,6 @@ public final class MediaManager {
         this.iFrameInterval = iFrameInterval;
         this.imagePath = imagePath;
         this.videoPath = videoPath;
-        this.transportType = transportType;
         this.videoSourceType = videoSourceType;
     }
 

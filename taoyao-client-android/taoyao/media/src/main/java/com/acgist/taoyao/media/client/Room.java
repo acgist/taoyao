@@ -8,11 +8,8 @@ import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.boot.utils.PointerUtils;
 import com.acgist.taoyao.media.RouterCallback;
-import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
-import com.acgist.taoyao.media.config.MediaAudioProperties;
 import com.acgist.taoyao.media.config.MediaProperties;
-import com.acgist.taoyao.media.config.MediaVideoProperties;
 import com.acgist.taoyao.media.config.WebrtcProperties;
 import com.acgist.taoyao.media.signal.ITaoyao;
 

@@ -32,7 +32,6 @@ namespace acgist {
         }
 
         void OnConnectionStateChange(mediasoupclient::Transport* transport, const std::string& connectionState) override {
-            // TODO：restartIce？
         }
 
         std::future<std::string> OnProduce(mediasoupclient::SendTransport* transport, const std::string& kind, nlohmann::json rtpParameters, const nlohmann::json& appData) override {
@@ -401,7 +400,6 @@ namespace acgist {
 //      webrtc::PeerConnectionInterface::RTCConfiguration rtcConfiguration(webrtc::PeerConnectionInterface::RTCConfigurationType::kSafe);
         webrtc::PeerConnectionInterface::RTCConfiguration rtcConfiguration(webrtc::PeerConnectionInterface::RTCConfigurationType::kAggressive);
         webrtc::JavaParamRef<jobject> jRtcConfigurationRef(env, jRtcConfiguration);
-        // 注意
         webrtc::jni::JavaToNativeRTCConfiguration(env, jRtcConfigurationRef, &rtcConfiguration);
         const char* rtpCapabilities = env->GetStringUTFChars(jRtpCapabilities, nullptr);
         room->enterRoom(
