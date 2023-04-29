@@ -721,14 +721,14 @@ public final class MediaManager {
 
         @Override
         public void onCapturerStarted(boolean status) {
-            Log.i(MediaManager.class.getSimpleName(), "结束视频捕获");
+            Log.i(MediaManager.class.getSimpleName(), "开始视频捕获");
             this.mainObserver.onCapturerStarted(status);
             this.shareObserver.onCapturerStarted(status);
         }
 
         @Override
         public void onCapturerStopped() {
-            Log.i(MediaManager.class.getSimpleName(), "开始视频捕获");
+            Log.i(MediaManager.class.getSimpleName(), "结束视频捕获");
             this.mainObserver.onCapturerStopped();
             this.shareObserver.onCapturerStopped();
         }

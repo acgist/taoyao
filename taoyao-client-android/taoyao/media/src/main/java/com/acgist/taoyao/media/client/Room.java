@@ -52,11 +52,10 @@ public class Room extends CloseableClient implements RouterCallback {
     private LocalClient localClient;
     private PeerConnection.RTCConfiguration rtcConfiguration;
     private PeerConnectionFactory peerConnectionFactory;
-    private String rtpCapabilities;
-    private String sctpCapabilities;
+    private Object rtpCapabilities;
+    private Object sctpCapabilities;
 
     /**
-     *
      * @param name         房间名称
      * @param roomId       房间ID
      * @param clientId     当前终端ID
@@ -121,8 +120,12 @@ public class Room extends CloseableClient implements RouterCallback {
             return this.taoyao.requestFuture(
                 this.taoyao.buildMessage("media::router::rtp::capabilities", "roomId", this.roomId),
                 response -> {
-                    final Object rtpCapabilities = MapUtils.get(response.body(), "rtpCapabilities");
-                    this.nativeEnterRoom(this.nativeRoomPointer, JSONUtils.toJSON(rtpCapabilities), this.peerConnectionFactory.getNativePeerConnectionFactory(), this.rtcConfiguration);
+                    this.nativeEnterRoom(
+                        this.nativeRoomPointer,
+                        JSONUtils.toJSON(MapUtils.get(response.body(), "rtpCapabilities")),
+                        this.peerConnectionFactory.getNativePeerConnectionFactory(),
+                        this.rtcConfiguration
+                    );
                     return true;
                 },
                 response -> {
@@ -311,20 +314,19 @@ public class Room extends CloseableClient implements RouterCallback {
 
     @Override
     public void enterRoomCallback(String rtpCapabilities, String sctpCapabilities) {
-        this.rtpCapabilities  = rtpCapabilities;
-        this.sctpCapabilities = sctpCapabilities;
+        this.rtpCapabilities  = JSONUtils.toJava(rtpCapabilities);
+        this.sctpCapabilities = JSONUtils.toJava(sctpCapabilities);
         this.taoyao.push(this.taoyao.buildMessage(
             "room::enter",
             "roomId",           this.roomId,
             "password",         this.password,
-            "rtpCapabilities",  rtpCapabilities,
-            "sctpCapabilities", sctpCapabilities
+            "rtpCapabilities",  this.rtpCapabilities,
+            "sctpCapabilities", this.sctpCapabilities
         ));
     }
 
     @Override
     public void closeRoomCallback() {
-
     }
 
     @Override

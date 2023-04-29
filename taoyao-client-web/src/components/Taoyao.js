@@ -1445,6 +1445,10 @@ class Taoyao extends RemoteClient {
         roomId: me.roomId,
       })
     );
+    if(!response.success) {
+        // TODO：提示
+        return;
+    }
     const routerRtpCapabilities = response.body.rtpCapabilities;
     me.mediasoupDevice = new mediasoupClient.Device();
 //    mediasoupClient.parseScalabilityMode("L2T3");
