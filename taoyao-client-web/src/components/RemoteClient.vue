@@ -6,11 +6,11 @@
     <p class="title">{{ client?.name || "" }}</p>
     <div class="buttons" :style="{'--volume': client?.volume}">
       <el-button @click="taoyao.mediaConsumerResume(audioConsumer.id)" v-show="audioConsumer && audioConsumer.paused" type="primary" title="打开麦克风" :icon="Microphone" circle />
-      <el-button @click="taoyao.mediaConsumerPause(audioConsumer.id)" v-show="audioConsumer && !audioConsumer.paused" type="danger" title="关闭麦克风" :icon="Mute" circle />
+      <el-button @click="taoyao.mediaConsumerPause(audioConsumer.id)" v-show="audioConsumer  && !audioConsumer.paused" type="danger" title="关闭麦克风" :icon="Mute" circle />
       <el-button @click="taoyao.mediaConsumerResume(videoConsumer.id)" v-show="videoConsumer && videoConsumer.paused" type="primary" title="打开摄像头" :icon="VideoPlay" circle />
-      <el-button @click="taoyao.mediaConsumerPause(videoConsumer.id)" v-show="videoConsumer && !videoConsumer.paused" type="danger" title="关闭摄像头" :icon="VideoPause" circle />
-      <el-button title="拍照" :icon="Camera" circle />
-      <el-button title="录像" :icon="VideoCamera" circle />
+      <el-button @click="taoyao.mediaConsumerPause(videoConsumer.id)" v-show="videoConsumer  && !videoConsumer.paused" type="danger" title="关闭摄像头" :icon="VideoPause" circle />
+      <el-button @click="taoyao.controlPhotograph(client.clientId)" title="拍照" :icon="Camera" circle />
+      <el-button @click="taoyao.controlRecord(client.clientId, (record = !record))" title="录像" :type="record ? 'danger' : ''" :icon="VideoCamera" circle />
       <el-button title="媒体信息" :icon="InfoFilled" circle />
       <el-button @click="roomExpel" title="踢出" :icon="CircleClose" circle />
     </div>
@@ -48,6 +48,7 @@ export default {
     return {
       audio: null,
       video: null,
+      record: false,
       audioStream: null,
       videoStream: null,
       dataConsumer: null,

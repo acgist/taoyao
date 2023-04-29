@@ -12,6 +12,10 @@ public class Config {
      */
     public static final int WHAT_SCREEN_CAPTURE = 1000;
     /**
+     * 视频录制
+     */
+    public static final int WHAT_RECORD = 1001;
+    /**
      * 新建本地音频
      */
     public static final int WHAT_NEW_LOCAL_AUDIO = 2000;

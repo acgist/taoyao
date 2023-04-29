@@ -177,6 +177,8 @@ const signalChannel = {
   },
   /**
    * 重连
+   * TODO：重连重建会话、房间
+   * TODO：断开释放所有资源
    */
   reconnect() {
     const me = this;
@@ -245,12 +247,16 @@ class Session {
   localStream;
   // 本地音频
   localAudioTrack;
+  localAudioEnabled;
   // 本地视频
   localVideoTrack;
+  localVideoEnabled;
   // 远程音频
   remoteAudioTrack;
+  remoteAudioEnabled;
   // 远程视频
   remoteVideoTrack;
+  remoteVideoEnabled;
   // PeerConnection
   peerConnection;
 
@@ -266,18 +272,56 @@ class Session {
     this.sessionId  = sessionId;
   }
 
-  async pause() {
-    this.localAudioTrack.enabled = false;
-    this.localVideoTrack.enabled = false;
+  async pause(type) {
+    if(type === 'audio') {
+      this.localAudioEnabled = false;
+      this.localAudioTrack.enabled = false;
+    }
+    if(type === 'video') {
+      this.localVideoEnabled = false;
+      this.localVideoTrack.enabled = false;
+    }
   }
   
-  async resume() {
-    this.localAudioTrack.enabled = true;
-    this.localVideoTrack.enabled = true;
+  async resume(type) {
+    if(type === 'audio') {
+      this.localAudioEnabled = true;
+      this.localAudioTrack.enabled = true;
+    }
+    if(type === 'video') {
+      this.localVideoEnabled = true;
+      this.localVideoTrack.enabled = true;
+    }
   }
-
+  
+  async pauseRemote(type) {
+    if(type === 'audio') {
+      this.remoteAudioEnabled = false;
+      this.remoteAudioTrack.enabled = false;
+    }
+    if(type === 'video') {
+      this.remoteVideoEnabled = false;
+      this.remoteVideoTrack.enabled = false;
+    }
+  }
+  
+  async resumeRemote(type) {
+    if(type === 'audio') {
+      this.remoteAudioEnabled = true;
+      this.remoteAudioTrack.enabled = true;
+    }
+    if(type === 'video') {
+      this.remoteVideoEnabled = true;
+      this.remoteVideoTrack.enabled = true;
+    }
+  }
+  
   async close() {
     this.closed = true;
+    this.localAudioEnabled = false;
+    this.localVideoEnabled = false;
+    this.remoteAudioEnabled = false;
+    this.remoteVideoEnabled = false;
     this.localAudioTrack.stop();
     this.localVideoTrack.stop();
     this.remoteAudioTrack.stop();
@@ -829,6 +873,34 @@ class Taoyao extends RemoteClient {
   defaultClientShutdown(message) {
     console.info("关闭终端");
     window.close();
+  }
+  /**
+   * 拍照
+   * 
+   * @param {*} clientId 
+   */
+  controlPhotograph(clientId) {
+    const me = this;
+    me.push(
+      protocol.buildMessage("control::photograph", {
+        to: clientId
+      })
+    );
+  }
+  /**
+   * 录像
+   * 
+   * @param {*} clientId 
+   * @param {*} enabled
+   */
+  controlRecord(clientId, enabled) {
+    const me = this;
+    me.push(
+      protocol.buildMessage("control::record", {
+        to: clientId,
+        enabled: enabled
+      })
+    );
   }
   /**
    * 终端音量信令
@@ -2210,22 +2282,48 @@ class Taoyao extends RemoteClient {
     } else {
     }
   }
+  async sessionPause(sessionId, type) {
+    const me = this;
+    const session = me.sessionClients.get(sessionId);
+    if(!session) {
+      return;
+    }
+    me.push(protocol.buildMessage("session::pause", {
+      type,
+      sessionId
+    }));
+    session.pauseRemote(type);
+  }
 
   async defaultSessionPause(message) {
     const me = this;
-    const { sessionId } = message.body;
+    const { type, sessionId } = message.body;
     const session = me.sessionClients.get(sessionId);
     if(session) {
-      session.pause();
+      session.pause(type);
+    } else {
     }
+  }
+
+  async sessionResume(sessionId, type) {
+    const me = this;
+    const session = me.sessionClients.get(sessionId);
+    if(!session) {
+      return;
+    }
+    me.push(protocol.buildMessage("session::resume", {
+      type,
+      sessionId
+    }));
+    session.resumeRemote(type);
   }
 
   async defaultSessionResume(message) {
     const me = this;
-    const { sessionId } = message.body;
+    const { type, sessionId } = message.body;
     const session = me.sessionClients.get(sessionId);
     if(session) {
-      session.resume();
+      session.resume(type);
     }
   }
   
@@ -2240,8 +2338,10 @@ class Taoyao extends RemoteClient {
       const track = event.track;
       if(track.kind === 'audio') {
         session.remoteAudioTrack = track;
+        session.remoteAudioEnabled = true;
       } else if(track.kind === 'video') {
         session.remoteVideoTrack = track;
+        session.remoteVideoEnabled = true;
       } else {
       }
       if(session.proxy && session.proxy.media) {
@@ -2268,7 +2368,9 @@ class Taoyao extends RemoteClient {
     session.localStream = localStream;
     session.peerConnection = peerConnection;
     session.localAudioTrack = localStream.getAudioTracks()[0];
+    session.localAudioEnabled = true;
     session.localVideoTrack = localStream.getVideoTracks()[0];
+    session.localVideoEnabled = true;
     await session.peerConnection.addTrack(session.localAudioTrack, localStream);
     await session.peerConnection.addTrack(session.localVideoTrack, localStream);
     return peerConnection;

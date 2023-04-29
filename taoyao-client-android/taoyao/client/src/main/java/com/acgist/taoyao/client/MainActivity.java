@@ -4,7 +4,9 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.ColorStateList;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -29,6 +31,7 @@ import com.acgist.taoyao.client.signal.Taoyao;
 import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.io.Serializable;
 import java.util.stream.Stream;
@@ -180,7 +183,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         }
         this.threadHandler.post(() -> {
             // 进入房间
-            Taoyao.taoyao.roomEnter("4f19f6fc-1763-499b-a352-d8c955af5a6e", null);
+//          Taoyao.taoyao.roomEnter("4f19f6fc-1763-499b-a352-d8c955af5a6e", null);
 //          Taoyao.taoyao.sessionCall("taoyao");
         });
     }
@@ -216,6 +219,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             Log.d(MainHandler.class.getSimpleName(), "Handler消息：" + message.what + " - " + message.obj);
             switch (message.what) {
                 case Config.WHAT_SCREEN_CAPTURE   -> MainActivity.this.screenCapture(message);
+                case Config.WHAT_RECORD           -> MainActivity.this.record(message);
                 case Config.WHAT_NEW_LOCAL_VIDEO,
                      Config.WHAT_NEW_REMOTE_VIDEO -> MainActivity.this.previewVideo(message);
                 case Config.WHAT_REMOVE_VIDEO     -> MainActivity.this.removeVideo(message);
@@ -231,6 +235,16 @@ public class MainActivity extends AppCompatActivity implements Serializable {
      */
     private void screenCapture(Message message) {
         this.activityResultLauncher.launch(this.mediaProjectionManager.createScreenCaptureIntent());
+    }
+
+    private void record(Message message) {
+        final Resources resources = this.getResources();
+        final FloatingActionButton record = this.binding.record;
+        if(Boolean.TRUE.equals(message.obj)) {
+            record.setBackgroundTintList(ColorStateList.valueOf(resources.getColor(R.color.purple_500, this.getTheme())));
+        } else {
+            record.setBackgroundTintList(ColorStateList.valueOf(resources.getColor(R.color.teal_200, this.getTheme())));
+        }
     }
 
     /**

@@ -537,6 +537,8 @@ public final class Taoyao implements ITaoyao {
         switch (header.getSignal()) {
             case "control::config::audio"                     -> this.controlConfigAudio(message, message.body());
             case "control::config::video"                     -> this.controlConfigVideo(message, message.body());
+            case "control::photograph"                        -> this.controlPhotograph(message, message.body());
+            case "control::record"                            -> this.controlRecord(message, message.body());
             case "client::config"                             -> this.clientConfig(message, message.body());
             case "client::register"                           -> this.clientRegister(message, message.body());
             case "client::reboot"                             -> this.clientReboot(message, message.body());
@@ -599,6 +601,21 @@ public final class Taoyao implements ITaoyao {
     private void controlConfigVideo(Message message, Map<String, Object> body) {
         final MediaVideoProperties mediaVideoProperties = JSONUtils.toJava(JSONUtils.toJSON(body), MediaVideoProperties.class);
         this.mediaManager.updateVideoConfig(mediaVideoProperties);
+    }
+
+    private void controlPhotograph(Message message, Map<String, Object> body) {
+        this.mediaManager.photograph();
+    }
+
+    private void controlRecord(Message message, Map<String, Object> body) {
+        final Boolean enabled = MapUtils.getBoolean(body, "enabled");
+        if(Boolean.TRUE.equals(enabled)) {
+            this.mediaManager.startRecord();
+        } else {
+            this.mediaManager.stopRecord();
+        }
+        body.put("enabled", enabled);
+        this.push(message);
     }
 
     /**
@@ -890,7 +907,8 @@ public final class Taoyao implements ITaoyao {
         if(sessionClient == null) {
             return;
         }
-        sessionClient.pause();
+        final String type = MapUtils.get(body, "type");
+        sessionClient.pause(type);
     }
 
     private void sessionResume(Message message, Map<String, Object> body) {
@@ -899,7 +917,8 @@ public final class Taoyao implements ITaoyao {
         if(sessionClient == null) {
             return;
         }
-        sessionClient.resume();
+        final String type = MapUtils.get(body, "type");
+        sessionClient.resume(type);
     }
 
     /**

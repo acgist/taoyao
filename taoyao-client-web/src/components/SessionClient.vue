@@ -5,12 +5,12 @@
     <video ref="video"></video>
     <p class="title">{{ client?.name || "" }}</p>
     <div class="buttons">
-      <el-button @click="taoyao.mediaConsumerResume(audioConsumer.id)" v-show="stream" type="primary" title="打开麦克风" :icon="Microphone" circle />
-      <el-button @click="taoyao.mediaConsumerPause(audioConsumer.id)" v-show="stream" type="danger" title="关闭麦克风" :icon="Mute" circle />
-      <el-button @click="taoyao.mediaConsumerResume(videoConsumer.id)" v-show="stream" type="primary" title="打开摄像头" :icon="VideoPlay" circle />
-      <el-button @click="taoyao.mediaConsumerPause(videoConsumer.id)" v-show="stream" type="danger" title="关闭摄像头" :icon="VideoPause" circle />
-      <el-button title="拍照" :icon="Camera" circle />
-      <el-button title="录像" :icon="VideoCamera" circle />
+      <el-button @click="taoyao.sessionResume(client.id, 'audio')" v-show="audioStream && !client.remoteAudioEnabled" type="primary" title="打开麦克风" :icon="Microphone" circle />
+      <el-button @click="taoyao.sessionPause(client.id, 'audio')" v-show="audioStream  && client.remoteAudioEnabled" type="danger" title="关闭麦克风" :icon="Mute" circle />
+      <el-button @click="taoyao.sessionResume(client.id, 'video')" v-show="videoStream && !client.remoteVideoEnabled" type="primary" title="打开摄像头" :icon="VideoPlay" circle />
+      <el-button @click="taoyao.sessionPause(client.id, 'video')" v-show="videoStream  && client.remoteVideoEnabled" type="danger" title="关闭摄像头" :icon="VideoPause" circle />
+      <el-button @click="taoyao.controlPhotograph(client.clientId)" title="拍照" :icon="Camera" circle />
+      <el-button @click="taoyao.controlRecord(client.clientId, (record = !record))" title="录像" :type="record ? 'danger' : ''" :icon="VideoCamera" circle />
       <el-button @click="close" title="踢出" :icon="CircleClose" circle />
     </div>
   </div>
@@ -47,7 +47,7 @@ export default {
     return {
       audio: null,
       video: null,
-      stream: null,
+      record: false,
       audioStream: null,
       videoStream: null,
     };

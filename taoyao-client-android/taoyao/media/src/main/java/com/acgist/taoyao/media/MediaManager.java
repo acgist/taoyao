@@ -632,6 +632,7 @@ public final class MediaManager {
             this.recordClient.start();
             final VideoTrack videoTrack  = this.peerConnectionFactory.createVideoTrack("TaoyaoVR", this.mainVideoSource);
             this.recordClient.source(videoTrack);
+            this.mainHandler.obtainMessage(Config.WHAT_RECORD, Boolean.TRUE).sendToTarget();
             return this.recordClient;
         }
     }
@@ -643,6 +644,7 @@ public final class MediaManager {
             } else {
                 this.recordClient.close();
                 this.recordClient = null;
+                this.mainHandler.obtainMessage(Config.WHAT_RECORD, Boolean.FALSE).sendToTarget();
             }
         }
     }

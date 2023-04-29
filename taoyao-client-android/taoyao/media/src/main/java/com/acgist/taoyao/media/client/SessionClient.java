@@ -15,6 +15,7 @@ import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
+import org.webrtc.MediaStreamTrack;
 import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SdpObserver;
@@ -292,11 +293,41 @@ public class SessionClient extends Client {
         this.pauseVideo();
     }
 
+    public void pause(String type) {
+        if(MediaStreamTrack.AUDIO_TRACK_KIND.equals(type)) {
+            ListUtils.getOnlyOne(this.mediaStream.audioTracks, audioTrack -> {
+                audioTrack.setEnabled(false);
+                return audioTrack;
+            });
+        } else if(MediaStreamTrack.VIDEO_TRACK_KIND.equals(type)) {
+            ListUtils.getOnlyOne(this.mediaStream.videoTracks, videoTrack -> {
+                videoTrack.setEnabled(false);
+                return videoTrack;
+            });
+        } else {
+        }
+    }
+
     @Override
     public void resume() {
         super.resume();
         this.resumeAudio();
         this.resumeVideo();
+    }
+
+    public void resume(String type) {
+        if(MediaStreamTrack.AUDIO_TRACK_KIND.equals(type)) {
+            ListUtils.getOnlyOne(this.mediaStream.audioTracks, audioTrack -> {
+                audioTrack.setEnabled(true);
+                return audioTrack;
+            });
+        } else if(MediaStreamTrack.VIDEO_TRACK_KIND.equals(type)) {
+            ListUtils.getOnlyOne(this.mediaStream.videoTracks, videoTrack -> {
+                videoTrack.setEnabled(true);
+                return videoTrack;
+            });
+        } else {
+        }
     }
 
     @Override

@@ -92,13 +92,13 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
             try {
                 request.wait(this.timeout);
             } catch (InterruptedException e) {
-                log.error("媒体服务等待响应异常：{}", request, e);
+                log.error("终端等待响应异常：{}", request, e);
             }
         }
         final Message response = this.requestMessage.remove(id);
         if (response == null || request.equals(response)) {
-            log.warn("媒体服务没有响应：{}", request);
-            throw MessageCodeException.of(MessageCode.CODE_2001, "媒体服务没有响应");
+            log.warn("终端没有响应：{}", request);
+            throw MessageCodeException.of(MessageCode.CODE_2001, "终端没有响应");
         }
         return response;
     }
