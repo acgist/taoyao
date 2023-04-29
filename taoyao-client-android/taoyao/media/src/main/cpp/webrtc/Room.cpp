@@ -318,11 +318,12 @@ namespace acgist {
     void Room::mediaProducerClose(JNIEnv* env, const std::string& producerId) {
         if(this->audioProducer->GetId() == producerId) {
             this->audioProducer->Close();
+            this->producerCloseCallback(env, producerId);
         } else if(this->videoProducer->GetId() == producerId) {
             this->videoProducer->Close();
+            this->producerCloseCallback(env, producerId);
         } else {
         }
-        this->producerCloseCallback(env, producerId);
     }
 
     void Room::mediaConsumerPause(JNIEnv* env, const std::string& consumerId) {
@@ -349,6 +350,7 @@ namespace acgist {
             return;
         }
         consumer->Close();
+        this->consumers.erase(consumerId);
         this->consumerCloseCallback(env, consumerId);
     }
 

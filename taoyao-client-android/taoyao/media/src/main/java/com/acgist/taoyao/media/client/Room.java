@@ -13,6 +13,7 @@ import com.acgist.taoyao.media.config.MediaProperties;
 import com.acgist.taoyao.media.config.WebrtcProperties;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
+import org.apache.commons.collections4.CollectionUtils;
 import org.webrtc.AudioTrack;
 import org.webrtc.MediaStream;
 import org.webrtc.MediaStreamTrack;
@@ -112,6 +113,9 @@ public class Room extends CloseableClient implements RouterCallback {
             this.peerConnectionFactory = this.mediaManager.newClient();
             this.localClient = new LocalClient(this.name, this.clientId, this.taoyao, this.mainHandler);
             this.localClient.setMediaStream(this.mediaManager.buildLocalMediaStream(this.audioProduce, this.videoProduce));
+            if(this.preview) {
+                this.localClient.playVideo();
+            }
             // STUN | TURN
             final List<PeerConnection.IceServer> iceServers = new ArrayList<>();
             // 不用配置
@@ -200,28 +204,50 @@ public class Room extends CloseableClient implements RouterCallback {
      *
      * @param body 消息主体
      */
-    public void newRemoteClient(Map<String, Object> body) {
-        synchronized (this.remoteClients) {
-            final String clientId = MapUtils.get(body, "clientId");
-            final Map<String, Object> status = MapUtils.get(body, "status");
-            final String name = MapUtils.get(status, "name");
+    public void newRemoteClientFromRoomEnter(Map<String, Object> body) {
+        final String clientId = MapUtils.get(body, "clientId");
+        if(this.clientId.equals(clientId)) {
+            return;
+        }
+        final Map<String, Object> status = MapUtils.get(body, "status");
+        final String name = MapUtils.get(status, "name");
+        final RemoteClient remoteClient = new RemoteClient(name, clientId, this.taoyao, this.mainHandler);
+        final RemoteClient old = this.remoteClients.put(clientId, remoteClient);
+        if(old != null) {
+            // 关闭旧的资源
+            old.close();
+        }
+    }
+
+    public void newRemoteClientFromRoomClientList(Map<String, Object> body) {
+        final List<Map<String, Object>> clients = MapUtils.get(body, "clients");
+        if(CollectionUtils.isEmpty(clients)) {
+            return;
+        }
+        clients.forEach(map -> {
+            final String name = MapUtils.get(map, "name");
+            final String clientId = MapUtils.get(map, "clientId");
+            if(this.clientId.equals(clientId)) {
+                return;
+            }
             final RemoteClient remoteClient = new RemoteClient(name, clientId, this.taoyao, this.mainHandler);
             final RemoteClient old = this.remoteClients.put(clientId, remoteClient);
             if(old != null) {
                 // 关闭旧的资源
                 old.close();
             }
-        }
+        });
     }
 
     public void closeRemoteClient(String clientId) {
-        synchronized (this.remoteClients) {
-            final RemoteClient remoteClient = this.remoteClients.get(clientId);
-            if(remoteClient == null) {
-                return;
-            }
-            remoteClient.close();
+        final RemoteClient remoteClient = this.remoteClients.remove(clientId);
+        if(remoteClient == null) {
+            return;
         }
+        remoteClient.tracks.keySet().forEach(consumerId -> {
+            this.nativeMediaConsumerClose(this.nativeRoomPointer, consumerId);
+        });
+        remoteClient.close();
     }
 
     @Override
@@ -233,8 +259,10 @@ public class Room extends CloseableClient implements RouterCallback {
             Log.i(Room.class.getSimpleName(), "关闭房间：" + this.roomId);
             super.close();
             this.nativeCloseRoom(this.nativeRoomPointer);
+            // 关闭远程媒体
             this.remoteClients.values().forEach(v -> this.closeRemoteClient(v.clientId));
             this.remoteClients.clear();
+            // 关闭本地媒体
             this.localClient.close();
             this.mediaManager.closeClient();
         }
@@ -249,7 +277,9 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     public void mediaConsumerClose(Map<String, Object> body) {
-        this.nativeMediaConsumerClose(this.nativeRoomPointer, MapUtils.get(body, "consumerId"));
+        final String consumerId = MapUtils.get(body, "consumerId");
+        this.nativeMediaConsumerClose(this.nativeRoomPointer, consumerId);
+        this.remoteClients.values().forEach(v -> v.close(consumerId));
     }
 
     public void mediaConsumerPause(String consumerId) {
@@ -285,7 +315,9 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     public void mediaProducerClose(Map<String, Object> body) {
-        this.nativeMediaProducerClose(this.nativeRoomPointer, MapUtils.get(body, "producerId"));
+        final String producerId = MapUtils.get(body, "producerId");
+        this.nativeMediaProducerClose(this.nativeRoomPointer, producerId);
+        this.localClient.close(producerId);
     }
 
     public void mediaProducerPause(String producerId) {
@@ -316,7 +348,7 @@ public class Room extends CloseableClient implements RouterCallback {
     public void enterRoomCallback(String rtpCapabilities, String sctpCapabilities) {
         this.rtpCapabilities  = JSONUtils.toJava(rtpCapabilities);
         this.sctpCapabilities = JSONUtils.toJava(sctpCapabilities);
-        this.taoyao.push(this.taoyao.buildMessage(
+        this.taoyao.request(this.taoyao.buildMessage(
             "room::enter",
             "roomId",           this.roomId,
             "password",         this.password,
@@ -382,9 +414,9 @@ public class Room extends CloseableClient implements RouterCallback {
         final Message response = JSONUtils.toJava(message, Message.class);
         final Map<String, Object> body = response.body();
         final String kind       = MapUtils.get(body, "kind");
-        final String clientId   = MapUtils.get(body, "clientId");
+        final String sourceId   = MapUtils.get(body, "sourceId");
         final String consumerId = MapUtils.get(body, "consumerId");
-        final RemoteClient remoteClient = this.remoteClients.get(clientId);
+        final RemoteClient remoteClient = this.remoteClients.get(sourceId);
         if(remoteClient == null) {
             // TODO：资源释放
             return;

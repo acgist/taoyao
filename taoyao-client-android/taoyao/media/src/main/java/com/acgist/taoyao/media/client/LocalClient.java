@@ -1,12 +1,14 @@
 package com.acgist.taoyao.media.client;
 
 import android.os.Handler;
+import android.util.Log;
 
 import com.acgist.taoyao.boot.utils.ListUtils;
 import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.MediaStream;
+import org.webrtc.MediaStreamTrack;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,8 +74,37 @@ public class LocalClient extends RoomClient {
 
     @Override
     public void close() {
+        Log.i(RemoteClient.class.getSimpleName(), "关闭本地终端：" + this.clientId);
         super.close();
-        this.tracks.clear();
+        if(this.mediaStream == null) {
+            return;
+        }
+        synchronized (this.mediaStream) {
+            this.mediaStream.dispose();
+        }
+    }
+
+    /**
+     * 关闭生产者
+     *
+     * @param producerId 生产者ID
+     */
+    public void close(String producerId) {
+        Log.i(RemoteClient.class.getSimpleName(), "关闭本地终端生产者者：" + this.clientId + " - " + producerId);
+        final Long pointer = this.tracks.get(producerId);
+        if(pointer == null || this.mediaStream == null) {
+            return;
+        }
+        synchronized (this.mediaStream) {
+            if(pointer.equals(this.audioProducerPointer)) {
+                this.mediaStream.audioTracks.forEach(MediaStreamTrack::dispose);
+                this.mediaStream.audioTracks.clear();
+            } else if(pointer.equals(this.videoProducerPointer)) {
+                this.mediaStream.videoTracks.forEach(MediaStreamTrack::dispose);
+                this.mediaStream.videoTracks.clear();
+            } else {
+            }
+        }
     }
 
 }

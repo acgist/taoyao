@@ -1,6 +1,7 @@
 package com.acgist.taoyao.media.client;
 
 import android.os.Handler;
+import android.util.Log;
 
 import com.acgist.taoyao.boot.utils.ListUtils;
 import com.acgist.taoyao.media.config.Config;
@@ -23,6 +24,7 @@ public class RemoteClient extends RoomClient {
     /**
      * 媒体流Track
      * 消费者ID = 媒体流Track
+     * 注意：track由mediasoup的consumer释放
      */
     protected final Map<String, MediaStreamTrack> tracks;
     protected long audioConsumerPointer;
@@ -65,9 +67,25 @@ public class RemoteClient extends RoomClient {
 
     @Override
     public void close() {
+        Log.i(RemoteClient.class.getSimpleName(), "关闭远程终端：" + this.clientId);
         super.close();
-        this.tracks.values().forEach(MediaStreamTrack::dispose);
-        this.tracks.clear();
+        synchronized (this.tracks) {
+            // 注意：使用nativeMediaConsumerClose释放
+            this.tracks.clear();
+        }
+    }
+
+    /**
+     * 关闭消费者
+     *
+     * @param consumerId 消费者ID
+     */
+    public void close(String consumerId) {
+        Log.i(RemoteClient.class.getSimpleName(), "关闭远程终端消费者：" + this.clientId + " - " + consumerId);
+        synchronized (this.tracks) {
+            // 注意：使用nativeMediaConsumerClose释放
+            this.tracks.remove(consumerId);
+        }
     }
 
 }

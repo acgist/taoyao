@@ -13,7 +13,6 @@ import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.PowerManager;
 import android.os.Process;
-import android.se.omapi.Session;
 import android.util.Log;
 
 import com.acgist.taoyao.boot.model.Header;
@@ -338,7 +337,6 @@ public final class Taoyao implements ITaoyao {
                                 buffer.compact();
                                 final String content = new String(this.decrypt.doFinal(message));
                                 try {
-                                    Log.d(Taoyao.class.getSimpleName(), "处理信令：" + content);
                                     Taoyao.this.on(content);
                                 } catch (Exception e) {
                                     Log.e(Taoyao.class.getSimpleName(), "处理信令异常：" + content, e);
@@ -513,6 +511,7 @@ public final class Taoyao implements ITaoyao {
         final Long id = header.getId();
         final Message request = this.requestMessage.get(id);
         if (request != null) {
+            Log.d(Taoyao.class.getSimpleName(), "处理信令响应：" + content);
             // 同步处理：重新设置响应消息
             this.requestMessage.put(id, message);
             // 唤醒等待线程
@@ -520,6 +519,7 @@ public final class Taoyao implements ITaoyao {
                 request.notifyAll();
             }
         } else {
+            Log.d(Taoyao.class.getSimpleName(), "处理信令异步：" + content);
             this.executeHandler.post(() -> {
                 try {
                     this.dispatch(content, header, message);
@@ -542,17 +542,18 @@ public final class Taoyao implements ITaoyao {
             case "client::reboot"                             -> this.clientReboot(message, message.body());
             case "client::shutdown"                           -> this.clientShutdown(message, message.body());
             case "media::consume"                             -> this.mediaConsume(message, message.body());
-//            case "media::audio::volume"                       -> this.mediaAudioVolume(message, message.body());
+            case "media::audio::volume"                       -> this.mediaAudioVolume(message, message.body());
             case "media::consumer::close"                     -> this.mediaConsumerClose(message, message.body());
             case "media::consumer::pause"                     -> this.mediaConsumerPause(message, message.body());
-//            case "media::consumer::request::key::frame"       -> this.mediaConsumerRequestKeyFrame(message, message.body());
+            case "media::consumer::request::key::frame"       -> this.mediaConsumerRequestKeyFrame(message, message.body());
             case "media::consumer::resume"                    -> this.mediaConsumerResume(message, message.body());
-//            case "media::consumer::set::preferred::layers"    -> this.mediaConsumerSetPreferredLayers(message, message.body());
-//            case "media::consumer::status"                    -> this.mediaConsumerStatus(message, message.body());
+            case "media::consumer::set::preferred::layers"    -> this.mediaConsumerSetPreferredLayers(message, message.body());
+            case "media::consumer::status"                    -> this.mediaConsumerStatus(message, message.body());
             case "media::producer::close"                     -> this.mediaProducerClose(message, message.body());
             case "media::producer::pause"                     -> this.mediaProducerPause(message, message.body());
             case "media::producer::resume"                    -> this.mediaProducerResume(message, message.body());
-//            case "media::producer::video::orientation:change" -> this.mediaVideoOrientationChange(message, message.body());
+            case "media::producer::video::orientation:change" -> this.mediaVideoOrientationChange(message, message.body());
+            case "room::client::list"                         -> this.roomClientList(message, message.body());
             case "room::close"                                -> this.roomClose(message, message.body());
             case "room::enter"                                -> this.roomEnter(message, message.body());
             case "room::expel"                                -> this.roomExpel(message, message.body());
@@ -645,6 +646,10 @@ public final class Taoyao implements ITaoyao {
         room.mediaConsume(message, body);
     }
 
+    private void mediaAudioVolume(Message message, Map<String, Object> body) {
+
+    }
+
     private void mediaConsumerClose(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
         final Room room = this.rooms.get(roomId);
@@ -663,6 +668,10 @@ public final class Taoyao implements ITaoyao {
         room.mediaConsumerPause(body);
     }
 
+    private void mediaConsumerRequestKeyFrame(Message message, Map<String, Object> body) {
+
+    }
+
     private void mediaConsumerResume(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
         final Room room = this.rooms.get(roomId);
@@ -670,6 +679,14 @@ public final class Taoyao implements ITaoyao {
             return;
         }
         room.mediaConsumerResume(body);
+    }
+
+    private void mediaConsumerSetPreferredLayers(Message message, Map<String, Object> body) {
+
+    }
+
+    private void mediaConsumerStatus(Message message, Map<String, Object> body) {
+
     }
 
     private void mediaProducerClose(Message message, Map<String, Object> body) {
@@ -690,6 +707,10 @@ public final class Taoyao implements ITaoyao {
         room.mediaProducerPause(body);
     }
 
+    private void mediaVideoOrientationChange(Message message, Map<String, Object> body) {
+
+    }
+
     private void mediaProducerResume(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
         final Room room = this.rooms.get(roomId);
@@ -697,6 +718,15 @@ public final class Taoyao implements ITaoyao {
             return;
         }
         room.mediaProducerResume(body);
+    }
+
+    private void roomClientList(Message message, Map<String, Object> body) {
+        final String roomId = MapUtils.get(body, "roomId");
+        final Room room = this.rooms.get(roomId);
+        if(room == null) {
+            return;
+        }
+        room.newRemoteClientFromRoomClientList(body);
     }
 
     private void roomClose(Message message, Map<String, Object> body) {
@@ -714,7 +744,7 @@ public final class Taoyao implements ITaoyao {
         if(room == null) {
             return;
         }
-        room.newRemoteClient(body);
+        room.newRemoteClientFromRoomEnter(body);
     }
 
     public Room roomEnter(String roomId, String password) {

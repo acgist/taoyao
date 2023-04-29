@@ -245,6 +245,10 @@ public interface Constant {
      * 媒体订阅类型
      */
     String SUBSCRIBE_TYPE = "subscribeType";
+    /**
+     * 终端列表
+     */
+    String CLIENTS = "clients";
 
     /**
      * 生产者ID生成器

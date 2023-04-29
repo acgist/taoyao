@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
+import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
@@ -66,13 +67,19 @@ public class RoomClientListProtocol extends ProtocolRoomAdapter implements Appli
     public void onApplicationEvent(RoomEnterEvent event) {
         final Room room = event.getRoom();
         final Client client = event.getClient();
-        client.push(this.build(room.clientStatus()));
+        client.push(this.build(Map.of(
+            Constant.ROOM_ID, room.getRoomId(),
+            Constant.CLIENTS, room.clientStatus()
+        )));
     }
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         message.setBody(room.clientStatus());
-        client.push(message);
+        client.push(this.build(Map.of(
+            Constant.ROOM_ID, room.getRoomId(),
+            Constant.CLIENTS, room.clientStatus()
+        )));
     }
     
 }

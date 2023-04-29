@@ -133,6 +133,9 @@ public class SessionClient extends Client {
             this.mediaStream       = this.mediaManager.buildLocalMediaStream(this.audioProduce, this.videoProduce);
             this.peerConnection    = this.peerConnectionFactory.createPeerConnection(configuration, this.observer);
             this.peerConnection.addStream(this.mediaStream);
+            if(this.preview) {
+                // 实现预览
+            }
             // 设置streamId同步
 //          final List<String> streamIds = new ArrayList<>();
 //          ListUtils.getOnlyOne(this.mediaStream.audioTracks, audioTrack -> {
@@ -304,7 +307,8 @@ public class SessionClient extends Client {
             }
             super.close();
             try {
-//             if(this.mediaStream != null) {
+                // PeerConnection自动释放
+//              if(this.mediaStream != null) {
 //                  this.mediaStream.dispose();
 //              }
 //              if(this.remoteMediaStream != null) {

@@ -1261,7 +1261,7 @@ class Taoyao extends RemoteClient {
           remoteClient.audioConsumer = consumer;
         } else if (track.kind === "video") {
           remoteClient.videoTrack = track;
-          remoteClient.videoconsumer = consumer;
+          remoteClient.videoConsumer = consumer;
         } else {
           console.warn("不支持的媒体：", track);
         }
@@ -1370,7 +1370,7 @@ class Taoyao extends RemoteClient {
    */
   defaultRoomClientList(message) {
     const me = this;
-    message.body.forEach((v) => {
+    message.body.clients.forEach((v) => {
       if (v.clientId === me.clientId) {
         // 忽略自己
       } else {

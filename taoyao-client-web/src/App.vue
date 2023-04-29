@@ -91,9 +91,9 @@
       <!-- 本地终端 -->
       <LocalClient v-if="taoyao && taoyao.roomId" ref="local-client" :client="taoyao" :taoyao="taoyao"></LocalClient>
       <!-- 远程终端 -->
-      <RemoteClient v-for="(kv, index) in remoteClients" :key="index" :ref="'remote-client-' + kv[0]" :client="kv[1]" :taoyao="taoyao"></RemoteClient>
+      <RemoteClient v-for="(kv, index) in remoteClients" :key="'remote-client-' + kv[0]" :ref="'remote-client-' + kv[0]" :client="kv[1]" :taoyao="taoyao"></RemoteClient>
       <!-- 远程会话 -->
-      <SessionClient v-for="(kv, index) in sessionClients" :key="index" :ref="'session-client-' + kv[0]" :client="kv[1]" :taoyao="taoyao"></SessionClient>
+      <SessionClient v-for="(kv, index) in sessionClients" :key="'session-client-' + kv[0]" :ref="'session-client-' + kv[0]" :client="kv[1]" :taoyao="taoyao"></SessionClient>
     </div>
   </div>
 </template>

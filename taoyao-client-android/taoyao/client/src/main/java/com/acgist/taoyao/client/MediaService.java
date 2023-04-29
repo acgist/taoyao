@@ -78,6 +78,7 @@ public class MediaService extends Service {
         super.onCreate();
         this.mkdir(R.string.storagePathImage);
         this.mkdir(R.string.storagePathVideo);
+        this.buildNotificationChannel();
     }
 
     @Override
@@ -89,6 +90,7 @@ public class MediaService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(MediaService.class.getSimpleName(), "onStartCommand：" + intent.getAction());
+        this.cleanAllNotification();
         if (Action.LAUNCH.name().equals(intent.getAction())) {
             this.launch(intent);
             this.openConnect(intent);
@@ -114,18 +116,13 @@ public class MediaService extends Service {
     private void launch(Intent intent) {
         final Intent notificationIntent = new Intent(this, MediaService.class);
         final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "NOTIFICATION_CHANNEL_ID")
+        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "TAOYAO")
             .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setLargeIcon(BitmapFactory.decodeResource(this.getResources(), R.mipmap.ic_launcher_foreground))
-            .setTicker("NOTIFICATION_TICKER")
-            .setContentTitle("屏幕录制")
-            .setContentText("屏幕录制共享")
+            .setContentTitle("桃夭后台")
+            .setContentText("桃夭正在后台运行")
             .setContentIntent(pendingIntent);
         final Notification notification = notificationBuilder.build();
-        final NotificationChannel channel = new NotificationChannel("NOTIFICATION_CHANNEL_ID", "NOTIFICATION_CHANNEL_NAME", NotificationManager.IMPORTANCE_DEFAULT);
-        channel.setDescription("NOTIFICATION_CHANNEL_DESC");
-        final NotificationManager notificationManager = this.getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(channel);
         this.startForeground((int) System.currentTimeMillis(), notification);
     }
 
@@ -182,18 +179,15 @@ public class MediaService extends Service {
     public void screenRecord(Intent intent) {
         final Intent notificationIntent = new Intent(this, MediaService.class);
         final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "NOTIFICATION_CHANNEL_ID")
+        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "TAOYAO")
             .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setLargeIcon(BitmapFactory.decodeResource(this.getResources(), R.mipmap.ic_launcher_foreground))
-            .setTicker("NOTIFICATION_TICKER")
-            .setContentTitle("屏幕录制")
-            .setContentText("屏幕录制共享")
+            // 自动清除
+//          .setAutoCancel(true)
+            .setContentTitle("录制屏幕")
+            .setContentText("桃夭正在录制屏幕")
             .setContentIntent(pendingIntent);
         final Notification notification = notificationBuilder.build();
-        final NotificationChannel channel = new NotificationChannel("NOTIFICATION_CHANNEL_ID", "NOTIFICATION_CHANNEL_NAME", NotificationManager.IMPORTANCE_DEFAULT);
-        channel.setDescription("NOTIFICATION_CHANNEL_DESC");
-        final NotificationManager notificationManager = this.getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(channel);
         this.startForeground((int) System.currentTimeMillis(), notification);
         MediaManager.getInstance().initScreen(intent.getParcelableExtra("data"));
     }
@@ -207,6 +201,19 @@ public class MediaService extends Service {
         if(!file.exists()) {
             file.mkdirs();
         }
+    }
+
+    private void buildNotificationChannel() {
+        final NotificationChannel channel = new NotificationChannel("TAOYAO", "桃夭通知", NotificationManager.IMPORTANCE_DEFAULT);
+        channel.setShowBadge(false);
+        channel.setDescription("桃夭系统通知");
+        final NotificationManager notificationManager = this.getSystemService(NotificationManager.class);
+        notificationManager.createNotificationChannel(channel);
+    }
+
+    private void cleanAllNotification() {
+        final NotificationManager notificationManager = this.getSystemService(NotificationManager.class);
+        notificationManager.cancelAll();
     }
 
 }
