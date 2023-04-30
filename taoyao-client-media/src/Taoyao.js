@@ -376,7 +376,7 @@ class Taoyao {
     // 定时打印使用情况
     setInterval(async () => {
       this.usage();
-    }, 300 * 1000);
+    }, 60 * 1000);
   }
 
   /**
@@ -552,7 +552,7 @@ class Taoyao {
   }
   
   closeAllRoom() {
-    console.info("关闭所有房间：", this.rooms.size());
+    console.info("关闭所有房间：", this.rooms.size);
     this.rooms.forEach((room, roomId) => {
       room.closeAll();
     });
