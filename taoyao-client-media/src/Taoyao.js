@@ -837,8 +837,12 @@ class Taoyao {
             consumer.close();
           });
           consumer.on("producerpause", () => {
+            // 本地暂停不要操作
+            if(consumer.localPaused) {
+              return;
+            }
             console.info("consumer producerpause：", consumer.id);
-            // consumer.pause();
+            consumer.pause();
             this.push(
               protocol.buildMessage("media::consumer::pause", {
                 roomId: roomId,
@@ -847,8 +851,12 @@ class Taoyao {
             );
           });
           consumer.on("producerresume", () => {
+            // 本地暂停不要操作
+            if(consumer.localPaused) {
+              return;
+            }
             console.info("consumer producerresume：", consumer.id);
-            // consumer.resume();
+            consumer.resume();
             this.push(
               protocol.buildMessage("media::consumer::resume", {
                 roomId: roomId,
@@ -936,6 +944,7 @@ class Taoyao {
             })
           );
           await consumer.resume();
+          consumer.localPaused = false;
           this.push(
             protocol.buildMessage("media::consumer::score", {
               score: consumer.score,
@@ -983,6 +992,7 @@ class Taoyao {
     const room = this.rooms.get(roomId);
     const consumer = room?.consumers.get(consumerId);
     if(consumer) {
+      consumer.localPaused = true;
       console.info("暂停消费者：", consumerId);
       await consumer.pause();
     } else {
@@ -1022,6 +1032,7 @@ class Taoyao {
     const room = this.rooms.get(roomId);
     const consumer = room.consumers.get(consumerId);
     if(consumer) {
+      consumer.localPaused = false;
       console.info("恢复消费者：", consumerId);
       await consumer.resume();
     } else {

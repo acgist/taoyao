@@ -431,6 +431,8 @@ class Taoyao extends RemoteClient {
   password;
   // 房间标识
   roomId;
+  // 视频质量
+  options;
   // 回调事件
   callback;
   // 请求回调
@@ -864,6 +866,7 @@ class Taoyao extends RemoteClient {
       ideal: video.frameRate,
       max: media.maxFrameRate,
     };
+    me.options = Object.keys(media.videos).map(key => ({value: key, label: media.videos[key].resolution}));
     me.mediaConfig = media;
     me.webrtcConfig = webrtc;
     console.debug(

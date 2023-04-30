@@ -5,19 +5,19 @@
     <video ref="video"></video>
     <p class="title">{{ client?.name || "" }}</p>
     <div class="buttons" :style="{'--volume': client?.volume}">
-      <el-button @click="taoyao.mediaProducerResume(audioProducer.id)" v-show="audioProducer && audioProducer.paused" type="primary" title="打开麦克风" :icon="Microphone" circle />
-      <el-button @click="taoyao.mediaProducerPause(audioProducer.id)" v-show="audioProducer && !audioProducer.paused" type="danger" title="关闭麦克风" :icon="Mute" circle />
-      <el-button @click="taoyao.mediaProducerResume(videoProducer.id)" v-show="videoProducer && videoProducer.paused" type="primary" title="打开摄像头" :icon="VideoPlay" circle />
-      <el-button @click="taoyao.mediaProducerPause(videoProducer.id)" v-show="videoProducer && !videoProducer.paused" type="danger" title="关闭摄像头" :icon="VideoPause" circle />
-      <el-button @click="exchangeVideoSource" title="交换媒体" :icon="Refresh" circle />
-      <el-button title="拍照" :icon="Camera" circle />
-      <el-button title="录像" :icon="VideoCamera" circle />
-      <el-button title="媒体信息" :icon="InfoFilled" circle />
-      <el-popover placement="top" :width="200" trigger="hover">
+      <el-button @click="taoyao.mediaProducerResume(audioProducer.id)" v-show="audioProducer &&  audioProducer.paused" type="primary" title="打开麦克风" :icon="Microphone" circle />
+      <el-button @click="taoyao.mediaProducerPause(audioProducer.id)"  v-show="audioProducer && !audioProducer.paused" type="danger"  title="关闭麦克风" :icon="Mute"       circle />
+      <el-button @click="taoyao.mediaProducerResume(videoProducer.id)" v-show="videoProducer &&  videoProducer.paused" type="primary" title="打开摄像头" :icon="VideoPlay"  circle />
+      <el-button @click="taoyao.mediaProducerPause(videoProducer.id)"  v-show="videoProducer && !videoProducer.paused" type="danger"  title="关闭摄像头" :icon="VideoPause" circle />
+      <el-button @click="exchangeVideoSource" :icon="Refresh" circle title="交换媒体" />
+      <el-button :icon="Camera"      circle title="拍照" />
+      <el-button :icon="VideoCamera" circle title="录像" />
+      <el-button @click="taoyao.mediaConsumerStatus()" :icon="InfoFilled"  circle title="媒体信息" />
+      <el-popover placement="top" :width="240" trigger="hover">
         <template #reference>
           <el-button>视频质量</el-button>
         </template>
-        <el-table :data="options">
+        <el-table :data="taoyao.options">
           <el-table-column width="100" property="value" label="标识" />
           <el-table-column width="100" property="label" label="名称" />
         </el-table>
@@ -62,32 +62,6 @@ export default {
       dataProducer: null,
       audioProducer: null,
       videoProducer: null,
-      options: [
-        {
-          value: "HD",
-          label: "高清",
-        },
-        {
-          value: "SD",
-          label: "标签",
-        },
-        {
-          value: "FD",
-          label: "超清",
-        },
-        {
-          value: "BD",
-          label: "蓝光",
-        },
-        {
-          value: "QD",
-          label: "2K",
-        },
-        {
-          value: "UD",
-          label: "4K",
-        },
-      ],
     };
   },
   mounted() {

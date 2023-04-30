@@ -5,13 +5,23 @@
     <video ref="video"></video>
     <p class="title">{{ client?.name || "" }}</p>
     <div class="buttons" :style="{'--volume': client?.volume}">
-      <el-button @click="taoyao.mediaConsumerResume(audioConsumer.id)" v-show="audioConsumer && audioConsumer.paused" type="primary" title="打开麦克风" :icon="Microphone" circle />
-      <el-button @click="taoyao.mediaConsumerPause(audioConsumer.id)" v-show="audioConsumer  && !audioConsumer.paused" type="danger" title="关闭麦克风" :icon="Mute" circle />
-      <el-button @click="taoyao.mediaConsumerResume(videoConsumer.id)" v-show="videoConsumer && videoConsumer.paused" type="primary" title="打开摄像头" :icon="VideoPlay" circle />
-      <el-button @click="taoyao.mediaConsumerPause(videoConsumer.id)" v-show="videoConsumer  && !videoConsumer.paused" type="danger" title="关闭摄像头" :icon="VideoPause" circle />
-      <el-button @click="taoyao.controlPhotograph(client.clientId)" title="拍照" :icon="Camera" circle />
-      <el-button @click="taoyao.controlRecord(client.clientId, (record = !record))" title="录像" :type="record ? 'danger' : ''" :icon="VideoCamera" circle />
-      <el-button title="媒体信息" :icon="InfoFilled" circle />
+      <!-- TODO：本地状态+远程状态计算当前状态 -->
+      <el-button @click="taoyao.mediaConsumerResume(audioConsumer.id)" v-show="audioConsumer &&  audioConsumer.paused" type="primary" title="打开麦克风" :icon="Microphone" circle />
+      <el-button @click="taoyao.mediaConsumerPause(audioConsumer.id)"  v-show="audioConsumer && !audioConsumer.paused" type="danger"  title="关闭麦克风" :icon="Mute"       circle />
+      <el-button @click="taoyao.mediaConsumerResume(videoConsumer.id)" v-show="videoConsumer &&  videoConsumer.paused" type="primary" title="打开摄像头" :icon="VideoPlay"  circle />
+      <el-button @click="taoyao.mediaConsumerPause(videoConsumer.id)"  v-show="videoConsumer && !videoConsumer.paused" type="danger"  title="关闭摄像头" :icon="VideoPause" circle />
+      <el-button @click="taoyao.controlPhotograph(client.clientId)"                 :icon="Camera"      circle title="拍照" />
+      <el-button @click="taoyao.controlRecord(client.clientId, (record = !record))" :icon="VideoCamera" circle title="录像" :type="record ? 'danger' : ''" />
+      <el-button @click="taoyao.mediaConsumerStatus()"                              :icon="InfoFilled"  circle title="媒体信息" />
+      <el-popover placement="top" :width="240" trigger="hover">
+        <template #reference>
+          <el-button>视频质量</el-button>
+        </template>
+        <el-table :data="taoyao.options">
+          <el-table-column width="100" property="value" label="标识" />
+          <el-table-column width="100" property="label" label="名称" />
+        </el-table>
+      </el-popover>
       <el-button @click="roomExpel" title="踢出" :icon="CircleClose" circle />
     </div>
   </div>
