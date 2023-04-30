@@ -12,7 +12,7 @@
       <el-button @click="exchangeVideoSource" :icon="Refresh" circle title="交换媒体" />
       <el-button :icon="Camera"      circle title="拍照" />
       <el-button :icon="VideoCamera" circle title="录像" />
-      <el-button @click="taoyao.mediaConsumerStatus()" :icon="InfoFilled"  circle title="媒体信息" />
+      <el-button @click="taoyao.mediaProducerStatus()" :icon="InfoFilled"  circle title="媒体信息" />
       <el-popover placement="top" :width="240" trigger="hover">
         <template #reference>
           <el-button>视频质量</el-button>
