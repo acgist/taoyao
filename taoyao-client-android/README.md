@@ -16,7 +16,7 @@
 
 > 注意删除目录`linux-include/build`和`linux-include/third_party`目录中除了`abseil-cpp`以外的所有依赖（当然不删也没关系就是文件太多编译器会变慢）
 
-## 镜头旋转
+## 视频旋转
 
 1. 应用旋转（横屏|竖屏）
 2. 代码旋转

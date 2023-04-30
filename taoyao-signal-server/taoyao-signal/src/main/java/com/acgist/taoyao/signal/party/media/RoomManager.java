@@ -103,6 +103,7 @@ public class RoomManager {
 //	        mediaClient.request(clone);
 	        // 更新媒体服务
 	        room.setMediaClient(mediaClient);
+	        // TODO：通知重建房间
 	    });
 	}
 

@@ -66,7 +66,8 @@ public class RoomCreateProtocol extends ProtocolClientAdapter implements Applica
 	            message.cloneWithoutBody()
             );
 	        message.setBody(room.getRoomStatus());
-	        this.clientManager.broadcast(message);
+	        // 通知媒体终端
+	        this.clientManager.broadcast(message, ClientType.MEDIA_CLIENT);
 	    } else {
 	        this.logNoAdapter(clientType);
 	    }

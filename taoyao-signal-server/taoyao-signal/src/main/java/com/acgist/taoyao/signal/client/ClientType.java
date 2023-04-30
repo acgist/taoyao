@@ -1,5 +1,7 @@
 package com.acgist.taoyao.signal.client;
 
+import java.util.stream.Stream;
+
 import com.acgist.taoyao.boot.model.MessageCodeException;
 
 import lombok.Getter;
@@ -54,5 +56,14 @@ public enum ClientType {
         }
         throw MessageCodeException.of("未知终端类型：" + value);
     }
+    
+    /**
+     * 媒体终端
+     */
+    public static final ClientType[] MEDIA_CLIENT = Stream.of(ClientType.values()).filter(ClientType::mediaClient).toArray(ClientType[]::new);
+    /**
+     * 媒体服务
+     */
+    public static final ClientType[] MEDIA_SERVER = Stream.of(ClientType.values()).filter(ClientType::mediaServer).toArray(ClientType[]::new);
     
 }

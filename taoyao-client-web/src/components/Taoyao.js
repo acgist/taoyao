@@ -96,7 +96,7 @@ const signalChannel = {
       clearTimeout(me.heartbeatTimer);
     }
     me.heartbeatTimer = setTimeout(async function () {
-      if (me.channel && me.channel.readyState === WebSocket.OPEN) {
+      if (me.connected()) {
         const battery = await navigator.getBattery();
         me.push(
           protocol.buildMessage("client::heartbeat", {
@@ -111,6 +111,13 @@ const signalChannel = {
     }, me.heartbeatTime);
   },
   /**
+   * @returns 是否连接成功
+   */
+  connected() {
+    const me = this;
+    return me.channel && me.channel.readyState === WebSocket.OPEN;
+  },
+  /**
    * 连接
    *
    * @param {*} address 地址
@@ -120,7 +127,7 @@ const signalChannel = {
    */
   async connect(address, reconnection = true) {
     const me = this;
-    if (me.channel && me.channel.readyState === WebSocket.OPEN) {
+    if (me.connected()) {
       return new Promise((resolve, reject) => {
         resolve(me.channel);
       });
@@ -152,7 +159,7 @@ const signalChannel = {
       me.channel.onclose = async function () {
         console.warn("信令通道关闭：", me.channel);
         me.taoyao.connect = false;
-        if(me.channel && me.channel.readyState !== WebSocket.OPEN) {
+        if(!me.connected()) {
           me.taoyao.closeRoomMedia();
           me.taoyao.closeSessionMedia();
         }
@@ -163,14 +170,6 @@ const signalChannel = {
       };
       me.channel.onerror = async function (e) {
         console.error("信令通道异常：", me.channel, e);
-        me.taoyao.connect = false;
-        if(me.channel && me.channel.readyState !== WebSocket.OPEN) {
-          me.taoyao.closeRoomMedia();
-          me.taoyao.closeSessionMedia();
-        }
-        if (me.reconnection) {
-          me.reconnect();
-        }
         // 不要失败回调
       };
       me.channel.onmessage = async function (e) {
@@ -189,8 +188,9 @@ const signalChannel = {
   reconnect() {
     const me = this;
     if (
-      me.lockReconnect ||
-      (me.channel && me.channel.readyState === WebSocket.OPEN)
+      me.lockReconnect  ||
+      me.taoyao.connect ||
+      me.connected()
     ) {
       return;
     }
@@ -333,10 +333,15 @@ class Session {
     this.remoteAudioEnabled = false;
     this.remoteVideoEnabled = false;
     this.localAudioTrack.stop();
+    this.localAudioTrack = null;
     this.localVideoTrack.stop();
+    this.localVideoTrack = null;
     this.remoteAudioTrack.stop();
+    this.remoteAudioTrack = null;
     this.remoteVideoTrack.stop();
+    this.remoteVideoTrack = null;
     this.peerConnection.close();
+    this.peerConnection = null;
   }
 
   async addIceCandidate(candidate) {
@@ -359,7 +364,7 @@ class Session {
  * 远程终端
  */
 class RemoteClient {
-  
+
   // 终端名称
   name;
   // 终端标识
@@ -396,12 +401,24 @@ class RemoteClient {
     this.volume = ((volume + 127) / 127 * 100) + "%";
   }
 
+  close() {
+    if(this.audioTrack) {
+      this.audioTrack.stop();
+      this.audioTrack = null;
+    }
+    if(this.videoTrack) {
+      this.videoTrack.stop();
+      this.videoTrack = null;
+    }
+  }
+
 }
 
 /**
  * 桃夭
  */
 class Taoyao extends RemoteClient {
+
   // 信令连接
   connect = false;
   // 信令地址
@@ -963,7 +980,7 @@ class Taoyao extends RemoteClient {
     const { roomId, consumerId } = message.body;
     const consumer = me.consumers.get(consumerId);
     if (consumer) {
-      console.info("关闭消费者：", consumerId);
+      console.debug("关闭消费者：", consumerId);
       consumer.close();
       me.consumers.delete(consumerId);
     } else {
@@ -1067,7 +1084,7 @@ class Taoyao extends RemoteClient {
     const { roomId, consumerId } = message.body;
     const consumer = me.consumers.get(consumerId);
     if (consumer) {
-      console.info("恢复消费者：", consumerId);
+      console.debug("恢复消费者：", consumerId);
       consumer.resume();
     } else {
       console.debug("恢复消费者无效：", consumerId);
@@ -1149,7 +1166,7 @@ class Taoyao extends RemoteClient {
     const { roomId, producerId } = message.body;
     const producer = me.dataProducer;
     if (producer) {
-      console.info("关闭数据生产者：", producerId);
+      console.debug("关闭数据生产者：", producerId);
       producer.close();
       // TODO：类型判断设置为空
     } else {
@@ -1174,7 +1191,7 @@ class Taoyao extends RemoteClient {
     const { roomId, producerId } = message.body;
     const producer = me.getProducer(producerId);
     if (producer) {
-      console.info("关闭生产者：", producerId);
+      console.debug("关闭生产者：", producerId);
       producer.close();
       // TODO：类型判断设置为空
     } else {
@@ -1488,8 +1505,6 @@ class Taoyao extends RemoteClient {
     }
     console.info("关闭房间：", roomId);
     me.closeRoomMedia();
-    me.roomId = null;
-    me.remoteClients.clear();
   }
   /**
    * 创建房间信令
@@ -1527,9 +1542,10 @@ class Taoyao extends RemoteClient {
         roomId: me.roomId,
       })
     );
-    if(!response.success) {
-        // TODO：提示
-        return;
+    if(response.code !== '0000') {
+      // TODO：提示
+      me.roomId = null;
+      return;
     }
     const routerRtpCapabilities = response.body.rtpCapabilities;
     me.mediasoupDevice = new mediasoupClient.Device();
@@ -1631,8 +1647,6 @@ class Taoyao extends RemoteClient {
       roomId: me.roomId
     }));
     me.closeRoomMedia();
-    me.roomId = null;
-    me.remoteClients.clear();
   }
   /**
    * 离开房间信令
@@ -1702,19 +1716,16 @@ class Taoyao extends RemoteClient {
     }
     // 检查设备
     self.checkDevice();
-    // 释放资源
-    self.closeRoomMedia();
     /**
      * 解决浏览器的自动播放策略问题
      */
-	// TODO：完全关闭以后释放资源
-    {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getAudioTracks().forEach((audioTrack) => {
-        audioTrack.enabled = false;
-        setTimeout(() => audioTrack.stop(), 30000);
-      });
-    }
+    // {
+    //   const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    //   stream.getAudioTracks().forEach((audioTrack) => {
+    //     audioTrack.enabled = false;
+    //     setTimeout(() => audioTrack.stop(), 30000);
+    //   });
+    // }
     // TODO：代码提取
     if (self.dataProduce || self.audioProduce || self.videoProduce) {
       const response = await self.request(
@@ -2389,33 +2400,48 @@ class Taoyao extends RemoteClient {
    * 关闭视频房间媒体
    */
   closeRoomMedia() {
-    console.info("关闭视频房间媒体");
-    let me = this;
-    if(me.audioTrack) {
-      me.audioTrack.stop();
-    }
-    if(me.videoTrack) {
-      me.videoTrack.stop();
-    }
+    console.debug("关闭视频房间媒体");
+    const me = this;
+    me.roomId = null;
+    me.close();
     if (me.sendTransport) {
       me.sendTransport.close();
+      me.sendTransport = null;
     }
     if (me.recvTransport) {
       me.recvTransport.close();
+      me.recvTransport = null;
     }
-    me.sendTransport = null;
-    me.recvTransport = null;
-    me.dataProducer = null;
-    me.audioProducer = null;
-    me.videoProducer = null;
+    if(me.dataProducer) {
+      me.dataProducer.close();
+      me.dataProducer = null;
+    }
+    if(me.audioProducer) {
+      me.audioProducer.close();
+      me.audioProducer = null;
+    }
+    if(me.videoProducer) {
+      me.videoProducer.close();
+      me.videoProducer = null;
+    }
+    me.consumers.forEach((consumer, consumerId) => {
+      consumer.close();
+    });
     me.consumers.clear();
+    me.dataConsumers.forEach((dataConsumer, consumerId) => {
+      dataConsumer.close();
+    });
     me.dataConsumers.clear();
+    me.remoteClients.forEach((client, clientId) => {
+      client.close();
+    });
+    me.remoteClients.clear();
   }
   /**
    * 关闭视频会话媒体
    */
   closeSessionMedia() {
-    console.info("关闭视频会话媒体");
+    console.debug("关闭视频会话媒体");
     const me = this;
     me.sessionClients.forEach((session, sessionId) => {
       if(session) {
@@ -2429,8 +2455,8 @@ class Taoyao extends RemoteClient {
   /**
    * 关闭资源
    */
-  close() {
-    let me = this;
+  closeAll() {
+    const me = this;
     me.closeRoomMedia();
     me.closeSessionMedia();
     if (me.signalChannel) {

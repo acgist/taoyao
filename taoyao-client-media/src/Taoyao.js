@@ -91,7 +91,7 @@ const signalChannel = {
       clearTimeout(me.heartbeatTimer);
     }
     me.heartbeatTimer = setTimeout(async function () {
-      if (me.channel && me.channel.readyState === WebSocket.OPEN) {
+      if (me.connected()) {
         me.push(
           // TODO：电池信息
           protocol.buildMessage("client::heartbeat", {
@@ -115,7 +115,7 @@ const signalChannel = {
    */
   async connect(address, reconnection = true) {
     const me = this;
-    if (me.channel && me.channel.readyState === WebSocket.OPEN) {
+    if (me.connected()) {
       return new Promise((resolve, reject) => {
         resolve(me.channel);
       });
@@ -147,7 +147,7 @@ const signalChannel = {
       me.channel.on("close", async function () {
         console.warn("信令通道关闭：", me.address);
         me.taoyao.connect = false;
-        if(me.channel && me.channel.readyState !== WebSocket.OPEN) {
+        if(!me.connected()) {
           me.taoyao.closeAllRoom();
         }
         if (me.reconnection) {
@@ -157,13 +157,6 @@ const signalChannel = {
       });
       me.channel.on("error", async function (e) {
         console.error("信令通道异常：", me.address, e);
-        me.taoyao.connect = false;
-        if(me.channel && me.channel.readyState !== WebSocket.OPEN) {
-          me.taoyao.closeAllRoom();
-        }
-        if (me.reconnection) {
-          me.reconnect();
-        }
         // 不要失败回调
       });
       me.channel.on("message", async function (data) {
@@ -178,13 +171,21 @@ const signalChannel = {
     });
   },
   /**
+   * @returns 是否连接成功
+   */
+   connected() {
+    const me = this;
+    return me.channel && me.channel.readyState === WebSocket.OPEN;
+  },
+  /**
    * 重连
    */
   reconnect() {
     const me = this;
     if (
-      me.lockReconnect ||
-      (me.channel && me.channel.readyState === WebSocket.OPEN)
+      me.lockReconnect  ||
+      me.taoyao.connect ||
+      me.connected()
     ) {
       return;
     }
@@ -551,7 +552,7 @@ class Taoyao {
   }
   
   closeAllRoom() {
-    console.info("关闭所有房间");
+    console.info("关闭所有房间：", this.rooms.size());
     this.rooms.forEach((room, roomId) => {
       room.closeAll();
     });
