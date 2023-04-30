@@ -152,6 +152,10 @@ const signalChannel = {
       me.channel.onclose = async function () {
         console.warn("信令通道关闭：", me.channel);
         me.taoyao.connect = false;
+        if(me.channel && me.channel.readyState !== WebSocket.OPEN) {
+          me.taoyao.closeRoomMedia();
+          me.taoyao.closeSessionMedia();
+        }
         if (me.reconnection) {
           me.reconnect();
         }
@@ -160,6 +164,10 @@ const signalChannel = {
       me.channel.onerror = async function (e) {
         console.error("信令通道异常：", me.channel, e);
         me.taoyao.connect = false;
+        if(me.channel && me.channel.readyState !== WebSocket.OPEN) {
+          me.taoyao.closeRoomMedia();
+          me.taoyao.closeSessionMedia();
+        }
         if (me.reconnection) {
           me.reconnect();
         }
@@ -177,8 +185,6 @@ const signalChannel = {
   },
   /**
    * 重连
-   * TODO：重连重建会话、房间
-   * TODO：断开释放所有资源
    */
   reconnect() {
     const me = this;
@@ -317,6 +323,10 @@ class Session {
   }
   
   async close() {
+    if(this.closed) {
+      return;
+    }
+    console.debug("会话关闭", this.sessionId);
     this.closed = true;
     this.localAudioEnabled = false;
     this.localVideoEnabled = false;
@@ -1477,7 +1487,7 @@ class Taoyao extends RemoteClient {
       return;
     }
     console.info("关闭房间：", roomId);
-    me.closeMedia();
+    me.closeRoomMedia();
     me.roomId = null;
     me.remoteClients.clear();
   }
@@ -1620,7 +1630,7 @@ class Taoyao extends RemoteClient {
     me.push(protocol.buildMessage("room::leave", {
       roomId: me.roomId
     }));
-    me.closeMedia();
+    me.closeRoomMedia();
     me.roomId = null;
     me.remoteClients.clear();
   }
@@ -1693,7 +1703,7 @@ class Taoyao extends RemoteClient {
     // 检查设备
     self.checkDevice();
     // 释放资源
-    self.closeMedia();
+    self.closeRoomMedia();
     /**
      * 解决浏览器的自动播放策略问题
      */
@@ -2250,7 +2260,6 @@ class Taoyao extends RemoteClient {
     const { sessionId } = message.body;
     const session = me.sessionClients.get(sessionId);
     if(session) {
-      console.debug("会话关闭", sessionId);
       session.close();
       me.sessionClients.delete(sessionId);
     } else {
@@ -2377,9 +2386,10 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 关闭媒体
+   * 关闭视频房间媒体
    */
-  closeMedia() {
+  closeRoomMedia() {
+    console.info("关闭视频房间媒体");
     let me = this;
     if(me.audioTrack) {
       me.audioTrack.stop();
@@ -2402,11 +2412,27 @@ class Taoyao extends RemoteClient {
     me.dataConsumers.clear();
   }
   /**
+   * 关闭视频会话媒体
+   */
+  closeSessionMedia() {
+    console.info("关闭视频会话媒体");
+    const me = this;
+    me.sessionClients.forEach((session, sessionId) => {
+      if(session) {
+        session.close();
+      } else {
+        console.debug("关闭会话无效", sessionId);
+      }
+    });
+    me.sessionClients.clear();
+  }
+  /**
    * 关闭资源
    */
   close() {
     let me = this;
-    me.closeMedia();
+    me.closeRoomMedia();
+    me.closeSessionMedia();
     if (me.signalChannel) {
       me.signalChannel.close();
     }

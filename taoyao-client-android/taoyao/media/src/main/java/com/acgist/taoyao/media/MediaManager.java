@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.projection.MediaProjection;
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import com.acgist.taoyao.media.client.PhotographClient;
@@ -109,14 +108,6 @@ public final class MediaManager {
      * 媒体配置
      */
     private MediaProperties mediaProperties;
-    /**
-     * 当前共享视频配置
-     */
-    private MediaVideoProperties mediaVideoProperties;
-    /**
-     * 当前共享音频配置
-     */
-    private MediaAudioProperties mediaAudioProperties;
     /**
      * WebRTC配置
      */
@@ -291,7 +282,6 @@ public final class MediaManager {
             PeerConnectionFactory.InitializationOptions.builder(this.context)
 //              .setFieldTrials("WebRTC-IntelVP8/Enabled/")
 //              .setFieldTrials("WebRTC-H264HighProfile/Enabled/")
-                // TODO：测试是否需要c++全局加载JavaVM？
 //              .setNativeLibraryName("jingle_peerconnection_so")
 //              .setEnableInternalTracer(true)
                 .createInitializationOptions()
@@ -433,9 +423,7 @@ public final class MediaManager {
     }
 
     private void initSharePromise() {
-        final Message message = new Message();
-        message.what = Config.WHAT_SCREEN_CAPTURE;
-        this.mainHandler.sendMessage(message);
+        this.mainHandler.obtainMessage(Config.WHAT_SCREEN_CAPTURE).sendToTarget();
     }
 
     /**
@@ -460,7 +448,8 @@ public final class MediaManager {
         this.mainVideoSource = this.peerConnectionFactory.createVideoSource(this.videoCapturer.isScreencast());
         // 次码流
         this.shareVideoSource = this.peerConnectionFactory.createVideoSource(this.videoCapturer.isScreencast());
-        this.shareVideoSource.adaptOutputFormat(this.mediaVideoProperties.getWidth(), this.mediaVideoProperties.getHeight(), this.mediaVideoProperties.getFrameRate());
+        final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideo();
+        this.shareVideoSource.adaptOutputFormat(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate());
         // 视频捕获
         this.videoCapturer.initialize(this.surfaceTextureHelper, this.context, new VideoCapturerObserver());
         // 次码流视频处理
@@ -474,25 +463,39 @@ public final class MediaManager {
      * @param mediaAudioProperties 音频配置
      * @param mediaVideoProperties 视频配置
      */
-    public void updateMediaConfig(MediaProperties mediaProperties, MediaAudioProperties mediaAudioProperties, MediaVideoProperties mediaVideoProperties) {
+    public void updateMediaConfig(MediaProperties mediaProperties) {
         this.mediaProperties = mediaProperties;
-        this.updateAudioConfig(this.mediaProperties.getAudio());
-        this.updateVideoConfig(this.mediaProperties.getVideo());
+        this.updateAudioConfig();
+        this.updateVideoConfig();
         synchronized (this) {
             this.notifyAll();
         }
     }
 
     public void updateAudioConfig(MediaAudioProperties mediaAudioProperties) {
-        this.mediaAudioProperties = mediaAudioProperties;
+        this.mediaProperties.setAudio(mediaAudioProperties);
+        this.updateAudioConfig();
+    }
+
+    private void updateAudioConfig() {
+        MediaAudioProperties mediaAudioProperties = this.mediaProperties.getAudio();
+        // TODO：调整音频
     }
 
     public void updateVideoConfig(MediaVideoProperties mediaVideoProperties) {
-        this.mediaVideoProperties = mediaVideoProperties;
-        if(this.shareVideoSource == null) {
-            return;
+        this.mediaProperties.setVideo(mediaVideoProperties);
+        this.updateVideoConfig();
+    }
+
+    private void updateVideoConfig() {
+        if(this.videoCapturer != null) {
+            final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get(this.videoQuantity);
+            this.videoCapturer.changeCaptureFormat(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate());
         }
-        this.shareVideoSource.adaptOutputFormat(this.mediaVideoProperties.getWidth(), this.mediaVideoProperties.getHeight(), this.mediaVideoProperties.getFrameRate());
+        if(this.shareVideoSource != null) {
+            final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideo();
+            this.shareVideoSource.adaptOutputFormat(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate());
+        }
     }
 
     public void updateWebrtcConfig(WebrtcProperties webrtcProperties) {
@@ -658,24 +661,24 @@ public final class MediaManager {
     public SurfaceViewRenderer buildSurfaceViewRenderer(final int flag, final VideoTrack videoTrack) {
         // 预览控件
         final SurfaceViewRenderer surfaceViewRenderer = new SurfaceViewRenderer(this.context);
+        // 添加播放
+        videoTrack.addSink(surfaceViewRenderer);
+        // 页面加载
+        this.mainHandler.obtainMessage(flag, surfaceViewRenderer).sendToTarget();
         this.mainHandler.post(() -> {
             // 视频反转
-            surfaceViewRenderer.setMirror(false);
+//          surfaceViewRenderer.setMirror(false);
+            // 旋转画面
+//          surfaceViewRenderer.setRotation(90);
             // 视频拉伸
-            surfaceViewRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
-            // 硬件拉伸
-            surfaceViewRenderer.setEnableHardwareScaler(true);
+//          surfaceViewRenderer.setScalingType(RendererCommon.ScalingType.SCALE_ASPECT_FILL);
+            // 调整帧率
 //          surfaceViewRenderer.setFpsReduction();
+            // 硬件拉伸
+//          surfaceViewRenderer.setEnableHardwareScaler(true);
             // 加载OpenSL ES
             surfaceViewRenderer.init(this.eglContext, null);
-            // 添加播放
-            videoTrack.addSink(surfaceViewRenderer);
         });
-        // 页面加载
-        final Message message = new Message();
-        message.obj = surfaceViewRenderer;
-        message.what = flag;
-        this.mainHandler.sendMessage(message);
         return surfaceViewRenderer;
     }
 

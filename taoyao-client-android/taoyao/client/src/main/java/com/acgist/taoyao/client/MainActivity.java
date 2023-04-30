@@ -6,7 +6,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
 import android.content.res.Resources;
-import android.graphics.Color;
 import android.media.projection.MediaProjectionManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -27,7 +26,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import com.acgist.taoyao.client.databinding.ActivityMainBinding;
-import com.acgist.taoyao.client.signal.Taoyao;
 import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
@@ -53,6 +51,8 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     protected void onCreate(Bundle bundle) {
         Log.i(MainActivity.class.getSimpleName(), "onCreate");
         super.onCreate(bundle);
+        // 强制横屏
+//      this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         this.requestPermission();
         this.launchMediaService();
         this.setTurnScreenOn(true);
@@ -216,7 +216,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         @Override
         public void handleMessage(@NonNull Message message) {
             super.handleMessage(message);
-            Log.d(MainHandler.class.getSimpleName(), "Handler消息：" + message.what + " - " + message.obj);
+            Log.d(MainHandler.class.getSimpleName(), "Handler消息：" + message.what);
             switch (message.what) {
                 case Config.WHAT_SCREEN_CAPTURE   -> MainActivity.this.screenCapture(message);
                 case Config.WHAT_RECORD           -> MainActivity.this.record(message);
@@ -270,6 +270,9 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             final GridLayout video = this.binding.video;
             final SurfaceView surfaceView = (SurfaceView) message.obj;
             final int index = video.indexOfChild(surfaceView);
+            if(index < 0) {
+                return;
+            }
             video.removeViewAt(index);
         }
     }

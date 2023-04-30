@@ -184,13 +184,13 @@ public final class Taoyao implements ITaoyao {
      */
     private final MediaManager mediaManager;
     /**
-     * 房间列表
+     * 视频房间列表
      */
     private final Map<String, Room> rooms;
     /**
-     * 会话终端列表
+     * 视频会话列表
      */
-    private final Map<String, SessionClient> sessionClients;
+    private final Map<String, SessionClient> sessions;
     /**
      * 全局静态变量
      */
@@ -240,7 +240,7 @@ public final class Taoyao implements ITaoyao {
         this.heartbeatHandler.postDelayed(this::heartbeat, 30L * 1000);
         this.mediaManager = MediaManager.getInstance();
         this.rooms = new ConcurrentHashMap<>();
-        this.sessionClients = new ConcurrentHashMap<>();
+        this.sessions = new ConcurrentHashMap<>();
         Taoyao.taoyao = this;
     }
 
@@ -441,6 +441,24 @@ public final class Taoyao implements ITaoyao {
         this.input = null;
         this.output = null;
         this.socket = null;
+        this.closeRoomMedia();
+        this.closeSessionMedia();
+    }
+
+    private void closeRoomMedia() {
+        Log.i(Taoyao.class.getSimpleName(), "释放所有视频房间");
+        this.rooms.forEach((k, v) -> {
+            v.close();
+        });
+        this.rooms.clear();
+    }
+
+    private void closeSessionMedia() {
+        Log.i(Taoyao.class.getSimpleName(), "释放所有视频会话");
+        this.sessions.forEach((k, v) -> {
+            v.close();
+        });
+        this.sessions.clear();
     }
 
     /**
@@ -457,7 +475,7 @@ public final class Taoyao implements ITaoyao {
         this.messageThread.quitSafely();
         this.executeThread.quitSafely();
         this.rooms.values().forEach(Room::close);
-        this.sessionClients.values().forEach(SessionClient::close);
+        this.sessions.values().forEach(SessionClient::close);
     }
 
     /**
@@ -624,7 +642,7 @@ public final class Taoyao implements ITaoyao {
      */
     private void clientConfig(Message message, Map<String, Object> body) {
         final MediaProperties mediaProperties = JSONUtils.toJava(JSONUtils.toJSON(body.get("media")), MediaProperties.class);
-        this.mediaManager.updateMediaConfig(mediaProperties, mediaProperties.getAudio(), mediaProperties.getVideo());
+        this.mediaManager.updateMediaConfig(mediaProperties);
         final WebrtcProperties webrtcProperties = JSONUtils.toJava(JSONUtils.toJSON(body.get("webrtc")), WebrtcProperties.class);
         this.mediaManager.updateWebrtcConfig(webrtcProperties);
     }
@@ -853,7 +871,7 @@ public final class Taoyao implements ITaoyao {
                     this.mediaManager.getMediaProperties(),
                     this.mediaManager.getWebrtcProperties()
                 );
-                this.sessionClients.put(sessionId, sessionClient);
+                this.sessions.put(sessionId, sessionClient);
             }
         );
     }
@@ -877,14 +895,14 @@ public final class Taoyao implements ITaoyao {
             this.mediaManager.getMediaProperties(),
             this.mediaManager.getWebrtcProperties()
         );
-        this.sessionClients.put(sessionId, sessionClient);
+        this.sessions.put(sessionId, sessionClient);
         sessionClient.init();
         sessionClient.offer();
     }
 
     private void sessionClose(Message message, Map<String, Object> body) {
         final String sessionId = MapUtils.get(body, "sessionId");
-        final SessionClient sessionClient = this.sessionClients.remove(sessionId);
+        final SessionClient sessionClient = this.sessions.remove(sessionId);
         if(sessionClient == null) {
             return;
         }
@@ -893,7 +911,7 @@ public final class Taoyao implements ITaoyao {
 
     private void sessionExchange(Message message, Map<String, Object> body) {
         final String sessionId            = MapUtils.get(body, "sessionId");
-        final SessionClient sessionClient = this.sessionClients.get(sessionId);
+        final SessionClient sessionClient = this.sessions.get(sessionId);
         if(sessionClient == null) {
             Log.w(Taoyao.class.getSimpleName(), "会话交换无效会话：" + sessionId);
             return;
@@ -903,7 +921,7 @@ public final class Taoyao implements ITaoyao {
 
     private void sessionPause(Message message, Map<String, Object> body) {
         final String sessionId            = MapUtils.get(body, "sessionId");
-        final SessionClient sessionClient = this.sessionClients.get(sessionId);
+        final SessionClient sessionClient = this.sessions.get(sessionId);
         if(sessionClient == null) {
             return;
         }
@@ -913,7 +931,7 @@ public final class Taoyao implements ITaoyao {
 
     private void sessionResume(Message message, Map<String, Object> body) {
         final String sessionId            = MapUtils.get(body, "sessionId");
-        final SessionClient sessionClient = this.sessionClients.get(sessionId);
+        final SessionClient sessionClient = this.sessions.get(sessionId);
         if(sessionClient == null) {
             return;
         }

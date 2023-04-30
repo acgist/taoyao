@@ -27,7 +27,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * 房间
+ * 视频房间
  *
  * @author acgist
  */

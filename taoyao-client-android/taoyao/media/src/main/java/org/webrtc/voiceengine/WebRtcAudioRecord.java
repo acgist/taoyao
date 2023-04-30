@@ -15,13 +15,15 @@ import android.media.AudioRecord;
 import android.media.MediaRecorder.AudioSource;
 import android.os.Build;
 import android.os.Process;
+
 import androidx.annotation.Nullable;
-import java.lang.System;
+
+import org.webrtc.Logging;
+import org.webrtc.ThreadUtils;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
-import org.webrtc.Logging;
-import org.webrtc.ThreadUtils;
 
 public class WebRtcAudioRecord {
   private static final boolean DEBUG = false;

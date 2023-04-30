@@ -68,22 +68,22 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button type="primary" @click="sessionCall" v-if="roomActive === 'call'">监控</el-button>
-        <el-button type="primary" @click="roomCreate" v-if="roomActive === 'create'">创建</el-button>
-        <el-button type="primary" @click="roomEnter" v-if="roomActive === 'enter'">进入</el-button>
-        <el-button type="primary" @click="roomInvite" v-if="roomActive === 'invite'">邀请</el-button>
+        <el-button type="primary" @click="sessionCall" v-if="roomActive === 'call'"  >监控</el-button>
+        <el-button type="primary" @click="roomCreate"  v-if="roomActive === 'create'">创建</el-button>
+        <el-button type="primary" @click="roomEnter"   v-if="roomActive === 'enter'" >进入</el-button>
+        <el-button type="primary" @click="roomInvite"  v-if="roomActive === 'invite'">邀请</el-button>
       </template>
     </el-dialog>
 
     <!-- 菜单 -->
     <div class="menus">
-      <el-button @click="signalVisible = true" type="primary" :disabled="taoyao && taoyao.connect">连接信令</el-button>
-      <el-button @click="roomActive = 'call'; roomVisible = true;" :disabled="!taoyao">监控终端</el-button>
-      <el-button @click="roomActive = 'create'; roomVisible = true;" type="primary" :disabled="!taoyao">创建房间</el-button>
-      <el-button @click="roomActive = 'enter'; roomVisible = true;" type="primary" :disabled="!taoyao">选择房间</el-button>
-      <el-button @click="roomActive = 'invite'; roomVisible = true;" :disabled="!taoyao || !taoyao.roomId">邀请终端</el-button>
-      <el-button @click="roomLeave" :disabled="!taoyao || !taoyao.roomId">离开房间</el-button>
-      <el-button @click="roomClose" :disabled="!taoyao || !taoyao.roomId" type="danger">关闭房间</el-button>
+      <el-button @click="signalVisible = true"                       :disabled="taoyao && taoyao.connect"                      type="primary">连接信令</el-button>
+      <el-button @click="roomActive = 'call';   roomVisible = true;" :disabled="!taoyao || !taoyao.connect"                                  >监控终端</el-button>
+      <el-button @click="roomActive = 'create'; roomVisible = true;" :disabled="!taoyao || !taoyao.connect"                    type="primary">创建房间</el-button>
+      <el-button @click="roomActive = 'enter';  roomVisible = true;" :disabled="!taoyao || !taoyao.connect"                    type="primary">选择房间</el-button>
+      <el-button @click="roomActive = 'invite'; roomVisible = true;" :disabled="!taoyao || !taoyao.connect || !taoyao.roomId"                >邀请终端</el-button>
+      <el-button @click="roomLeave"                                  :disabled="!taoyao || !taoyao.connect || !taoyao.roomId"                >离开房间</el-button>
+      <el-button @click="roomClose"                                  :disabled="!taoyao || !taoyao.connect || !taoyao.roomId"  type="danger" >关闭房间</el-button>
     </div>
 
     <!-- 终端 -->
@@ -91,18 +91,18 @@
       <!-- 本地终端 -->
       <LocalClient v-if="taoyao && taoyao.roomId" ref="local-client" :client="taoyao" :taoyao="taoyao"></LocalClient>
       <!-- 远程终端 -->
-      <RemoteClient v-for="(kv, index) in remoteClients" :key="'remote-client-' + kv[0]" :ref="'remote-client-' + kv[0]" :client="kv[1]" :taoyao="taoyao"></RemoteClient>
+      <RemoteClient v-for="kv in remoteClients"   :key="'remote-client-' + kv[0]"  :ref="'remote-client-' + kv[0]"  :client="kv[1]" :taoyao="taoyao"></RemoteClient>
       <!-- 远程会话 -->
-      <SessionClient v-for="(kv, index) in sessionClients" :key="'session-client-' + kv[0]" :ref="'session-client-' + kv[0]" :client="kv[1]" :taoyao="taoyao"></SessionClient>
+      <SessionClient v-for="kv in sessionClients" :key="'session-client-' + kv[0]" :ref="'session-client-' + kv[0]" :client="kv[1]" :taoyao="taoyao"></SessionClient>
     </div>
   </div>
 </template>
 
 <script>
 import { ElMessage } from 'element-plus'
-import { Taoyao } from "./components/Taoyao.js";
-import LocalClient from './components/LocalClient.vue';
-import RemoteClient from './components/RemoteClient.vue';
+import { Taoyao }    from './components/Taoyao.js';
+import LocalClient   from './components/LocalClient.vue';
+import RemoteClient  from './components/RemoteClient.vue';
 import SessionClient from './components/SessionClient.vue';
 
 export default {

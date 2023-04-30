@@ -147,6 +147,9 @@ const signalChannel = {
       me.channel.on("close", async function () {
         console.warn("信令通道关闭：", me.address);
         me.taoyao.connect = false;
+        if(me.channel && me.channel.readyState !== WebSocket.OPEN) {
+          me.taoyao.closeAllRoom();
+        }
         if (me.reconnection) {
           me.reconnect();
         }
@@ -155,6 +158,9 @@ const signalChannel = {
       me.channel.on("error", async function (e) {
         console.error("信令通道异常：", me.address, e);
         me.taoyao.connect = false;
+        if(me.channel && me.channel.readyState !== WebSocket.OPEN) {
+          me.taoyao.closeAllRoom();
+        }
         if (me.reconnection) {
           me.reconnect();
         }
@@ -336,6 +342,7 @@ class Room {
     if (me.close) {
       return;
     }
+    console.info("关闭房间：", me.roomId);
     me.close = true;
     me.producers.forEach(v => v.close());
     me.consumers.forEach(v => v.close());
@@ -350,7 +357,6 @@ class Room {
 
 /**
  * 桃夭
- TODO：断开连接关闭所有房间
  */
 class Taoyao {
   // 是否连接
@@ -542,6 +548,14 @@ class Taoyao {
       this.nextMediasoupWorkerIndex = 0;
     }
     return worker;
+  }
+  
+  closeAllRoom() {
+    console.info("关闭所有房间");
+    this.rooms.forEach((room, roomId) => {
+      room.closeAll();
+    });
+    this.rooms.clear();
   }
 
   /**
@@ -1481,7 +1495,6 @@ class Taoyao {
       console.warn("房间无效：", roomId);
       return;
     }
-    console.info("关闭房间：", roomId);
     room.closeAll();
   }
 

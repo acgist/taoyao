@@ -1,7 +1,6 @@
 package com.acgist.taoyao.media.client;
 
 import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 
 import com.acgist.taoyao.media.config.Config;
@@ -77,13 +76,11 @@ public abstract class Client extends CloseableClient {
         super.close();
         Log.i(this.getClass().getSimpleName(), "关闭终端：" + this.clientId);
         if(this.surfaceViewRenderer != null) {
-            // 移除
-            final Message message = new Message();
-            message.obj = surfaceViewRenderer;
-            message.what = Config.WHAT_REMOVE_VIDEO;
-            this.mainHandler.sendMessage(message);
-            // 销毁
+            // 释放资源
             this.surfaceViewRenderer.release();
+            // 移除资源：注意先释放再移除避免报错
+            this.mainHandler.obtainMessage(Config.WHAT_REMOVE_VIDEO, this.surfaceViewRenderer).sendToTarget();
+            // 设置为空
             this.surfaceViewRenderer = null;
         }
     }

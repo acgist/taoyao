@@ -74,13 +74,18 @@ public class LocalClient extends RoomClient {
 
     @Override
     public void close() {
-        Log.i(RemoteClient.class.getSimpleName(), "关闭本地终端：" + this.clientId);
-        super.close();
-        if(this.mediaStream == null) {
-            return;
-        }
-        synchronized (this.mediaStream) {
-            this.mediaStream.dispose();
+        synchronized (this) {
+            if(this.close) {
+                return;
+            }
+            super.close();
+            Log.i(RemoteClient.class.getSimpleName(), "关闭本地终端：" + this.clientId);
+            if(this.mediaStream == null) {
+                return;
+            }
+            synchronized (this.mediaStream) {
+                this.mediaStream.dispose();
+            }
         }
     }
 

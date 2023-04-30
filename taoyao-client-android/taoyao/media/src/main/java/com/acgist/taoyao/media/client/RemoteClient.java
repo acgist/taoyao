@@ -67,11 +67,16 @@ public class RemoteClient extends RoomClient {
 
     @Override
     public void close() {
-        Log.i(RemoteClient.class.getSimpleName(), "关闭远程终端：" + this.clientId);
-        super.close();
-        synchronized (this.tracks) {
-            // 注意：使用nativeMediaConsumerClose释放
-            this.tracks.clear();
+        synchronized (this) {
+            if(this.close) {
+                return;
+            }
+            super.close();
+            Log.i(RemoteClient.class.getSimpleName(), "关闭远程终端：" + this.clientId);
+            synchronized (this.tracks) {
+                // 注意：使用nativeMediaConsumerClose释放
+                this.tracks.clear();
+            }
         }
     }
 

@@ -365,21 +365,18 @@ public class SessionClient extends Client {
             public void onSignalingChange(PeerConnection.SignalingState signalingState) {
                 Log.d(SessionClient.class.getSimpleName(), "PC信令状态改变：" + signalingState);
                 SessionClient.this.logState();
-                // TODO：处理失败
             }
 
             @Override
             public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
                 Log.d(SessionClient.class.getSimpleName(), "PCIce收集状态改变：" + iceGatheringState);
                 SessionClient.this.logState();
-                // TODO：处理失败
             }
 
             @Override
             public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
                 Log.d(SessionClient.class.getSimpleName(), "PCIce连接状态改变：" + iceConnectionState);
                 SessionClient.this.logState();
-                // TODO：处理失败
             }
 
             @Override
