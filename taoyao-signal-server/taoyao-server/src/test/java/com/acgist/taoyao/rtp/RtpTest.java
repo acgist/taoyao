@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class RtpTest {
-	
+    
 	@Test
 	void testSocket() throws Exception {
 		final Socket socket = new Socket();

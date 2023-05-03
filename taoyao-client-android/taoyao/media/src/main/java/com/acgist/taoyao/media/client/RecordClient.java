@@ -32,7 +32,13 @@ import java.time.LocalDateTime;
  */
 public class RecordClient extends Client implements VideoSink, JavaAudioDeviceModule.SamplesReadyCallback {
 
+    /**
+     * 等待时间（毫秒）
+     */
     private static final long WAIT_TIME_MS = 50;
+    /**
+     * 等待时间（纳秒）
+     */
     private static final long WAIT_TIME_US = WAIT_TIME_MS * 1000;
 
     /**

@@ -377,6 +377,7 @@ public class SessionClient extends Client {
             public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
                 Log.d(SessionClient.class.getSimpleName(), "PCIce连接状态改变：" + iceConnectionState);
                 SessionClient.this.logState();
+                // disconnected：暂时连接不上可能自我恢复
             }
 
             @Override
@@ -432,6 +433,7 @@ public class SessionClient extends Client {
             public void onRenegotiationNeeded() {
                 Log.d(SessionClient.class.getSimpleName(), "重新协商媒体：" + SessionClient.this.sessionId);
                 if(SessionClient.this.peerConnection.connectionState() == PeerConnection.PeerConnectionState.CONNECTED) {
+//                    SessionClient.this.peerConnection.restartIce();
                 // TODO：重新协商
 //                  SessionClient.this.offer();
                 }

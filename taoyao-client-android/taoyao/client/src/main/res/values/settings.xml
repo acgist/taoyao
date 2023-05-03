@@ -44,4 +44,6 @@
     <integer name="channelCount">1</integer>
     <!-- 视频关键帧频率 -->
     <integer name="iFrameInterval">1</integer>
+    <!-- 水印 -->
+    <string name="watermark">"'TAOYAO' yyyy-MM-dd HH:mm:ss"</string>
 </resources>

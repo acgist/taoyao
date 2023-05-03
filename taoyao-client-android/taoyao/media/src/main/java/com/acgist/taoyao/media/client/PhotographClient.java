@@ -135,6 +135,7 @@ public class PhotographClient implements VideoSink {
 //          matrix.setRotate(90);
 //          final Bitmap matrixBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, false);
             bitmap.compress(Bitmap.CompressFormat.JPEG, this.quantity, output);
+            bitmap.recycle();
         } catch (Exception e) {
             Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
         } finally {

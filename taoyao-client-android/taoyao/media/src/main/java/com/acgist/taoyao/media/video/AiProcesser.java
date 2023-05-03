@@ -1,30 +1,18 @@
 package com.acgist.taoyao.media.video;
 
 import org.webrtc.VideoFrame;
-import org.webrtc.VideoProcessor;
-import org.webrtc.VideoSink;
 
 /**
- * AI处理器
+ * AI识别处理器
+ *
+ * 建议不要每帧识别，如果没有识别出来结果可以复用识别结果。
  *
  * @author acgist
  */
-public class AiProcesser implements VideoProcessor {
+public class AiProcesser extends VideoProcesser {
 
     @Override
-    public void setSink(VideoSink videoSink) {
-    }
-
-    @Override
-    public void onCapturerStarted(boolean status) {
-    }
-
-    @Override
-    public void onCapturerStopped() {
-    }
-
-    @Override
-    public void onFrameCaptured(VideoFrame videoFrame) {
+    protected void doProcess(VideoFrame.I420Buffer i420Buffer) {
     }
 
 }

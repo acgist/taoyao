@@ -130,6 +130,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             resources.getInteger(R.integer.iFrameInterval),
             resources.getString(R.string.storagePathImage),
             resources.getString(R.string.storagePathVideo),
+            resources.getString(R.string.watermark),
             VideoSourceType.valueOf(resources.getString(R.string.videoSourceType))
         );
         final Display display = this.getWindow().getContext().getDisplay();

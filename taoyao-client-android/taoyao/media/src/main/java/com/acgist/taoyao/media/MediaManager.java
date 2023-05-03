@@ -14,7 +14,10 @@ import com.acgist.taoyao.media.config.MediaProperties;
 import com.acgist.taoyao.media.config.MediaVideoProperties;
 import com.acgist.taoyao.media.config.WebrtcProperties;
 import com.acgist.taoyao.media.signal.ITaoyao;
+import com.acgist.taoyao.media.video.VideoProcesser;
+import com.acgist.taoyao.media.video.WatermarkProcesser;
 
+import org.apache.commons.lang3.StringUtils;
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
 import org.webrtc.Camera2Enumerator;
@@ -27,7 +30,6 @@ import org.webrtc.EglBase;
 import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.PeerConnectionFactory;
-import org.webrtc.RendererCommon;
 import org.webrtc.ScreenCapturerAndroid;
 import org.webrtc.SurfaceTextureHelper;
 import org.webrtc.SurfaceViewRenderer;
@@ -89,6 +91,10 @@ public final class MediaManager {
      */
     private int iFrameInterval;
     /**
+     * 水印
+     */
+    private String watermark;
+    /**
      * 视频来源类型
      */
     private VideoSourceType videoSourceType;
@@ -148,6 +154,10 @@ public final class MediaManager {
      * PeerConnectionFactory
      */
     private PeerConnectionFactory peerConnectionFactory;
+    /**
+     * 视频处理
+     */
+    private VideoProcesser videoProcesser;
 
     static {
 //      // 设置采样
@@ -190,14 +200,14 @@ public final class MediaManager {
 
     /**
      * @param mainHandler   Handler
-     * @param context      上下文
+     * @param context       上下文
      */
     public void initContext(
         Handler mainHandler, Context context,
         int imageQuantity, String audioQuantity, String videoQuantity,
         int channelCount, int iFrameInterval,
         String imagePath, String videoPath,
-        VideoSourceType videoSourceType
+        String watermark, VideoSourceType videoSourceType
     ) {
         this.mainHandler = mainHandler;
         this.context   = context;
@@ -208,6 +218,7 @@ public final class MediaManager {
         this.iFrameInterval = iFrameInterval;
         this.imagePath = imagePath;
         this.videoPath = videoPath;
+        this.watermark = watermark;
         this.videoSourceType = videoSourceType;
     }
 
@@ -320,6 +331,7 @@ public final class MediaManager {
         });
         this.initAudio();
         this.initVideo();
+        this.initWatermark();
     }
 
     private JavaAudioDeviceModule javaAudioDeviceModule() {
@@ -419,7 +431,7 @@ public final class MediaManager {
                 // 忽略其他摄像头
             }
         }
-        this.initVideoTrack();
+        this.initVideoSource();
     }
 
     private void initSharePromise() {
@@ -433,13 +445,13 @@ public final class MediaManager {
      */
     public void initScreen(Intent intent) {
         this.videoCapturer = new ScreenCapturerAndroid(intent, new ScreenCallback());
-        this.initVideoTrack();
+        this.initVideoSource();
     }
 
     /**
      * 加载视频
      */
-    private void initVideoTrack() {
+    private void initVideoSource() {
         // 加载视频
         this.surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", this.eglContext);
 //      this.surfaceTextureHelper.setTextureSize();
@@ -456,12 +468,21 @@ public final class MediaManager {
 //      this.shareVideoSource.setVideoProcessor();
     }
 
+    private void initWatermark() {
+        if(StringUtils.isNotEmpty(this.watermark)) {
+            final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get(this.videoQuantity);
+            if(this.videoProcesser == null) {
+                this.videoProcesser = new WatermarkProcesser(this.watermark, mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight());
+            } else {
+                this.videoProcesser = new WatermarkProcesser(this.watermark, mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), this.videoProcesser);
+            }
+        }
+    }
+
     /**
      * 更新配置
      *
-     * @param mediaProperties      媒体配置
-     * @param mediaAudioProperties 音频配置
-     * @param mediaVideoProperties 视频配置
+     * @param mediaProperties 媒体配置
      */
     public void updateMediaConfig(MediaProperties mediaProperties) {
         this.mediaProperties = mediaProperties;
@@ -707,6 +728,10 @@ public final class MediaManager {
             this.peerConnectionFactory.dispose();
             this.peerConnectionFactory = null;
         }
+        if(this.videoProcesser != null) {
+            this.videoProcesser.close();
+            this.videoProcesser = null;
+        }
     }
 
     /**
@@ -741,8 +766,18 @@ public final class MediaManager {
         @Override
         public void onFrameCaptured(VideoFrame videoFrame) {
             // 注意：VideoFrame必须释放，多线程环境需要调用retain和release方法。
-            this.mainObserver.onFrameCaptured(videoFrame);
-            this.shareObserver.onFrameCaptured(videoFrame);
+            if(MediaManager.this.videoProcesser == null) {
+                this.mainObserver.onFrameCaptured(videoFrame);
+                this.shareObserver.onFrameCaptured(videoFrame);
+            } else {
+                final VideoFrame.I420Buffer i420Buffer = videoFrame.getBuffer().toI420();
+                MediaManager.this.videoProcesser.process(i420Buffer);
+                final VideoFrame processVideoFrame = new VideoFrame(i420Buffer.cropAndScale(0, 0, i420Buffer.getWidth(), i420Buffer.getHeight(), i420Buffer.getWidth(), i420Buffer.getHeight()), videoFrame.getRotation(), videoFrame.getTimestampNs());
+                i420Buffer.release();
+                this.mainObserver.onFrameCaptured(processVideoFrame);
+                this.shareObserver.onFrameCaptured(processVideoFrame);
+                processVideoFrame.release();
+            }
         }
 
     }
