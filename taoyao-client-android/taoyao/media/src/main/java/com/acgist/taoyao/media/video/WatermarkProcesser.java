@@ -21,6 +21,8 @@ import java.util.TimerTask;
  * 没有定时：26~32波动
  * 定时水印：28~32
  *
+ * TODO：优化调整位置优化性能减少内存拷贝
+ *
  * @author acgist
  */
 public class WatermarkProcesser extends VideoProcesser {

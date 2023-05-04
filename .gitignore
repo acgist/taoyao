@@ -1,13 +1,14 @@
-*.log
-*.project
-*.settings
-*.classpath
-*.factorypath
-
-.vscode
+.project
+.settings
+.classpath
+.factorypath
 
 package-lock.json
 
+.vscode
+
+dist
 logs
+build
 target
 node_modules
