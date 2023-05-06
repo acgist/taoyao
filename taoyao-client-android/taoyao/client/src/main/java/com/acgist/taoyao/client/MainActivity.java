@@ -2,6 +2,7 @@ package com.acgist.taoyao.client;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -134,9 +135,11 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         this.mainHandler = new MainHandler();
+        final Context context = this.getApplicationContext();
         final Resources resources = this.getResources();
-        MediaManager.getInstance().initContext(
-            this.mainHandler, this.getApplicationContext(),
+        final MediaManager mediaManager = MediaManager.getInstance();
+        mediaManager.initContext(
+            this.mainHandler, context,
             resources.getInteger(R.integer.imageQuantity),
             resources.getString(R.string.audioQuantity),
             resources.getString(R.string.videoQuantity),
@@ -147,6 +150,9 @@ public class MainActivity extends AppCompatActivity {
             resources.getString(R.string.watermark),
             VideoSourceType.valueOf(resources.getString(R.string.videoSourceType))
         );
+        if(resources.getBoolean(R.bool.broadcaster)) {
+            mediaManager.initTTS(context);
+        }
         // 注意：不能使用intent传递
         MediaService.mainHandler = this.mainHandler;
         Log.i(MainActivity.class.getSimpleName(), "拉起媒体服务");

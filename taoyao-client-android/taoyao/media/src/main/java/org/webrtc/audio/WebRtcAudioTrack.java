@@ -27,8 +27,10 @@ import org.webrtc.ThreadUtils;
 import org.webrtc.audio.JavaAudioDeviceModule.AudioTrackErrorCallback;
 import org.webrtc.audio.JavaAudioDeviceModule.AudioTrackStartErrorCode;
 import org.webrtc.audio.JavaAudioDeviceModule.AudioTrackStateCallback;
+import org.webrtc.audio.JavaAudioDeviceModule.SamplesReadyCallback;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 class WebRtcAudioTrack {
   private static final String TAG = "WebRtcAudioTrackExternal";
@@ -87,6 +89,18 @@ class WebRtcAudioTrack {
 
   private final @Nullable AudioTrackErrorCallback errorCallback;
   private final @Nullable AudioTrackStateCallback stateCallback;
+  private @Nullable SamplesReadyCallback audioSamplesReadyCallback;
+
+  /**
+   * 设置录音工具
+   *
+   * @param samplesReadyCallback 录音回调
+   *
+   * @Taoyao
+   */
+  public void setMixerProcesser(JavaAudioDeviceModule.SamplesReadyCallback samplesReadyCallback) {
+    this.audioSamplesReadyCallback = samplesReadyCallback;
+  }
 
   /**
    * Audio thread which keeps calling AudioTrack.write() to stream audio.
@@ -131,6 +145,13 @@ class WebRtcAudioTrack {
           byteBuffer.position(0);
         }
         int bytesWritten = writeBytes(audioTrack, byteBuffer, sizeInBytes);
+        if (audioSamplesReadyCallback != null) {
+          SamplesReadyCallback nullable = audioSamplesReadyCallback;
+          if(nullable != null) {
+            final byte[] data = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.arrayOffset(), byteBuffer.capacity() + byteBuffer.arrayOffset());
+            nullable.onWebRtcAudioTrackSamplesReady(new JavaAudioDeviceModule.AudioSamples(audioTrack.getAudioFormat(), audioTrack.getChannelCount(), audioTrack.getSampleRate(), data));
+          }
+        }
         if (bytesWritten != sizeInBytes) {
           Logging.e(TAG, "AudioTrack.write played invalid number of bytes: " + bytesWritten);
           // If a write() returns a negative value, an error has occurred.

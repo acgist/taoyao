@@ -17,9 +17,9 @@
     <!-- 信令加密密钥 -->
     <string name="encryptSecret">2SPWy+TF1zM=</string>
     <!-- 图片存储目录 -->
-    <string name="storagePathImage">/taoyao/image</string>
+    <string name="storagePathImage">/taoyao</string>
     <!-- 视频存储目录 -->
-    <string name="storagePathVideo">/taoyao/video</string>
+    <string name="storagePathVideo">/taoyao</string>
     <!-- 视频来源：FILE|BACK|FRONT|SCREEN -->
     <string name="videoSourceType">BACK</string>
     <!-- 媒体配置：是否消费数据 -->
@@ -34,6 +34,8 @@
     <bool name="audioProduce">true</bool>
     <!-- 媒体配置：是否生产视频 -->
     <bool name="videoProduce">true</bool>
+    <!-- 语音播报 -->
+    <bool name="broadcaster">false</bool>
     <!-- 图片质量 -->
     <integer name="imageQuantity">100</integer>
     <!-- 音频质量 -->

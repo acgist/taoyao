@@ -1,6 +1,6 @@
 # WebRTC
 
-本文档内容旨在独立编译`WebRTC`项目，非必需使用。
+本文档内容旨在独立编译`WebRTC`项目，并非必需使用。
 
 ## libwebrtc
 
@@ -15,22 +15,24 @@
 * 四核`CPU`
 * 硬盘`100G`
 * 系统`Ubuntu 20.xx`
-* 宽带按需`100Mbps/s`
+* 宽带按需`100MB/s`
 * 整个下载过程大概需要半到一个小时
 * 整个编译过程大概需要一到两个小时
+
+## 代码编译
 
 ```
 # 编译工具
 mkdir -p /data
 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 
-# 源码
+# 下载源码
 mkdir -p /data/webrtc
 cd /data/webrtc
 /data/depot_tools/fetch --nohooks webrtc_android
 /data/depot_tools/gclient sync
 
-# 分支
+# 切换分支
 cd src
 git checkout -b m94 branch-heads/4606
 /data/depot_tools/gclient sync
@@ -42,28 +44,32 @@ source ./build/android/envsetup.sh
 
 # 编译配置：./tools_webrtc/android/build_aar.py
 ---
-'target_os': 'android',
-'is_clang': True,
-'is_debug': False,
-'use_rtti': True,
-'rtc_use_h264': True,
-'use_custom_libcxx': False,
-'rtc_include_tests': False,
-'is_component_build': False,
+'target_os'               : 'android',
+'is_clang'                : True,
+'is_debug'                : False,
+'use_rtti'                : True,
+'rtc_use_h264'            : True,
+'use_custom_libcxx'       : False,
+'rtc_include_tests'       : False,
+'is_component_build'      : False,
 'treat_warnings_as_errors': False,
-'use_goma': use_goma,
-'target_cpu': _GetTargetCpu(arch)
+'use_goma'                : use_goma,
+'target_cpu'              : _GetTargetCpu(arch)
 ---
 
 # 编译项目
 ./tools_webrtc/android/build_aar.py --build-dir ./out/release-build/ --arch x86 x86_64 arm64-v8a armeabi-v7a
 
-# 安装工具
+# 安装re2c
+#sudo apt-get install re2c
 cd /data
 wget https://github.com/skvadrik/re2c/releases/download/3.0/re2c-3.0.tar.xz
-tar -xJf re2c-3.0.tar.xz
+tar -Jxvf re2c-3.0.tar.xz
 cd re2c-3.0
 ./configure
+make && make install
+
+# 安装ninja
 cd /data
 git clone https://github.com/ninja-build/ninja.git
 cd ninja
@@ -90,7 +96,8 @@ out/release-build/arm64-v8a/gen/sdk/android/video_api_java/generated_java/input_
 out/release-build/arm64-v8a/gen/sdk/android/peerconnection_java/generated_java/input_srcjars/
 
 # 提取头文件
-mkdir linux-include
+mkdir src
+vim header.sh
 ---
 #!/bin/bash
  
@@ -98,24 +105,18 @@ src=`find ./ -name "*.h"`
 for header in $src
 do
     echo "cp header file $header"
-    cp --parents $header linux-include
+    cp --parents $header src
 done
 
 src=`find ./ -name "*.hpp"`
 for header in $src
 do
     echo "cp header file $header"
-    cp --parents $header linux-include
-done
-
-src=`find ./ -name "*.hxx"`
-for header in $src
-do
-    echo "cp header file $header"
-    cp --parents $header linux-include
+    cp --parents $header src
 done
 ---
-zip -r src.zip linux-include
+sh header.sh
+zip -r src.zip src
 ```
 
 [WebRTC](https://pan.baidu.com/s/1E_DXv32D9ODyj5J-o-ji_g?pwd=hudc)

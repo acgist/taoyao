@@ -65,7 +65,7 @@ public class PhotographClient implements VideoSink {
     public PhotographClient(int quantity, String path) {
         this.quantity = quantity;
         this.filename = DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".jpg";
-        this.filepath = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, this.filename).toString();
+        this.filepath = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath(), path, this.filename).toString();
         this.done     = false;
         this.finish   = false;
         Log.i(RecordClient.class.getSimpleName(), "拍摄照片文件：" + this.filepath);
@@ -97,13 +97,6 @@ public class PhotographClient implements VideoSink {
     }
 
     public void photograph(VideoSource videoSource, PeerConnectionFactory peerConnectionFactory) {
-        if(this.videoTrack != null) {
-            return;
-        }
-        if(videoSource == null || peerConnectionFactory == null) {
-            Log.e(PhotographClient.class.getSimpleName(), "数据采集无效");
-            return;
-        }
         this.videoTrack = peerConnectionFactory.createVideoTrack("TaoyaoVP", videoSource);
         this.videoTrack.setEnabled(true);
         this.videoTrack.addSink(this);

@@ -76,8 +76,9 @@ public class MediaService extends Service {
         :: https://gitee.com/acgist/taoyao
         """);
         super.onCreate();
-        this.mkdir(R.string.storagePathImage);
-        this.mkdir(R.string.storagePathVideo);
+        final Resources resources = this.getResources();
+        this.mkdir(resources.getString(R.string.storagePathImage), Environment.DIRECTORY_PICTURES);
+        this.mkdir(resources.getString(R.string.storagePathVideo), Environment.DIRECTORY_MOVIES);
         this.buildNotificationChannel();
     }
 
@@ -192,13 +193,16 @@ public class MediaService extends Service {
         MediaManager.getInstance().initScreen(intent.getParcelableExtra("data"));
     }
 
-    private void mkdir(int id) {
+    private void mkdir(String path, String type) {
         final Path imagePath = Paths.get(
-            Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(),
-            this.getResources().getString(id)
+            Environment.getExternalStoragePublicDirectory(type).getAbsolutePath(),
+            path
         );
         final File file = imagePath.toFile();
-        if(!file.exists()) {
+        if(file.exists()) {
+            Log.d(MediaService.class.getSimpleName(), "目录已经存在：" + imagePath);
+        } else {
+            Log.d(MediaService.class.getSimpleName(), "新建文件目录：" + imagePath);
             file.mkdirs();
         }
     }

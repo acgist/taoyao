@@ -120,7 +120,7 @@ cmake -v
 mkdir -p /data/dev/nodejs
 cd /data/dev/nodejs
 wget https://nodejs.org/dist/v16.19.0/node-v16.19.0-linux-x64.tar.xz
-tar -xvJf node-v16.19.0-linux-x64.tar.xz
+tar -Jxvf node-v16.19.0-linux-x64.tar.xz
 
 # 连接
 ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/npm /usr/local/bin/
@@ -213,7 +213,7 @@ mkdir -p /data/dev/python
 cd /data/dev/python
 #wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tar.xz
 wget https://mirrors.huaweicloud.com/python/3.8.16/Python-3.8.16.tar.xz
-tar -xvJf Python-3.8.16.tar.xz
+tar -Jxvf Python-3.8.16.tar.xz
 
 # 安装
 cd Python-3.8.16
@@ -265,7 +265,7 @@ yum install nginx
 systemctl enable nginx
 
 # 管理服务
-systemctl start | stop | restart nginx
+systemctl start|stop|restart nginx
 
 # 加载配置
 nginx -s reload
@@ -307,7 +307,7 @@ systemctl enable taoyao-signal-server
 ./deploy.sh
 
 # 管理服务
-systemctl start | stop | restart taoyao-signal-server
+systemctl start|stop|restart taoyao-signal-server
 ```
 
 ## 安装媒体
@@ -318,11 +318,11 @@ cd /data/taoyao/taoyao-client-media
 npm install
 
 # 配置ecosystem
-pm2 start | reload ecosystem.config.json
+pm2 start|reload ecosystem.config.json
 pm2 save
 
 # 管理服务：服务名称必须和配置终端标识一致否则不能执行重启和关闭信令
-pm2 start | stop | restart taoyao-client-media
+pm2 start|stop|restart taoyao-client-media
 ```
 
 ### Mediasoup编译失败
@@ -359,7 +359,7 @@ pm2 start npm --name "taoyao-client-web" -- run dev
 pm2 save
 
 # 管理服务
-pm2 start | stop | restart taoyao-client-web
+pm2 start|stop|restart taoyao-client-web
 
 # 打包代码
 npm run build

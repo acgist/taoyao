@@ -1,6 +1,6 @@
 # 小米5S
 
-由于使用小米5S作为测试机，没有适合的`LineageOS`版本，所有这里选择了`PixelExperience`作为测试系统，如果其他机器建议使用`LineageOS`，`ROM`下载地址：
+由于使用小米5S作为测试机，没有适合的`LineageOS`版本，所有这里选择了`PixelExperience`作为测试系统。如果其他机器建议使用`LineageOS`，当然最好还是使用`Pixel`作为测试机，可以直接使用原生系统，或者自己定制编译`AOSP`。
 
 ## TWRP
 

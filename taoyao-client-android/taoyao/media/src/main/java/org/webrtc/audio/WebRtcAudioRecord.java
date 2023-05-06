@@ -105,9 +105,20 @@ class WebRtcAudioRecord {
 
   private final @Nullable AudioRecordErrorCallback errorCallback;
   private final @Nullable AudioRecordStateCallback stateCallback;
-  private final @Nullable SamplesReadyCallback audioSamplesReadyCallback;
+  private @Nullable SamplesReadyCallback audioSamplesReadyCallback;
   private final boolean isAcousticEchoCancelerSupported;
   private final boolean isNoiseSuppressorSupported;
+
+  /**
+   * 设置录音工具
+   *
+   * @param samplesReadyCallback 录音回调
+   *
+   * @Taoyao
+   */
+  public void setMixerProcesser(SamplesReadyCallback samplesReadyCallback) {
+    this.audioSamplesReadyCallback = samplesReadyCallback;
+  }
 
   /**
    * Audio thread which keeps calling ByteBuffer.read() waiting for audio
@@ -131,7 +142,6 @@ class WebRtcAudioRecord {
       // Audio recording has started and the client is informed about it.
       doAudioRecordStateCallback(AUDIO_RECORD_START);
 
-      long lastTime = System.nanoTime();
       while (keepAlive) {
         int bytesRead = audioRecord.read(byteBuffer, byteBuffer.capacity());
         if (bytesRead == byteBuffer.capacity()) {
@@ -148,11 +158,11 @@ class WebRtcAudioRecord {
           if (audioSamplesReadyCallback != null) {
             // Copy the entire byte buffer array. The start of the byteBuffer is not necessarily
             // at index 0.
-            byte[] data = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.arrayOffset(),
-                byteBuffer.capacity() + byteBuffer.arrayOffset());
-            audioSamplesReadyCallback.onWebRtcAudioRecordSamplesReady(
-                new JavaAudioDeviceModule.AudioSamples(audioRecord.getAudioFormat(),
-                    audioRecord.getChannelCount(), audioRecord.getSampleRate(), data));
+            SamplesReadyCallback nullable = audioSamplesReadyCallback;
+            if(nullable != null) {
+              final byte[] data = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.arrayOffset(), byteBuffer.capacity() + byteBuffer.arrayOffset());
+              nullable.onWebRtcAudioRecordSamplesReady(new JavaAudioDeviceModule.AudioSamples(audioRecord.getAudioFormat(), audioRecord.getChannelCount(), audioRecord.getSampleRate(), data));
+            }
           }
         } else {
           String errorMessage = "AudioRecord.read failed: " + bytesRead;

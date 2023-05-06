@@ -11,6 +11,7 @@ import android.util.Log;
 
 import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.media.MediaManager;
+import com.acgist.taoyao.media.audio.MixerProcesser;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.PeerConnectionFactory;
@@ -32,7 +33,7 @@ import java.time.LocalDateTime;
  *
  * @author acgist
  */
-public class RecordClient extends Client implements VideoSink, JavaAudioDeviceModule.SamplesReadyCallback {
+public class RecordClient extends Client implements VideoSink {
 
     /**
      * 等待时间（毫秒）
@@ -126,6 +127,8 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
      */
     private MediaMuxer mediaMuxer;
     private VideoTrack videoTrack;
+    private MixerProcesser mixerProcesser;
+    private JavaAudioDeviceModule javaAudioDeviceModule;
 
     public RecordClient(
         int audioBitRate, int sampleRate, int channelCount,
@@ -144,7 +147,9 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         this.height         = height;
         this.yuvSize        = width * height * 3 / 2;
         this.filename       = DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".mp4";
-        this.filepath       = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, this.filename).toString();
+        this.filepath       = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_MOVIES).getAbsolutePath(), path, this.filename).toString();
+        this.audioActive    = false;
+        this.videoActive    = false;
     }
 
     public void start() {
@@ -191,15 +196,12 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         this.audioHandler.post(this::audioCodec);
     }
 
-    private volatile long audioPts = 0;
-
     private void audioCodec() {
         long pts       = 0L;
         int trackIndex = -1;
         int outputIndex;
         this.audioCodec.start();
         this.audioActive = true;
-        JavaAudioDeviceModule.AudioSamples audioSamples = null;
         final MediaCodec.BufferInfo bufferInfo = new MediaCodec.BufferInfo();
         while (!this.close) {
             outputIndex = this.audioCodec.dequeueOutputBuffer(bufferInfo, WAIT_TIME_US);
@@ -369,17 +371,20 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         }
     }
 
-    public void record(VideoSource videoSource, PeerConnectionFactory peerConnectionFactory) {
-        if(this.videoTrack != null) {
-            return;
+    public void record(VideoSource videoSource, JavaAudioDeviceModule javaAudioDeviceModule, PeerConnectionFactory peerConnectionFactory) {
+        // 音频
+        if(javaAudioDeviceModule != null) {
+            this.mixerProcesser = new MixerProcesser(this);
+            this.mixerProcesser.start();
+            javaAudioDeviceModule.setMixerProcesser(this.mixerProcesser);
+            this.javaAudioDeviceModule = javaAudioDeviceModule;
         }
-        if(videoSource == null || peerConnectionFactory == null) {
-            Log.e(RecordClient.class.getSimpleName(), "数据采集无效");
-            return;
+        // 视频
+        if(videoSource != null && peerConnectionFactory != null) {
+            this.videoTrack = peerConnectionFactory.createVideoTrack("TaoyaoVR", videoSource);
+            this.videoTrack.setEnabled(true);
+            this.videoTrack.addSink(this);
         }
-        this.videoTrack = peerConnectionFactory.createVideoTrack("TaoyaoVR", videoSource);
-        this.videoTrack.setEnabled(true);
-        this.videoTrack.addSink(this);
     }
 
     @Override
@@ -390,6 +395,13 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
             }
             super.close();
             Log.i(RecordClient.class.getSimpleName(), "结束录制：" + this.filepath);
+            if(this.javaAudioDeviceModule != null) {
+                this.javaAudioDeviceModule.removeMixerProcesser();
+            }
+            if(this.mixerProcesser != null) {
+                this.mixerProcesser.close();
+                this.mixerProcesser = null;
+            }
             if(this.videoTrack != null) {
                 this.videoTrack.removeSink(this);
                 this.videoTrack.dispose();
@@ -422,26 +434,20 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
     }
 
     /**
-     * @param audioSamples PCM数据
+     * @param pts  PTS时间偏移
+     * @param data PCM数据
      */
-    @Override
-    public void onWebRtcAudioRecordSamplesReady(JavaAudioDeviceModule.AudioSamples audioSamples) {
+    public void onPcm(long pts, byte[] data) {
         if(this.close || !this.audioActive) {
             return;
         }
-        Log.i(RecordClient.class.getSimpleName(), "音频信息：" + audioSamples.getAudioFormat());
-        int index = this.audioCodec.dequeueInputBuffer(WAIT_TIME_US);
-        if (index >= 0) {
-            final byte[] data = audioSamples.getData();
-            final ByteBuffer buffer = this.audioCodec.getInputBuffer(index);
-            buffer.put(data);
-            this.audioCodec.queueInputBuffer(index, 0, data.length, this.audioPts, 0);
-            // 1000000 microseconds / 48000 hz / 2 bytes
-            this.audioPts += data.length * (1_000_000 / audioSamples.getSampleRate() / 2);
-        } else {
-            // WARN
+        final int index = this.audioCodec.dequeueInputBuffer(WAIT_TIME_US);
+        if (index < 0) {
+            return;
         }
-        audioSamples = null;
+        final ByteBuffer buffer = this.audioCodec.getInputBuffer(index);
+        buffer.put(data);
+        this.audioCodec.queueInputBuffer(index, 0, data.length, pts, 0);
     }
 
     @Override
@@ -449,7 +455,7 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         if (this.close || !this.videoActive) {
             return;
         }
-        Log.i(RecordClient.class.getSimpleName(), "视频信息：" + videoFrame.getRotatedWidth() + " - " + videoFrame.getRotatedHeight());
+//      Log.d(RecordClient.class.getSimpleName(), "视频信息：" + videoFrame.getRotatedWidth() + " - " + videoFrame.getRotatedHeight());
         final int index = this.videoCodec.dequeueInputBuffer(WAIT_TIME_US);
         if(index < 0) {
             return;

@@ -1,0 +1,30 @@
+name: codeql
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  analyze:
+    name: Analyze
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ "cpp", "java", "javascript" ]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v2
+    - name: Set up JDK
+      uses: actions/setup-java@v1
+      with:
+        java-version: 17
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v1
+      with:
+        languages: ${{ matrix.language }}
+    - name: Autobuild
+      uses: github/codeql-action/autobuild@v1
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v1
+      

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.media.projection.MediaProjection;
 import android.os.Handler;
+import android.speech.tts.TextToSpeech;
 import android.util.Log;
 
 import com.acgist.taoyao.media.client.PhotographClient;
@@ -42,6 +43,8 @@ import org.webrtc.VideoTrack;
 import org.webrtc.audio.JavaAudioDeviceModule;
 
 import java.util.Arrays;
+import java.util.Locale;
+import java.util.UUID;
 
 /**
  * 媒体来源管理器
@@ -155,9 +158,17 @@ public final class MediaManager {
      */
     private PeerConnectionFactory peerConnectionFactory;
     /**
+     * JavaAudioDeviceModule
+     */
+    private JavaAudioDeviceModule javaAudioDeviceModule;
+    /**
      * 视频处理
      */
     private VideoProcesser videoProcesser;
+    /**
+     * TTS
+     */
+    private TextToSpeech textToSpeech;
     /**
      * 录屏等待锁
      */
@@ -263,6 +274,28 @@ public final class MediaManager {
         this.taoyao = taoyao;
     }
 
+    public void initTTS(Context context) {
+        if(this.textToSpeech != null) {
+            return;
+        }
+        this.textToSpeech = new TextToSpeech(context, new MediaManager.TextToSpeechInitListener());
+    }
+
+    public void broadcast(String text) {
+        if(this.textToSpeech == null) {
+            return;
+        }
+//      this.textToSpeech.stop();
+        this.textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString());
+    }
+
+    public void closeTTS() {
+        if(this.textToSpeech == null) {
+            return;
+        }
+        this.textToSpeech.shutdown();
+    }
+
     /**
      * 新建终端
      *
@@ -339,11 +372,11 @@ public final class MediaManager {
         Log.i(MediaManager.class.getSimpleName(), "加载媒体：" + this.videoSourceType);
         final VideoDecoderFactory videoDecoderFactory = new DefaultVideoDecoderFactory(this.eglContext);
         final VideoEncoderFactory videoEncoderFactory = new DefaultVideoEncoderFactory(this.eglContext, true, true);
-        final JavaAudioDeviceModule javaAudioDeviceModule = this.javaAudioDeviceModule();
+        this.javaAudioDeviceModule = this.javaAudioDeviceModule();
         this.peerConnectionFactory = PeerConnectionFactory.builder()
             .setVideoDecoderFactory(videoDecoderFactory)
             .setVideoEncoderFactory(videoEncoderFactory)
-            .setAudioDeviceModule(javaAudioDeviceModule)
+            .setAudioDeviceModule(this.javaAudioDeviceModule)
 //          .setAudioProcessingFactory()
 //          .setAudioEncoderFactoryFactory(new BuiltinAudioEncoderFactoryFactory())
 //          .setAudioDecoderFactoryFactory(new BuiltinAudioDecoderFactoryFactory())
@@ -372,33 +405,58 @@ public final class MediaManager {
 //          .setAudioSource(MediaRecorder.AudioSource.MIC)
 //          .setAudioFormat(AudioFormat.ENCODING_PCM_16BIT)
 //          .setAudioAttributes(audioAttributes)
-//          .setUseStereoInput()
-//          .setUseStereoOutput()
             // 超低延迟
 //          .setUseLowLatency()
-            .setSamplesReadyCallback(audioSamples -> {
-                if(this.recordClient != null) {
-                    this.recordClient.onWebRtcAudioRecordSamplesReady(audioSamples);
+//          .setUseStereoInput()
+//          .setUseStereoOutput()
+            // 本地声音
+//          .setSamplesReadyCallback()
+            .setAudioTrackErrorCallback(new JavaAudioDeviceModule.AudioTrackErrorCallback() {
+                @Override
+                public void onWebRtcAudioTrackInitError(String errorMessage) {
+                    Log.e(MediaManager.class.getSimpleName(), "WebRTC远程音频Track加载异常：" + errorMessage);
+                }
+                @Override
+                public void onWebRtcAudioTrackStartError(JavaAudioDeviceModule.AudioTrackStartErrorCode errorCode, String errorMessage) {
+                    Log.e(MediaManager.class.getSimpleName(), "WebRTC远程音频Track开始异常：" + errorMessage);
+                }
+                @Override
+                public void onWebRtcAudioTrackError(String errorMessage) {
+                    Log.e(MediaManager.class.getSimpleName(), "WebRTC远程音频Track异常：" + errorMessage);
                 }
             })
             .setAudioTrackStateCallback(new JavaAudioDeviceModule.AudioTrackStateCallback() {
                 @Override
                 public void onWebRtcAudioTrackStart() {
-                    Log.i(MediaManager.class.getSimpleName(), "WebRTC声音Track开始");
+                    Log.i(MediaManager.class.getSimpleName(), "WebRTC远程音频Track开始");
                 }
                 @Override
                 public void onWebRtcAudioTrackStop() {
-                    Log.i(MediaManager.class.getSimpleName(), "WebRTC声音Track结束");
+                    Log.i(MediaManager.class.getSimpleName(), "WebRTC远程音频Track结束");
+                }
+            })
+            .setAudioRecordErrorCallback(new JavaAudioDeviceModule.AudioRecordErrorCallback() {
+                @Override
+                public void onWebRtcAudioRecordInitError(String errorMessage) {
+                    Log.e(MediaManager.class.getSimpleName(), "WebRTC本地音频录制加载异常：" + errorMessage);
+                }
+                @Override
+                public void onWebRtcAudioRecordStartError(JavaAudioDeviceModule.AudioRecordStartErrorCode errorCode, String errorMessage) {
+                    Log.e(MediaManager.class.getSimpleName(), "WebRTC本地音频录制开始异常：" + errorMessage);
+                }
+                @Override
+                public void onWebRtcAudioRecordError(String errorMessage) {
+                    Log.e(MediaManager.class.getSimpleName(), "WebRTC本地音频录制异常：" + errorMessage);
                 }
             })
             .setAudioRecordStateCallback(new JavaAudioDeviceModule.AudioRecordStateCallback() {
                 @Override
                 public void onWebRtcAudioRecordStart() {
-                    Log.i(MediaManager.class.getSimpleName(), "WebRTC声音录制开始");
+                    Log.i(MediaManager.class.getSimpleName(), "WebRTC本地音频录制开始");
                 }
                 @Override
                 public void onWebRtcAudioRecordStop() {
-                    Log.i(MediaManager.class.getSimpleName(), "WebRTC声音录制结束");
+                    Log.i(MediaManager.class.getSimpleName(), "WebRTC本地音频录制结束");
                 }
             })
 //          .setUseHardwareNoiseSuppressor(true)
@@ -689,7 +747,7 @@ public final class MediaManager {
                 this.videoPath, this.taoyao, this.mainHandler
             );
             this.recordClient.start();
-            this.recordClient.record(this.mainVideoSource, this.peerConnectionFactory);
+            this.recordClient.record(this.mainVideoSource, this.javaAudioDeviceModule, this.peerConnectionFactory);
             this.mainHandler.obtainMessage(Config.WHAT_RECORD, Boolean.TRUE).sendToTarget();
             return this.recordClient;
         }
@@ -758,6 +816,10 @@ public final class MediaManager {
             this.surfaceTextureHelper.dispose();
             this.surfaceTextureHelper = null;
         }
+        if(this.javaAudioDeviceModule != null) {
+            this.javaAudioDeviceModule.release();
+            this.javaAudioDeviceModule = null;
+        }
         if (this.peerConnectionFactory != null) {
             this.peerConnectionFactory.dispose();
             this.peerConnectionFactory = null;
@@ -806,7 +868,11 @@ public final class MediaManager {
             } else {
                 final VideoFrame.I420Buffer i420Buffer = videoFrame.getBuffer().toI420();
                 MediaManager.this.videoProcesser.process(i420Buffer);
-                final VideoFrame processVideoFrame = new VideoFrame(i420Buffer.cropAndScale(0, 0, i420Buffer.getWidth(), i420Buffer.getHeight(), i420Buffer.getWidth(), i420Buffer.getHeight()), videoFrame.getRotation(), videoFrame.getTimestampNs());
+                final VideoFrame processVideoFrame = new VideoFrame(
+                    i420Buffer.cropAndScale(0, 0, i420Buffer.getWidth(), i420Buffer.getHeight(), i420Buffer.getWidth(), i420Buffer.getHeight()),
+                    videoFrame.getRotation(),
+                    videoFrame.getTimestampNs()
+                );
                 i420Buffer.release();
                 this.mainObserver.onFrameCaptured(processVideoFrame);
                 this.shareObserver.onFrameCaptured(processVideoFrame);
@@ -867,6 +933,18 @@ public final class MediaManager {
             Log.i(MediaManager.class.getSimpleName(), "停止屏幕捕获");
         }
 
+    }
+
+    private class TextToSpeechInitListener implements TextToSpeech.OnInitListener {
+        @Override
+        public void onInit(int status) {
+            Log.i(MediaManager.class.getSimpleName(), "加载TTS：" + status);
+            if(status == TextToSpeech.SUCCESS) {
+                MediaManager.this.textToSpeech.setLanguage(Locale.CANADA);
+                MediaManager.this.textToSpeech.setPitch(1.0F);
+                MediaManager.this.textToSpeech.setSpeechRate(1.0F);
+            }
+        }
     }
 
     private native void nativeInit();

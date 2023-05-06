@@ -316,6 +316,17 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
 
   /** Called when new audio samples are ready. This should only be set for debug purposes */
   public static interface SamplesReadyCallback {
+    /**
+     * 远程音频
+     *
+     * @param samples 音频采样
+     */
+    void onWebRtcAudioTrackSamplesReady(AudioSamples samples);
+    /**
+     * 本地音频
+     *
+     * @param samples 音频采样
+     */
     void onWebRtcAudioRecordSamplesReady(AudioSamples samples);
   }
 
@@ -379,6 +390,26 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
     this.useStereoOutput = useStereoOutput;
   }
 
+  /**
+   * 设置录音工具
+   *
+   * @param samplesReadyCallback 录音回调
+   *
+   * @Taoyao
+   */
+  public void setMixerProcesser(SamplesReadyCallback samplesReadyCallback) {
+    this.audioInput.setMixerProcesser(samplesReadyCallback);
+    this.audioOutput.setMixerProcesser(samplesReadyCallback);
+  }
+
+  /**
+   * 删除录音工具
+   */
+  public void removeMixerProcesser() {
+    this.audioInput.setMixerProcesser(null);
+    this.audioOutput.setMixerProcesser(null);
+  }
+
   @Override
   public long getNativeAudioDeviceModulePointer() {
     synchronized (nativeLock) {
@@ -427,4 +458,5 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
   private static native long nativeCreateAudioDeviceModule(Context context,
       AudioManager audioManager, WebRtcAudioRecord audioInput, WebRtcAudioTrack audioOutput,
       int inputSampleRate, int outputSampleRate, boolean useStereoInput, boolean useStereoOutput);
+
 }
