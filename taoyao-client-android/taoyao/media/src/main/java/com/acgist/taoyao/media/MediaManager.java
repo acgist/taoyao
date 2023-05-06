@@ -158,6 +158,10 @@ public final class MediaManager {
      * 视频处理
      */
     private VideoProcesser videoProcesser;
+    /**
+     * 录屏等待锁
+     */
+    private final Object screenLock = new Object();
 
     static {
 //      // 设置采样
@@ -189,7 +193,7 @@ public final class MediaManager {
     }
 
     /**
-     * @return 是否可用：所有配置加载完成
+     * @return 是否可用（所有配置加载完成）
      */
     public boolean available() {
         return
@@ -199,8 +203,38 @@ public final class MediaManager {
     }
 
     /**
-     * @param mainHandler   Handler
-     * @param context       上下文
+     * @return 是否正在录制
+     */
+    public boolean isRecording() {
+        return this.recordClient != null;
+    }
+
+    /**
+     * @return MediaProperties
+     */
+    public MediaProperties getMediaProperties() {
+        return this.mediaProperties;
+    }
+
+    /**
+     * @return WebrtcProperties
+     */
+    public WebrtcProperties getWebrtcProperties() {
+        return this.webrtcProperties;
+    }
+
+    /**
+     * @param mainHandler     MainHandler
+     * @param context         上下文
+     * @param imageQuantity   图片质量
+     * @param audioQuantity   音频质量
+     * @param videoQuantity   视频质量
+     * @param channelCount    音频通道数量
+     * @param iFrameInterval  关键帧频率
+     * @param imagePath       图片保存路径
+     * @param videoPath       视频保存路径
+     * @param watermark       水印信息
+     * @param videoSourceType 视频来源类型
      */
     public void initContext(
         Handler mainHandler, Context context,
@@ -223,7 +257,7 @@ public final class MediaManager {
     }
 
     /**
-     * @param taoyao  信令
+     * @param taoyao 信令
      */
     public void initTaoyao(ITaoyao taoyao) {
         this.taoyao = taoyao;
@@ -274,18 +308,6 @@ public final class MediaManager {
             }
             return this.clientCount;
         }
-    }
-
-    public boolean isRecording() {
-        return this.recordClient != null;
-    }
-
-    public MediaProperties getMediaProperties() {
-        return this.mediaProperties;
-    }
-
-    public WebrtcProperties getWebrtcProperties() {
-        return this.webrtcProperties;
     }
 
     private void initPeerConnectionFactory() {
@@ -407,17 +429,22 @@ public final class MediaManager {
         } else if (this.videoSourceType.isCamera()) {
             this.initCamera();
         } else if (this.videoSourceType == VideoSourceType.SCREEN) {
-            this.initSharePromise();
+            this.initScreenPromise();
         } else {
             // 其他来源
         }
     }
 
+    /**
+     * 加载文件采集
+     */
     private void initFile() {
+        // 自己实现
+//      new FileVideoCapturer();
     }
 
     /**
-     * 加载摄像头
+     * 加载摄像头采集
      */
     private void initCamera() {
         final CameraEnumerator cameraEnumerator = new Camera2Enumerator(this.context);
@@ -434,28 +461,39 @@ public final class MediaManager {
         this.initVideoSource();
     }
 
-    private void initSharePromise() {
+    /**
+     * 加载屏幕采集
+     */
+    private void initScreenPromise() {
         this.mainHandler.obtainMessage(Config.WHAT_SCREEN_CAPTURE).sendToTarget();
+        synchronized (this.screenLock) {
+            try {
+                this.screenLock.wait();
+            } catch (InterruptedException e) {
+                Log.e(MediaManager.class.getSimpleName(), "等待录屏授权异常", e);
+            }
+        }
     }
 
     /**
-     * 加载屏幕
+     * 加载屏幕采集
      *
      * @param intent Intent
      */
     public void initScreen(Intent intent) {
         this.videoCapturer = new ScreenCapturerAndroid(intent, new ScreenCallback());
         this.initVideoSource();
+        synchronized (this.screenLock) {
+            this.screenLock.notifyAll();
+        }
     }
 
     /**
-     * 加载视频
+     * 加载视频来源
      */
     private void initVideoSource() {
         // 加载视频
         this.surfaceTextureHelper = SurfaceTextureHelper.create("MediaVideoThread", this.eglContext);
-//      this.surfaceTextureHelper.setTextureSize();
-//      this.surfaceTextureHelper.setFrameRotation();
         // 主码流
         this.mainVideoSource = this.peerConnectionFactory.createVideoSource(this.videoCapturer.isScreencast());
         // 次码流
@@ -464,8 +502,6 @@ public final class MediaManager {
         this.shareVideoSource.adaptOutputFormat(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate());
         // 视频捕获
         this.videoCapturer.initialize(this.surfaceTextureHelper, this.context, new VideoCapturerObserver());
-        // 次码流视频处理
-//      this.shareVideoSource.setVideoProcessor();
     }
 
     private void initWatermark() {
@@ -541,13 +577,16 @@ public final class MediaManager {
             cameraVideoCapturer.switchCamera(new CameraVideoCapturer.CameraSwitchHandler() {
                 @Override
                 public void onCameraSwitchDone(boolean success) {
+                    Log.d(MediaManager.class.getSimpleName(), "切换镜头成功");
                 }
                 @Override
                 public void onCameraSwitchError(String message) {
+                    Log.e(MediaManager.class.getSimpleName(), "切换镜头失败：" + message);
                 }
             });
         } else {
-            this.initVideo();
+//          this.initVideo();
+//          切换所有VideoTrack视频来源
         }
     }
 
@@ -625,18 +664,14 @@ public final class MediaManager {
 
     public String photograph() {
         synchronized (this) {
-            String filepath;
             final PhotographClient photographClient = new PhotographClient(this.imageQuantity, this.imagePath);
             if(this.clientCount <= 0) {
                 final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideos().get(this.videoQuantity);
                 photographClient.photograph(mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), mediaVideoProperties.getFrameRate(), this.videoSourceType, this.context);
-                filepath = photographClient.waitForPhotograph();
             } else {
-                final VideoTrack videoTrack  = this.peerConnectionFactory.createVideoTrack("TaoyaoVP", this.mainVideoSource);
-                photographClient.photograph(videoTrack);
-                filepath = photographClient.waitForPhotograph();
+                photographClient.photograph(this.mainVideoSource, this.peerConnectionFactory);
             }
-            return filepath;
+            return photographClient.waitForPhotograph();
         }
     }
 
@@ -654,8 +689,7 @@ public final class MediaManager {
                 this.videoPath, this.taoyao, this.mainHandler
             );
             this.recordClient.start();
-            final VideoTrack videoTrack  = this.peerConnectionFactory.createVideoTrack("TaoyaoVR", this.mainVideoSource);
-            this.recordClient.source(videoTrack);
+            this.recordClient.record(this.mainVideoSource, this.peerConnectionFactory);
             this.mainHandler.obtainMessage(Config.WHAT_RECORD, Boolean.TRUE).sendToTarget();
             return this.recordClient;
         }

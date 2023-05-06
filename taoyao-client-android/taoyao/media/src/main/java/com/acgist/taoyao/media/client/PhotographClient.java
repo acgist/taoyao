@@ -27,8 +27,10 @@ import android.view.Surface;
 import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.media.VideoSourceType;
 
+import org.webrtc.PeerConnectionFactory;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
+import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 
 import java.io.ByteArrayOutputStream;
@@ -94,10 +96,17 @@ public class PhotographClient implements VideoSink {
         return this.filepath;
     }
 
-    public void photograph(VideoTrack videoTrack) {
-        videoTrack.setEnabled(true);
-        videoTrack.addSink(this);
-        this.videoTrack = videoTrack;
+    public void photograph(VideoSource videoSource, PeerConnectionFactory peerConnectionFactory) {
+        if(this.videoTrack != null) {
+            return;
+        }
+        if(videoSource == null || peerConnectionFactory == null) {
+            Log.e(PhotographClient.class.getSimpleName(), "数据采集无效");
+            return;
+        }
+        this.videoTrack = peerConnectionFactory.createVideoTrack("TaoyaoVP", videoSource);
+        this.videoTrack.setEnabled(true);
+        this.videoTrack.addSink(this);
     }
 
     @Override
@@ -178,6 +187,9 @@ public class PhotographClient implements VideoSink {
 
     @SuppressLint("MissingPermission")
     public void photograph(int width, int height, int fps, VideoSourceType videoSourceType, Context context) {
+        if(this.handlerThread != null) {
+            return;
+        }
         this.handlerThread = new HandlerThread("PhotographThread");
         this.handlerThread.start();
         final Handler handler = new Handler(this.handlerThread.getLooper());
@@ -199,6 +211,11 @@ public class PhotographClient implements VideoSink {
                     } else {
                         // TODO：截屏
                     }
+                }
+                if(cameraId == null) {
+                    Log.e(PhotographClient.class.getSimpleName(), "拍照失败没有适配：" + videoSourceType);
+                    PhotographClient.this.notifyWait();
+                    return;
                 }
                 cameraManager.openCamera(cameraId, this.cameraDeviceStateCallback, null);
             } catch (CameraAccessException e) {

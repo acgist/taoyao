@@ -11,11 +11,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
-import android.os.SystemClock;
 import android.util.Log;
-import android.view.Display;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.GridLayout;
 
@@ -31,7 +30,8 @@ import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-import java.io.Serializable;
+import org.apache.commons.lang3.RandomUtils;
+
 import java.util.stream.Stream;
 
 /**
@@ -39,9 +39,9 @@ import java.util.stream.Stream;
  *
  * @author acgist
  */
-public class MainActivity extends AppCompatActivity implements Serializable {
+public class MainActivity extends AppCompatActivity {
 
-    private Handler threadHandler;
+    private Handler actionHandler;
     private MainHandler mainHandler;
     private ActivityMainBinding binding;
     private MediaProjectionManager mediaProjectionManager;
@@ -51,17 +51,20 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     protected void onCreate(Bundle bundle) {
         Log.i(MainActivity.class.getSimpleName(), "onCreate");
         super.onCreate(bundle);
+        final Window window = this.getWindow();
         // 强制横屏
 //      this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        this.buildAction();
         this.requestPermission();
         this.launchMediaService();
+        this.registerMediaProjection();
         this.setTurnScreenOn(true);
         this.setShowWhenLocked(true);
-        this.getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         this.binding = ActivityMainBinding.inflate(this.getLayoutInflater());
-        this.setContentView(this.binding.getRoot());
-        this.binding.getRoot().setZ(100F);
-        this.registerMediaProjection();
+        final View root = this.binding.getRoot();
+        root.setZ(100F);
+        this.setContentView(root);
         this.binding.action.setOnClickListener(this::action);
         this.binding.record.setOnClickListener(this::record);
         this.binding.settings.setOnClickListener(this::settings);
@@ -87,12 +90,24 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     }
 
     /**
+     * 设置按钮线程
+     * 防止按钮任务主线程等待导致主线程死锁
+     */
+    private void buildAction() {
+        if(this.actionHandler != null) {
+            return;
+        }
+        final HandlerThread handlerThread = new HandlerThread("ActionThread");
+        handlerThread.start();
+        this.actionHandler = new Handler(handlerThread.getLooper());
+    }
+
+    /**
      * 请求权限
      */
     private void requestPermission() {
-        final String[] permissions = new String[]{
+        final String[] permissions = new String[] {
             Manifest.permission.CAMERA,
-            Manifest.permission.REBOOT,
             Manifest.permission.INTERNET,
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.ACCESS_WIFI_STATE,
@@ -107,7 +122,7 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         if (Stream.of(permissions).map(this.getApplicationContext()::checkSelfPermission).allMatch(v -> v == PackageManager.PERMISSION_GRANTED)) {
             Log.i(MediaService.class.getSimpleName(), "授权成功");
         } else {
-            ActivityCompat.requestPermissions(this, permissions, 0);
+            ActivityCompat.requestPermissions(this, permissions, RandomUtils.nextInt());
         }
     }
 
@@ -118,7 +133,6 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         if (this.mainHandler != null) {
             return;
         }
-        int waitCount = 0;
         this.mainHandler = new MainHandler();
         final Resources resources = this.getResources();
         MediaManager.getInstance().initContext(
@@ -133,24 +147,19 @@ public class MainActivity extends AppCompatActivity implements Serializable {
             resources.getString(R.string.watermark),
             VideoSourceType.valueOf(resources.getString(R.string.videoSourceType))
         );
-        final Display display = this.getWindow().getContext().getDisplay();
-        while (Display.STATE_ON != display.getState() && waitCount++ < 10) {
-            SystemClock.sleep(100);
-        }
-        if (display.STATE_ON == display.getState()) {
-            Log.i(MainActivity.class.getSimpleName(), "拉起媒体服务");
-            final Intent intent = new Intent(this, MediaService.class);
-            intent.setAction(MediaService.Action.CONNECT.name());
-            // 注意：不能使用intent传递
-            MediaService.mainHandler = this.mainHandler;
-            this.startService(intent);
-        } else {
-            Log.w(MainActivity.class.getSimpleName(), "拉起媒体服务失败");
-        }
+        // 注意：不能使用intent传递
+        MediaService.mainHandler = this.mainHandler;
+        Log.i(MainActivity.class.getSimpleName(), "拉起媒体服务");
+        final Intent intent = new Intent(this, MediaService.class);
+        intent.setAction(MediaService.Action.CONNECT.name());
+        this.startService(intent);
     }
 
+    /**
+     * 注册捕获屏幕功能
+     */
     private void registerMediaProjection() {
-        if (this.activityResultLauncher != null && this.mediaProjectionManager != null) {
+        if (this.mediaProjectionManager != null && this.activityResultLauncher != null) {
             return;
         }
         this.mediaProjectionManager = this.getApplicationContext().getSystemService(MediaProjectionManager.class);
@@ -172,58 +181,75 @@ public class MainActivity extends AppCompatActivity implements Serializable {
     }
 
     /**
-     * 功能测试按钮根据实际情况设置功能
+     * 功能按钮（测试使用）
      *
      * @param view View
      */
     private void action(View view) {
-        if (this.threadHandler == null) {
-            final HandlerThread handlerThread = new HandlerThread("ActionThread");
-            handlerThread.start();
-            this.threadHandler = new Handler(handlerThread.getLooper());
-        }
-        this.threadHandler.post(() -> {
+        this.actionHandler.post(() -> {
             // 进入房间
 //          Taoyao.taoyao.roomEnter("4f19f6fc-1763-499b-a352-d8c955af5a6e", null);
+            // 监控终端
 //          Taoyao.taoyao.sessionCall("taoyao");
         });
     }
 
+    /**
+     * 录像按钮
+     *
+     * @param view View
+     */
     private void record(View view) {
-        final MediaManager mediaManager = MediaManager.getInstance();
-        if (mediaManager.isRecording()) {
-            mediaManager.stopRecord();
-        } else {
-            mediaManager.startRecord();
-        }
-    }
-
-    private void settings(View view) {
-        final Intent intent = new Intent(this, SettingsActivity.class);
-        this.startActivity(intent);
-    }
-
-    private void photograph(View view) {
-        MediaManager.getInstance().photograph();
+        this.actionHandler.post(() -> {
+            final MediaManager mediaManager = MediaManager.getInstance();
+            if (mediaManager.isRecording()) {
+                mediaManager.stopRecord();
+            } else {
+                mediaManager.startRecord();
+            }
+        });
     }
 
     /**
-     * Handler
+     * 设置按钮
+     *
+     * @param view View
+     */
+    private void settings(View view) {
+        this.actionHandler.post(() -> {
+            final Intent intent = new Intent(this, SettingsActivity.class);
+            this.startActivity(intent);
+        });
+    }
+
+    /**
+     * 拍照按钮
+     *
+     * @param view View
+     */
+    private void photograph(View view) {
+        this.actionHandler.post(() -> {
+            MediaManager.getInstance().photograph();
+        });
+    }
+
+    /**
+     * MainHandler
      *
      * @author acgist
      */
-    public class MainHandler extends Handler implements Serializable {
+    public class MainHandler extends Handler {
 
         @Override
         public void handleMessage(@NonNull Message message) {
             super.handleMessage(message);
-            Log.d(MainHandler.class.getSimpleName(), "Handler消息：" + message.what);
+            Log.d(MainHandler.class.getSimpleName(), "MainHandler消息：" + message.what);
             switch (message.what) {
                 case Config.WHAT_SCREEN_CAPTURE   -> MainActivity.this.screenCapture(message);
                 case Config.WHAT_RECORD           -> MainActivity.this.record(message);
                 case Config.WHAT_NEW_LOCAL_VIDEO,
                      Config.WHAT_NEW_REMOTE_VIDEO -> MainActivity.this.previewVideo(message);
-                case Config.WHAT_REMOVE_VIDEO     -> MainActivity.this.removeVideo(message);
+                case Config.WHAT_REMOVE_VIDEO     -> MainActivity.this.removePreviewVideo(message);
             }
         }
 
@@ -238,27 +264,34 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         this.activityResultLauncher.launch(this.mediaProjectionManager.createScreenCaptureIntent());
     }
 
+    /**
+     * 录制按钮
+     *
+     * @param message 消息
+     */
     private void record(Message message) {
-        final Resources resources = this.getResources();
+        final Resources resources         = this.getResources();
+        final Resources.Theme theme       = this.getTheme();
         final FloatingActionButton record = this.binding.record;
         if(Boolean.TRUE.equals(message.obj)) {
-            record.setBackgroundTintList(ColorStateList.valueOf(resources.getColor(R.color.purple_500, this.getTheme())));
+            record.setBackgroundTintList(ColorStateList.valueOf(resources.getColor(R.color.purple_500, theme)));
         } else {
-            record.setBackgroundTintList(ColorStateList.valueOf(resources.getColor(R.color.teal_200, this.getTheme())));
+            record.setBackgroundTintList(ColorStateList.valueOf(resources.getColor(R.color.teal_200,   theme)));
         }
     }
 
     /**
-     * 预览用户视频
+     * 视频预览
      *
      * @param message 消息
      */
-    private void previewVideo(Message message) {
+    private synchronized void previewVideo(Message message) {
         final GridLayout video = this.binding.video;
-        final int count = video.getChildCount();
-        final GridLayout.Spec rowSpec    = GridLayout.spec(count / 2, 1.0F);
-        final GridLayout.Spec columnSpec = GridLayout.spec(count % 2, 1.0F);
-        GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams(rowSpec, columnSpec);
+        final int count        = video.getChildCount();
+        final GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams(
+            GridLayout.spec(count / 2, 1.0F),
+            GridLayout.spec(count % 2, 1.0F)
+        );
         layoutParams.width  = 0;
         layoutParams.height = 0;
         final SurfaceView surfaceView = (SurfaceView) message.obj;
@@ -266,16 +299,19 @@ public class MainActivity extends AppCompatActivity implements Serializable {
         video.addView(surfaceView, layoutParams);
     }
 
-    private void removeVideo(Message message) {
-        synchronized (this) {
-            final GridLayout video = this.binding.video;
-            final SurfaceView surfaceView = (SurfaceView) message.obj;
-            final int index = video.indexOfChild(surfaceView);
-            if(index < 0) {
-                return;
-            }
-            video.removeViewAt(index);
+    /**
+     * 移除视频预览
+     *
+     * @param message 消息
+     */
+    private synchronized void removePreviewVideo(Message message) {
+        final GridLayout video        = this.binding.video;
+        final SurfaceView surfaceView = (SurfaceView) message.obj;
+        final int index = video.indexOfChild(surfaceView);
+        if(index < 0) {
+            return;
         }
+        video.removeViewAt(index);
     }
 
 }

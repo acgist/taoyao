@@ -13,8 +13,10 @@ import com.acgist.taoyao.boot.utils.DateUtils;
 import com.acgist.taoyao.media.MediaManager;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
+import org.webrtc.PeerConnectionFactory;
 import org.webrtc.VideoFrame;
 import org.webrtc.VideoSink;
+import org.webrtc.VideoSource;
 import org.webrtc.VideoTrack;
 import org.webrtc.YuvHelper;
 import org.webrtc.audio.JavaAudioDeviceModule;
@@ -127,7 +129,8 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
 
     public RecordClient(
         int audioBitRate, int sampleRate, int channelCount,
-        int videoBitRate, int frameRate, int iFrameInterval, int width, int height,
+        int videoBitRate, int frameRate,  int iFrameInterval,
+        int width, int height,
         String path, ITaoyao taoyao, Handler mainHandler
     ) {
         super("本地录像", "LocalRecordClient", taoyao, mainHandler);
@@ -140,8 +143,8 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         this.width          = width;
         this.height         = height;
         this.yuvSize        = width * height * 3 / 2;
-        this.filename = DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".mp4";
-        this.filepath = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, this.filename).toString();
+        this.filename       = DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".mp4";
+        this.filepath       = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOCUMENTS).getAbsolutePath(), path, this.filename).toString();
     }
 
     public void start() {
@@ -366,8 +369,15 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
         }
     }
 
-    public void source(VideoTrack videoTrack) {
-        this.videoTrack = videoTrack;
+    public void record(VideoSource videoSource, PeerConnectionFactory peerConnectionFactory) {
+        if(this.videoTrack != null) {
+            return;
+        }
+        if(videoSource == null || peerConnectionFactory == null) {
+            Log.e(RecordClient.class.getSimpleName(), "数据采集无效");
+            return;
+        }
+        this.videoTrack = peerConnectionFactory.createVideoTrack("TaoyaoVR", videoSource);
         this.videoTrack.setEnabled(true);
         this.videoTrack.addSink(this);
     }
@@ -380,13 +390,18 @@ public class RecordClient extends Client implements VideoSink, JavaAudioDeviceMo
             }
             super.close();
             Log.i(RecordClient.class.getSimpleName(), "结束录制：" + this.filepath);
-            this.videoTrack.removeSink(this);
-            this.videoTrack.dispose();
+            if(this.videoTrack != null) {
+                this.videoTrack.removeSink(this);
+                this.videoTrack.dispose();
+                this.videoTrack = null;
+            }
             if (this.audioThread != null) {
                 this.audioThread.quitSafely();
+                this.audioThread = null;
             }
             if (this.videoThread != null) {
                 this.videoThread.quitSafely();
+                this.videoThread = null;
             }
             final File file = new File(this.filepath);
             if(file.length() <= 0) {

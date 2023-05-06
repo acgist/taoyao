@@ -1,4 +1,4 @@
-# 部署
+# 项目部署
 
 ## 整体环境
 
@@ -8,10 +8,11 @@ git >= 1.8.0
 pm2 >= 5.2.0
 Java >= 17.0.0
 Maven >= 3.8.0
+CMake >= 3.26.0
+nodejs >= v16.18.0
+python >= 3.8.0 with PIP
 Android >= 10
 gcc/g++ >= 10.2.0
-node version >= v16.18.0
-python version >= 3.8.0 with PIP
 ```
 
 ## 设置Yum源
@@ -119,8 +120,7 @@ cmake -v
 mkdir -p /data/dev/nodejs
 cd /data/dev/nodejs
 wget https://nodejs.org/dist/v16.19.0/node-v16.19.0-linux-x64.tar.xz
-xz -d node-v16.19.0-linux-x64.tar.xz
-tar -xf node-v16.19.0-linux-x64.tar
+tar -xvJf node-v16.19.0-linux-x64.tar.xz
 
 # 连接
 ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/npm /usr/local/bin/
@@ -213,8 +213,7 @@ mkdir -p /data/dev/python
 cd /data/dev/python
 #wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tar.xz
 wget https://mirrors.huaweicloud.com/python/3.8.16/Python-3.8.16.tar.xz
-xz -d Python-3.8.16.tar.xz
-tar -xf Python-3.8.16.tar
+tar -xvJf Python-3.8.16.tar.xz
 
 # 安装
 cd Python-3.8.16
@@ -226,7 +225,7 @@ ln -sf /usr/local/python3/bin/pip3.8 /usr/bin/pip
 ln -sf /usr/local/python3/bin/python3.8 /usr/bin/python
 ln -sf /usr/local/python3/bin/python3.8 /usr/bin/python3
 
-# 配置YUM
+# 配置Yum
 
 vim /usr/bin/yum
 vim /usr/libexec/urlgrabber-ext-down
@@ -328,15 +327,13 @@ pm2 start | stop | restart taoyao-client-media
 
 ### Mediasoup编译失败
 
-编译过程中的依赖下载容易失败，
-需要进入目录`mediasoup/worker/subprojects`，查看`*.wrap`文件依次下载所需依赖，修改名称放到`packagefiles`目录中，最后注释下载链接。
-将`package.json`中的`mediasoup`改为本地依赖`file:./mediasoup`，重新编译即可。
+编译过程中的依赖下载容易失败，需要进入目录`mediasoup/worker/subprojects`，查看`*.wrap`文件依次下载所需依赖，修改名称放到`packagefiles`目录中，最后注释下载链接。将`package.json`中的`mediasoup`改为本地依赖`file:./mediasoup`，重新编译即可。
 
-> 下载依赖建议备份以备以后编译使用
+> 下载依赖建议备份方便再次编译使用
 
 ### Mediasoup单独编译
 
-编译媒体服务时会自动编译`mediasoup`所以可以不用单独编译
+编译媒体服务时会自动编译`mediasoup`所以忽略单独编译
 
 ```
 # 编译代码
@@ -349,6 +346,8 @@ make clean
 ```
 
 ## 安装Web终端
+
+`Nginx`和`PM2`选择一种启动即可
 
 ```
 # 编译代码
@@ -386,13 +385,13 @@ sh ./gradlew --no-daemon assembleRelease
 ## 配置防火墙
 
 ```
-# Nginx端口
+# 终端服务（Web）：Nginx
 firewall-cmd --zone=public --add-port=443/tcp --permanent
-# 终端服务：建议使用Nginx代理
+# 终端服务（Web）：PM2
 firewall-cmd --zone=public --add-port=8443/tcp --permanent
 # 信令服务（WebSocket）
 firewall-cmd --zone=public --add-port=8888/tcp --permanent
-# 信令服务（Socket）：没有启用不用添加规则
+# 信令服务（Socket）
 firewall-cmd --zone=public --add-port=9999/tcp --permanent
 # 媒体服务
 firewall-cmd --zone=public --add-port=40000-49999/udp --permanent
