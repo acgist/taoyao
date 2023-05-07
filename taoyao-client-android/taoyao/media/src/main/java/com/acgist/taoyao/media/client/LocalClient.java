@@ -52,6 +52,7 @@ public class LocalClient extends RoomClient {
             return;
         }
         ListUtils.getOnlyOne(this.mediaStream.audioTracks, audioTrack -> {
+            audioTrack.setVolume(Config.DEFAULT_VOLUME);
             audioTrack.setEnabled(true);
             return audioTrack;
         });

@@ -19,11 +19,8 @@ public class AudioMixerTest {
         final byte[] bytesB = Files.readAllBytes(fileB.toPath());
         final int length = Math.min(bytesA.length, bytesB.length);
         final byte[] target = new byte[length];
-        int a, b;
         for (int i = 0; i < length; i++) {
-            a = bytesA[i];
-            b = bytesB[i];
-            target[i] = (byte) ((a + b) / 2);
+            target[i] = (byte) (((bytesA[i] + bytesB[i]) & 0xFFFF) / 2);
         }
         Files.write(Paths.get("D:\\tmp\\mixer\\3.pcm"), target);
     }

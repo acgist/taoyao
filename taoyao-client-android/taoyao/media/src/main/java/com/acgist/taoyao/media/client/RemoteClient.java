@@ -7,6 +7,7 @@ import com.acgist.taoyao.boot.utils.ListUtils;
 import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
+import org.webrtc.AudioTrack;
 import org.webrtc.MediaStreamTrack;
 import org.webrtc.VideoTrack;
 
@@ -39,8 +40,12 @@ public class RemoteClient extends RoomClient {
     public void playAudio() {
         super.playAudio();
         ListUtils.getOnlyOne(
-            this.tracks.values().stream().filter(v -> MediaStreamTrack.AUDIO_TRACK_KIND.equals(v.kind())).collect(Collectors.toList()),
+            this.tracks.values().stream()
+                .filter(v -> MediaStreamTrack.AUDIO_TRACK_KIND.equals(v.kind()))
+                .map(v -> (AudioTrack) v)
+                .collect(Collectors.toList()),
             audioTrack -> {
+                audioTrack.setVolume(Config.DEFAULT_VOLUME);
                 audioTrack.setEnabled(true);
                 return audioTrack;
             }

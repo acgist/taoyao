@@ -117,7 +117,18 @@ class WebRtcAudioRecord {
    * @Taoyao
    */
   public void setMixerProcesser(SamplesReadyCallback samplesReadyCallback) {
+    // 不用处理这个逻辑：设置为空表示关闭录制
+//  if(this.audioSamplesReadyCallback != null && samplesReadyCallback == null) {
+//    this.audioSamplesReadyCallback.startNative();
+//  }
     this.audioSamplesReadyCallback = samplesReadyCallback;
+    if(this.audioSamplesReadyCallback != null) {
+      if(this.audioThread == null) {
+        this.audioSamplesReadyCallback.startNative();
+      } else {
+        this.audioSamplesReadyCallback.startWebRTC();
+      }
+    }
   }
 
   /**
@@ -158,7 +169,8 @@ class WebRtcAudioRecord {
           if (audioSamplesReadyCallback != null) {
             // Copy the entire byte buffer array. The start of the byteBuffer is not necessarily
             // at index 0.
-            SamplesReadyCallback nullable = audioSamplesReadyCallback;
+            // 注意不能定义其他地方否则不能回收
+            final SamplesReadyCallback nullable = audioSamplesReadyCallback;
             if(nullable != null) {
               final byte[] data = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.arrayOffset(), byteBuffer.capacity() + byteBuffer.arrayOffset());
               nullable.onWebRtcAudioRecordSamplesReady(new JavaAudioDeviceModule.AudioSamples(audioRecord.getAudioFormat(), audioRecord.getChannelCount(), audioRecord.getSampleRate(), data));
@@ -181,6 +193,9 @@ class WebRtcAudioRecord {
         }
       } catch (IllegalStateException e) {
         Logging.e(TAG, "AudioRecord.stop failed: " + e.getMessage());
+      }
+      if(audioSamplesReadyCallback != null) {
+        audioSamplesReadyCallback.startNative();
       }
     }
 
@@ -376,6 +391,9 @@ class WebRtcAudioRecord {
     Logging.d(TAG, "startRecording");
     assertTrue(audioRecord != null);
     assertTrue(audioThread == null);
+    if(audioSamplesReadyCallback != null) {
+      audioSamplesReadyCallback.startWebRTC();
+    }
     try {
       audioRecord.startRecording();
     } catch (IllegalStateException e) {

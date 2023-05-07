@@ -230,6 +230,7 @@ public class SessionClient extends Client {
             return;
         }
         ListUtils.getOnlyOne(this.remoteMediaStream.audioTracks, audioTrack -> {
+            audioTrack.setVolume(Config.DEFAULT_VOLUME);
             audioTrack.setEnabled(true);
             return audioTrack;
         });
@@ -239,6 +240,7 @@ public class SessionClient extends Client {
     public void pauseAudio() {
         super.pauseAudio();
         ListUtils.getOnlyOne(this.remoteMediaStream.audioTracks, audioTrack -> {
+            audioTrack.setVolume(0);
             audioTrack.setEnabled(false);
             return audioTrack;
         });
@@ -248,6 +250,7 @@ public class SessionClient extends Client {
     public void resumeAudio() {
         super.resumeAudio();
         ListUtils.getOnlyOne(this.remoteMediaStream.audioTracks, audioTrack -> {
+            audioTrack.setVolume(Config.DEFAULT_VOLUME);
             audioTrack.setEnabled(true);
             return audioTrack;
         });
@@ -296,6 +299,7 @@ public class SessionClient extends Client {
     public void pause(String type) {
         if(MediaStreamTrack.AUDIO_TRACK_KIND.equals(type)) {
             ListUtils.getOnlyOne(this.mediaStream.audioTracks, audioTrack -> {
+                audioTrack.setVolume(0);
                 audioTrack.setEnabled(false);
                 return audioTrack;
             });
@@ -318,6 +322,7 @@ public class SessionClient extends Client {
     public void resume(String type) {
         if(MediaStreamTrack.AUDIO_TRACK_KIND.equals(type)) {
             ListUtils.getOnlyOne(this.mediaStream.audioTracks, audioTrack -> {
+                audioTrack.setVolume(Config.DEFAULT_VOLUME);
                 audioTrack.setEnabled(true);
                 return audioTrack;
             });

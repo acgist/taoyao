@@ -401,7 +401,7 @@ public final class MediaManager {
 //            }
 //        });
         final JavaAudioDeviceModule javaAudioDeviceModule = JavaAudioDeviceModule.builder(this.context)
-//          .setSampleRate()
+//          .setSampleRate(48000)
 //          .setAudioSource(MediaRecorder.AudioSource.MIC)
 //          .setAudioFormat(AudioFormat.ENCODING_PCM_16BIT)
 //          .setAudioAttributes(audioAttributes)
@@ -571,6 +571,22 @@ public final class MediaManager {
                 this.videoProcesser = new WatermarkProcesser(this.watermark, mediaVideoProperties.getWidth(), mediaVideoProperties.getHeight(), this.videoProcesser);
             }
         }
+    }
+
+    public void muteAllRemote() {
+        this.javaAudioDeviceModule.setSpeakerMute(true);
+    }
+
+    public void unmuteAllRemote() {
+        this.javaAudioDeviceModule.setSpeakerMute(false);
+    }
+
+    public void muteAllLocal() {
+        this.javaAudioDeviceModule.setMicrophoneMute(true);
+    }
+
+    public void unmuteAllLocal() {
+        this.javaAudioDeviceModule.setMicrophoneMute(false);
     }
 
     /**

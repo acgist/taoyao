@@ -14,6 +14,7 @@ import android.content.Context;
 import android.media.AudioAttributes;
 import android.media.AudioDeviceInfo;
 import android.media.AudioManager;
+import android.media.AudioRecord;
 import android.os.Build;
 
 import androidx.annotation.RequiresApi;
@@ -316,6 +317,14 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
 
   /** Called when new audio samples are ready. This should only be set for debug purposes */
   public static interface SamplesReadyCallback {
+    /**
+     * 本地录制
+     */
+    void startNative();
+    /**
+     * 远程录制
+     */
+    void startWebRTC();
     /**
      * 远程音频
      *

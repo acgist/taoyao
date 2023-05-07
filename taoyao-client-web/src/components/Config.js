@@ -5,7 +5,7 @@ const defaultAudioConfig = {
   // 设备
   // deviceId : '',
   // 音量：0~1
-  volume: 0.5,
+  volume: 1.0,
   // 延迟大小（单位毫秒）：500毫秒以内较好
   latency: 0.4,
   // 采样位数：8|16|32

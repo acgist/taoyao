@@ -374,10 +374,10 @@ public class RecordClient extends Client implements VideoSink {
     public void record(VideoSource videoSource, JavaAudioDeviceModule javaAudioDeviceModule, PeerConnectionFactory peerConnectionFactory) {
         // 音频
         if(javaAudioDeviceModule != null) {
-            this.mixerProcesser = new MixerProcesser(this);
-            this.mixerProcesser.start();
-            javaAudioDeviceModule.setMixerProcesser(this.mixerProcesser);
             this.javaAudioDeviceModule = javaAudioDeviceModule;
+            this.mixerProcesser = new MixerProcesser(this.sampleRate, this.channelCount, this);
+            this.mixerProcesser.start();
+            this.javaAudioDeviceModule.setMixerProcesser(this.mixerProcesser);
         }
         // 视频
         if(videoSource != null && peerConnectionFactory != null) {

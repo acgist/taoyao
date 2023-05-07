@@ -146,7 +146,8 @@ class WebRtcAudioTrack {
         }
         int bytesWritten = writeBytes(audioTrack, byteBuffer, sizeInBytes);
         if (audioSamplesReadyCallback != null) {
-          SamplesReadyCallback nullable = audioSamplesReadyCallback;
+          // 注意不能定义其他地方否则不能回收
+          final SamplesReadyCallback nullable = audioSamplesReadyCallback;
           if(nullable != null) {
             final byte[] data = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.arrayOffset(), byteBuffer.capacity() + byteBuffer.arrayOffset());
             nullable.onWebRtcAudioTrackSamplesReady(new JavaAudioDeviceModule.AudioSamples(audioTrack.getAudioFormat(), audioTrack.getChannelCount(), audioTrack.getSampleRate(), data));
