@@ -117,13 +117,15 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
                 if(this.source == Source.NATIVE) {
                     recordSize = this.audioRecord.read(byteBuffer, byteBuffer.capacity());
                     if(recordSize != byteBuffer.capacity()) {
+                        Thread.yield();
                         continue;
                     }
                     recordData = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.arrayOffset(), byteBuffer.capacity() + byteBuffer.arrayOffset());
                     pts += recordData.length * (1_000_000 / this.sampleRate / 2);
                     this.recordClient.onPcm(pts, recordData);
                 } else if(this.source == Source.WEBRTC) {
-                    local  = this.local.poll(100, TimeUnit.MILLISECONDS);
+                    // 平均10毫秒
+                    local  = this.local.poll(64, TimeUnit.MILLISECONDS);
                     remote = this.remote.poll();
                     if(local != null && remote != null) {
 //                      Log.d(MixerProcesser.class.getSimpleName(), String.format("""
@@ -161,9 +163,11 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
                         pts += remoteData.length * (1_000_000 / remote.getSampleRate() / 2);
                         this.recordClient.onPcm(pts, remoteData);
                     } else {
+                        Thread.yield();
                         continue;
                     }
                 } else {
+                    Thread.yield();
                 }
             } catch (Exception e) {
                 Log.e(MixerProcesser.class.getSimpleName(), "音频处理异常", e);

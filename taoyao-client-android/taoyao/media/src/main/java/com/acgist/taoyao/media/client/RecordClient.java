@@ -233,7 +233,7 @@ public class RecordClient extends Client implements VideoSink {
                 bufferInfo.presentationTimeUs -= pts;
                 this.mediaMuxer.writeSampleData(trackIndex, outputBuffer, bufferInfo);
                 this.audioCodec.releaseOutputBuffer(outputIndex, false);
-                Log.d(RecordClient.class.getSimpleName(), "录制音频帧（时间戳）：" + bufferInfo.flags + " - " + (bufferInfo.presentationTimeUs / 1_000_000F));
+//              Log.d(RecordClient.class.getSimpleName(), "录制音频帧（时间戳）：" + (bufferInfo.presentationTimeUs / 1_000_000F));
 //              if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME == MediaCodec.BUFFER_FLAG_KEY_FRAME) {
 //              } else if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
 //              } else if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
@@ -327,7 +327,7 @@ public class RecordClient extends Client implements VideoSink {
                 bufferInfo.presentationTimeUs -= pts;
                 this.mediaMuxer.writeSampleData(trackIndex, outputBuffer, bufferInfo);
                 this.videoCodec.releaseOutputBuffer(outputIndex, false);
-                Log.d(RecordClient.class.getSimpleName(), "录制视频帧（时间戳）：" + (bufferInfo.presentationTimeUs / 1_000_000F));
+//              Log.d(RecordClient.class.getSimpleName(), "录制视频帧（时间戳）：" + (bufferInfo.presentationTimeUs / 1_000_000F));
 //              if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME == MediaCodec.BUFFER_FLAG_KEY_FRAME) {
 //              } else if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
 //              } else if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {

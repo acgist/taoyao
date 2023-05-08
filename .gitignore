@@ -3,12 +3,12 @@
 .classpath
 .factorypath
 
-package-lock.json
-
-.vscode
-
 dist
 logs
 build
 target
 node_modules
+
+.vscode
+
+package-lock.json
