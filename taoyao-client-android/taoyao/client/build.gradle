@@ -10,12 +10,13 @@ android {
         targetSdk 32
         versionCode 100
         versionName "1.0.0"
+        consumerProguardFiles "consumer-rules.pro"
         applicationId "com.acgist.taoyao.client"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
