@@ -14,10 +14,9 @@ public final class MapUtils {
     }
 
     /**
-     * @param <T> 参数泛型
-     * 
+     * @param <T>  参数泛型
      * @param body 消息主体
-     * @param key 参数名称
+     * @param key  参数名称
      * 
      * @return 参数值
      */
@@ -30,10 +29,9 @@ public final class MapUtils {
     }
 
     /**
-     * @param <T> 参数泛型
-     * 
-     * @param body 消息主体
-     * @param key 参数名称
+     * @param <T>          参数泛型
+     * @param body         消息主体
+     * @param key          参数名称
      * @param defaultValue 参数默认值
      * 
      * @return 参数值
@@ -49,7 +47,7 @@ public final class MapUtils {
     
     /**
      * @param body 消息主体
-     * @param key 参数名称
+     * @param key  参数名称
      * 
      * @return 参数值
      */
@@ -62,9 +60,9 @@ public final class MapUtils {
             return null;
         } else if(object instanceof Long value) {
             return value;
-        } else if(object instanceof Integer value) {
-            return value.longValue();
         } else if(object instanceof Double value) {
+            return value.longValue();
+        } else if(object instanceof Integer value) {
             return value.longValue();
         }
         return new BigDecimal(object.toString()).longValue();
@@ -72,7 +70,7 @@ public final class MapUtils {
     
     /**
      * @param body 消息主体
-     * @param key 参数名称
+     * @param key  参数名称
      * 
      * @return 参数值
      */
@@ -85,17 +83,17 @@ public final class MapUtils {
             return null;
         } else if(object instanceof Long value) {
             return value.doubleValue();
-        } else if(object instanceof Integer value) {
-            return value.doubleValue();
         } else if(object instanceof Double value) {
             return value;
+        } else if(object instanceof Integer value) {
+            return value.doubleValue();
         }
         return new BigDecimal(object.toString()).doubleValue();
     }
     
     /**
      * @param body 消息主体
-     * @param key 参数名称
+     * @param key  参数名称
      * 
      * @return 参数值
      */
@@ -108,17 +106,17 @@ public final class MapUtils {
             return null;
         } else if(object instanceof Long value) {
             return value.intValue();
-        } else if(object instanceof Integer value) {
-            return value;
         } else if(object instanceof Double value) {
             return value.intValue();
+        } else if(object instanceof Integer value) {
+            return value;
         }
         return new BigDecimal(object.toString()).intValue();
     }
     
     /**
      * @param body 消息主体
-     * @param key 参数名称
+     * @param key  参数名称
      * 
      * @return 参数值
      */
@@ -136,10 +134,9 @@ public final class MapUtils {
     }
 
     /**
-     * @param <T> 参数泛型
-     * 
+     * @param <T>  参数泛型
      * @param body 消息主体
-     * @param key 参数名称
+     * @param key  参数名称
      * 
      * @return 参数值
      */

@@ -10,6 +10,10 @@ import java.time.LocalDateTime;
 public final class IdUtils {
 
     /**
+     * 最大索引
+     */
+    private static final int MAX_INDEX = 999;
+    /**
      * 当前索引
      */
     private static int index;
@@ -17,13 +21,12 @@ public final class IdUtils {
      * 当前终端索引
      */
     private static int clientIndex = 99999;
-    /**
-     * 最大索引
-     */
-    private static final int MAX_INDEX = 999;
+    
+    private IdUtils() {
+    }
 
     /**
-     * @return 消息ID
+     * @return ID
      */
     public static final long buildId() {
         int index;

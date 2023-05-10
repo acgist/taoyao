@@ -1,5 +1,7 @@
 package com.acgist.taoyao.boot.utils;
 
+import android.util.Log;
+
 import java.io.Closeable;
 
 /**
@@ -23,7 +25,7 @@ public final class CloseableUtils {
                 closeable.close();
             }
         } catch (Exception e) {
-            // TODO：日志
+            Log.e(CloseableUtils.class.getSimpleName(), "关闭资源异常", e);
         }
     }
 
@@ -38,7 +40,7 @@ public final class CloseableUtils {
                 closeable.close();
             }
         } catch (Exception e) {
-            // TODO：日志
+            Log.e(CloseableUtils.class.getSimpleName(), "关闭资源异常", e);
         }
     }
 

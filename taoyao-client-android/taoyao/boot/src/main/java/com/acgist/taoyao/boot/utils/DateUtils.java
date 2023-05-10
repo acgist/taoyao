@@ -15,15 +15,12 @@ import java.util.Objects;
  */
 public final class DateUtils {
 
-    private DateUtils() {
-    }
-
     /**
      * 日期
      *
      * @author acgist
      */
-    public static enum DateStyle {
+    public enum DateStyle {
 
         YYMMDD("yyMMdd"),
         YYYYMMDD("yyyyMMdd"),
@@ -51,6 +48,7 @@ public final class DateUtils {
         public DateTimeFormatter getDateTimeFormatter() {
             return this.dateTimeFormatter;
         }
+        
     }
 
     /**
@@ -58,7 +56,7 @@ public final class DateUtils {
      *
      * @author acgist
      */
-    public static enum TimeStyle {
+    public enum TimeStyle {
 
         HH24("HH"),
         HH24MM("HHmm"),
@@ -97,17 +95,8 @@ public final class DateUtils {
      *
      * @author acgist
      */
-    public static enum DateTimeStyle {
+    public enum DateTimeStyle {
 
-        // YYYY
-        YYYYMMDD_HH24_MM("yyyyMMdd HH:mm"),
-        YYYY_MM_DD_HH24_MM("yyyy-MM-dd HH:mm"),
-        YYYYMMDDHH24MMSS("yyyyMMddHHmmss"),
-        YYYYMMDDHH24MMSSSSS("yyyyMMddHHmmssSSS"),
-        YYYYMMDD_HH24_MM_SS("yyyyMMdd HH:mm:ss"),
-        YYYYMMDD_HH24_MM_SS_SSS("yyyyMMdd HH:mm:ss.SSS"),
-        YYYY_MM_DD_HH24_MM_SS("yyyy-MM-dd HH:mm:ss"),
-        YYYY_MM_DD_HH24_MM_SS_SSS("yyyy-MM-dd HH:mm:ss.SSS"),
         // YY
         YYMMDD_HH24_MM("yyMMdd HH:mm"),
         YY_MM_DD_HH24_MM("yy-MM-dd HH:mm"),
@@ -117,6 +106,15 @@ public final class DateUtils {
         YYMMDD_HH24_MM_SS_SSS("yyMMdd HH:mm:ss.SSS"),
         YY_MM_DD_HH24_MM_SS("yy-MM-dd HH:mm:ss"),
         YY_MM_DD_HH24_MM_SS_SSS("yy-MM-dd HH:mm:ss.SSS"),
+        // YYYY
+        YYYYMMDD_HH24_MM("yyyyMMdd HH:mm"),
+        YYYY_MM_DD_HH24_MM("yyyy-MM-dd HH:mm"),
+        YYYYMMDDHH24MMSS("yyyyMMddHHmmss"),
+        YYYYMMDDHH24MMSSSSS("yyyyMMddHHmmssSSS"),
+        YYYYMMDD_HH24_MM_SS("yyyyMMdd HH:mm:ss"),
+        YYYYMMDD_HH24_MM_SS_SSS("yyyyMMdd HH:mm:ss.SSS"),
+        YYYY_MM_DD_HH24_MM_SS("yyyy-MM-dd HH:mm:ss"),
+        YYYY_MM_DD_HH24_MM_SS_SSS("yyyy-MM-dd HH:mm:ss.SSS"),
         // ISO
         YY_MM_DD_HH24_MM_SS_ISO("yy-MM-dd'T'HH:mm:ss"),
         YY_MM_DD_HH24_MM_SS_SSS_ISO("yy-MM-dd'T'HH:mm:ss.SSS"),
@@ -151,26 +149,27 @@ public final class DateUtils {
         }
 
     }
-
-    /**
-     * 生成时间戳
-     *
-     * @return 时间戳
-     * @see #buildTime(LocalDateTime)
-     */
-    public static final String buildTime() {
-        return buildTime(LocalDateTime.now());
+    
+    private DateUtils() {
     }
 
     /**
-     * 生成时间戳
-     *
+     * @return 时间戳
+     * 
+     * @see #buildTime(LocalDateTime)
+     */
+    public static final String buildTime() {
+        return DateUtils.buildTime(LocalDateTime.now());
+    }
+
+    /**
      * @param localDateTime 日期时间
+     * 
      * @return 时间戳
      */
     public static final String buildTime(LocalDateTime localDateTime) {
         if (Objects.isNull(localDateTime)) {
-            return buildTime();
+            return DateUtils.buildTime();
         }
         return DateTimeStyle.YYYYMMDDHH24MMSS.getDateTimeFormatter().format(localDateTime);
     }
@@ -179,6 +178,7 @@ public final class DateUtils {
      * 日期转化
      *
      * @param date Date
+     * 
      * @return LocalDate
      */
     public static final LocalDate toLocalDate(Date date) {
@@ -189,6 +189,7 @@ public final class DateUtils {
      * 日期转化
      *
      * @param date Date
+     * 
      * @return LocalTime
      */
     public static final LocalTime toLocalTime(Date date) {
@@ -199,6 +200,7 @@ public final class DateUtils {
      * 日期转化
      *
      * @param date Date
+     * 
      * @return LocalDateTime
      */
     public static final LocalDateTime toLocalDateTime(Date date) {
@@ -209,6 +211,7 @@ public final class DateUtils {
      * 转换毫秒
      *
      * @param localDateTime LocalDateTime
+     * 
      * @return 毫秒
      */
     public static final long toMilli(LocalDateTime localDateTime) {
@@ -220,6 +223,7 @@ public final class DateUtils {
      *
      * @param localDate LocalDate
      * @param format    格式
+     * 
      * @return 日期字符串
      */
     public static String format(LocalDate localDate, DateStyle format) {
@@ -231,6 +235,7 @@ public final class DateUtils {
      *
      * @param localTime LocalTime
      * @param format    格式
+     * 
      * @return 时间字符串
      */
     public static String format(LocalTime localTime, TimeStyle format) {
@@ -242,6 +247,7 @@ public final class DateUtils {
      *
      * @param localDateTime LocalDateTime
      * @param format        格式
+     * 
      * @return 日期时间字符串
      */
     public static String format(LocalDateTime localDateTime, DateTimeStyle format) {

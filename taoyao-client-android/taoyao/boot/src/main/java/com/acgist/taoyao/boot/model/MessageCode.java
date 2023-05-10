@@ -2,7 +2,7 @@ package com.acgist.taoyao.boot.model;
 
 /**
  * 状态编码
- * <p>
+ * 
  * 1xxx = 前置错误
  * 2xxx = 内部错误
  * 3xxx = 请求错误
@@ -38,7 +38,7 @@ public enum MessageCode {
     CODE_9999("9999", 500, "未知错误");
 
     /**
-     * HTTP状态编码前缀
+     * HTTP Status前缀
      */
     private static final String HTTP_STATUS = "3";
 
@@ -47,7 +47,7 @@ public enum MessageCode {
      */
     private final String code;
     /**
-     * 状态数值
+     * 状态数值（HTTP Status）
      */
     private final Integer status;
     /**
@@ -56,18 +56,19 @@ public enum MessageCode {
     private final String message;
 
     private MessageCode(String code, Integer status, String message) {
-        this.code = code;
-        this.status = status;
+        this.code    = code;
+        this.status  = status;
         this.message = message;
     }
 
     /**
      * @param code 状态编码
+     * 
      * @return 状态编码
      */
     public static final MessageCode of(String code) {
         final MessageCode[] values = MessageCode.values();
-        for (MessageCode value : values) {
+        for (final MessageCode value : values) {
             if (value.code.equals(code)) {
                 return value;
             }
@@ -77,10 +78,11 @@ public enum MessageCode {
 
     /**
      * @param status HTTP Status
+     * 
      * @return 状态编码
      */
     public static final MessageCode of(Integer status) {
-        return of(HTTP_STATUS + status);
+        return MessageCode.of(HTTP_STATUS + status);
     }
 
     public String getCode() {

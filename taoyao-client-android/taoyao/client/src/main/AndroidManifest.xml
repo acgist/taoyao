@@ -22,7 +22,6 @@
                 <action android:name="android.intent.action.HOME" />
                 <action android:name="android.intent.action.MAIN" />
                 <action android:name="android.intent.action.DEFAULT" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -32,13 +31,11 @@
             android:exported="false"
             android:label="@string/title_activity_settings"
             android:theme="@style/Theme.Taoyao" />
-
         <service
             android:name=".MediaService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="mediaProjection" />
-
+            android:foregroundServiceType="camera|location|microphone|mediaProjection" />
         <receiver
             android:name=".TaoyaoReceiver"
             android:enabled="true"

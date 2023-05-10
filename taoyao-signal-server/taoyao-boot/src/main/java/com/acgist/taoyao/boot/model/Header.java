@@ -20,7 +20,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Header implements Serializable {
+public class Header implements Cloneable, Serializable {
 
 	private static final long serialVersionUID = 1L;
 	

@@ -7,7 +7,6 @@ import org.apache.commons.lang3.StringUtils;
 
 import java.io.Serializable;
 
-
 /**
  * 消息
  * 接口、信令、媒体信令通用消息模型
@@ -40,31 +39,22 @@ public class Message implements Cloneable, Serializable {
      * 消息主体
      */
     private Object body;
-
-    /**
-     * @param messageCode 状态编码
-     */
-    public void setCode(MessageCode messageCode) {
-        this.setCode(messageCode, null);
+    
+    public Message() {
     }
 
-    /**
-     * @param messageCode 状态编码
-     * @param message     状态描述
-     *
-     * @return this
-     */
-    public Message setCode(MessageCode messageCode, String message) {
-        this.code = messageCode.getCode();
-        this.message = StringUtils.isEmpty(message) ? messageCode.getMessage() : message;
-        return this;
+    public Message(String code, String message, Header header, Object body) {
+        this.code    = code;
+        this.message = message;
+        this.header  = header;
+        this.body    = body;
     }
 
     /**
      * @return 成功消息
      */
     public static final Message success() {
-        return success(null);
+        return Message.success(null);
     }
 
     /**
@@ -83,7 +73,7 @@ public class Message implements Cloneable, Serializable {
      * @return 失败消息
      */
     public static final Message fail() {
-        return fail(null, null, null);
+        return Message.fail(null, null, null);
     }
 
     /**
@@ -92,7 +82,7 @@ public class Message implements Cloneable, Serializable {
      * @return 失败消息
      */
     public static final Message fail(MessageCode messageCode) {
-        return fail(messageCode, null, null);
+        return Message.fail(messageCode, null, null);
     }
 
     /**
@@ -102,15 +92,16 @@ public class Message implements Cloneable, Serializable {
      * @return 失败消息
      */
     public static final Message fail(MessageCode messageCode, Object body) {
-        return fail(messageCode, null, body);
+        return Message.fail(messageCode, null, body);
     }
 
     /**
      * @param message 状态描述
+     * 
      * @return 失败消息
      */
     public static final Message fail(String message) {
-        return fail(null, message, null);
+        return Message.fail(null, message, null);
     }
 
     /**
@@ -120,7 +111,7 @@ public class Message implements Cloneable, Serializable {
      * @return 失败消息
      */
     public static final Message fail(String message, Object body) {
-        return fail(null, message, body);
+        return Message.fail(null, message, body);
     }
 
     /**
@@ -130,7 +121,7 @@ public class Message implements Cloneable, Serializable {
      * @return 失败消息
      */
     public static final Message fail(MessageCode messageCode, String message) {
-        return fail(messageCode, message, null);
+        return Message.fail(messageCode, message, null);
     }
 
     /**
@@ -153,6 +144,25 @@ public class Message implements Cloneable, Serializable {
     }
 
     /**
+     * @param messageCode 状态编码
+     */
+    public void setCode(MessageCode messageCode) {
+        this.setCode(messageCode, null);
+    }
+
+    /**
+     * @param messageCode 状态编码
+     * @param message     状态描述
+     *
+     * @return this
+     */
+    public Message setCode(MessageCode messageCode, String message) {
+        this.code    = messageCode.getCode();
+        this.message = StringUtils.isEmpty(message) ? messageCode.getMessage() : message;
+        return this;
+    }
+    
+    /**
      * 克隆消息排除消息主体
      *
      * @return 克隆消息
@@ -162,29 +172,22 @@ public class Message implements Cloneable, Serializable {
     }
 
     /**
-     * @return Map消息主体
+     * @return 消息主体
      */
     public <T> T body() {
         return (T) this.body;
     }
 
+    /**
+     * @return 是否成功
+     */
+    public boolean isSuccess() {
+        return CODE_0000.equals(this.code);
+    }
+    
     @Override
     public String toString() {
         return JSONUtils.toJSON(this);
-    }
-
-    public Message() {
-    }
-
-    public Message(String code, String message, Header header, Object body) {
-        this.code = code;
-        this.message = message;
-        this.header = header;
-        this.body = body;
-    }
-
-    public boolean isSuccess() {
-        return CODE_0000.equals(this.code);
     }
 
     public String getCode() {

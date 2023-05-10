@@ -7,7 +7,7 @@ import java.io.Serializable;
  *
  * @author acgist
  */
-public class Header implements Serializable {
+public class Header implements Cloneable, Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -24,18 +24,18 @@ public class Header implements Serializable {
      */
     private String signal;
 
-    @Override
-    public Header clone() {
-        return new Header(this.v, this.id, this.signal);
-    }
-
     public Header() {
     }
 
     public Header(String v, Long id, String signal) {
-        this.v = v;
-        this.id = id;
+        this.v      = v;
+        this.id     = id;
         this.signal = signal;
+    }
+
+    @Override
+    public Header clone() {
+        return new Header(this.v, this.id, this.signal);
     }
 
     public String getV() {

@@ -16,12 +16,11 @@ public final class ListUtils {
     }
 
     /**
+     * @param <T>      集合类型
      * @param list     集合
      * @param function 执行函数
      *
-     * @return 集合首个元素
-     *
-     * @param <T> 集合类型
+     * @return 集合首个元素执行函数返回结果
      */
     public static final <T> T getOnlyOne(List<T> list, Function<T, T> function) {
         if(list == null || list.isEmpty()) {

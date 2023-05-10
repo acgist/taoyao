@@ -21,8 +21,6 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -35,18 +33,19 @@ import java.util.TimeZone;
  */
 public final class JSONUtils {
 
-    private JSONUtils() {
-    }
-
     /**
      * Mapper（线程安全）
      */
-    private static final ObjectMapper MAPPER = buildMapper();
+    private static final ObjectMapper MAPPER = JSONUtils.buildMapper();
+    
+    private JSONUtils() {
+    }
 
     /**
      * Java转JSON
      *
      * @param object Java
+     * 
      * @return JSON
      */
     public static final String toJSON(Object object) {
@@ -65,6 +64,7 @@ public final class JSONUtils {
      *
      * @param <T>  Java类型
      * @param json JSON
+     * 
      * @return Java
      */
     public static final <T> T toJava(String json) {
@@ -85,6 +85,7 @@ public final class JSONUtils {
      * @param <T>   Java类型
      * @param json  JSON
      * @param clazz Java类型
+     * 
      * @return Java
      */
     public static final <T> T toJava(String json, Class<T> clazz) {
@@ -104,6 +105,7 @@ public final class JSONUtils {
      * @param <T>  Java类型
      * @param json JSON
      * @param type Java类型
+     * 
      * @return Java
      */
     public static final <T> T toJava(String json, TypeReference<T> type) {
@@ -123,11 +125,12 @@ public final class JSONUtils {
      * @param <K>  K类型
      * @param <V>  V类型
      * @param json JSON
+     * 
      * @return Map
      */
     public static final <K, V> Map<K, V> toMap(String json) {
         if (Objects.isNull(json)) {
-            return new HashMap<>();
+            return Map.of();
         }
         try {
             return MAPPER.readValue(json, new TypeReference<Map<K, V>>() {
@@ -142,11 +145,12 @@ public final class JSONUtils {
      *
      * @param <T>  元素类型
      * @param json JSON
+     * 
      * @return List
      */
     public static final <T> List<T> toList(String json) {
         if (Objects.isNull(json)) {
-            return new ArrayList<>();
+            return List.of();
         }
         try {
             return MAPPER.readValue(json, new TypeReference<List<T>>() {
@@ -159,14 +163,15 @@ public final class JSONUtils {
     /**
      * JSON转List
      *
-     * @param <T>   元素类型
+     * @param <T>   Java类型
      * @param json  JSON
-     * @param clazz 类型
+     * @param clazz Java类型
+     * 
      * @return List
      */
     public static final <T> List<T> toList(String json, Class<T> clazz) {
         if (Objects.isNull(json)) {
-            return new ArrayList<>();
+            return List.of();
         }
         try {
             return MAPPER.readValue(json, new TypeReference<List<T>>() {
@@ -184,7 +189,7 @@ public final class JSONUtils {
         return mapper
             .setTimeZone(TimeZone.getDefault())
             .setDateFormat(new SimpleDateFormat(DateUtils.DateTimeStyle.YYYY_MM_DD_HH24_MM_SS.getFormat()))
-            .registerModules(buildCustomModule(), buildJavaTimeModule())
+            .registerModules(JSONUtils.buildCustomModule(), JSONUtils.buildJavaTimeModule())
             .disable(SerializationFeature.FAIL_ON_EMPTY_BEANS)
             .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
             .setSerializationInclusion(Include.NON_NULL);
@@ -196,7 +201,7 @@ public final class JSONUtils {
     private static final Module buildCustomModule() {
         final SimpleModule customModule = new SimpleModule("CustomModule");
         // 注意不能转换Long类型数据：请求数据类型变化
-//		customModule.addSerializer(Long.class, ToStringSerializer.instance);
+//      customModule.addSerializer(Long.class, ToStringSerializer.instance);
         return customModule;
     }
 

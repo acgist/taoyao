@@ -1,7 +1,6 @@
 package com.acgist.taoyao.boot.model;
 
 import java.io.Serializable;
-import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -62,43 +61,17 @@ public class Message implements Cloneable, Serializable {
     }
 
     public Message(String code, String message, Header header, Object body) {
-        this.code = code;
+        this.code    = code;
         this.message = message;
-        this.header = header;
-        this.body = body;
+        this.header  = header;
+        this.body    = body;
     }
 	
-	/**
-	 * @param code 状态编码
-	 */
-	public void setCode(String code) {
-		this.code = code;
-	}
-	
-	/**
-	 * @param messageCode 状态编码
-	 */
-	public void setCode(MessageCode messageCode) {
-		this.setCode(messageCode, null);
-	}
-	
-	/**
-	 * @param messageCode 状态编码
-	 * @param message     状态描述
-	 * 
-	 * @return this
-	 */
-	public Message setCode(MessageCode messageCode, String message) {
-		this.code = messageCode.getCode();
-		this.message = StringUtils.isEmpty(message) ? messageCode.getMessage() : message;
-		return this;
-	}
-
 	/**
 	 * @return 成功消息
 	 */
 	public static final Message success() {
-		return success(null);
+		return Message.success(null);
 	}
 
 	/**
@@ -117,7 +90,7 @@ public class Message implements Cloneable, Serializable {
 	 * @return 失败消息
 	 */
 	public static final Message fail() {
-		return fail(null, null, null);
+		return Message.fail(null, null, null);
 	}
 
 	/**
@@ -126,7 +99,7 @@ public class Message implements Cloneable, Serializable {
 	 * @return 失败消息
 	 */
 	public static final Message fail(MessageCode messageCode) {
-		return fail(messageCode, null, null);
+		return Message.fail(messageCode, null, null);
 	}
 
 	/**
@@ -136,7 +109,7 @@ public class Message implements Cloneable, Serializable {
 	 * @return 失败消息
 	 */
 	public static final Message fail(MessageCode messageCode, Object body) {
-		return fail(messageCode, null, body);
+		return Message.fail(messageCode, null, body);
 	}
 	
 	/**
@@ -145,7 +118,7 @@ public class Message implements Cloneable, Serializable {
 	 * @return 失败消息
 	 */
 	public static final Message fail(String message) {
-		return fail(null, message, null);
+		return Message.fail(null, message, null);
 	}
 	
 	/**
@@ -155,7 +128,7 @@ public class Message implements Cloneable, Serializable {
 	 * @return 失败消息
 	 */
 	public static final Message fail(String message, Object body) {
-		return fail(null, message, body);
+		return Message.fail(null, message, body);
 	}
 	
 	/**
@@ -165,7 +138,7 @@ public class Message implements Cloneable, Serializable {
 	 * @return 失败消息
 	 */
 	public static final Message fail(MessageCode messageCode, String message) {
-		return fail(messageCode, message, null);
+		return Message.fail(messageCode, message, null);
 	}
 
 	/**
@@ -186,6 +159,25 @@ public class Message implements Cloneable, Serializable {
 	public Message clone() {
 		return new Message(this.code, this.message, this.header.clone(), this.body);
 	}
+    
+    /**
+     * @param messageCode 状态编码
+     */
+    public void setCode(MessageCode messageCode) {
+        this.setCode(messageCode, null);
+    }
+    
+    /**
+     * @param messageCode 状态编码
+     * @param message     状态描述
+     * 
+     * @return this
+     */
+    public Message setCode(MessageCode messageCode, String message) {
+        this.code    = messageCode.getCode();
+        this.message = StringUtils.isEmpty(message) ? messageCode.getMessage() : message;
+        return this;
+    }
 	
 	/**
 	 * 克隆消息排除消息主体
@@ -197,19 +189,25 @@ public class Message implements Cloneable, Serializable {
 	}
 	
 	/**
-	 * @return Map消息主体
+	 * @return 消息主体
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
-    public Map<String, Object> body() {
-        if(this.body instanceof Map map) {
-            return map;
-        } else if(this.body == null) {
-            return Map.of();
-        } else {
-            throw MessageCodeException.of("信令主体类型错误：" + this.body);
-        }
+    @SuppressWarnings("unchecked")
+    public <T> T body() {
+	    return (T) this.body;
 	}
-	
+    
+    /**
+     * 注解不会自动生成
+     * 
+     * @param code 状态编码
+     */
+    public void setCode(String code) {
+        this.code = code;
+    }
+    
+    /**
+     * @return 是否成功
+     */
     public boolean isSuccess() {
         return CODE_0000.equals(this.code);
     }
