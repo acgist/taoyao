@@ -88,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         Log.i(MainActivity.class.getSimpleName(), "onDestroy");
         super.onDestroy();
+        // 资源释放
     }
 
     /**
@@ -134,6 +135,7 @@ public class MainActivity extends AppCompatActivity {
         if (this.mainHandler != null) {
             return;
         }
+        Log.i(MainActivity.class.getSimpleName(), "拉起媒体服务");
         this.mainHandler = new MainHandler();
         final Context context = this.getApplicationContext();
         final Resources resources = this.getResources();
@@ -155,7 +157,6 @@ public class MainActivity extends AppCompatActivity {
         }
         // 注意：不能使用intent传递
         MediaService.mainHandler = this.mainHandler;
-        Log.i(MainActivity.class.getSimpleName(), "拉起媒体服务");
         final Intent intent = new Intent(this, MediaService.class);
         intent.setAction(MediaService.Action.CONNECT.name());
         this.startService(intent);
@@ -241,6 +242,7 @@ public class MainActivity extends AppCompatActivity {
 
     /**
      * MainHandler
+     * 后台线程和UI线程关联线程Handler
      *
      * @author acgist
      */

@@ -278,6 +278,7 @@ public final class MediaManager {
         if(this.textToSpeech != null) {
             return;
         }
+        Log.i(MediaManager.class.getSimpleName(), "加载TTS");
         this.textToSpeech = new TextToSpeech(context, new MediaManager.TextToSpeechInitListener());
     }
 
