@@ -15,6 +15,7 @@ import android.os.Message;
 import android.util.Log;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.GridLayout;
@@ -33,6 +34,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import org.apache.commons.lang3.RandomUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -46,6 +49,7 @@ public class MainActivity extends AppCompatActivity {
     private MainHandler mainHandler;
     private ActivityMainBinding binding;
     private MediaProjectionManager mediaProjectionManager;
+    private List<ViewGroup.LayoutParams> removeLayoutParams;
     private ActivityResultLauncher<Intent> activityResultLauncher;
 
     @Override
@@ -70,6 +74,7 @@ public class MainActivity extends AppCompatActivity {
         this.binding.record.setOnClickListener(this::record);
         this.binding.settings.setOnClickListener(this::settings);
         this.binding.photograph.setOnClickListener(this::photograph);
+        this.removeLayoutParams = new ArrayList<>();
     }
 
     @Override
@@ -293,18 +298,25 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param message 消息
      */
-    private synchronized void previewVideo(Message message) {
-        final GridLayout video = this.binding.video;
-        final int count        = video.getChildCount();
-        final GridLayout.LayoutParams layoutParams = new GridLayout.LayoutParams(
-            GridLayout.spec(count / 2, 1.0F),
-            GridLayout.spec(count % 2, 1.0F)
-        );
-        layoutParams.width  = 0;
-        layoutParams.height = 0;
-        final SurfaceView surfaceView = (SurfaceView) message.obj;
-        surfaceView.setZ(0F);
-        video.addView(surfaceView, layoutParams);
+    private void previewVideo(Message message) {
+        synchronized (this) {
+            final GridLayout video = this.binding.video;
+            final int count        = video.getChildCount();
+            final ViewGroup.LayoutParams layoutParams;
+            if(this.removeLayoutParams.isEmpty()) {
+                layoutParams = new GridLayout.LayoutParams(
+                    GridLayout.spec(count / 2, 1.0F),
+                    GridLayout.spec(count % 2, 1.0F)
+                );
+                layoutParams.width  = 0;
+                layoutParams.height = 0;
+            } else {
+                layoutParams = this.removeLayoutParams.remove(0);
+            }
+            final SurfaceView surfaceView = (SurfaceView) message.obj;
+            surfaceView.setZ(0F);
+            video.addView(surfaceView, layoutParams);
+        }
     }
 
     /**
@@ -312,14 +324,17 @@ public class MainActivity extends AppCompatActivity {
      *
      * @param message 消息
      */
-    private synchronized void removePreviewVideo(Message message) {
-        final GridLayout video        = this.binding.video;
-        final SurfaceView surfaceView = (SurfaceView) message.obj;
-        final int index = video.indexOfChild(surfaceView);
-        if(index < 0) {
-            return;
+    private void removePreviewVideo(Message message) {
+        synchronized (this) {
+            final GridLayout video        = this.binding.video;
+            final SurfaceView surfaceView = (SurfaceView) message.obj;
+            final int index = video.indexOfChild(surfaceView);
+            if(index < 0) {
+                return;
+            }
+            video.removeViewAt(index);
+            this.removeLayoutParams.add(surfaceView.getLayoutParams());
         }
-        video.removeViewAt(index);
     }
 
 }
