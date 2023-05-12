@@ -53,4 +53,11 @@ public final class IdUtils {
         IdUtils.clientIndex = clientIndex;
     }
 
+    /**
+     * @return 随机INT
+     */
+    public static final int nextInt() {
+        return (int) (System.nanoTime() % Integer.MAX_VALUE);
+    }
+
 }

@@ -2,7 +2,6 @@ package com.acgist.taoyao.client;
 
 import android.Manifest;
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -26,13 +25,11 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
+import com.acgist.taoyao.boot.utils.IdUtils;
 import com.acgist.taoyao.client.databinding.ActivityMainBinding;
 import com.acgist.taoyao.media.MediaManager;
-import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.config.Config;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
-import org.apache.commons.lang3.RandomUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -129,7 +126,7 @@ public class MainActivity extends AppCompatActivity {
         if (Stream.of(permissions).map(this.getApplicationContext()::checkSelfPermission).allMatch(v -> v == PackageManager.PERMISSION_GRANTED)) {
             Log.i(MediaService.class.getSimpleName(), "授权成功");
         } else {
-            ActivityCompat.requestPermissions(this, permissions, RandomUtils.nextInt());
+            ActivityCompat.requestPermissions(this, permissions, IdUtils.nextInt());
         }
     }
 
@@ -142,28 +139,10 @@ public class MainActivity extends AppCompatActivity {
         }
         Log.i(MainActivity.class.getSimpleName(), "拉起媒体服务");
         this.mainHandler = new MainHandler();
-        final Context context = this.getApplicationContext();
-        final Resources resources = this.getResources();
-        final MediaManager mediaManager = MediaManager.getInstance();
-        mediaManager.initContext(
-            this.mainHandler, context,
-            resources.getInteger(R.integer.imageQuantity),
-            resources.getString(R.string.audioQuantity),
-            resources.getString(R.string.videoQuantity),
-            resources.getInteger(R.integer.channelCount),
-            resources.getInteger(R.integer.iFrameInterval),
-            resources.getString(R.string.storagePathImage),
-            resources.getString(R.string.storagePathVideo),
-            resources.getString(R.string.watermark),
-            VideoSourceType.valueOf(resources.getString(R.string.videoSourceType))
-        );
-        if(resources.getBoolean(R.bool.broadcaster)) {
-            mediaManager.initTTS(context);
-        }
         // 注意：不能使用intent传递
-        MediaService.mainHandler = this.mainHandler;
+        MediaService.setMainHandler(this.mainHandler);
         final Intent intent = new Intent(this, MediaService.class);
-        intent.setAction(MediaService.Action.CONNECT.name());
+        intent.setAction(MediaService.Action.LAUNCH.name());
         this.startService(intent);
     }
 
@@ -181,7 +160,7 @@ public class MainActivity extends AppCompatActivity {
                 if (result.getResultCode() == Activity.RESULT_OK) {
                     Log.i(MediaManager.class.getSimpleName(), "屏幕捕获成功");
                     final Intent intent = new Intent(this, MediaService.class);
-                    intent.setAction(MediaService.Action.SCREEN_RECORD.name());
+                    intent.setAction(MediaService.Action.SCREEN_CAPTURE.name());
                     intent.putExtra("data", result.getData());
                     intent.putExtra("code", result.getResultCode());
                     this.startService(intent);

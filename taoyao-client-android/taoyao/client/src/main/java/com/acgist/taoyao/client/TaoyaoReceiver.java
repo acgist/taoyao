@@ -16,7 +16,7 @@ public class TaoyaoReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         Log.i(TaoyaoReceiver.class.getSimpleName(), "onReceive：" + intent.getAction());
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
-            this.launchPreview(context);
+            this.bootTaoyao(context);
         } else {
         }
     }
@@ -26,11 +26,11 @@ public class TaoyaoReceiver extends BroadcastReceiver {
      *
      * @param context 上下文
      */
-    private void launchPreview(Context context) {
-        final Intent intent = new Intent(context, MediaService.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        intent.setAction(MediaService.Action.LAUNCH.name());
-        context.startForegroundService(intent);
+    private void bootTaoyao(Context context) {
+        final Intent serviceIntent = new Intent(context, MediaService.class);
+        serviceIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        serviceIntent.setAction(MediaService.Action.BOOT.name());
+        context.startForegroundService(serviceIntent);
     }
 
 }

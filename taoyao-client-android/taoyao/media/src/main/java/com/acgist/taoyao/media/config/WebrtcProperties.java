@@ -16,8 +16,8 @@ import java.util.List;
 public class WebrtcProperties {
 
     private Boolean encrypt;
-	private WebrtcStunProperties[] stun;
-	private WebrtcTurnProperties[] turn;
+    private WebrtcStunProperties[] stun;
+    private WebrtcTurnProperties[] turn;
 
     @JsonIgnore
     public List<PeerConnection.IceServer> getIceServers() {

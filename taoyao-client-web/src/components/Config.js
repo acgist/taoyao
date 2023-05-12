@@ -1,5 +1,8 @@
 /**
  * 音频默认配置
+ * TODO：MediaStreamTrack.applyConstraints()
+ * 播放音量、采集音量
+ * https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackSettings
  */
 const defaultAudioConfig = {
   // 设备

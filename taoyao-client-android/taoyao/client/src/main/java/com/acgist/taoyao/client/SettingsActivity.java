@@ -87,12 +87,13 @@ public class SettingsActivity extends AppCompatActivity {
         editor.putString("settings.username", username);
         editor.putString("settings.password", password);
         editor.commit();
-        // 重连
-        final Intent intent = new Intent(this, MediaService.class);
-        intent.setAction(MediaService.Action.RECONNECT.name());
-        this.startService(intent);
-        // 返回预览页面
-        this.startActivity(new Intent(this, MainActivity.class));
+        // 重连信令
+        final Intent serviceIntent = new Intent(this, MediaService.class);
+        serviceIntent.setAction(MediaService.Action.RECONNECT.name());
+        this.startService(serviceIntent);
+        // 预览页面
+        final Intent activityIntent = new Intent(this, MainActivity.class);
+        this.startActivity(activityIntent);
         // 结束
         this.finish();
     }

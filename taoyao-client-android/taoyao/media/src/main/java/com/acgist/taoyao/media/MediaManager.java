@@ -210,6 +210,7 @@ public final class MediaManager {
         return
             this.taoyao          != null &&
             this.context         != null &&
+            this.mainHandler     != null &&
             this.mediaProperties != null;
     }
 
@@ -244,6 +245,7 @@ public final class MediaManager {
      * @param iFrameInterval  关键帧频率
      * @param imagePath       图片保存路径
      * @param videoPath       视频保存路径
+     * @param tts             是否加载TTS
      * @param watermark       水印信息
      * @param videoSourceType 视频来源类型
      */
@@ -251,7 +253,7 @@ public final class MediaManager {
         Handler mainHandler, Context context,
         int imageQuantity, String audioQuantity, String videoQuantity,
         int channelCount, int iFrameInterval,
-        String imagePath, String videoPath,
+        String imagePath, String videoPath, boolean tts,
         String watermark, VideoSourceType videoSourceType
     ) {
         this.mainHandler = mainHandler;
@@ -265,6 +267,9 @@ public final class MediaManager {
         this.videoPath = videoPath;
         this.watermark = watermark;
         this.videoSourceType = videoSourceType;
+        if(tts) {
+            this.initTTS(context);
+        }
     }
 
     /**
@@ -274,7 +279,7 @@ public final class MediaManager {
         this.taoyao = taoyao;
     }
 
-    public void initTTS(Context context) {
+    private void initTTS(Context context) {
         if(this.textToSpeech != null) {
             return;
         }

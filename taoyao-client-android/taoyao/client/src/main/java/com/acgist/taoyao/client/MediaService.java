@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Resources;
 import android.graphics.BitmapFactory;
+import android.media.AudioManager;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.Handler;
@@ -19,8 +20,10 @@ import android.widget.Toast;
 
 import androidx.core.app.NotificationCompat;
 
+import com.acgist.taoyao.boot.utils.IdUtils;
 import com.acgist.taoyao.client.signal.Taoyao;
 import com.acgist.taoyao.media.MediaManager;
+import com.acgist.taoyao.media.VideoSourceType;
 import com.acgist.taoyao.media.signal.ITaoyaoListener;
 
 import java.io.File;
@@ -35,6 +38,7 @@ import java.nio.file.Paths;
 public class MediaService extends Service {
 
     static {
+        Log.i(MediaService.class.getSimpleName(), "加载C++库文件");
         System.loadLibrary("taoyao");
         System.loadLibrary("jingle_peerconnection_so");
     }
@@ -46,20 +50,28 @@ public class MediaService extends Service {
      */
     public enum Action {
 
-        // 启动
+        /**
+         * 系统启动
+         */
+        BOOT,
+        /**
+         * 连接信令
+         */
         LAUNCH,
-        // 连接
-        CONNECT,
-        // 重连
+        /**
+         * 重连信令
+         */
         RECONNECT,
-        // 屏幕录制
-        SCREEN_RECORD;
+        /**
+         * 屏幕录制
+         */
+        SCREEN_CAPTURE;
 
     }
 
-    public static Handler mainHandler;
-
     private Taoyao taoyao;
+    private static Handler mainHandler;
+    private static final String TAOYAO = "TAOYAO";
     private final ITaoyaoListener taoyaoListener = new ITaoyaoListener() {
     };
 
@@ -79,6 +91,7 @@ public class MediaService extends Service {
         final Resources resources = this.getResources();
         this.mkdir(resources.getString(R.string.storagePathImage), Environment.DIRECTORY_PICTURES);
         this.mkdir(resources.getString(R.string.storagePathVideo), Environment.DIRECTORY_MOVIES);
+        this.settingAudio();
         this.buildNotificationChannel();
     }
 
@@ -91,16 +104,16 @@ public class MediaService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.i(MediaService.class.getSimpleName(), "onStartCommand：" + intent.getAction());
-        this.cleanAllNotification();
-        if (Action.LAUNCH.name().equals(intent.getAction())) {
-            this.launch(intent);
-            this.openConnect(intent);
-        } else if (Action.CONNECT.name().equals(intent.getAction())) {
-            this.openConnect(intent);
+        if (Action.BOOT.name().equals(intent.getAction())) {
+            this.boot();
+            this.openConnect();
+        } else if (Action.LAUNCH.name().equals(intent.getAction())) {
+            this.launch();
+            this.openConnect();
         } else if (Action.RECONNECT.name().equals(intent.getAction())) {
             this.reconnect();
-        } else if (Action.SCREEN_RECORD.name().equals(intent.getAction())) {
-            this.screenRecord(intent);
+        } else if (Action.SCREEN_CAPTURE.name().equals(intent.getAction())) {
+            this.screenCapture(intent);
         } else {
             Log.w(MediaService.class.getSimpleName(), "未知动作：" + intent.getAction());
         }
@@ -114,20 +127,48 @@ public class MediaService extends Service {
         this.close();
     }
 
-    private void launch(Intent intent) {
-        final Intent notificationIntent = new Intent(this, MediaService.class);
-        final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "TAOYAO")
+    /**
+     * 启动
+     */
+    private void boot() {
+        final Intent activityIntent = new Intent(this, MainActivity.class);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(this, IdUtils.nextInt(), activityIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, TAOYAO)
             .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setLargeIcon(BitmapFactory.decodeResource(this.getResources(), R.mipmap.ic_launcher_foreground))
             .setContentTitle("桃夭后台")
             .setContentText("桃夭正在后台运行")
             .setContentIntent(pendingIntent);
         final Notification notification = notificationBuilder.build();
-        this.startForeground((int) System.currentTimeMillis(), notification);
+        this.startForeground(IdUtils.nextInt(), notification);
     }
 
-    private void openConnect(Intent intent) {
+    /**
+     * 启动
+     */
+    private void launch() {
+        final Context context = this.getApplicationContext();
+        final Resources resources = this.getResources();
+        final MediaManager mediaManager = MediaManager.getInstance();
+        mediaManager.initContext(
+            MediaService.mainHandler, context,
+            resources.getInteger(R.integer.imageQuantity),
+            resources.getString(R.string.audioQuantity),
+            resources.getString(R.string.videoQuantity),
+            resources.getInteger(R.integer.channelCount),
+            resources.getInteger(R.integer.iFrameInterval),
+            resources.getString(R.string.storagePathImage),
+            resources.getString(R.string.storagePathVideo),
+            resources.getBoolean(R.bool.broadcaster),
+            resources.getString(R.string.watermark),
+            VideoSourceType.valueOf(resources.getString(R.string.videoSourceType))
+        );
+    }
+
+    /**
+     * 连接信令
+     */
+    private void openConnect() {
         if (this.taoyao == null) {
             Log.d(MediaService.class.getSimpleName(), "打开信令连接");
             this.connect();
@@ -136,6 +177,9 @@ public class MediaService extends Service {
         }
     }
 
+    /**
+     * 重连信令
+     */
     private void reconnect() {
         Log.d(MediaService.class.getSimpleName(), "重新连接信令");
         this.connect();
@@ -147,15 +191,14 @@ public class MediaService extends Service {
     private synchronized void connect() {
         // 加载配置
         final SharedPreferences sharedPreferences = this.getSharedPreferences("settings", Context.MODE_PRIVATE);
-        final int port = sharedPreferences.getInt("settings.port", 9999);
-        final String host = sharedPreferences.getString("settings.host", "192.168.1.100");
-        final String name = sharedPreferences.getString("settings.name", "移动端");
+        final int port        = sharedPreferences.getInt("settings.port", 9999);
+        final String host     = sharedPreferences.getString("settings.host", "192.168.1.100");
+        final String name     = sharedPreferences.getString("settings.name", "移动端");
         final String clientId = sharedPreferences.getString("settings.clientId", "mobile");
         final String username = sharedPreferences.getString("settings.username", "taoyao");
         final String password = sharedPreferences.getString("settings.password", "taoyao");
+        final Context context     = this.getApplicationContext();
         final Resources resources = this.getResources();
-        // 系统服务
-        final Context context = this.getApplicationContext();
         this.close();
         // 连接信令
         this.taoyao = new Taoyao(
@@ -165,9 +208,31 @@ public class MediaService extends Service {
             this.mainHandler, context, this.taoyaoListener
         );
         MediaManager.getInstance().initTaoyao(this.taoyao);
-        Toast.makeText(this.getApplicationContext(), "连接信令", Toast.LENGTH_SHORT).show();
+        Toast.makeText(context, "连接信令", Toast.LENGTH_SHORT).show();
     }
 
+    /**
+     * 屏幕录制
+     *
+     * @param intent Intent
+     */
+    public void screenCapture(Intent intent) {
+        final Intent activityIntent = new Intent(this, MainActivity.class);
+        final PendingIntent pendingIntent = PendingIntent.getActivity(this, IdUtils.nextInt(), activityIntent, PendingIntent.FLAG_CANCEL_CURRENT);
+        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, TAOYAO)
+            .setSmallIcon(R.mipmap.ic_launcher_foreground)
+            .setLargeIcon(BitmapFactory.decodeResource(this.getResources(), R.mipmap.ic_launcher_foreground))
+            .setContentTitle("录制屏幕")
+            .setContentText("桃夭正在录制屏幕")
+            .setContentIntent(pendingIntent);
+        final Notification notification = notificationBuilder.build();
+        this.startForeground((int) System.currentTimeMillis(), notification);
+        MediaManager.getInstance().initScreen(intent.getParcelableExtra("data"));
+    }
+
+    /**
+     * 关闭连接
+     */
     private synchronized void close() {
         if (this.taoyao == null) {
             return;
@@ -177,22 +242,12 @@ public class MediaService extends Service {
         this.taoyao = null;
     }
 
-    public void screenRecord(Intent intent) {
-        final Intent notificationIntent = new Intent(this, MediaService.class);
-        final PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, notificationIntent, 0);
-        final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, "TAOYAO")
-            .setSmallIcon(R.mipmap.ic_launcher_foreground)
-            .setLargeIcon(BitmapFactory.decodeResource(this.getResources(), R.mipmap.ic_launcher_foreground))
-            // 自动清除
-//          .setAutoCancel(true)
-            .setContentTitle("录制屏幕")
-            .setContentText("桃夭正在录制屏幕")
-            .setContentIntent(pendingIntent);
-        final Notification notification = notificationBuilder.build();
-        this.startForeground((int) System.currentTimeMillis(), notification);
-        MediaManager.getInstance().initScreen(intent.getParcelableExtra("data"));
-    }
-
+    /**
+     * 创建目录
+     *
+     * @param path 路径
+     * @param type 类型
+     */
     private void mkdir(String path, String type) {
         final Path imagePath = Paths.get(
             Environment.getExternalStoragePublicDirectory(type).getAbsolutePath(),
@@ -201,23 +256,42 @@ public class MediaService extends Service {
         final File file = imagePath.toFile();
         if(file.exists()) {
             Log.d(MediaService.class.getSimpleName(), "目录已经存在：" + imagePath);
+        } else if(file.mkdirs()) {
+            Log.d(MediaService.class.getSimpleName(), "新建目录成功：" + imagePath);
         } else {
-            Log.d(MediaService.class.getSimpleName(), "新建文件目录：" + imagePath);
-            file.mkdirs();
+            Log.d(MediaService.class.getSimpleName(), "新建目录失败：" + imagePath);
         }
     }
 
-    private void buildNotificationChannel() {
-        final NotificationChannel channel = new NotificationChannel("TAOYAO", "桃夭通知", NotificationManager.IMPORTANCE_DEFAULT);
-        channel.setShowBadge(false);
-        channel.setDescription("桃夭系统通知");
-        final NotificationManager notificationManager = this.getSystemService(NotificationManager.class);
-        notificationManager.createNotificationChannel(channel);
+    /**
+     * 设置音频
+     */
+    private void settingAudio() {
+        final AudioManager audioManager = this.getApplicationContext().getSystemService(AudioManager.class);
+        Log.i(MediaService.class.getSimpleName(), "当前音频模式：" + audioManager.getMode());
+        Log.i(MediaService.class.getSimpleName(), "当前音频音量：" + audioManager.getStreamVolume(audioManager.getMode()));
+//      Log.i(MediaService.class.getSimpleName(), "当前蓝牙是否打开：" + audioManager.isBluetoothScoOn());
+//      Log.i(MediaService.class.getSimpleName(), "当前耳机是否打开：" + audioManager.isWiredHeadsetOn());
+//      Log.i(MediaService.class.getSimpleName(), "当前电话扬声器是否打开：" + audioManager.isSpeakerphoneOn());
+//      audioManager.setStreamVolume(AudioManager.MODE_IN_COMMUNICATION, audioManager.getStreamMaxVolume(AudioManager.MODE_IN_COMMUNICATION), AudioManager.FLAG_PLAY_SOUND);
     }
 
-    private void cleanAllNotification() {
+    /**
+     * 新建通知通道
+     */
+    private void buildNotificationChannel() {
         final NotificationManager notificationManager = this.getSystemService(NotificationManager.class);
-        notificationManager.cancelAll();
+        final NotificationChannel notificationChannel = new NotificationChannel(TAOYAO, "桃夭通知", NotificationManager.IMPORTANCE_DEFAULT);
+        notificationChannel.setShowBadge(false);
+        notificationChannel.setDescription("桃夭通知");
+        notificationManager.createNotificationChannel(notificationChannel);
+    }
+
+    /**
+     * @param mainHandler MainHandler
+     */
+    public static final void setMainHandler(Handler mainHandler) {
+        MediaService.mainHandler = mainHandler;
     }
 
 }
