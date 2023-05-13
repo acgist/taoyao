@@ -16,14 +16,21 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
  */
 @Protocol
 @Description(
-    body = """
-    {
-        "to": "目标终端ID"
-    }
-    """,
+    body = {
+        """
+        {
+            "to": "目标终端ID"
+        }
+        """,
+        """
+        {
+            "filepath": "图片文件路径"
+        }
+        """
+    },
     flow = {
-        "信令服务->终端",
-        "终端->信令服务->终端"
+        "信令服务->目标终端->信令服务",
+        "终端=>信令服务->目标终端->信令服务->终端"
     }
 )
 public class ControlPhotographProtocol extends ProtocolControlAdapter {

@@ -23,6 +23,7 @@ import com.acgist.taoyao.boot.utils.JSONUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.client.R;
 import com.acgist.taoyao.media.MediaManager;
+import com.acgist.taoyao.media.client.RecordClient;
 import com.acgist.taoyao.media.client.Room;
 import com.acgist.taoyao.media.client.SessionClient;
 import com.acgist.taoyao.media.config.MediaAudioProperties;
@@ -60,17 +61,26 @@ import javax.crypto.spec.SecretKeySpec;
 public final class Taoyao implements ITaoyao {
 
     /**
-     * 端口
+     * 心跳时间
      */
-    private final int port;
-    /**
-     * 地址
-     */
-    private final String host;
+    private static final long HEARTBEAT_DURATION = 30L * 1000;
+
     /**
      * 信令版本
      */
     private final String version;
+    /**
+     * 终端类型
+     */
+    private final String clientType;
+    /**
+     * 信令端口
+     */
+    private final int port;
+    /**
+     * 信令地址
+     */
+    private final String host;
     /**
      * 终端名称
      */
@@ -80,15 +90,11 @@ public final class Taoyao implements ITaoyao {
      */
     private final String clientId;
     /**
-     * 终端类型
-     */
-    private final String clientType;
-    /**
-     * 桃夭帐号
+     * 信令帐号
      */
     private final String username;
     /**
-     * 桃夭密码
+     * 信令密码
      */
     private final String password;
     /**
@@ -124,11 +130,11 @@ public final class Taoyao implements ITaoyao {
      */
     private final Cipher decrypt;
     /**
-     * Handler
+     * MainHandler
      */
     private final Handler mainHandler;
     /**
-     * 服务上下文
+     * 上下文
      */
     private final Context context;
     /**
@@ -136,7 +142,7 @@ public final class Taoyao implements ITaoyao {
      */
     private final ITaoyaoListener taoyaoListener;
     /**
-     * Wifi管理器
+     * WIFI管理器
      */
     private final WifiManager wifiManager;
     /**
@@ -152,11 +158,8 @@ public final class Taoyao implements ITaoyao {
      */
     private final LocationManager locationManager;
     /**
-     * 请求消息：同步消息
-     */
-    private final Map<Long, Message> requestMessage;
-    /**
      * 消息Handler
+     * 接收消息、重连信令
      */
     private final Handler messageHandler;
     /**
@@ -165,6 +168,7 @@ public final class Taoyao implements ITaoyao {
     private final HandlerThread messageThread;
     /**
      * 执行Handler
+     * 处理接收信令消息
      */
     private final Handler executeHandler;
     /**
@@ -180,9 +184,13 @@ public final class Taoyao implements ITaoyao {
      */
     private final HandlerThread heartbeatThread;
     /**
-     * 媒体来源管理器
+     * 媒体管理器
      */
     private final MediaManager mediaManager;
+    /**
+     * 请求消息：同步消息
+     */
+    private final Map<Long, Message> requestMessage;
     /**
      * 视频房间列表
      */
@@ -196,52 +204,85 @@ public final class Taoyao implements ITaoyao {
      */
     public static Taoyao taoyao;
 
+    /**
+     * @param version        信令版本
+     * @param clientType     终端类型
+     * @param port           信令端口
+     * @param host           信令地址
+     * @param name           终端名称
+     * @param clientId       终端ID
+     * @param username       信令帐号
+     * @param password       信令密码
+     * @param timeout        超时时间
+     * @param algo           加密算法
+     * @param secret         加密密钥
+     * @param mainHandler    MainHandler
+     * @param context        上下文
+     * @param taoyaoListener 桃夭监听
+     */
     public Taoyao(
-        int port, String host, String version,
-        String name, String clientId, String clientType, String username, String password,
+        String version, String clientType, int port, String host,
+        String name, String clientId, String username, String password,
         int timeout, String algo, String secret,
         Handler mainHandler, Context context, ITaoyaoListener taoyaoListener
     ) {
-        this.close = false;
-        this.connect = false;
-        this.port = port;
-        this.host = host;
-        this.version = version;
-        this.name = name;
-        this.clientId = clientId;
+        this.close      = false;
+        this.connect    = false;
+        this.version    = version;
         this.clientType = clientType;
-        this.username = username;
-        this.password = password;
-        this.timeout = timeout;
+        this.port       = port;
+        this.host       = host;
+        this.name       = name;
+        this.clientId   = clientId;
+        this.username   = username;
+        this.password   = password;
+        this.timeout    = timeout;
         final boolean plaintext = algo == null || algo.isEmpty() || algo.equals("PLAINTEXT");
-        this.encrypt = plaintext ? null : this.buildCipher(Cipher.ENCRYPT_MODE, algo, secret);
-        this.decrypt = plaintext ? null : this.buildCipher(Cipher.DECRYPT_MODE, algo, secret);
-        this.mainHandler = mainHandler;
-        this.context = context;
-        this.taoyaoListener = taoyaoListener;
-        this.wifiManager = context.getSystemService(WifiManager.class);
-        this.powerManager = context.getSystemService(PowerManager.class);
-        this.batteryManager = context.getSystemService(BatteryManager.class);
-        this.locationManager = context.getSystemService(LocationManager.class);
-        this.requestMessage = new ConcurrentHashMap<>();
-        this.messageThread = new HandlerThread("MessageThread");
-        this.messageThread.setDaemon(true);
-        this.messageThread.start();
-        this.messageHandler = new Handler(this.messageThread.getLooper());
-        this.messageHandler.post(this::connect);
-        this.executeThread = new HandlerThread("ExecuteThread");
-        this.executeThread.setDaemon(true);
-        this.executeThread.start();
-        this.executeHandler = new Handler(this.executeThread.getLooper());
-        this.heartbeatThread = new HandlerThread("HeartbeatThread");
-        this.heartbeatThread.setDaemon(true);
-        this.heartbeatThread.start();
+        this.encrypt    = plaintext ? null : this.buildCipher(Cipher.ENCRYPT_MODE, algo, secret);
+        this.decrypt    = plaintext ? null : this.buildCipher(Cipher.DECRYPT_MODE, algo, secret);
+        this.mainHandler      = mainHandler;
+        this.context          = context;
+        this.taoyaoListener   = taoyaoListener;
+        this.wifiManager      = context.getSystemService(WifiManager.class);
+        this.powerManager     = context.getSystemService(PowerManager.class);
+        this.batteryManager   = context.getSystemService(BatteryManager.class);
+        this.locationManager  = context.getSystemService(LocationManager.class);
+        this.messageThread    = this.buildHandlerThread("MessageThread");
+        this.messageHandler   = new Handler(this.messageThread.getLooper());
+        this.executeThread    = this.buildHandlerThread("ExecuteThread");
+        this.executeHandler   = new Handler(this.executeThread.getLooper());
+        this.heartbeatThread  = this.buildHandlerThread("HeartbeatThread");
         this.heartbeatHandler = new Handler(this.heartbeatThread.getLooper());
-        this.heartbeatHandler.postDelayed(this::heartbeat, 30L * 1000);
-        this.mediaManager = MediaManager.getInstance();
-        this.rooms = new ConcurrentHashMap<>();
-        this.sessions = new ConcurrentHashMap<>();
-        Taoyao.taoyao = this;
+        this.mediaManager     = MediaManager.getInstance();
+        this.requestMessage   = new ConcurrentHashMap<>();
+        this.rooms            = new ConcurrentHashMap<>();
+        this.sessions         = new ConcurrentHashMap<>();
+        Taoyao.taoyao         = this;
+        // 开始连接
+        this.messageHandler.post(this::connect);
+        // 开始心跳
+        this.heartbeatHandler.postDelayed(this::clientHeartbeat, HEARTBEAT_DURATION);
+    }
+
+    /**
+     * @param port     信令端口
+     * @param host     信令地址
+     * @param name     终端名称
+     * @param clientId 终端ID
+     * @param username 信令帐号
+     * @param password 信令密码
+     *
+     * @return 是否需要重连信令
+     */
+    public boolean needReconnect(int port, String host, String name, String clientId, String username, String password) {
+        return !(
+            port == this.port              &&
+            host.equals(this.host)         &&
+            name.equals(this.name)         &&
+            clientId.equals(this.clientId) &&
+            username.equals(this.username) &&
+            password.equals(this.password)
+        );
     }
 
     /**
@@ -249,22 +290,36 @@ public final class Taoyao implements ITaoyao {
      * @param name   算法名称
      * @param secret 密钥
      *
-     * @return 加解密工具
+     * @return 加密解密工具
      */
     private Cipher buildCipher(int mode, String name, String secret) {
         try {
-            final String algo = name.equals("DES") ? "DES/ECB/PKCS5Padding" : "AES/ECB/PKCS5Padding";
+            final String algo   = "DES".equals(name) ? "DES/ECB/PKCS5Padding" : "AES/ECB/PKCS5Padding";
             final Cipher cipher = Cipher.getInstance(algo);
             cipher.init(mode, new SecretKeySpec(Base64.getMimeDecoder().decode(secret), name));
             return cipher;
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException e) {
-            Log.e(Taoyao.class.getSimpleName(), "创建加解密工具异常", e);
+            Log.e(Taoyao.class.getSimpleName(), "创建加密解密工具异常", e);
         }
         return null;
     }
 
     /**
+     * @param name 线程名称
+     *
+     * @return 线程
+     */
+    private HandlerThread buildHandlerThread(String name) {
+        final HandlerThread handlerThread = new HandlerThread(name);
+        handlerThread.setDaemon(true);
+        handlerThread.start();
+        return handlerThread;
+    }
+
+    /**
      * 连接信令
+     *
+     * @returns 是否连接成功
      */
     public synchronized boolean connect() {
         if(this.close) {
@@ -273,7 +328,7 @@ public final class Taoyao implements ITaoyao {
         // 释放连接
         this.disconnect();
         // 开始连接
-        Log.d(Taoyao.class.getSimpleName(), "连接信令：" + this.host + ":" + this.port);
+        Log.i(Taoyao.class.getSimpleName(), "连接信令：" + this.host + ":" + this.port);
         this.socket = new Socket();
         this.taoyaoListener.onConnect();
         try {
@@ -282,8 +337,8 @@ public final class Taoyao implements ITaoyao {
             this.socket.connect(new InetSocketAddress(this.host, this.port), this.timeout);
             if (this.socket.isConnected()) {
                 this.connect = true;
-                this.input = this.socket.getInputStream();
-                this.output = this.socket.getOutputStream();
+                this.input   = this.socket.getInputStream();
+                this.output  = this.socket.getOutputStream();
                 this.clientRegister();
                 this.taoyaoListener.onConnected();
                 this.messageHandler.post(this::pull);
@@ -303,13 +358,12 @@ public final class Taoyao implements ITaoyao {
      * 循环读取信令消息
      */
     private void pull() {
-        int length = 0;
-        short messageLength = 0;
-        final byte[] bytes = new byte[1024];
+        int length              = 0;
+        short messageLength     = 0;
+        final byte[] bytes      = new byte[1024];
         final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
         while (!this.close && this.connect) {
             try {
-                // 读取
                 while (!this.close && (length = this.input.read(bytes)) >= 0) {
                     buffer.put(bytes, 0, length);
                     while (buffer.position() > 0) {
@@ -337,7 +391,7 @@ public final class Taoyao implements ITaoyao {
                                 buffer.compact();
                                 final String content = new String(this.decrypt.doFinal(message));
                                 try {
-                                    Taoyao.this.on(content);
+                                    this.on(content);
                                 } catch (Exception e) {
                                     Log.e(Taoyao.class.getSimpleName(), "处理信令异常：" + content, e);
                                     this.taoyaoListener.onError(e);
@@ -360,32 +414,29 @@ public final class Taoyao implements ITaoyao {
      * @param message 原始消息
      *
      * @return 加密消息
+     *
+     * @throws BadPaddingException       错误填充
+     * @throws IllegalBlockSizeException 错误大小
      */
-    private byte[] encrypt(Message message) {
+    private byte[] encrypt(Message message) throws BadPaddingException, IllegalBlockSizeException {
         final byte[] bytes = message.toString().getBytes();
-        if (this.encrypt != null) {
-            try {
-                // 加密
-                final byte[] encryptBytes = this.encrypt.doFinal(bytes);
-                // 编码
-                final ByteBuffer buffer = ByteBuffer.allocateDirect(Short.BYTES + encryptBytes.length);
-                buffer.putShort((short) encryptBytes.length);
-                buffer.put(encryptBytes);
-                buffer.flip();
-                // 编码
-                final byte[] encodingBytes = new byte[buffer.capacity()];
-                buffer.get(encodingBytes);
-                return encodingBytes;
-            } catch (IllegalBlockSizeException | BadPaddingException e) {
-                Log.e(Taoyao.class.getSimpleName(), "加密异常：" + message, e);
-            }
+        if (this.encrypt == null) {
+            return bytes;
         }
-        return bytes;
+        final byte[] encryptBytes  = this.encrypt.doFinal(bytes);
+        final ByteBuffer buffer    = ByteBuffer.allocateDirect(Short.BYTES + encryptBytes.length);
+        final byte[] encodingBytes = new byte[buffer.capacity()];
+        buffer.putShort((short) encryptBytes.length);
+        buffer.put(encryptBytes);
+        buffer.flip();
+        buffer.get(encodingBytes);
+        return encodingBytes;
     }
 
     /**
      * @param message 信令消息
      */
+    @Override
     public void push(Message message) {
         if (this.output == null) {
             Log.w(Taoyao.class.getSimpleName(), "通道没有打开：" + message);
@@ -406,8 +457,16 @@ public final class Taoyao implements ITaoyao {
      */
     @Override
     public Message request(Message request) {
+        if(request == null) {
+            Log.w(Taoyao.class.getSimpleName(), "信令消息错误：" + request);
+            return null;
+        }
         final Header header = request.getHeader();
-        final Long id = header.getId();
+        if(header == null) {
+            Log.w(Taoyao.class.getSimpleName(), "信令消息错误：" + request);
+            return null;
+        }
+        final Long id       = header.getId();
         this.requestMessage.put(id, request);
         synchronized (request) {
             this.push(request);
@@ -432,32 +491,34 @@ public final class Taoyao implements ITaoyao {
         if(!this.connect) {
             return;
         }
+        Log.i(Taoyao.class.getSimpleName(), "释放信令：" + this.host + ":" + this.port);
         this.taoyaoListener.onDisconnect();
-        Log.d(Taoyao.class.getSimpleName(), "释放信令：" + this.host + ":" + this.port);
         this.connect = false;
         CloseableUtils.close(this.input);
         CloseableUtils.close(this.output);
         CloseableUtils.close(this.socket);
-        this.input = null;
+        this.input  = null;
         this.output = null;
         this.socket = null;
         this.closeRoomMedia();
         this.closeSessionMedia();
     }
 
+    /**
+     * 释放所有视频房间
+     */
     private void closeRoomMedia() {
         Log.i(Taoyao.class.getSimpleName(), "释放所有视频房间");
-        this.rooms.forEach((k, v) -> {
-            v.close();
-        });
+        this.rooms.forEach((k, v) -> v.close());
         this.rooms.clear();
     }
 
+    /**
+     * 释放所有视频会话
+     */
     private void closeSessionMedia() {
         Log.i(Taoyao.class.getSimpleName(), "释放所有视频会话");
-        this.sessions.forEach((k, v) -> {
-            v.close();
-        });
+        this.sessions.forEach((k, v) -> v.close());
         this.sessions.clear();
     }
 
@@ -468,14 +529,12 @@ public final class Taoyao implements ITaoyao {
         if(this.close) {
             return;
         }
-        Log.d(Taoyao.class.getSimpleName(), "关闭信令：" + this.host + ":" + this.port);
+        Log.i(Taoyao.class.getSimpleName(), "关闭信令：" + this.host + ":" + this.port);
         this.close = true;
         this.disconnect();
         this.heartbeatThread.quitSafely();
         this.messageThread.quitSafely();
         this.executeThread.quitSafely();
-        this.rooms.values().forEach(Room::close);
-        this.sessions.values().forEach(SessionClient::close);
     }
 
     /**
@@ -484,7 +543,7 @@ public final class Taoyao implements ITaoyao {
      *
      * @return 消息
      */
-    public Message buildMessage(String signal, Object... args) {
+    public Message buildMessage(String signal, Object ... args) {
         final Map<Object, Object> map = new HashMap<>();
         if (ArrayUtils.isNotEmpty(args)) {
             for (int index = 0; index < args.length; index += 2) {
@@ -520,16 +579,18 @@ public final class Taoyao implements ITaoyao {
     private void on(String content) {
         final Message message = JSONUtils.toJava(content, Message.class);
         if (message == null) {
+            Log.w(Taoyao.class.getSimpleName(), "信令消息错误：" + content);
             return;
         }
         final Header header = message.getHeader();
         if (header == null) {
+            Log.w(Taoyao.class.getSimpleName(), "信令消息错误：" + content);
             return;
         }
         final Long id = header.getId();
         final Message request = this.requestMessage.get(id);
         if (request != null) {
-            Log.d(Taoyao.class.getSimpleName(), "处理信令响应：" + content);
+            Log.i(Taoyao.class.getSimpleName(), "处理信令响应：" + content);
             // 同步处理：重新设置响应消息
             this.requestMessage.put(id, message);
             // 唤醒等待线程
@@ -537,257 +598,436 @@ public final class Taoyao implements ITaoyao {
                 request.notifyAll();
             }
         } else {
-            Log.d(Taoyao.class.getSimpleName(), "处理信令异步：" + content);
+            Log.i(Taoyao.class.getSimpleName(), "处理信令异步：" + content);
             this.executeHandler.post(() -> {
                 try {
                     this.dispatch(content, header, message);
                 } catch (Exception e) {
                     Log.e(Taoyao.class.getSimpleName(), "处理信令异常：" + content, e);
+                    this.taoyaoListener.onError(e);
                 }
             });
         }
     }
 
+    /**
+     * @param content 信令原始消息
+     * @param header  信令消息头部
+     * @param message 信令消息
+     */
     private void dispatch(final String content, final Header header, final Message message) {
         if(this.taoyaoListener.preOnMessage(message)) {
             return;
         }
         switch (header.getSignal()) {
-            case "control::config::audio"                     -> this.controlConfigAudio(message, message.body());
-            case "control::config::video"                     -> this.controlConfigVideo(message, message.body());
-            case "control::photograph"                        -> this.controlPhotograph(message, message.body());
-            case "control::record"                            -> this.controlRecord(message, message.body());
-            case "client::config"                             -> this.clientConfig(message, message.body());
-            case "client::register"                           -> this.clientRegister(message, message.body());
-            case "client::reboot"                             -> this.clientReboot(message, message.body());
-            case "client::shutdown"                           -> this.clientShutdown(message, message.body());
-            case "media::consume"                             -> this.mediaConsume(message, message.body());
-            case "media::audio::volume"                       -> this.mediaAudioVolume(message, message.body());
-            case "media::consumer::close"                     -> this.mediaConsumerClose(message, message.body());
-            case "media::consumer::pause"                     -> this.mediaConsumerPause(message, message.body());
-            case "media::consumer::request::key::frame"       -> this.mediaConsumerRequestKeyFrame(message, message.body());
-            case "media::consumer::resume"                    -> this.mediaConsumerResume(message, message.body());
-            case "media::consumer::set::preferred::layers"    -> this.mediaConsumerSetPreferredLayers(message, message.body());
-            case "media::consumer::status"                    -> this.mediaConsumerStatus(message, message.body());
-            case "media::producer::close"                     -> this.mediaProducerClose(message, message.body());
-            case "media::producer::pause"                     -> this.mediaProducerPause(message, message.body());
-            case "media::producer::resume"                    -> this.mediaProducerResume(message, message.body());
-            case "media::producer::video::orientation:change" -> this.mediaVideoOrientationChange(message, message.body());
-            case "room::client::list"                         -> this.roomClientList(message, message.body());
-            case "room::close"                                -> this.roomClose(message, message.body());
-            case "room::enter"                                -> this.roomEnter(message, message.body());
-            case "room::expel"                                -> this.roomExpel(message, message.body());
-            case "room::invite"                               -> this.roomInivte(message, message.body());
-            case "room::leave"                                -> this.roomLeave(message, message.body());
-            case "session::call"                              -> this.sessionCall(message, message.body());
-            case "session::close"                             -> this.sessionClose(message, message.body());
-            case "session::exchange"                          -> this.sessionExchange(message, message.body());
-            case "session::pause"                             -> this.sessionPause(message, message.body());
-            case "session::resume"                            -> this.sessionResume(message, message.body());
-            default                                           -> Log.d(Taoyao.class.getSimpleName(), "没有适配信令：" + content);
+            case "client::config"                          -> this.clientConfig(message, message.body());
+            case "client::reboot"                          -> this.clientReboot(message, message.body());
+            case "client::register"                        -> this.clientRegister(message, message.body());
+            case "client::shutdown"                        -> this.clientShutdown(message, message.body());
+            case "control::config::audio"                  -> this.controlConfigAudio(message, message.body());
+            case "control::config::video"                  -> this.controlConfigVideo(message, message.body());
+            case "control::photograph"                     -> this.controlPhotograph(message, message.body());
+            case "control::record"                         -> this.controlRecord(message, message.body());
+            case "media::audio::volume"                    -> this.mediaAudioVolume(message, message.body());
+            case "media::consume"                          -> this.mediaConsume(message, message.body());
+            case "media::consumer::close"                  -> this.mediaConsumerClose(message, message.body());
+            case "media::consumer::pause"                  -> this.mediaConsumerPause(message, message.body());
+            case "media::consumer::request::key::frame"    -> this.mediaConsumerRequestKeyFrame(message, message.body());
+            case "media::consumer::resume"                 -> this.mediaConsumerResume(message, message.body());
+            case "media::consumer::set::preferred::layers" -> this.mediaConsumerSetPreferredLayers(message, message.body());
+            case "media::consumer::status"                 -> this.mediaConsumerStatus(message, message.body());
+            case "media::producer::close"                  -> this.mediaProducerClose(message, message.body());
+            case "media::producer::pause"                  -> this.mediaProducerPause(message, message.body());
+            case "media::producer::resume"                 -> this.mediaProducerResume(message, message.body());
+            case "media::video::orientation::change"       -> this.mediaVideoOrientationChange(message, message.body());
+            case "room::client::list"                      -> this.roomClientList(message, message.body());
+            case "room::close"                             -> this.roomClose(message, message.body());
+            case "room::enter"                             -> this.roomEnter(message, message.body());
+            case "room::expel"                             -> this.roomExpel(message, message.body());
+            case "room::invite"                            -> this.roomInivte(message, message.body());
+            case "room::leave"                             -> this.roomLeave(message, message.body());
+            case "session::call"                           -> this.sessionCall(message, message.body());
+            case "session::close"                          -> this.sessionClose(message, message.body());
+            case "session::exchange"                       -> this.sessionExchange(message, message.body());
+            case "session::pause"                          -> this.sessionPause(message, message.body());
+            case "session::resume"                         -> this.sessionResume(message, message.body());
+            default                                        -> Log.d(Taoyao.class.getSimpleName(), "没有适配信令：" + content);
         }
         this.taoyaoListener.postOnMessage(message);
     }
 
     /**
-     * 注册
-     */
-    private void clientRegister() {
-        final Location location = this.location();
-        this.push(this.buildMessage(
-            "client::register",
-            "username", this.username,
-            "password", this.password,
-            "name", this.name,
-            "clientId", this.clientId,
-            "clientType", this.clientType,
-            "latitude", location == null ? -1 : location.getLatitude(),
-            "longitude", location == null ? -1 : location.getLongitude(),
-            "signal", this.signal(),
-            "battery", this.battery(),
-            "charging", this.charging(),
-            "recording", this.mediaManager.isRecording()
-        ));
-    }
-
-    private void controlConfigAudio(Message message, Map<String, Object> body) {
-        final MediaAudioProperties mediaAudioProperties = JSONUtils.toJava(JSONUtils.toJSON(body), MediaAudioProperties.class);
-        this.mediaManager.updateAudioConfig(mediaAudioProperties);
-
-    }
-
-    private void controlConfigVideo(Message message, Map<String, Object> body) {
-        final MediaVideoProperties mediaVideoProperties = JSONUtils.toJava(JSONUtils.toJSON(body), MediaVideoProperties.class);
-        this.mediaManager.updateVideoConfig(mediaVideoProperties);
-    }
-
-    private void controlPhotograph(Message message, Map<String, Object> body) {
-        this.mediaManager.photograph();
-    }
-
-    private void controlRecord(Message message, Map<String, Object> body) {
-        final Boolean enabled = MapUtils.getBoolean(body, "enabled");
-        if(Boolean.TRUE.equals(enabled)) {
-            this.mediaManager.startRecord();
-        } else {
-            this.mediaManager.stopRecord();
-        }
-        body.put("enabled", enabled);
-        this.push(message);
-    }
-
-    /**
-     * @param message 消息
-     * @param body    消息主体
+     * 配置终端
+     *
+     * @param message 信令消息
+     * @param body    信令主体
      */
     private void clientConfig(Message message, Map<String, Object> body) {
-        final MediaProperties mediaProperties = JSONUtils.toJava(JSONUtils.toJSON(body.get("media")), MediaProperties.class);
+        final MediaProperties mediaProperties   = JSONUtils.toJava(JSONUtils.toJSON(body.get("media")), MediaProperties.class);
         this.mediaManager.updateMediaConfig(mediaProperties);
         final WebrtcProperties webrtcProperties = JSONUtils.toJava(JSONUtils.toJSON(body.get("webrtc")), WebrtcProperties.class);
         this.mediaManager.updateWebrtcConfig(webrtcProperties);
     }
 
     /**
+     * 终端心跳信令
+     */
+    private void clientHeartbeat() {
+        this.heartbeatHandler.postDelayed(this::clientHeartbeat, HEARTBEAT_DURATION);
+        if(this.close || !this.connect) {
+            return;
+        }
+        final Location location = this.location();
+        this.push(this.buildMessage(
+            "client::heartbeat",
+            "latitude",  location == null ? -1 : location.getLatitude(),
+            "longitude", location == null ? -1 : location.getLongitude(),
+            "signal",    this.signal(),
+            "battery",   this.battery(),
+            "charging",  this.charging(),
+            "recording", this.mediaManager.isRecording()
+        ));
+    }
+
+    /**
+     * 重启终端
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
+    @SuppressLint("MissingPermission")
+    private void clientReboot(Message message, Map<String, Object> body) {
+        Log.i(Taoyao.class.getSimpleName(), "系统重启");
+        this.powerManager.reboot("系统重启");
+        Process.killProcess(Process.myPid());
+    }
+
+    /**
+     * 终端注册
+     */
+    private void clientRegister() {
+        final Location location = this.location();
+        this.push(this.buildMessage(
+            "client::register",
+            "name",       this.name,
+            "clientId",   this.clientId,
+            "clientType", this.clientType,
+            "username",   this.username,
+            "password",   this.password,
+            "latitude",  location == null ? -1 : location.getLatitude(),
+            "longitude", location == null ? -1 : location.getLongitude(),
+            "signal",    this.signal(),
+            "battery",   this.battery(),
+            "charging",  this.charging(),
+            "recording", this.mediaManager.isRecording()
+        ));
+    }
+
+    /**
+     * 终端注册
+     *
      * @param message 消息
      * @param body    消息主体
      */
     private void clientRegister(Message message, Map<String, Object> body) {
-        final Integer index = (Integer) body.get("index");
+        final Integer index = MapUtils.getInteger(body, "index");
         if (index == null) {
             return;
         }
         IdUtils.setClientIndex(index);
     }
 
-    private void clientReboot(Message message, Map<String, Object> body) {
-        Log.i(Taoyao.class.getSimpleName(), "系统重启");
-//      this.powerManager.reboot("系统重启");
-        Process.killProcess(Process.myPid());
-    }
-
+    /**
+     * 关闭终端
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
+    @SuppressLint("MissingPermission")
     private void clientShutdown(Message message, Map<String, Object> body) {
         Log.i(Taoyao.class.getSimpleName(), "系统关机");
-        // 自行实现
-//      this.powerManager.reboot("系统关机");
+        this.powerManager.reboot("系统关机");
         Process.killProcess(Process.myPid());
     }
 
+    /**
+     * 更新音频配置
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
+    private void controlConfigAudio(Message message, Map<String, Object> body) {
+        final MediaAudioProperties mediaAudioProperties = JSONUtils.toJava(JSONUtils.toJSON(body), MediaAudioProperties.class);
+        this.mediaManager.updateAudioConfig(mediaAudioProperties);
+    }
+
+    /**
+     * 更新视频配置
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
+    private void controlConfigVideo(Message message, Map<String, Object> body) {
+        final MediaVideoProperties mediaVideoProperties = JSONUtils.toJava(JSONUtils.toJSON(body), MediaVideoProperties.class);
+        this.mediaManager.updateVideoConfig(mediaVideoProperties);
+    }
+
+    /**
+     * 拍照
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
+    private void controlPhotograph(Message message, Map<String, Object> body) {
+        final String filepath = this.mediaManager.photograph();
+        body.put("filepath", filepath);
+        this.push(message);
+    }
+
+    /**
+     * 录制
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
+    private void controlRecord(Message message, Map<String, Object> body) {
+        String filepath;
+        final Boolean enabled = MapUtils.getBoolean(body, "enabled");
+        if(Boolean.TRUE.equals(enabled)) {
+            final RecordClient recordClient = this.mediaManager.startRecord();
+            filepath = recordClient.getFilepath();
+        } else {
+            filepath = this.mediaManager.stopRecord();
+        }
+        body.put("enabled", enabled);
+        body.put("filepath", filepath);
+        this.push(message);
+    }
+
+    /**
+     * 远程音量
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
+    private void mediaAudioVolume(Message message, Map<String, Object> body) {
+        // TODO：如果需要显示音量
+    }
+
+    /**
+     * 消费媒体信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void mediaConsume(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
-        final Room room = this.rooms.get(roomId);
+        final Room room     = this.rooms.get(roomId);
         if(room == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
             return;
         }
         room.mediaConsume(message, body);
     }
 
-    private void mediaAudioVolume(Message message, Map<String, Object> body) {
-
-    }
-
+    /**
+     * 关闭消费者信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void mediaConsumerClose(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
-        final Room room = this.rooms.get(roomId);
+        final Room room     = this.rooms.get(roomId);
         if(room == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
             return;
         }
         room.mediaConsumerClose(body);
     }
 
+    /**
+     * 暂停消费者信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void mediaConsumerPause(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
-        final Room room = this.rooms.get(roomId);
+        final Room room     = this.rooms.get(roomId);
         if(room == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
             return;
         }
         room.mediaConsumerPause(body);
     }
 
+    /**
+     * 请求关键帧信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void mediaConsumerRequestKeyFrame(Message message, Map<String, Object> body) {
 
     }
 
+    /**
+     * 恢复消费者信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void mediaConsumerResume(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
-        final Room room = this.rooms.get(roomId);
+        final Room room     = this.rooms.get(roomId);
         if(room == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
             return;
         }
         room.mediaConsumerResume(body);
     }
 
+    /**
+     * 修改最佳空间层和时间层信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void mediaConsumerSetPreferredLayers(Message message, Map<String, Object> body) {
 
     }
 
+    /**
+     * 查询消费者状态信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void mediaConsumerStatus(Message message, Map<String, Object> body) {
 
     }
 
+    /**
+     * 关闭生产者信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void mediaProducerClose(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
-        final Room room = this.rooms.get(roomId);
+        final Room room     = this.rooms.get(roomId);
         if(room == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
             return;
         }
         room.mediaProducerClose(body);
     }
 
+    /**
+     * 暂停生产者信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void mediaProducerPause(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
-        final Room room = this.rooms.get(roomId);
+        final Room room     = this.rooms.get(roomId);
         if(room == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
             return;
         }
         room.mediaProducerPause(body);
     }
 
-    private void mediaVideoOrientationChange(Message message, Map<String, Object> body) {
-
-    }
-
+    /**
+     * 恢复生产者信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void mediaProducerResume(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
-        final Room room = this.rooms.get(roomId);
+        final Room room     = this.rooms.get(roomId);
         if(room == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
             return;
         }
         room.mediaProducerResume(body);
     }
 
+    /**
+     * 视频方向变化信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
+    private void mediaVideoOrientationChange(Message message, Map<String, Object> body) {
+
+    }
+
+    /**
+     * 房间终端列表信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void roomClientList(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
-        final Room room = this.rooms.get(roomId);
+        final Room room     = this.rooms.get(roomId);
         if(room == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
             return;
         }
         room.newRemoteClientFromRoomClientList(body);
     }
 
+    /**
+     * 关闭房间信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void roomClose(Message message, Map<String, Object> body) {
-        final String roomId   = MapUtils.get(body, "roomId");
-        final Room room = this.rooms.remove(roomId);
+        final String roomId = MapUtils.get(body, "roomId");
+        final Room room     = this.rooms.remove(roomId);
         if(room == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
             return;
         }
         room.close();
     }
 
+    /**
+     * 进入房间信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void roomEnter(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
-        final Room room = this.rooms.get(roomId);
+        final Room room     = this.rooms.get(roomId);
         if(room == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
             return;
         }
         room.newRemoteClientFromRoomEnter(body);
     }
 
+    /**
+     * 进入房间信令
+     *
+     * @param roomId   房间ID
+     * @param password 房间密码
+     *
+     * @return 房间
+     */
     public Room roomEnter(String roomId, String password) {
         final Resources resources = this.context.getResources();
         final Room room = this.rooms.computeIfAbsent(
             roomId,
             key -> new Room(
-                this.name, key,
+                roomId, this.name,
                 this.clientId, password,
                 this, this.mainHandler,
                 resources.getBoolean(R.bool.preview),
@@ -808,25 +1048,44 @@ public final class Taoyao implements ITaoyao {
             room.mediaProduce();
             return room;
         } else {
+            Log.i(Taoyao.class.getSimpleName(), "进入房间失败：" + roomId);
             this.rooms.remove(roomId);
             return null;
         }
     }
 
+    /**
+     * 踢出房间信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void roomExpel(Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, "roomId");
         this.roomLeave(roomId);
     }
 
+    /**
+     * 邀请终端信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void roomInivte(Message message, Map<String, Object> body) {
         final String roomId   = MapUtils.get(body, "roomId");
         final String password = MapUtils.get(body, "password");
         this.roomEnter(roomId, password);
     }
 
+    /**
+     * 离开房间信令
+     *
+     * @param roomId 房间ID
+     */
     public void roomLeave(String roomId) {
         final Room room = this.rooms.remove(roomId);
         if(room == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
             return;
         }
         this.push(this.buildMessage(
@@ -836,16 +1095,28 @@ public final class Taoyao implements ITaoyao {
         room.close();
     }
 
+    /**
+     * 离开房间信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void roomLeave(Message message, Map<String, Object> body) {
         final String roomId   = MapUtils.get(body, "roomId");
         final String clientId = MapUtils.get(body, "clientId");
-        final Room room = this.rooms.get(roomId);
+        final Room room       = this.rooms.get(roomId);
         if(room == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
             return;
         }
         room.closeRemoteClient(clientId);
     }
 
+    /**
+     * 发起会话信令
+     *
+     * @param clientId 终端ID
+     */
     public void sessionCall(String clientId) {
         this.requestFuture(
             this.buildMessage(
@@ -854,11 +1125,11 @@ public final class Taoyao implements ITaoyao {
             ),
             response -> {
                 final Map<String, Object> body = response.body();
-                final String name      = MapUtils.get(body, "name");
-                final String sessionId = MapUtils.get(body, "sessionId");
+                final String name         = MapUtils.get(body, "name");
+                final String sessionId    = MapUtils.get(body, "sessionId");
                 final Resources resources = this.context.getResources();
                 final SessionClient sessionClient = new SessionClient(
-                    sessionId, name, MapUtils.get(body, "clientId"), this, this.mainHandler,
+                    sessionId, name, clientId, this, this.mainHandler,
                     resources.getBoolean(R.bool.preview),
                     resources.getBoolean(R.bool.playAudio),
                     resources.getBoolean(R.bool.playVideo),
@@ -876,6 +1147,12 @@ public final class Taoyao implements ITaoyao {
         );
     }
 
+    /**
+     * 发起会话信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void sessionCall(Message message, Map<String, Object> body) {
         final String name      = MapUtils.get(body, "name");
         final String clientId  = MapUtils.get(body, "clientId");
@@ -900,83 +1177,70 @@ public final class Taoyao implements ITaoyao {
         sessionClient.offer();
     }
 
+    /**
+     * 关闭媒体信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void sessionClose(Message message, Map<String, Object> body) {
-        final String sessionId = MapUtils.get(body, "sessionId");
+        final String sessionId            = MapUtils.get(body, "sessionId");
         final SessionClient sessionClient = this.sessions.remove(sessionId);
         if(sessionClient == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效会话：" + sessionId);
             return;
         }
         sessionClient.close();
     }
 
+    /**
+     * 媒体交换信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void sessionExchange(Message message, Map<String, Object> body) {
         final String sessionId            = MapUtils.get(body, "sessionId");
         final SessionClient sessionClient = this.sessions.get(sessionId);
         if(sessionClient == null) {
-            Log.w(Taoyao.class.getSimpleName(), "会话交换无效会话：" + sessionId);
+            Log.w(Taoyao.class.getSimpleName(), "无效会话：" + sessionId);
             return;
         }
         sessionClient.exchange(message, body);
     }
 
+    /**
+     * 暂停媒体信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void sessionPause(Message message, Map<String, Object> body) {
         final String sessionId            = MapUtils.get(body, "sessionId");
         final SessionClient sessionClient = this.sessions.get(sessionId);
         if(sessionClient == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效会话：" + sessionId);
             return;
         }
         final String type = MapUtils.get(body, "type");
         sessionClient.pause(type);
     }
 
+    /**
+     * 恢复媒体信令
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
     private void sessionResume(Message message, Map<String, Object> body) {
         final String sessionId            = MapUtils.get(body, "sessionId");
         final SessionClient sessionClient = this.sessions.get(sessionId);
         if(sessionClient == null) {
+            Log.w(Taoyao.class.getSimpleName(), "无效会话：" + sessionId);
             return;
         }
         final String type = MapUtils.get(body, "type");
         sessionClient.resume(type);
-    }
-
-    /**
-     * 心跳
-     */
-    private void heartbeat() {
-        this.heartbeatHandler.postDelayed(this::heartbeat, 30L * 1000);
-        if(this.close || !this.connect) {
-            return;
-        }
-        final Location location = this.location();
-        this.push(this.buildMessage(
-            "client::heartbeat",
-            "latitude", location == null ? -1 : location.getLatitude(),
-            "longitude", location == null ? -1 : location.getLongitude(),
-            "signal", this.signal(),
-            "battery", this.battery(),
-            "charging", this.charging(),
-            "recording", this.mediaManager.isRecording()
-        ));
-    }
-
-    /**
-     * @return 电量百分比
-     */
-    private int battery() {
-        return
-            this.batteryManager == null ?
-            -1 :
-            this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
-    }
-
-    /**
-     * @return 充电状态
-     */
-    private boolean charging() {
-        return
-            this.batteryManager == null ?
-            false :
-            this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS) == BatteryManager.BATTERY_STATUS_CHARGING;
     }
 
     /**
@@ -990,12 +1254,25 @@ public final class Taoyao implements ITaoyao {
         if(wifiInfo == null) {
             return -1;
         }
-        final int signal = this.wifiManager.calculateSignalLevel(wifiInfo.getRssi());
-        return signal / this.wifiManager.getMaxSignalLevel() * 100;
+        return this.wifiManager.calculateSignalLevel(wifiInfo.getRssi()) / this.wifiManager.getMaxSignalLevel() * 100;
     }
 
     /**
-     * @return 位置
+     * @return 电量信息
+     */
+    private int battery() {
+        return this.batteryManager == null ? -1 : this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY);
+    }
+
+    /**
+     * @return 充电状态
+     */
+    private boolean charging() {
+        return this.batteryManager == null ? false : this.batteryManager.getIntProperty(BatteryManager.BATTERY_PROPERTY_STATUS) == BatteryManager.BATTERY_STATUS_CHARGING;
+    }
+
+    /**
+     * @return 位置信息
      */
     @SuppressLint("MissingPermission")
     private Location location() {
@@ -1003,10 +1280,10 @@ public final class Taoyao implements ITaoyao {
             return null;
         }
         final Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_FINE);
         criteria.setCostAllowed(false);
         criteria.setBearingRequired(false);
         criteria.setAltitudeRequired(false);
-        criteria.setAccuracy(Criteria.ACCURACY_FINE);
         criteria.setPowerRequirement(Criteria.POWER_LOW);
         final String provider = this.locationManager.getBestProvider(criteria, true);
         if (provider == null) {

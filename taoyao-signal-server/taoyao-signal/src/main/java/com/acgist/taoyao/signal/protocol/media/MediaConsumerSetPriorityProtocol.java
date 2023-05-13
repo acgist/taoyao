@@ -13,6 +13,8 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 /**
  * 设置消费者优先级信令
  * 
+ * TODO：unsetPriority
+ * 
  * @author acgist
  */
 @Protocol

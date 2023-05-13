@@ -77,7 +77,7 @@ public class MediaService extends Service {
 
     @Override
     public void onCreate() {
-        Log.i(MediaService.class.getSimpleName(), "onCreate");
+        Log.d(MediaService.class.getSimpleName(), "onCreate");
         Log.i(MediaService.class.getSimpleName(), """
         庭院深深深几许，杨柳堆烟，帘幕无重数。玉勒雕鞍游冶处，楼高不见章台路。
         雨横风狂三月暮，门掩黄昏，无计留春住。泪眼问花花不语，乱红飞过秋千去。
@@ -97,13 +97,13 @@ public class MediaService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.i(MediaService.class.getSimpleName(), "onBind");
+        Log.d(MediaService.class.getSimpleName(), "onBind");
         return new Binder();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(MediaService.class.getSimpleName(), "onStartCommand：" + intent.getAction());
+        Log.d(MediaService.class.getSimpleName(), "onStartCommand：" + intent.getAction());
         if (Action.BOOT.name().equals(intent.getAction())) {
             this.boot();
             this.openConnect();
@@ -122,7 +122,7 @@ public class MediaService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.i(MediaService.class.getSimpleName(), "onDestroy");
+        Log.d(MediaService.class.getSimpleName(), "onDestroy");
         super.onDestroy();
         this.close();
     }
@@ -155,11 +155,11 @@ public class MediaService extends Service {
             resources.getInteger(R.integer.imageQuantity),
             resources.getString(R.string.audioQuantity),
             resources.getString(R.string.videoQuantity),
+            resources.getBoolean(R.bool.broadcaster),
             resources.getInteger(R.integer.channelCount),
             resources.getInteger(R.integer.iFrameInterval),
             resources.getString(R.string.storagePathImage),
             resources.getString(R.string.storagePathVideo),
-            resources.getBoolean(R.bool.broadcaster),
             resources.getString(R.string.watermark),
             VideoSourceType.valueOf(resources.getString(R.string.videoSourceType))
         );
@@ -199,13 +199,20 @@ public class MediaService extends Service {
         final String password = sharedPreferences.getString("settings.password", "taoyao");
         final Context context     = this.getApplicationContext();
         final Resources resources = this.getResources();
-        this.close();
+        if(this.taoyao != null) {
+            if(this.taoyao.needReconnect(port, host, name, clientId, username, password)) {
+                this.close();
+            } else {
+                Log.d(MediaService.class.getSimpleName(), "配置没有改变忽略重连");
+                return;
+            }
+        }
         // 连接信令
         this.taoyao = new Taoyao(
-            port, host, resources.getString(R.string.version),
-            name, clientId, resources.getString(R.string.clientType), username, password,
+            resources.getString(R.string.version), resources.getString(R.string.clientType),
+            port, host, name, clientId, username, password,
             resources.getInteger(R.integer.timeout), resources.getString(R.string.encrypt), resources.getString(R.string.encryptSecret),
-            this.mainHandler, context, this.taoyaoListener
+            MediaService.mainHandler, context, this.taoyaoListener
         );
         MediaManager.getInstance().initTaoyao(this.taoyao);
         Toast.makeText(context, "连接信令", Toast.LENGTH_SHORT).show();
@@ -268,11 +275,11 @@ public class MediaService extends Service {
      */
     private void settingAudio() {
         final AudioManager audioManager = this.getApplicationContext().getSystemService(AudioManager.class);
-        Log.i(MediaService.class.getSimpleName(), "当前音频模式：" + audioManager.getMode());
-        Log.i(MediaService.class.getSimpleName(), "当前音频音量：" + audioManager.getStreamVolume(audioManager.getMode()));
-//      Log.i(MediaService.class.getSimpleName(), "当前蓝牙是否打开：" + audioManager.isBluetoothScoOn());
-//      Log.i(MediaService.class.getSimpleName(), "当前耳机是否打开：" + audioManager.isWiredHeadsetOn());
-//      Log.i(MediaService.class.getSimpleName(), "当前电话扬声器是否打开：" + audioManager.isSpeakerphoneOn());
+        Log.d(MediaService.class.getSimpleName(), "当前音频模式：" + audioManager.getMode());
+        Log.d(MediaService.class.getSimpleName(), "当前音频音量：" + audioManager.getStreamVolume(audioManager.getMode()));
+//      Log.d(MediaService.class.getSimpleName(), "当前蓝牙是否打开：" + audioManager.isBluetoothScoOn());
+//      Log.d(MediaService.class.getSimpleName(), "当前耳机是否打开：" + audioManager.isWiredHeadsetOn());
+//      Log.d(MediaService.class.getSimpleName(), "当前电话扬声器是否打开：" + audioManager.isSpeakerphoneOn());
 //      audioManager.setStreamVolume(AudioManager.MODE_IN_COMMUNICATION, audioManager.getStreamMaxVolume(AudioManager.MODE_IN_COMMUNICATION), AudioManager.FLAG_PLAY_SOUND);
     }
 

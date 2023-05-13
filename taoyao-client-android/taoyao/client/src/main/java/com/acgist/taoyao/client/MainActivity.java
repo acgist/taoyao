@@ -2,6 +2,7 @@ package com.acgist.taoyao.client;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.res.ColorStateList;
@@ -18,6 +19,7 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.GridLayout;
+import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -51,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle bundle) {
-        Log.i(MainActivity.class.getSimpleName(), "onCreate");
+        Log.d(MainActivity.class.getSimpleName(), "onCreate");
         super.onCreate(bundle);
         final Window window = this.getWindow();
         // 强制横屏
@@ -76,19 +78,19 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        Log.i(MainActivity.class.getSimpleName(), "onStart");
+        Log.d(MainActivity.class.getSimpleName(), "onStart");
         super.onStart();
     }
 
     @Override
     protected void onStop() {
-        Log.i(MainActivity.class.getSimpleName(), "onStop");
+        Log.d(MainActivity.class.getSimpleName(), "onStop");
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        Log.i(MainActivity.class.getSimpleName(), "onDestroy");
+        Log.d(MainActivity.class.getSimpleName(), "onDestroy");
         super.onDestroy();
         // 资源释放
     }
@@ -123,10 +125,12 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.RECEIVE_BOOT_COMPLETED,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
         };
-        if (Stream.of(permissions).map(this.getApplicationContext()::checkSelfPermission).allMatch(v -> v == PackageManager.PERMISSION_GRANTED)) {
-            Log.i(MediaService.class.getSimpleName(), "授权成功");
+        final Context context = this.getApplicationContext();
+        if (Stream.of(permissions).map(context::checkSelfPermission).allMatch(v -> v == PackageManager.PERMISSION_GRANTED)) {
+            Log.d(MediaService.class.getSimpleName(), "授权成功");
         } else {
             ActivityCompat.requestPermissions(this, permissions, IdUtils.nextInt());
+            Toast.makeText(context, "授权失败", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -158,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
             new ActivityResultContracts.StartActivityForResult(),
             result -> {
                 if (result.getResultCode() == Activity.RESULT_OK) {
-                    Log.i(MediaManager.class.getSimpleName(), "屏幕捕获成功");
+                    Log.d(MediaManager.class.getSimpleName(), "屏幕捕获成功");
                     final Intent intent = new Intent(this, MediaService.class);
                     intent.setAction(MediaService.Action.SCREEN_CAPTURE.name());
                     intent.putExtra("data", result.getData());
@@ -290,6 +294,7 @@ public class MainActivity extends AppCompatActivity {
                 layoutParams.width  = 0;
                 layoutParams.height = 0;
             } else {
+                // 复用布局
                 layoutParams = this.removeLayoutParams.remove(0);
             }
             final SurfaceView surfaceView = (SurfaceView) message.obj;
@@ -312,6 +317,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
             video.removeViewAt(index);
+            // 缓存布局
             this.removeLayoutParams.add(surfaceView.getLayoutParams());
         }
     }

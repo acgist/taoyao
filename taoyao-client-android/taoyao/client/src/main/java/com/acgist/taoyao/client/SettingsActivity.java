@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -22,18 +23,18 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        Log.i(SettingsActivity.class.getSimpleName(), "onCreate");
+        Log.d(SettingsActivity.class.getSimpleName(), "onCreate");
         super.onCreate(savedInstanceState);
-        // 布局
         this.binding = ActivitySettingsBinding.inflate(this.getLayoutInflater());
-        this.setContentView(this.binding.getRoot());
-        // 设置按钮
+        final View root = this.binding.getRoot();
+        root.setZ(100F);
+        this.setContentView(root);
         this.binding.connect.setOnClickListener(this::settingsPersistent);
     }
 
     @Override
     protected void onStart() {
-        Log.i(SettingsActivity.class.getSimpleName(), "onStart");
+        Log.d(SettingsActivity.class.getSimpleName(), "onStart");
         super.onStart();
         // 回填配置
         final SharedPreferences sharedPreferences = this.getSharedPreferences("settings", Context.MODE_PRIVATE);
@@ -47,18 +48,18 @@ public class SettingsActivity extends AppCompatActivity {
 
     @Override
     protected void onStop() {
-        Log.i(SettingsActivity.class.getSimpleName(), "onStop");
+        Log.d(SettingsActivity.class.getSimpleName(), "onStop");
         super.onStop();
     }
 
     @Override
     protected void onDestroy() {
-        Log.i(SettingsActivity.class.getSimpleName(), "onDestroy");
+        Log.d(SettingsActivity.class.getSimpleName(), "onDestroy");
         super.onDestroy();
     }
 
     /**
-     * 持久化日志
+     * 保存配置
      *
      * @param view View
      */
@@ -86,16 +87,19 @@ public class SettingsActivity extends AppCompatActivity {
         editor.putString("settings.clientId", clientId);
         editor.putString("settings.username", username);
         editor.putString("settings.password", password);
-        editor.commit();
-        // 重连信令
-        final Intent serviceIntent = new Intent(this, MediaService.class);
-        serviceIntent.setAction(MediaService.Action.RECONNECT.name());
-        this.startService(serviceIntent);
-        // 预览页面
-        final Intent activityIntent = new Intent(this, MainActivity.class);
-        this.startActivity(activityIntent);
-        // 结束
-        this.finish();
+        if(editor.commit()) {
+            // 重连信令
+            final Intent serviceIntent = new Intent(this, MediaService.class);
+            serviceIntent.setAction(MediaService.Action.RECONNECT.name());
+            this.startService(serviceIntent);
+            // 预览页面
+            final Intent activityIntent = new Intent(this, MainActivity.class);
+            this.startActivity(activityIntent);
+            // 结束
+            this.finish();
+        } else {
+            Toast.makeText(this.getApplicationContext(), "配置保存失败", Toast.LENGTH_SHORT).show();
+        }
     }
 
 }

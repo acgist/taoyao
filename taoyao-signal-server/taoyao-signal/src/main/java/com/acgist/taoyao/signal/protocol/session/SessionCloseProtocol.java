@@ -45,7 +45,6 @@ public class SessionCloseProtocol extends ProtocolSessionAdapter implements Appl
     
     @Override
     public void execute(String clientId, ClientType clientType, Session session, Client client, Message message, Map<String, Object> body) {
-        session.push(message);
         session.close();
     }
     

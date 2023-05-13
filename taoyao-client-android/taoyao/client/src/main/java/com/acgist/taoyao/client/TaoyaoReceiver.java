@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.util.Log;
 
 /**
- * 开机启动
+ * 开机广播
  *
  * @author acgist
  */
@@ -14,7 +14,7 @@ public class TaoyaoReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.i(TaoyaoReceiver.class.getSimpleName(), "onReceive：" + intent.getAction());
+        Log.d(TaoyaoReceiver.class.getSimpleName(), "onReceive：" + intent.getAction());
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
             this.bootTaoyao(context);
         } else {

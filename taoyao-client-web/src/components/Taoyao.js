@@ -142,13 +142,13 @@ const signalChannel = {
         const battery = await navigator.getBattery();
         me.push(
           protocol.buildMessage("client::register", {
-            clientId: me.taoyao.clientId,
             name: me.taoyao.name,
+            clientId: me.taoyao.clientId,
             clientType: "WEB",
-            battery: battery.level * 100,
-            charging: battery.charging,
             username: me.taoyao.username,
             password: me.taoyao.password,
+            battery: battery.level * 100,
+            charging: battery.charging,
           })
         );
         me.reconnectionTimeout = me.minReconnectionDelay;
@@ -1660,6 +1660,7 @@ class Taoyao extends RemoteClient {
     const me = this;
     const { clientId } = message.body;
     me.remoteClients.delete(clientId);
+    // TODO：close
     console.info("终端离开：", clientId);
   }
   /**
@@ -2240,7 +2241,7 @@ class Taoyao extends RemoteClient {
       })
     );
     const { name, sessionId } = response.body;
-    const session = new Session({name, clientId: response.body.clientId, sessionId});
+    const session = new Session({name, clientId, sessionId});
     this.sessionClients.set(sessionId, session);
   }
 

@@ -183,8 +183,10 @@ public class RecordClient extends Client implements VideoSink {
             audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, this.audioBitRate);
 //          audioFormat.setInteger(MediaFormat.KEY_BIT_RATE, AudioFormat.ENCODING_PCM_16BIT);
             audioFormat.setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC);
+            // 动态码率
 //          audioFormat.setInteger(MediaFormat.KEY_BITRATE_MODE, MediaCodecInfo.EncoderCapabilities.BITRATE_MODE_VBR);
-//          audioFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 1024 * 8 * 8); // 设置缓冲大小
+            // 设置缓冲大小
+//          audioFormat.setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, 1024 * 8 * 8);
             this.audioCodec = MediaCodec.createEncoderByType(audioType);
             this.audioCodec.configure(audioFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         } catch (Exception e) {

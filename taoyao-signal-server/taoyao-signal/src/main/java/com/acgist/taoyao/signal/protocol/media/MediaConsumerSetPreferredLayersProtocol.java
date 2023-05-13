@@ -14,9 +14,12 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**
  * 修改最佳空间层和时间层信令
+ * 
  * 空间层（spatialLayer）：分辨率
  * 时间层（temporalLayer）：帧率
+ * 
  * 码率：数据大小和时间的比值
+ * 
  * 注意：只有simulcast和SVC消费者有效
  * 
  * @author acgist

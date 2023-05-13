@@ -17,15 +17,23 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
  */
 @Protocol
 @Description(
-    body = """
-    {
-        "to": "目标终端ID",
-        "enabled": 是否录像（true|false）
-    }
-    """,
+    body = {
+        """
+        {
+            "to": "目标终端ID",
+            "enabled": 是否录像（true|false）
+        }
+        """,
+        """
+        {
+            "enabled": 是否录像（true|false）,
+            "filepath": "视频文件路径"
+        }
+        """
+    },
     flow = {
-        "信令服务->终端",
-        "终端=>信令服务->终端"
+        "信令服务->目标终端->信令服务",
+        "终端=>信令服务->目标终端->信令服务->终端"
     }
 )
 public class ControlRecordProtocol extends ProtocolControlAdapter {
@@ -43,7 +51,7 @@ public class ControlRecordProtocol extends ProtocolControlAdapter {
     
     /**
      * @param clientId 终端ID
-     * @param enabled 状态
+     * @param enabled  状态
      * 
      * @return 执行结果
      */

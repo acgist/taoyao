@@ -47,11 +47,9 @@ import java.util.Locale;
 import java.util.UUID;
 
 /**
- * 媒体来源管理器
+ * 媒体管理器
  *
  * @author acgist
- *
- * TODO：动态码率（BITRATE_MODE_VBR、BITRATE_MODE）
  */
 public final class MediaManager {
 
@@ -85,6 +83,10 @@ public final class MediaManager {
      * 视频质量
      */
     private String videoQuantity;
+    /**
+     * 语音播报
+     */
+    private boolean broadcaster;
     /**
      * 通道数量
      */
@@ -162,13 +164,13 @@ public final class MediaManager {
      */
     private JavaAudioDeviceModule javaAudioDeviceModule;
     /**
+     * 语音播报
+     */
+    private TextToSpeech textToSpeech;
+    /**
      * 视频处理
      */
     private VideoProcesser videoProcesser;
-    /**
-     * TTS
-     */
-    private TextToSpeech textToSpeech;
     /**
      * 录屏等待锁
      */
@@ -241,34 +243,35 @@ public final class MediaManager {
      * @param imageQuantity   图片质量
      * @param audioQuantity   音频质量
      * @param videoQuantity   视频质量
+     * @param broadcaster     是否语音播报
      * @param channelCount    音频通道数量
      * @param iFrameInterval  关键帧频率
      * @param imagePath       图片保存路径
      * @param videoPath       视频保存路径
-     * @param tts             是否加载TTS
      * @param watermark       水印信息
      * @param videoSourceType 视频来源类型
      */
     public void initContext(
         Handler mainHandler, Context context,
         int imageQuantity, String audioQuantity, String videoQuantity,
-        int channelCount, int iFrameInterval,
-        String imagePath, String videoPath, boolean tts,
+        boolean broadcaster, int channelCount, int iFrameInterval,
+        String imagePath, String videoPath,
         String watermark, VideoSourceType videoSourceType
     ) {
-        this.mainHandler = mainHandler;
-        this.context   = context;
-        this.imageQuantity = imageQuantity;
-        this.audioQuantity = audioQuantity;
-        this.videoQuantity = videoQuantity;
-        this.channelCount = channelCount;
-        this.iFrameInterval = iFrameInterval;
-        this.imagePath = imagePath;
-        this.videoPath = videoPath;
-        this.watermark = watermark;
+        this.mainHandler     = mainHandler;
+        this.context         = context;
+        this.imageQuantity   = imageQuantity;
+        this.audioQuantity   = audioQuantity;
+        this.videoQuantity   = videoQuantity;
+        this.broadcaster     = broadcaster;
+        this.channelCount    = channelCount;
+        this.iFrameInterval  = iFrameInterval;
+        this.imagePath       = imagePath;
+        this.videoPath       = videoPath;
+        this.watermark       = watermark;
         this.videoSourceType = videoSourceType;
-        if(tts) {
-            this.initTTS(context);
+        synchronized (this) {
+            this.notifyAll();
         }
     }
 
@@ -277,29 +280,21 @@ public final class MediaManager {
      */
     public void initTaoyao(ITaoyao taoyao) {
         this.taoyao = taoyao;
+        synchronized (this) {
+            this.notifyAll();
+        }
     }
 
-    private void initTTS(Context context) {
-        if(this.textToSpeech != null) {
+    public synchronized void broadcast(String text) {
+        if(!this.broadcaster) {
             return;
         }
-        Log.i(MediaManager.class.getSimpleName(), "加载TTS");
-        this.textToSpeech = new TextToSpeech(context, new MediaManager.TextToSpeechInitListener());
-    }
-
-    public void broadcast(String text) {
         if(this.textToSpeech == null) {
-            return;
+            this.textToSpeech = new TextToSpeech(this.context, new MediaManager.TextToSpeechInitListener());
         }
-//      this.textToSpeech.stop();
         this.textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, UUID.randomUUID().toString());
-    }
-
-    public void closeTTS() {
-        if(this.textToSpeech == null) {
-            return;
-        }
-        this.textToSpeech.shutdown();
+//      this.textToSpeech.stop();
+//      this.textToSpeech.shutdown();
     }
 
     /**
@@ -775,14 +770,16 @@ public final class MediaManager {
         }
     }
 
-    public void stopRecord() {
+    public String stopRecord() {
         synchronized (this) {
             if(this.recordClient == null) {
-                return;
+                return null;
             } else {
+                final String filepath = this.recordClient.getFilepath();
                 this.recordClient.close();
                 this.recordClient = null;
                 this.mainHandler.obtainMessage(Config.WHAT_RECORD, Boolean.FALSE).sendToTarget();
+                return filepath;
             }
         }
     }
@@ -960,7 +957,7 @@ public final class MediaManager {
     private class TextToSpeechInitListener implements TextToSpeech.OnInitListener {
         @Override
         public void onInit(int status) {
-            Log.i(MediaManager.class.getSimpleName(), "加载TTS：" + status);
+            Log.i(MediaManager.class.getSimpleName(), "加载语音播报：" + status);
             if(status == TextToSpeech.SUCCESS) {
                 MediaManager.this.textToSpeech.setLanguage(Locale.CANADA);
                 MediaManager.this.textToSpeech.setPitch(1.0F);

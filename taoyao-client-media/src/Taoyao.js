@@ -130,13 +130,13 @@ const signalChannel = {
         // TODO：电池信息
         me.push(
           protocol.buildMessage("client::register", {
-            clientId: config.signal.clientId,
             name: config.signal.name,
+            clientId: config.signal.clientId,
             clientType: "MEDIA",
-            battery: 100,
-            charging: true,
             username: config.signal.username,
             password: config.signal.password,
+            battery: 100,
+            charging: true,
           })
         );
         me.reconnectionTimeout = me.minReconnectionDelay;

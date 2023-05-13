@@ -99,6 +99,10 @@ public abstract class ProtocolAdapter implements Protocol {
 		if(id == null) {
 			id = this.idService.buildId();
 		}
+		// 设置主体
+		if(body == null) {
+		    body = Map.of();
+		}
 		// 消息头部
 		final Header header = Header.builder()
 			.v(this.taoyaoProperties.getVersion())

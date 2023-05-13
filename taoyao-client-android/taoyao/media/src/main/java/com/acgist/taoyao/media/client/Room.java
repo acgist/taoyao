@@ -46,6 +46,7 @@ public class Room extends CloseableClient implements RouterCallback {
     private final boolean dataProduce;
     private final boolean audioProduce;
     private final boolean videoProduce;
+    private boolean produce;
     private final MediaProperties mediaProperties;
     private final WebrtcProperties webrtcProperties;
     private final Map<String, RemoteClient> remoteClients;
@@ -57,8 +58,8 @@ public class Room extends CloseableClient implements RouterCallback {
     private Object sctpCapabilities;
 
     /**
-     * @param name         房间名称
      * @param roomId       房间ID
+     * @param name         终端名称
      * @param clientId     当前终端ID
      * @param password     房间密码
      * @param taoyao       信令
@@ -76,17 +77,17 @@ public class Room extends CloseableClient implements RouterCallback {
      * @param webrtcProperties WebRTC配置
      */
     public Room(
-        String name, String roomId,
+        String roomId, String name,
         String clientId, String password,
         ITaoyao taoyao, Handler mainHandler,
-        boolean preview, boolean playAudio, boolean playVideo,
+        boolean preview,     boolean playAudio,    boolean playVideo,
         boolean dataConsume, boolean audioConsume, boolean videoConsume,
         boolean dataProduce, boolean audioProduce, boolean videoProduce,
         MediaProperties mediaProperties, WebrtcProperties webrtcProperties
     ) {
         super(taoyao, mainHandler);
-        this.name = name;
         this.roomId   = roomId;
+        this.name     = name;
         this.clientId = clientId;
         this.password = password;
         this.preview  = preview;
@@ -98,9 +99,10 @@ public class Room extends CloseableClient implements RouterCallback {
         this.dataProduce  = dataProduce;
         this.audioProduce = audioProduce;
         this.videoProduce = videoProduce;
-        this.mediaProperties = mediaProperties;
+        this.produce      = false;
+        this.mediaProperties  = mediaProperties;
         this.webrtcProperties = webrtcProperties;
-        this.remoteClients = new ConcurrentHashMap<>();
+        this.remoteClients     = new ConcurrentHashMap<>();
         this.nativeRoomPointer = this.nativeNewRoom(roomId, this);
     }
 
@@ -109,6 +111,7 @@ public class Room extends CloseableClient implements RouterCallback {
             if (this.init) {
                 return true;
             }
+            Log.i(Room.class.getSimpleName(), "进入房间：" + this.roomId);
             super.init();
             this.peerConnectionFactory = this.mediaManager.newClient();
             this.localClient = new LocalClient(this.name, this.clientId, this.taoyao, this.mainHandler);
@@ -141,6 +144,10 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     public void mediaProduce() {
+        if(this.produce) {
+            return;
+        }
+        this.produce = true;
         if (this.audioProduce || this.videoProduce) {
             this.createSendTransport();
         }

@@ -8,10 +8,10 @@
     <bool name="playVideo">true</bool>
     <!-- 信令版本 -->
     <string name="version">1.0.0</string>
-    <!-- 超时时间 -->
-    <integer name="timeout">5000</integer>
     <!-- 终端类型：CAMERA|MOBILE -->
     <string name="clientType">MOBILE</string>
+    <!-- 超时时间 -->
+    <integer name="timeout">5000</integer>
     <!-- 信令加密策略：AES|DES -->
     <string name="encrypt">DES</string>
     <!-- 信令加密密钥 -->
@@ -34,14 +34,14 @@
     <bool name="audioProduce">true</bool>
     <!-- 媒体配置：是否生产视频 -->
     <bool name="videoProduce">true</bool>
-    <!-- 语音播报 -->
-    <bool name="broadcaster">false</bool>
     <!-- 图片质量 -->
     <integer name="imageQuantity">100</integer>
     <!-- 音频质量 -->
     <string name="audioQuantity">fd-audio</string>
     <!-- 视频质量 -->
     <string name="videoQuantity">fd-video</string>
+    <!-- 语音播报 -->
+    <bool name="broadcaster">false</bool>
     <!-- 音频通道数量 -->
     <integer name="channelCount">1</integer>
     <!-- 视频关键帧频率 -->
