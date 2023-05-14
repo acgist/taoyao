@@ -11,9 +11,7 @@
         android:id="@+id/video"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:columnCount="2">
-
-    </GridLayout>
+        android:columnCount="2"></GridLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/settings"

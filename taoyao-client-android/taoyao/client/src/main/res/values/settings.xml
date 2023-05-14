@@ -16,12 +16,6 @@
     <string name="encrypt">DES</string>
     <!-- 信令加密密钥 -->
     <string name="encryptSecret">2SPWy+TF1zM=</string>
-    <!-- 图片存储目录 -->
-    <string name="storagePathImage">/taoyao</string>
-    <!-- 视频存储目录 -->
-    <string name="storagePathVideo">/taoyao</string>
-    <!-- 视频来源：FILE|BACK|FRONT|SCREEN -->
-    <string name="videoSourceType">BACK</string>
     <!-- 媒体配置：是否消费数据 -->
     <bool name="dataConsume">false</bool>
     <!-- 媒体配置：是否消费音频 -->
@@ -46,6 +40,12 @@
     <integer name="channelCount">1</integer>
     <!-- 视频关键帧频率 -->
     <integer name="iFrameInterval">1</integer>
+    <!-- 图片存储目录 -->
+    <string name="imagePath">/taoyao</string>
+    <!-- 视频存储目录 -->
+    <string name="videoPath">/taoyao</string>
     <!-- 水印 -->
     <string name="watermark">"'TAOYAO' yyyy-MM-dd HH:mm:ss"</string>
+    <!-- 视频来源：FILE|BACK|FRONT|SCREEN -->
+    <string name="videoSourceType">BACK</string>
 </resources>

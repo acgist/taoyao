@@ -1539,6 +1539,7 @@ class Taoyao extends RemoteClient {
       this.callbackError("无效房间");
       return;
     }
+    // TODO：已经进入房间忽略
     me.roomId = roomId;
     const response = await me.request(
       protocol.buildMessage("media::router::rtp::capabilities", {
@@ -1581,6 +1582,7 @@ class Taoyao extends RemoteClient {
     if (clientId === me.clientId) {
       // 忽略自己
     } else {
+      // TODO：已经存在忽略
       me.remoteClients.set(clientId, new RemoteClient(status));
     }
   }
@@ -1634,6 +1636,7 @@ class Taoyao extends RemoteClient {
     const me = this;
     // 默认进入，如果需要确认使用回调函数重写。
     const { roomId, password } = message.body;
+    // TODO：已经进入房间拒绝
     // if(me.roomId) {
     //   this.callbackError();
     //   return;

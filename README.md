@@ -23,8 +23,8 @@
 |:--|:--|:--|
 |taoyao-client-web|Web终端|Web终端|
 |taoyao-client-media|媒体终端|媒体服务|
-|taoyao-signal-server|信令服务|终端信令控制|
 |taoyao-client-android|安卓终端|安卓终端|
+|taoyao-signal-server|信令服务|终端信令控制|
 
 ### Web终端功能
 

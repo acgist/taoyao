@@ -1,16 +1,17 @@
 /**
  * 音频默认配置
  * TODO：MediaStreamTrack.applyConstraints()
- * 播放音量、采集音量
+ * TODO：播放音量（audio标签配置）、采集音量
+ * 支持属性：navigator.mediaDevices.getSupportedConstraints()
  * https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackSettings
  */
 const defaultAudioConfig = {
   // 设备
   // deviceId : '',
-  // 音量：0~1
-  volume: 1.0,
-  // 延迟大小（单位毫秒）：500毫秒以内较好
-  latency: 0.4,
+  // 音量（废弃）：0.0~1.0
+  // volume: 1.0,
+  // 延迟时间（单位：秒）：500毫秒以内较好
+  // latency: 0.4,
   // 采样位数：8|16|32
   sampleSize: { min: 8, ideal: 16, max: 32 },
   // 采样率：8000|16000|32000|48000
@@ -18,7 +19,7 @@ const defaultAudioConfig = {
   // 声道数量：1|2
   channelCount: 1,
   // 是否开启自动增益：true|false
-  autoGainControl: false,
+  autoGainControl: true,
   // 是否开启降噪功能：true|false
   noiseSuppression: true,
   // 是否开启回音消除：true|false

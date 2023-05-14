@@ -89,8 +89,8 @@ public class MediaService extends Service {
         """);
         super.onCreate();
         final Resources resources = this.getResources();
-        this.mkdir(resources.getString(R.string.storagePathImage), Environment.DIRECTORY_PICTURES);
-        this.mkdir(resources.getString(R.string.storagePathVideo), Environment.DIRECTORY_MOVIES);
+        this.mkdir(resources.getString(R.string.imagePath), Environment.DIRECTORY_PICTURES);
+        this.mkdir(resources.getString(R.string.videoPath), Environment.DIRECTORY_MOVIES);
         this.settingAudio();
         this.buildNotificationChannel();
     }
@@ -158,8 +158,8 @@ public class MediaService extends Service {
             resources.getBoolean(R.bool.broadcaster),
             resources.getInteger(R.integer.channelCount),
             resources.getInteger(R.integer.iFrameInterval),
-            resources.getString(R.string.storagePathImage),
-            resources.getString(R.string.storagePathVideo),
+            resources.getString(R.string.imagePath),
+            resources.getString(R.string.videoPath),
             resources.getString(R.string.watermark),
             VideoSourceType.valueOf(resources.getString(R.string.videoSourceType))
         );
@@ -209,9 +209,12 @@ public class MediaService extends Service {
         }
         // 连接信令
         this.taoyao = new Taoyao(
-            resources.getString(R.string.version), resources.getString(R.string.clientType),
+            resources.getString(R.string.version),
+            resources.getString(R.string.clientType),
             port, host, name, clientId, username, password,
-            resources.getInteger(R.integer.timeout), resources.getString(R.string.encrypt), resources.getString(R.string.encryptSecret),
+            resources.getInteger(R.integer.timeout),
+            resources.getString(R.string.encrypt),
+            resources.getString(R.string.encryptSecret),
             MediaService.mainHandler, context, this.taoyaoListener
         );
         MediaManager.getInstance().initTaoyao(this.taoyao);
