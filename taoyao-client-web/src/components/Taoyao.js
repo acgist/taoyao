@@ -332,16 +332,26 @@ class Session {
     this.localVideoEnabled = false;
     this.remoteAudioEnabled = false;
     this.remoteVideoEnabled = false;
-    this.localAudioTrack.stop();
-    this.localAudioTrack = null;
-    this.localVideoTrack.stop();
-    this.localVideoTrack = null;
-    this.remoteAudioTrack.stop();
-    this.remoteAudioTrack = null;
-    this.remoteVideoTrack.stop();
-    this.remoteVideoTrack = null;
-    this.peerConnection.close();
-    this.peerConnection = null;
+    if(this.localAudioTrack) {
+      this.localAudioTrack.stop();
+      this.localAudioTrack = null;
+    }
+    if(this.localVideoTrack) {
+      this.localVideoTrack.stop();
+      this.localVideoTrack = null;
+    }
+    if(this.remoteAudioTrack) {
+      this.remoteAudioTrack.stop();
+      this.remoteAudioTrack = null;
+    }
+    if(this.remoteVideoTrack) {
+      this.remoteVideoTrack.stop();
+      this.remoteVideoTrack = null;
+    }
+    if(this.peerConnection) {
+      this.peerConnection.close();
+      this.peerConnection = null;
+    }
   }
 
   async addIceCandidate(candidate) {
@@ -769,7 +779,6 @@ class Taoyao extends RemoteClient {
       // const stream = await this._getExternalVideoStream();
       // track = stream.getVideoTracks()[0].clone();
     } else if (self.videoSource === "camera") {
-      console.debug("enableWebcam() | calling getUserMedia()");
       // TODO：参数
       stream = await navigator.mediaDevices.getUserMedia({
         audio: self.audioConfig,
@@ -846,6 +855,8 @@ class Taoyao extends RemoteClient {
       ideal: audio.sampleSize,
       max: media.maxSampleSize,
     };
+    // 强制修改
+    // me.audioConfig.sampleRate = 8000;
     me.audioConfig.sampleRate = {
       min: media.minSampleRate,
       ideal: audio.sampleRate,

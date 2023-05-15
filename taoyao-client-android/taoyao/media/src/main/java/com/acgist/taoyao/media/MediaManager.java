@@ -403,8 +403,9 @@ public final class MediaManager {
 //        });
         final JavaAudioDeviceModule javaAudioDeviceModule = JavaAudioDeviceModule.builder(this.context)
 //          .setSampleRate(48000)
-//          .setAudioSource(MediaRecorder.AudioSource.MIC)
+//          .setSampleRate(mediaAudioProperties.getSampleRate())
 //          .setAudioFormat(AudioFormat.ENCODING_PCM_16BIT)
+//          .setAudioSource(MediaRecorder.AudioSource.MIC)
 //          .setAudioAttributes(audioAttributes)
             // 超低延迟
 //          .setUseLowLatency()
