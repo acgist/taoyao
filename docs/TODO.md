@@ -12,9 +12,9 @@
 单例变量
 单例静态函数
 构造函数
-成员函数（public/protected/private）
+成员函数（`public/protected/private`）
 静态成员函数
-getter/setter
+`getter/setter`
 
 ## 日常任务
 
@@ -33,10 +33,11 @@ getter/setter
 * 开机自启
 * 录制底噪
 * 分辨率调整
+* 服务端录制
 * 降低视频录制大小
 * 防止重复邀请拉取
 * 查询消费者生产者信息
-* 浏览器WebRTC监控页面关闭
+* 浏览器WebRTC监控页面关闭：`chrome://webrtc-internals/`
 
 ## 完成任务
 

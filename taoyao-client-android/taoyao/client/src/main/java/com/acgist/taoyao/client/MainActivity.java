@@ -229,29 +229,6 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * MainHandler
-     * 后台线程和UI线程关联线程Handler
-     *
-     * @author acgist
-     */
-    public class MainHandler extends Handler {
-
-        @Override
-        public void handleMessage(@NonNull Message message) {
-            super.handleMessage(message);
-            Log.d(MainHandler.class.getSimpleName(), "MainHandler消息：" + message.what);
-            switch (message.what) {
-                case Config.WHAT_SCREEN_CAPTURE   -> MainActivity.this.screenCapture(message);
-                case Config.WHAT_RECORD           -> MainActivity.this.record(message);
-                case Config.WHAT_NEW_LOCAL_VIDEO,
-                     Config.WHAT_NEW_REMOTE_VIDEO -> MainActivity.this.previewVideo(message);
-                case Config.WHAT_REMOVE_VIDEO     -> MainActivity.this.removePreviewVideo(message);
-            }
-        }
-
-    }
-
-    /**
      * 屏幕捕获
      *
      * @param message 消息
@@ -320,6 +297,29 @@ public class MainActivity extends AppCompatActivity {
             // 缓存布局
             this.removeLayoutParams.add(surfaceView.getLayoutParams());
         }
+    }
+    
+    /**
+     * MainHandler
+     * 后台线程和UI线程关联线程Handler
+     *
+     * @author acgist
+     */
+    public class MainHandler extends Handler {
+
+        @Override
+        public void handleMessage(@NonNull Message message) {
+            super.handleMessage(message);
+            Log.d(MainHandler.class.getSimpleName(), "MainHandler消息：" + message.what);
+            switch (message.what) {
+                case Config.WHAT_SCREEN_CAPTURE   -> MainActivity.this.screenCapture(message);
+                case Config.WHAT_RECORD           -> MainActivity.this.record(message);
+                case Config.WHAT_NEW_LOCAL_VIDEO,
+                     Config.WHAT_NEW_REMOTE_VIDEO -> MainActivity.this.previewVideo(message);
+                case Config.WHAT_REMOVE_VIDEO     -> MainActivity.this.removePreviewVideo(message);
+            }
+        }
+
     }
 
 }

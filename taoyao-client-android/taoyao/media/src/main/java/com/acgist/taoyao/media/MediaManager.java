@@ -967,7 +967,14 @@ public final class MediaManager {
         }
     }
 
+    /**
+     * 加载MediasoupClient
+     */
     private native void nativeInit();
+
+    /**
+     * 关闭MediasoupClient
+     */
     private native void nativeStop();
 
 }

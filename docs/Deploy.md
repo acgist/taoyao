@@ -3,7 +3,7 @@
 ## 整体环境
 
 ```
-CentOS：CentOS Linux release 7.9.2009 (Core)
+CentOS = CentOS Linux release 7.9.2009 (Core)
 git >= 1.8.0
 pm2 >= 5.2.0
 Java >= 17.0.0
@@ -22,6 +22,12 @@ cd /etc/yum.repos.d
 rm -rf *
 wget /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.repo
 yum makecache
+```
+
+## 更新依赖
+
+```
+yum install zlib-devel libffi-devel openssl-devel
 ```
 
 ## 优化Linux句柄数量
@@ -126,7 +132,11 @@ tar -Jxvf node-v16.19.0-linux-x64.tar.xz
 ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/npm /usr/local/bin/
 ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/node /usr/local/bin/
 
+# 镜像
+npm config set registry https://registry.npm.taobao.org
+
 # 验证
+npm config get registry
 npm -v
 node -v
 ```
@@ -205,9 +215,6 @@ mvn -version
 ## 安装Python
 
 ```
-# 依赖
-yum install zlib-devel libffi-devel openssl-devel
-
 # 下载
 mkdir -p /data/dev/python
 cd /data/dev/python
@@ -458,4 +465,15 @@ openssl pkcs12 -export -clcerts -in server.crt -inkey server.key -out server.p12
 # keytool -importkeystore -v -srckeystore server.p12 -srcstoretype pkcs12 -destkeystore server.jks -deststoretype jks
 # 原始密码：-srcstorepass 123456
 # 设置密码：-deststorepass 123456
+```
+
+## Debian
+
+如果使用`Debian`大部分命令都是通用的，使用`apt`替换`yum`即可，不用处理`Yum`中`Python`的冲突。
+
+```
+# 常用工具
+apt-get install vim wget net-tools
+# 依赖软件
+apt-get install libssl-dev zlib1g-dev build-essential
 ```

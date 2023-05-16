@@ -7,7 +7,6 @@ namespace acgist {
 
 #include "android/log.h"
 
-// TODO：优化INFO提示
 #ifndef LOG_TAG_TAOYAO
 #define LOG_TAG_TAOYAO "libtaoyao"
 #define LOG_D(format, ...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG_TAOYAO, "%s " format, __func__, ##__VA_ARGS__)
