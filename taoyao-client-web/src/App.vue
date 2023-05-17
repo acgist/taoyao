@@ -218,9 +218,10 @@ export default {
 .menus{width:100%;top:1rem;left:0;text-align:center;position:fixed;z-index:1;}
 .clients{width:100%;height:100%;top:0;left:0;position:fixed;}
 .client{float:left;width:50vw;height:50vh;box-shadow:0 0 1px 0px rgba(0,0,0,0.4);}
-.client .buttons{width:100%;bottom:2px;left:0;text-align:center;position:absolute;padding:0.8rem 0;background:rgba(0,0,0,0.4);}
-.client .buttons:after{width:0;height:2px;bottom:0;left:0;position:absolute;background:#C00;content:"";transition: all 400ms linear;}
 .client audio{display:none;}
 .client video{width:100%;height:100%;}
+.client .mic{background:linear-gradient(to top, var(--el-color-primary) 10%, transparent 0%);}
 .client .title{position:absolute;top:0;left:0;text-align:center;width:100%;}
+.client .buttons{width:100%;bottom:0;left:0;text-align:center;position:absolute;padding:0.8rem 0;background:rgba(0,0,0,0.4);}
+.client .buttons .el-button{margin:0 6px;}
 </style>

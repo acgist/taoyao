@@ -1,15 +1,17 @@
 <!-- 远程终端 -->
+<!--
+注意：当生产者关闭以后不能操作该生产者生产的消费者
+-->
 <template>
   <div class="client">
     <audio ref="audio"></audio>
     <video ref="video"></video>
     <p class="title">{{ client?.name || "" }}</p>
-    <div class="buttons" :style="{'--volume': client?.volume}">
-      <!-- TODO：本地状态+远程状态计算当前状态 -->
-      <el-button @click="taoyao.mediaConsumerResume(audioConsumer.id)" v-show="audioConsumer &&  audioConsumer.paused" type="primary" title="打开麦克风" :icon="Microphone" circle />
-      <el-button @click="taoyao.mediaConsumerPause(audioConsumer.id)"  v-show="audioConsumer && !audioConsumer.paused" type="danger"  title="关闭麦克风" :icon="Mute"       circle />
-      <el-button @click="taoyao.mediaConsumerResume(videoConsumer.id)" v-show="videoConsumer &&  videoConsumer.paused" type="primary" title="打开摄像头" :icon="VideoPlay"  circle />
-      <el-button @click="taoyao.mediaConsumerPause(videoConsumer.id)"  v-show="videoConsumer && !videoConsumer.paused" type="danger"  title="关闭摄像头" :icon="VideoPause" circle />
+    <div class="buttons">
+      <el-button @click="taoyao.mediaConsumerResume(audioConsumer.id)" v-show="audioConsumer &&  audioConsumer.paused" type="danger"  title="打开麦克风" :icon="Mute"       circle />
+      <el-button @click="taoyao.mediaConsumerPause(audioConsumer.id)"  v-show="audioConsumer && !audioConsumer.paused" type="primary" title="关闭麦克风" :icon="Microphone" circle class="mic" :style="{'--volume': client?.volume}" />
+      <el-button @click="taoyao.mediaConsumerResume(videoConsumer.id)" v-show="videoConsumer &&  videoConsumer.paused" type="danger"  title="打开摄像头" :icon="VideoPlay"  circle />
+      <el-button @click="taoyao.mediaConsumerPause(videoConsumer.id)"  v-show="videoConsumer && !videoConsumer.paused" type="primary" title="关闭摄像头" :icon="VideoPause" circle />
       <el-button @click="taoyao.controlPhotograph(client.clientId)"                 :icon="Camera"      circle title="拍照" />
       <el-button @click="taoyao.controlRecord(client.clientId, (record = !record))" :icon="VideoCamera" circle title="录像" :type="record ? 'danger' : ''" />
       <el-button @click="taoyao.mediaConsumerStatus()"                              :icon="InfoFilled"  circle title="媒体信息" />
@@ -112,5 +114,5 @@ export default {
 };
 </script>
 <style scoped>
-.client .buttons:after{width:var(--volume);}
+.client .mic{background:linear-gradient(to top, var(--el-color-primary) var(--volume), transparent 0%);}
 </style>

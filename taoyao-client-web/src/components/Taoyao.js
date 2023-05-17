@@ -243,6 +243,8 @@ class Session {
   id;
   // 远程终端名称
   name;
+  // 音量
+  volume = 100;
   // 是否关闭
   closed;
   // 远程终端ID

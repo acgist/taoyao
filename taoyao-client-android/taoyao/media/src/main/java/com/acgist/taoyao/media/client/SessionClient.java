@@ -30,6 +30,8 @@ import java.util.function.Consumer;
  * 视频会话
  * SDK + WebRTC实现视频会话
  *
+ * TODO：通过setRemoteDescription设置x-google-start-bitrate、x-google-min-bitrate、x-google-max-bitrate
+ *
  * 注意：
  * 2. offer/answer/candidate枚举大小
  * 1. candidate格式安卓和浏览器格式不同

@@ -2,22 +2,45 @@
 
 namespace acgist {
 
+    /**
+     * 发送通道监听器
+     */
     class SendListener : public mediasoupclient::SendTransport::Listener {
 
     public:
+        /**
+         * 房间指针
+         */
         Room* room;
 
     public:
+        /**
+         * 发送通道监听器
+         *
+         * @param room 房间指针
+         */
         explicit SendListener(Room* room) {
             this->room = room;
         }
+        /**
+         * 析构函数
+         */
         virtual ~SendListener() {
         }
 
     public:
+        /**
+         * 连接通道
+         *
+         * @param transport      通道指针
+         * @param dtlsParameters DTLS参数
+         *
+         * @return future
+         */
         std::future<void> OnConnect(mediasoupclient::Transport* transport, const nlohmann::json& dtlsParameters) override {
             const std::string cTransportId    = transport->GetId();
             const std::string cDtlsParameters = dtlsParameters.dump();
+            LOG_I("连接发送通道：%s - %s", this->room->roomId.data(), cTransportId.data());
             JNIEnv* env = nullptr;
             if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_EDETACHED) {
                 bindJavaThread(&env);
@@ -31,13 +54,31 @@ namespace acgist {
             return promise.get_future();
         }
 
+        /**
+         * 通道状态改变
+         *
+         * @param transport       通道指针
+         * @param connectionState 当前状态
+         */
         void OnConnectionStateChange(mediasoupclient::Transport* transport, const std::string& connectionState) override {
+            LOG_I("发送通道状态改变：%s - %s - %s", this->room->roomId.data(), transport->GetId().data(), connectionState.data());
         }
 
+        /**
+         * 通道生产媒体
+         *
+         * @param transport     通道指针
+         * @param kind          媒体类型
+         * @param rtpParameters RTP参数
+         * @param appData       应用数据
+         *
+         * @return 生产者ID
+         */
         std::future<std::string> OnProduce(mediasoupclient::SendTransport* transport, const std::string& kind, nlohmann::json rtpParameters, const nlohmann::json& appData) override {
             std::string result;
             const std::string cTransportId   = transport->GetId();
             const std::string cRtpParameters = rtpParameters.dump();
+            LOG_I("生产媒体：%s - %s - %s", this->room->roomId.data(), cTransportId.data(), kind.data());
             JNIEnv* env = nullptr;
             if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_EDETACHED) {
                 bindJavaThread(&env);
@@ -51,29 +92,65 @@ namespace acgist {
             return promise.get_future();
         }
 
+        /**
+         * 通道生产数据
+         * 注意：需要自己实现
+         *
+         * @param transport            通道指针
+         * @param sctpStreamParameters SCTP参数
+         * @param label                标记
+         * @param protocol             协议
+         * @param appData              应用数据
+         *
+         * @return 生产者ID
+         */
         std::future<std::string> OnProduceData(mediasoupclient::SendTransport* transport, const nlohmann::json& sctpStreamParameters, const std::string& label, const std::string& protocol, const nlohmann::json& appData) override {
+            const std::string cTransportId   = transport->GetId();
+            LOG_I("生产数据：%s - %s - %s -%s", this->room->roomId.data(), cTransportId.data(), label.data(), protocol.data());
             std::promise <std::string> promise;
-            // TODO：如果需要自行实现
             return promise.get_future();
         }
 
     };
 
+    /**
+     * 接收通道监听器
+     */
     class RecvListener : public mediasoupclient::RecvTransport::Listener {
 
     public:
+        /**
+         * 房间指针
+         */
         Room* room;
 
     public:
+        /**
+         * 接收通道监听器
+         *
+         * @param room 房间指针
+         */
         explicit RecvListener(Room* room) {
             this->room = room;
         }
+        /**
+         * 析构函数
+         */
         virtual ~RecvListener() {
         }
 
+        /**
+         * 连接通道
+         *
+         * @param transport      通道指针
+         * @param dtlsParameters DTLS参数
+         *
+         * @return future
+         */
         std::future<void> OnConnect(mediasoupclient::Transport* transport, const nlohmann::json& dtlsParameters) override {
             const std::string cTransportId    = transport->GetId();
             const std::string cDtlsParameters = dtlsParameters.dump();
+            LOG_I("连接接收通道：%s - %s", this->room->roomId.data(), cTransportId.data());
             JNIEnv* env = nullptr;
             if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_EDETACHED) {
                 bindJavaThread(&env);
@@ -87,24 +164,51 @@ namespace acgist {
             return promise.get_future();
         }
 
+        /**
+         * 通道状态改变
+         *
+         * @param transport       通道指针
+         * @param connectionState 通道状态
+         */
         void OnConnectionStateChange(mediasoupclient::Transport* transport, const std::string& connectionState) override {
+            LOG_I("接收通道状态改变：%s - %s - %s", this->room->roomId.data(), transport->GetId().data(), connectionState.data());
         }
 
     };
 
+    /**
+     * 生产者监听器
+     */
     class ProducerListener : public mediasoupclient::Producer::Listener {
 
     public:
+        /**
+         * 房间指针
+         */
         Room* room;
 
     public:
+        /**
+         * 生产者监听器
+         *
+         * @param room 房间指针
+         */
         explicit ProducerListener(Room* room) {
             this->room = room;
         }
+        /**
+         * 析构函数
+         */
         virtual ~ProducerListener() {
         }
 
+        /**
+         * 通道关闭
+         *
+         * @param producer 生产者
+         */
         void OnTransportClose(mediasoupclient::Producer* producer) override {
+            LOG_I("生产者通道关闭：%s - %s", this->room->roomId.data(), producer->GetId().data());
             producer->Close();
             JNIEnv* env = nullptr;
             if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_EDETACHED) {
@@ -118,20 +222,39 @@ namespace acgist {
 
     };
 
+    /**
+     * 消费者监听器
+     */
     class ConsumerListener : public mediasoupclient::Consumer::Listener {
 
     public:
+        /**
+         * 房间指针
+         */
         Room* room;
 
     public:
+        /**
+         * 消费者监听器
+         *
+         * @param room 房间指针
+         */
         explicit ConsumerListener(Room* room) {
             this->room = room;
         }
+        /**
+         * 析构函数
+         */
         virtual ~ConsumerListener() {
-//          mediasoupclient::Consumer::Listener::~Listener();
         }
 
+        /**
+         * 通道关闭
+         *
+         * @param consumer 消费者
+         */
         void OnTransportClose(mediasoupclient::Consumer* consumer) override {
+            LOG_I("消费者通道关闭：%s - %s", this->room->roomId.data(), consumer->GetId().data());
             consumer->Close();
             JNIEnv* env = nullptr;
             if(taoyaoJavaVM->GetEnv((void**) &env, JNI_VERSION_1_6) == JNI_EDETACHED) {
@@ -164,6 +287,7 @@ namespace acgist {
     }
 
     Room::~Room() {
+        // TODO：解决析构函数不是虚函数的问题
         delete this->rtcConfiguration;
         delete this->device;
         delete this->sendListener;
@@ -185,8 +309,8 @@ namespace acgist {
         this->factory          = factory;
         this->rtcConfiguration = new webrtc::PeerConnectionInterface::RTCConfiguration(rtcConfiguration);
         mediasoupclient::PeerConnection::Options options;
-        options.config  = rtcConfiguration;
-        options.factory = factory;
+        options.config      = rtcConfiguration;
+        options.factory     = factory;
         nlohmann::json json = nlohmann::json::parse(rtpCapabilities);
         this->device->Load(json, &options);
         const std::string cRtpCapabilities  = this->device->GetRtpCapabilities().dump();
@@ -197,8 +321,8 @@ namespace acgist {
     void Room::createSendTransport(JNIEnv* env, const std::string& body) {
         nlohmann::json json = nlohmann::json::parse(body);
         mediasoupclient::PeerConnection::Options options;
-        options.config  = *this->rtcConfiguration;
-        options.factory = this->factory;
+        options.config      = *this->rtcConfiguration;
+        options.factory     = this->factory;
         this->sendTransport = this->device->CreateSendTransport(
             this->sendListener,
             json["transportId"],
@@ -213,8 +337,8 @@ namespace acgist {
     void Room::createRecvTransport(JNIEnv* env, const std::string& body) {
         nlohmann::json json = nlohmann::json::parse(body);
         mediasoupclient::PeerConnection::Options options;
-        options.config  = *this->rtcConfiguration;
-        options.factory = this->factory;
+        options.config      = *this->rtcConfiguration;
+        options.factory     = this->factory;
         this->recvTransport = this->device->CreateRecvTransport(
             this->recvListener,
             json["transportId"],
@@ -228,6 +352,7 @@ namespace acgist {
 
     void Room::mediaProduceAudio(JNIEnv* env, webrtc::MediaStreamInterface* mediaStream) {
         if(!this->device->CanProduce("audio")) {
+            LOG_I("不能生产音频媒体：%s", this->roomId.data());
             return;
         }
         nlohmann::json codecOptions =
@@ -247,13 +372,17 @@ namespace acgist {
 
     void Room::mediaProduceVideo(JNIEnv* env, webrtc::MediaStreamInterface* mediaStream) {
         if(!this->device->CanProduce("video")) {
+            LOG_I("不能生产视频媒体：%s", this->roomId.data());
             return;
         }
-        // TODO：配置读取
+        // TODO：配置读取同时测试效果
         nlohmann::json codecOptions =
             {
+                // x-google-start-bitrate
                 { "videoGoogleStartBitrate", 400  },
+                // x-google-min-bitrate
                 { "videoGoogleMinBitrate",   800  },
+                // x-google-max-bitrate
                 { "videoGoogleMaxBitrate",   1600 }
             };
 //      如果需要使用`Simulcast`打开下面配置
@@ -385,8 +514,8 @@ namespace acgist {
         jstring jRoomId, jobject jRouterCallback
     ) {
         jobject routerCallback = env->NewGlobalRef(jRouterCallback);
-        const char* roomId = env->GetStringUTFChars(jRoomId, nullptr);
-        Room* room = new Room(roomId, routerCallback);
+        const char* roomId     = env->GetStringUTFChars(jRoomId, nullptr);
+        Room* room             = new Room(roomId, routerCallback);
         env->DeleteLocalRef(jRoomId);
         env->ReleaseStringUTFChars(jRoomId, roomId);
         return (jlong) room;
@@ -424,7 +553,7 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeCreateSendTransport(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jBody) {
-        Room* room = (Room*) nativeRoomPointer;
+        Room* room       = (Room*) nativeRoomPointer;
         const char* body = env->GetStringUTFChars(jBody, nullptr);
         room->createSendTransport(env, body);
         env->DeleteLocalRef(jBody);
@@ -433,7 +562,7 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeCreateRecvTransport(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jBody) {
-        Room* room = (Room*) nativeRoomPointer;
+        Room* room       = (Room*) nativeRoomPointer;
         const char* body = env->GetStringUTFChars(jBody, nullptr);
         room->createRecvTransport(env, body);
         env->DeleteLocalRef(jBody);
@@ -454,7 +583,7 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaConsume(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jMessage) {
-        Room* room = (Room*) nativeRoomPointer;
+        Room* room          = (Room*) nativeRoomPointer;
         const char* message = env->GetStringUTFChars(jMessage, nullptr);
         room->mediaConsume(env, message);
         env->DeleteLocalRef(jMessage);
@@ -463,7 +592,7 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaProducerPause(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jProducerId) {
-        Room* room = (Room*) nativeRoomPointer;
+        Room* room             = (Room*) nativeRoomPointer;
         const char* producerId = env->GetStringUTFChars(jProducerId, nullptr);
         room->mediaProducerPause(env, producerId);
         env->DeleteLocalRef(jProducerId);
@@ -472,7 +601,7 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaProducerResume(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jProducerId) {
-        Room* room = (Room*) nativeRoomPointer;
+        Room* room             = (Room*) nativeRoomPointer;
         const char* producerId = env->GetStringUTFChars(jProducerId, nullptr);
         room->mediaProducerResume(env, producerId);
         env->DeleteLocalRef(jProducerId);
@@ -481,7 +610,7 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaProducerClose(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jProducerId) {
-        Room* room = (Room*) nativeRoomPointer;
+        Room* room             = (Room*) nativeRoomPointer;
         const char* producerId = env->GetStringUTFChars(jProducerId, nullptr);
         room->mediaProducerClose(env, producerId);
         env->DeleteLocalRef(jProducerId);
@@ -490,7 +619,7 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaConsumerPause(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jConsumerId) {
-        Room* room = (Room*) nativeRoomPointer;
+        Room* room             = (Room*) nativeRoomPointer;
         const char* consumerId = env->GetStringUTFChars(jConsumerId, nullptr);
         room->mediaConsumerPause(env, consumerId);
         env->DeleteLocalRef(jConsumerId);
@@ -499,7 +628,7 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaConsumerResume(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jConsumerId) {
-        Room* room = (Room*) nativeRoomPointer;
+        Room* room             = (Room*) nativeRoomPointer;
         const char* consumerId = env->GetStringUTFChars(jConsumerId, nullptr);
         room->mediaConsumerResume(env, consumerId);
         env->DeleteLocalRef(jConsumerId);
@@ -508,7 +637,7 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaConsumerClose(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jConsumerId) {
-        Room* room = (Room*) nativeRoomPointer;
+        Room* room             = (Room*) nativeRoomPointer;
         const char* consumerId = env->GetStringUTFChars(jConsumerId, nullptr);
         room->mediaConsumerClose(env, consumerId);
         env->DeleteLocalRef(jConsumerId);

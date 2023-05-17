@@ -39,7 +39,7 @@ namespace acgist {
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_MediaManager_nativeInit(JNIEnv* env, jobject me) {
         std::string version = mediasoupclient::Version();
-        LOG_I("加载MediasoupClient %s", version.data());
+        LOG_I("加载MediasoupClient：%s", version.data());
         mediasoupclient::Initialize();
         // => { spatialLayers: 2, temporalLayers: 3 }
         // mediasoupclient::parseScalabilityMode("L2T3");

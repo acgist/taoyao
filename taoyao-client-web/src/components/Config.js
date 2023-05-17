@@ -1,6 +1,11 @@
 /**
  * 音频默认配置
- * TODO：MediaStreamTrack.applyConstraints()
+ * TODO：MediaStreamTrack.applyConstraints().then().catch();
+ * let setting = {
+ *   autoGainControl:  true,
+ *   noiseSuppression: true
+ * }
+  await track.applyConstraints(Object.assign(track.getSettings(), setting));
  * TODO：播放音量（audio标签配置）、采集音量
  * 支持属性：navigator.mediaDevices.getSupportedConstraints()
  * https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackSettings

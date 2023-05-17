@@ -5,10 +5,10 @@
     <video ref="video"></video>
     <p class="title">{{ client?.name || "" }}</p>
     <div class="buttons">
-      <el-button @click="taoyao.sessionResume(client.id, 'audio')" v-show="audioStream && !client.remoteAudioEnabled" type="primary" title="打开麦克风" :icon="Microphone" circle />
-      <el-button @click="taoyao.sessionPause(client.id, 'audio')"  v-show="audioStream &&  client.remoteAudioEnabled" type="danger"  title="关闭麦克风" :icon="Mute"       circle />
-      <el-button @click="taoyao.sessionResume(client.id, 'video')" v-show="videoStream && !client.remoteVideoEnabled" type="primary" title="打开摄像头" :icon="VideoPlay"  circle />
-      <el-button @click="taoyao.sessionPause(client.id, 'video')"  v-show="videoStream &&  client.remoteVideoEnabled" type="danger"  title="关闭摄像头" :icon="VideoPause" circle />
+      <el-button @click="taoyao.sessionResume(client.id, 'audio')" v-show="audioStream && !client.remoteAudioEnabled" type="danger"  title="打开麦克风" :icon="Mute"       circle />
+      <el-button @click="taoyao.sessionPause(client.id, 'audio')"  v-show="audioStream &&  client.remoteAudioEnabled" type="primary" title="关闭麦克风" :icon="Microphone" circle class="mic" :style="{'--volume': client?.volume}" />
+      <el-button @click="taoyao.sessionResume(client.id, 'video')" v-show="videoStream && !client.remoteVideoEnabled" type="danger"  title="打开摄像头" :icon="VideoPlay"  circle />
+      <el-button @click="taoyao.sessionPause(client.id, 'video')"  v-show="videoStream &&  client.remoteVideoEnabled" type="primary" title="关闭摄像头" :icon="VideoPause" circle />
       <el-button @click="taoyao.controlPhotograph(client.clientId)"                 :icon="Camera"      circle title="拍照" />
       <el-button @click="taoyao.controlRecord(client.clientId, (record = !record))" :icon="VideoCamera" circle title="录像" :type="record ? 'danger' : ''" />
       <el-popover placement="top" :width="240" trigger="hover">
@@ -104,3 +104,6 @@ export default {
   }
 };
 </script>
+<style scoped>
+.client .mic{background:linear-gradient(to top, var(--el-color-primary) var(--volume), transparent 0%);}
+</style>

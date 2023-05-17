@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# 休眠一秒：等待后台任务调度
+sleep 1
+
 # 等待任务
 startTime=$(date +%s)
 processId=$(ps -aux | grep "${project.artifactId}" | grep java | awk '{print $2}')

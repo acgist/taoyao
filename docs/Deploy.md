@@ -24,7 +24,7 @@ wget /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.
 yum makecache
 ```
 
-## 更新依赖
+## 安装依赖
 
 ```
 yum install zlib-devel libffi-devel openssl-devel
