@@ -4,6 +4,7 @@ import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.os.Build;
 
 import org.webrtc.VideoFrame;
 
@@ -88,7 +89,11 @@ public class WatermarkProcesser extends VideoProcesser {
         final boolean[][] matrix = new boolean[width][height];
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
-                matrix[i][j] = bitmap.getColor(i, j).toArgb() != 0;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    matrix[i][j] = bitmap.getColor(i, j).toArgb() != 0;
+                } else {
+                    matrix[i][j] = bitmap.getPixel(i, j) != 0;
+                }
             }
         }
         MATRICES[source] = new WatermarkMatrix(width, height, matrix);

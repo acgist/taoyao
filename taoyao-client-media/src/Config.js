@@ -73,6 +73,8 @@ module.exports = {
           clockRate: 90000,
           parameters: {
             "x-google-start-bitrate": 1000,
+            // "x-google-min-bitrate": 800,
+            // "x-google-max-bitrate": 1600,
           },
         },
         {
@@ -82,6 +84,8 @@ module.exports = {
           parameters: {
             "profile-id": 2,
             "x-google-start-bitrate": 1000,
+            // "x-google-min-bitrate": 800,
+            // "x-google-max-bitrate": 1600,
           },
         },
         {
@@ -93,6 +97,8 @@ module.exports = {
             "profile-level-id": "4d0032",
             "level-asymmetry-allowed": 1,
             "x-google-start-bitrate": 1000,
+            // "x-google-min-bitrate": 800,
+            // "x-google-max-bitrate": 1600,
           },
         },
         {
@@ -104,6 +110,8 @@ module.exports = {
             "profile-level-id": "42e01f",
             "level-asymmetry-allowed": 1,
             "x-google-start-bitrate": 1000,
+            // "x-google-min-bitrate": 800,
+            // "x-google-max-bitrate": 1600,
           },
         },
       ],

@@ -10,7 +10,7 @@ import lombok.Setter;
  * 视频编码 = 压缩
  * 8     = 颜色位数  
  * 3 / 2 = YUV | RGB
- * 码率（比特率）：单位（kbps | kbit/s | kb/s）
+ * 码率（比特率）：单位（kbps | kbit/s）
  * 码率 = 文件字节大小 * 8 / 秒数 / 1000
  * 1Byte = 8bit
  * 

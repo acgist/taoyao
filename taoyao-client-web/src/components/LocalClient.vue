@@ -107,5 +107,5 @@ export default {
 };
 </script>
 <style scoped>
-.client .mic{background:linear-gradient(to top, var(--el-color-primary) var(--volume), transparent 0%);}
+.client .mic{background:linear-gradient(to top, var(--el-color-primary) var(--volume, 100%), transparent 0%);}
 </style>

@@ -244,7 +244,7 @@ class Session {
   // 远程终端名称
   name;
   // 音量
-  volume = 100;
+  volume = "100%";
   // 是否关闭
   closed;
   // 远程终端ID
@@ -382,7 +382,7 @@ class RemoteClient {
   // 终端标识
   clientId;
   // 音量
-  volume = 0;
+  volume = "100%";
   // 代理对象
   proxy;
   // 数据消费者

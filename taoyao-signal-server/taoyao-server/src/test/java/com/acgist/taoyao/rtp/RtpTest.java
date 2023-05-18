@@ -82,11 +82,13 @@ public class RtpTest {
 		// {"header":{"v":"1.0.0","id":1215310510002009,"signal":"room::enter"},"body":{"roomId":"8260e615-3081-4bfc-96a8-574f4dd780d9"}}
 		// {"header":{"v":"1.0.0","id":1215310510002010,"signal":"media::transport::plain"},"body":{"roomId":"8260e615-3081-4bfc-96a8-574f4dd780d9","rtcpMux":false,"comedia":true}}
 		// {"header":{"v":"1.0.0","id":1215375110006012,"signal":"media::produce"},"body":{"kind":"video","roomId":"8260e615-3081-4bfc-96a8-574f4dd780d9","transportId":"14dc9307-bf9c-4442-a9ad-ce6a97623ef4","appData":{},"rtpParameters":{"codecs":[{"mimeType":"video/vp8","clockRate":90000,"payloadType":102,"rtcpFeedback":[]}],"encodings":[{"ssrc":123123}]}}}
+		// ffmpeg直接播放
+//		ffmpeg -re -i video.mp4 -c:a copy -vn -map 0:1 -f rtp rtp://localhost:6666 > taoyao.sdp
+//		ffmpeg -re -i video.mp4 -c:v copy -an -map 0:0 -f rtp rtp://localhost:6666 > taoyao.sdp
 //      ffplay -protocol_whitelist "file,udp,rtp" taoyao.sdp
-//		ffmpeg -re -i video.mp4 -vcodec copy -map 0:0 -f rtp rtp://localhost:6666 > taoyao.sdp
 		// ffmpeg不支持rtcpMux
 //		ffmpeg -re -i video.mp4 -c:v libvpx -map 0:0 -f tee "[select=v:f=rtp:ssrc=123123:payload_type=102]rtp://192.168.1.110:40793?rtcpport=47218"
-//		ffmpeg -re -i video.mp4 -vcodec vp8 -map 0:0 -f tee "[select=v:f=rtp:ssrc=123123:payload_type=102]rtp://192.168.1.110:40793?rtcpport=47218"
+//		ffmpeg -re -i video.mp4 -c:v vp8    -map 0:0 -f tee "[select=v:f=rtp:ssrc=123123:payload_type=102]rtp://192.168.1.110:40793?rtcpport=47218"
 		final Scanner scanner = new Scanner(System.in);
 		do {
 		    if(StringUtils.isEmpty(line)) {

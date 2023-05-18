@@ -23,9 +23,9 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 创建RTP输入通道信令
  * 注意：
- * 3. ffmpeg不支持rtcpMux
+ * 1. ffmpeg不支持rtcpMux
  * 2. comedia必须开启srtp功能
- * 1. 如果关闭comedia不会自动升级双向通道
+ * 3. 如果关闭comedia不会自动升级双向通道
  * 
  * @author acgist
  */

@@ -6,7 +6,7 @@ android {
     namespace 'com.acgist.taoyao.client'
     compileSdk 32
     defaultConfig {
-        minSdk 30
+        minSdk 28
         targetSdk 32
         versionCode 100
         versionName "1.0.0"

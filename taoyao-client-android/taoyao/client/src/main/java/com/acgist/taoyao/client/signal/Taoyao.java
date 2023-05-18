@@ -9,6 +9,7 @@ import android.location.LocationManager;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.BatteryManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.PowerManager;
@@ -1254,7 +1255,15 @@ public final class Taoyao implements ITaoyao {
         if(wifiInfo == null) {
             return -1;
         }
-        return this.wifiManager.calculateSignalLevel(wifiInfo.getRssi()) / this.wifiManager.getMaxSignalLevel() * 100;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            return this.wifiManager.calculateSignalLevel(wifiInfo.getRssi()) / this.wifiManager.getMaxSignalLevel() * 100;
+        } else {
+            // 0   ~ -50 : 优秀
+            // -50 ~ -70 : 良好
+            // -70 ~ -100: 较差
+            final int rssi = wifiInfo.getRssi();
+            return rssi <= -100 ? 0 : (100 + rssi);
+        }
     }
 
     /**
