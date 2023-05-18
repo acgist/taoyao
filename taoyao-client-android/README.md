@@ -1,5 +1,10 @@
 # 安卓终端
 
+## 支持版本
+
+* SDK：28~32
+* Andoird：9~12
+
 ## C++终端
 
 * [libmediasoupclient源码](https://github.com/versatica/libmediasoupclient)
@@ -18,6 +23,14 @@
 
 1. 应用旋转：横屏竖屏
 2. 物理旋转：旋转镜头
+
+## SDK源码修改
+
+由于原始SDK部分功能没有提供，所以修改了部分SDK，如果需要升级项目注意同步修改，修改文件列表：
+
+* JavaAudioDeviceModule
+* WebRtcAudioRecord
+* WebRtcAudioTrack
 
 ## 学习资料
 

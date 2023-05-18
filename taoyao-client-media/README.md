@@ -23,6 +23,10 @@ make
 make -C worker
 ```
 
+## 录像功能
+
+录像直接将媒体流转发给`ffmpeg`实现录制，没有直接修改`mediasoup`代码，代码侵入较低更加方便升级。
+
 ## 节点配置
 
 需要保证`src/Config.js`中的`clientId`和`ecosystem.config.json`中的`name`保持一致，否者重启和关闭信令无效。

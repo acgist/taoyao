@@ -3,16 +3,16 @@
 ## 整体环境
 
 ```
-CentOS = CentOS Linux release 7.9.2009 (Core)
-git >= 1.8.0
-pm2 >= 5.2.0
-Java >= 17.0.0
-Maven >= 3.8.0
-CMake >= 3.26.0
-nodejs >= v16.18.0
-python >= 3.8.0 with PIP
-Android >= 10
+CentOS  =  CentOS Linux release 7.9.2009 (Core)
+Git     >= 1.8.0
+Java    >= 17.0.0
+Maven   >= 3.8.0
+CMake   >= 3.26.0
+NodeJS  >= v16.18.0
+Python  >= 3.8.0 with PIP
+ffmpeg  >= 4.3.1
 gcc/g++ >= 10.2.0
+Android >= 9
 ```
 
 ## 设置Yum源
@@ -81,7 +81,7 @@ yum install git
 git --version
 ```
 
-## 安装GCC/G++
+## 安装gcc/g++
 
 ```
 # 安装
@@ -116,10 +116,10 @@ cd cmake-3.26.0
 make && make install
 
 # 验证
-cmake -v
+cmake -version
 ```
 
-## 安装Node
+## 安装NodeJS
 
 ```
 # 下载
@@ -129,39 +129,34 @@ wget https://nodejs.org/dist/v16.19.0/node-v16.19.0-linux-x64.tar.xz
 tar -Jxvf node-v16.19.0-linux-x64.tar.xz
 
 # 连接
-ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/npm /usr/local/bin/
+ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/npm  /usr/local/bin/
 ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/node /usr/local/bin/
 
-# 镜像
+# 设置镜像
 npm config set registry https://registry.npm.taobao.org
 
-# 验证
-npm config get registry
-npm -v
-node -v
-```
-
-## 安装PM2
-
-```
-# 安装
+# 安装pm2
 npm install -g pm2
 
 # 连接
 ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/pm2 /usr/local/bin/
 
-# 日志
+# 安装日志
 pm2 install pm2-logrotate
 pm2 set pm2-logrotate:retain 14
 pm2 set pm2-logrotate:compress true
 pm2 set pm2-logrotate:max_size 256M
 
-# 查看配置
-pm2 conf
-
 # 自启
 pm2 startup
 pm2 save
+
+# 验证
+pm2 conf
+npm config get registry
+pm2 -v
+npm -v
+node -v
 ```
 
 ## 安装Java
@@ -224,13 +219,12 @@ tar -Jxvf Python-3.8.16.tar.xz
 
 # 安装
 cd Python-3.8.16
-./configure --prefix=/usr/local/python3 --with-ssl
+./configure --with-ssl --enable-optimizations
 make && make install
 
 # 配置
-ln -sf /usr/local/python3/bin/pip3.8 /usr/bin/pip
-ln -sf /usr/local/python3/bin/python3.8 /usr/bin/python
-ln -sf /usr/local/python3/bin/python3.8 /usr/bin/python3
+ln -sf /usr/local/bin/pip3.8    /usr/local/bin/pip
+ln -sf /usr/local/bin/python3.8 /usr/local/bin/python
 
 # 配置Yum
 
@@ -261,6 +255,87 @@ trusted-host = mirrors.aliyun.com
 pip config list
 ```
 
+## 安装ffmpeg
+
+```
+mkdir -p /data/dev/ffmpeg
+cd /data/dev/ffmpeg
+
+# nasm
+wget https://www.nasm.us/pub/nasm/releasebuilds/2.16/nasm-2.16.tar.gz
+tar -zxvf nasm-2.16.tar.gz
+cd nasm-2.16/
+./configure
+make && make install
+
+# yasm
+wget https://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz
+tar -zxvf yasm-1.3.0.tar.gz
+cd yasm-1.3.0/
+./configure
+make && make install
+
+# libvpx?  --enable-gpl --enable-libvpx
+#git clone https://chromium.googlesource.com/webm/libvpx.git
+git clone https://github.com/webmproject/libvpx.git
+cd libvpx/
+git checkout v1.13.0
+./configure --enable-static --enable-shared --enable-vp8 --enable-vp9 --enable-vp9-highbitdepth --as=yasm --disable-examples --disable-unit-tests
+make && make install
+
+# libopus? --enable-gpl --enable-libopus
+wget https://archive.mozilla.org/pub/opus/opus-1.3.1.tar.gz
+tar -zxvf opus-1.3.1.tar.gz
+cd opus-1.3.1/
+./configure --enable-static --enable-shared
+make && make install
+
+# libx264? --enable-gpl --enable-libx264
+git clone https://code.videolan.org/videolan/x264.git
+cd x264/
+./configure --enable-static --enable-shared
+make && make install
+
+# libx265? --enable-gpl --enable-libx265
+git clone https://bitbucket.org/multicoreware/x265_git
+cd x265_git/
+git checkout 3.5
+cd build/linux/
+cmake -G "Unix Makefiles" ../../source/
+make && make install
+
+# ffmpeg
+wget http://www.ffmpeg.org/releases/ffmpeg-4.3.1.tar.xz
+tar -Jxvf ffmpeg-4.3.1.tar.xz
+cd ffmpeg-4.3.1/
+PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/"
+./configure \
+--enable-static \
+--enable-shared \
+--enable-gpl \
+--enable-libvpx \
+--enable-libopus \
+--enable-libx264 \
+--enable-libx265 \
+--enable-encoder=libvpx_vp8 --enable-decoder=vp8 --enable-parser=vp8 \
+--enable-encoder=libvpx_vp9 --enable-decoder=vp9 --enable-parser=vp9
+make && make install
+
+# 设置依赖
+vi /etc/ld.so.conf
+
+---
+/usr/local/lib/
+---
+
+ldconfig
+
+# 验证
+ffmpeg -version
+ffmpeg -decoders
+ffmpeg -encoders
+```
+
 ## 安装Nginx
 
 ```
@@ -283,6 +358,9 @@ vim /etc/selinux/config
 ---
 SELINUX=disabled
 ---
+
+# 验证
+nginx -V
 ```
 
 ## 下载源码
@@ -476,4 +554,23 @@ openssl pkcs12 -export -clcerts -in server.crt -inkey server.key -out server.p12
 apt-get install vim wget net-tools
 # 依赖软件
 apt-get install libssl-dev zlib1g-dev build-essential
+```
+
+## GCC/G++指定路径
+
+```
+# 安装路径
+--prefix=/data/dev/ffmpeg/build
+# 执行文件路径
+--bindir=/data/dev/ffmpeg/bin
+# 库文件路径
+--libdir=/usr/local/lib
+# 头文件路径
+--includedir=/usr/local/include
+```
+
+## 删除工具
+
+```
+rm -rf /data/dev/cmake /data/dev/ffmpeg /data/dev/python
 ```
