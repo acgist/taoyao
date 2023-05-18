@@ -326,6 +326,7 @@ vi /etc/ld.so.conf
 
 ---
 /usr/local/lib/
+/usr/local/lib64/
 ---
 
 ldconfig
