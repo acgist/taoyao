@@ -4,7 +4,7 @@ After=network.target
 Wants=network.target
 
 [Service]
-User=root
+User=taoyao
 Type=forking
 KillMode=process
 ExecStart=/data/taoyao/taoyao-signal-server/deploy/bin/startup.sh

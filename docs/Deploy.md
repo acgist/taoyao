@@ -3,34 +3,119 @@
 ## 整体环境
 
 ```
-CentOS  =  CentOS Linux release 7.9.2009 (Core)
+Debian  =  11.7.0
 Git     >= 1.8.0
 Java    >= 17.0.0
 Maven   >= 3.8.0
 CMake   >= 3.26.0
-NodeJS  >= v16.18.0
+NodeJS  >= v18.16.0
 Python  >= 3.8.0 with PIP
-ffmpeg  >= 4.3.1
+ffmpeg  >= 4.3.0
 gcc/g++ >= 10.2.0
-Android >= 9
+Android >= 9.0
 ```
 
-## 设置Yum源
+## Debian
+
+`CentOS 7`实在是太旧了，软件更新非常麻烦，所以直接使用`Debian`作为测试，系统配置全部使用`root`用户。
+
+### 系统参数
+
+* CPU = 1核
+* 内存 = 1G
+* 硬盘 = 20G
+* 帐号 = taoyao
+
+### 硬盘分区
+
+* /     = 5G
+* swap  = 2G
+* /data = 15G
+
+### 选择并安装软件很慢
 
 ```
-cd /etc/yum.repos.d
-rm -rf *
-wget /etc/yum.repos.d/CentOS-Base.repo https://mirrors.aliyun.com/repo/Centos-7.repo
-yum makecache
+Ctrl + Alt + F2
+vi /target/etc/apt/sources.list
+
+---
+#deb http://security.debian.org/debian-security bullseye-security main
+#deb-src http://security.debian.org/debian-security bullseye-security main
+deb http://mirrors.ustc.edu.cn/debian-security bullseye-security main
+deb-src http://mirrors.ustc.edu.cn/debian-security bullseye-security main
+---
+
+Ctrl + Alt + F1
 ```
 
-## 安装依赖
+### 配置vi
 
 ```
-yum install zlib-devel libffi-devel openssl-devel
+vi /etc/vim/vimrc.tiny
+
+---
+set backspace=2
+set nocompatible
+---
 ```
 
-## 优化Linux句柄数量
+### 网络配置
+
+```
+# 配置
+vi /etc/network/interfaces
+
+---
+iface enp0s3 inet static
+address 192.168.1.110
+gateway 192.168.1.1
+netmask 255.255.255.0
+---
+
+# 重启网卡
+ifdown enp0s3
+ifup enp0s3
+```
+
+### 设置国内镜像
+
+```
+# 配置
+vi /etc/apt/sources.list
+
+---
+deb https://mirrors.aliyun.com/debian/ bullseye main non-free contrib
+deb-src https://mirrors.aliyun.com/debian/ bullseye main non-free contrib
+deb https://mirrors.aliyun.com/debian-security/ bullseye-security main
+deb-src https://mirrors.aliyun.com/debian-security/ bullseye-security main
+deb https://mirrors.aliyun.com/debian/ bullseye-updates main non-free contrib
+deb-src https://mirrors.aliyun.com/debian/ bullseye-updates main non-free contrib
+deb https://mirrors.aliyun.com/debian/ bullseye-backports main non-free contrib
+deb-src https://mirrors.aliyun.com/debian/ bullseye-backports main non-free contrib
+---
+
+# 更新系统
+apt update
+```
+
+### 安装依赖
+
+```
+# 常用工具
+apt install vim sudo wget net-tools
+
+# 配置sudo
+chmod u+w /etc/sudoers
+vim /etc/sudoers
+
+---
+taoyao  ALL=(ALL:ALL) ALL
+---
+
+chmod u-w /etc/sudoers
+```
+
+### 优化Linux句柄数量
 
 ```
 # 配置
@@ -39,19 +124,19 @@ vim /etc/security/limits.conf
 ---
 root soft nofile 655350
 root hard nofile 655350
-* soft nofile 655350
-* hard nofile 655350
-* soft nproc 655350
-* hard nproc 655350
-* soft core unlimited
-* hard core unlimited
+*    soft nofile 655350
+*    hard nofile 655350
+*    soft nproc  655350
+*    hard nproc  655350
+*    soft core   unlimited
+*    hard core   unlimited
 ---
 
 # 验证（重新打开窗口有效）
 ulimit -a
 ```
 
-## 优化Linux内核参数
+### 优化Linux内核参数
 
 ```
 # 配置
@@ -59,7 +144,6 @@ vim /etc/sysctl.conf
 
 ---
 net.ipv4.tcp_tw_reuse        = 1
-net.ipv4.tcp_tw_recycle      = 1
 net.ipv4.tcp_syncookies      = 1
 net.ipv4.tcp_fin_timeout     = 30
 net.ipv4.tcp_keepalive_time  = 1200
@@ -71,11 +155,23 @@ net.ipv4.tcp_max_syn_backlog = 8192
 sysctl -p
 ```
 
+### 配置目录权限
+
+```
+chown taoyao /data
+```
+
+## 安装软件依赖
+
+```
+sudo apt install pkg-config libssl-dev zlib1g-dev
+```
+
 ## 安装Git
 
 ```
 # 安装
-yum install git
+sudo apt install git
 
 # 验证
 git --version
@@ -85,35 +181,78 @@ git --version
 
 ```
 # 安装
-yum install centos-release-scl
-yum install devtoolset-10-gcc devtoolset-10-gcc-c++
-scl enable devtoolset-10 -- bash
-
-# 配置
-vim ~/.bash_profile
-
----
-source /opt/rh/devtoolset-10/enable
----
+sudo apt install build-essential
 
 # 验证
 gcc -v
 g++ -v
 ```
 
+## 安装Java
+
+```
+# 下载
+mkdir -p /data/dev/java ; cd $_
+wget https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz
+tar -zxvf openjdk-17.0.2_linux-x64_bin.tar.gz
+
+# 配置
+vim ~/.profile
+
+---
+JAVA_HOME=/data/dev/java/jdk-17.0.2
+PATH=$PATH:$JAVA_HOME/bin
+---
+
+# 立即生效
+. ~/.profile
+
+# 连接
+sudo ln -sf /data/dev/java/jdk-17.0.2/bin/java /usr/local/bin/
+
+# 验证
+java -version
+```
+
+## 安装Maven
+
+```
+# 下载
+mkdir -p /data/dev/maven ; cd $_
+#wget https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
+wget https://mirrors.ustc.edu.cn/apache/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
+tar -zxvf apache-maven-3.8.8-bin.tar.gz
+
+# 配置
+vim ~/.profile
+
+---
+MAVEN_HOME=/data/dev/maven/apache-maven-3.8.8
+PATH=$PATH:$MAVEN_HOME/bin
+---
+
+# 立即生效
+. ~/.profile
+
+# 连接
+sudo ln -sf /data/dev/maven/apache-maven-3.8.8/bin/mvn /usr/local/bin/
+
+# 验证
+mvn -version
+```
+
 ## 安装CMake
 
 ```
 # 下载
-mkdir -p /data/dev/cmake
-cd /data/dev/cmake
+mkdir -p /data/dev/cmake ; cd $_
 wget https://github.com/Kitware/CMake/releases/download/v3.26.0/cmake-3.26.0.tar.gz
 
 # 安装
 tar -zxvf cmake-3.26.0.tar.gz
 cd cmake-3.26.0
 ./configure
-make && make install
+make && sudo make install
 
 # 验证
 cmake -version
@@ -123,14 +262,13 @@ cmake -version
 
 ```
 # 下载
-mkdir -p /data/dev/nodejs
-cd /data/dev/nodejs
-wget https://nodejs.org/dist/v16.19.0/node-v16.19.0-linux-x64.tar.xz
-tar -Jxvf node-v16.19.0-linux-x64.tar.xz
+mkdir -p /data/dev/nodejs ; cd $_
+wget https://nodejs.org/dist/v18.16.0/node-v18.16.0-linux-x64.tar.xz
+tar -Jxvf node-v18.16.0-linux-x64.tar.xz
 
 # 连接
-ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/npm  /usr/local/bin/
-ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/node /usr/local/bin/
+sudo ln -sf /data/dev/nodejs/node-v18.16.0-linux-x64/bin/npm  /usr/local/bin/
+sudo ln -sf /data/dev/nodejs/node-v18.16.0-linux-x64/bin/node /usr/local/bin/
 
 # 设置镜像
 npm config set registry https://registry.npm.taobao.org
@@ -139,7 +277,7 @@ npm config set registry https://registry.npm.taobao.org
 npm install -g pm2
 
 # 连接
-ln -sf /data/dev/nodejs/node-v16.19.0-linux-x64/bin/pm2 /usr/local/bin/
+sudo ln -sf /data/dev/nodejs/node-v18.16.0-linux-x64/bin/pm2 /usr/local/bin/
 
 # 安装日志
 pm2 install pm2-logrotate
@@ -149,6 +287,7 @@ pm2 set pm2-logrotate:max_size 256M
 
 # 自启
 pm2 startup
+#sudo env PATH=$PATH:/data/dev/nodejs/node-v18.16.0-linux-x64/bin /data/dev/nodejs/node-v18.16.0-linux-x64/lib/node_modules/pm2/bin/pm2 startup systemd -u taoyao --hp /home/taoyao
 pm2 save
 
 # 验证
@@ -159,60 +298,11 @@ npm -v
 node -v
 ```
 
-## 安装Java
-
-```
-# 下载
-mkdir -p /data/dev/java
-cd /data/dev/java
-wget https://download.java.net/java/GA/jdk17.0.2/dfd4a8d0985749f896bed50d7138ee7f/8/GPL/openjdk-17.0.2_linux-x64_bin.tar.gz
-tar -zxvf openjdk-17.0.2_linux-x64_bin.tar.gz
-
-# 配置
-vim ~/.bash_profile
-
----
-JAVA_HOME=/data/dev/java/jdk-17.0.2
-PATH=$PATH:$JAVA_HOME/bin
----
-
-# 立即生效
-. ~/.bash_profile
-
-# 验证
-java -version
-```
-
-## 安装Maven
-
-```
-# 下载
-mkdir -p /data/dev/maven
-cd /data/dev/maven
-wget https://dlcdn.apache.org/maven/maven-3/3.8.8/binaries/apache-maven-3.8.8-bin.tar.gz
-tar -zxvf apache-maven-3.8.8-bin.tar.gz
-
-# 配置
-vim ~/.bash_profile
-
----
-MAVEN_HOME=/data/dev/maven/apache-maven-3.8.8
-PATH=$PATH:$MAVEN_HOME/bin
----
-
-# 立即生效
-. ~/.bash_profile
-
-# 验证
-mvn -version
-```
-
 ## 安装Python
 
 ```
 # 下载
-mkdir -p /data/dev/python
-cd /data/dev/python
+mkdir -p /data/dev/python ; cd $_
 #wget https://www.python.org/ftp/python/3.8.16/Python-3.8.16.tar.xz
 wget https://mirrors.huaweicloud.com/python/3.8.16/Python-3.8.16.tar.xz
 tar -Jxvf Python-3.8.16.tar.xz
@@ -220,23 +310,13 @@ tar -Jxvf Python-3.8.16.tar.xz
 # 安装
 cd Python-3.8.16
 ./configure --with-ssl --enable-optimizations
-make && make install
+make && sudo make install
 
 # 配置
-ln -sf /usr/local/bin/pip3.8    /usr/local/bin/pip
-ln -sf /usr/local/bin/python3.8 /usr/local/bin/python
-
-# 配置Yum
-
-vim /usr/bin/yum
-vim /usr/libexec/urlgrabber-ext-down
-
----
-/usr/bin/python => /usr/bin/python2.7
----
+sudo ln -sf /usr/local/bin/pip3.8    /usr/local/bin/pip
+sudo ln -sf /usr/local/bin/python3.8 /usr/local/bin/python
 
 ## 验证
-yum --version
 pip --version
 python --version
 
@@ -258,56 +338,62 @@ pip config list
 ## 安装ffmpeg
 
 ```
-mkdir -p /data/dev/ffmpeg
-cd /data/dev/ffmpeg
+mkdir -p /data/dev/ffmpeg ; cd $_
 
 # nasm
+cd /data/dev/ffmpeg
 wget https://www.nasm.us/pub/nasm/releasebuilds/2.16/nasm-2.16.tar.gz
 tar -zxvf nasm-2.16.tar.gz
 cd nasm-2.16/
 ./configure
-make && make install
+make && sudo make install
 
 # yasm
+cd /data/dev/ffmpeg
 wget https://www.tortall.net/projects/yasm/releases/yasm-1.3.0.tar.gz
 tar -zxvf yasm-1.3.0.tar.gz
 cd yasm-1.3.0/
 ./configure
-make && make install
+make && sudo make install
 
 # libvpx?  --enable-gpl --enable-libvpx
+cd /data/dev/ffmpeg
 #git clone https://chromium.googlesource.com/webm/libvpx.git
 git clone https://github.com/webmproject/libvpx.git
 cd libvpx/
 git checkout v1.13.0
 ./configure --enable-static --enable-shared --enable-vp8 --enable-vp9 --enable-vp9-highbitdepth --as=yasm --disable-examples --disable-unit-tests
-make && make install
+make && sudo make install
 
 # libopus? --enable-gpl --enable-libopus
+cd /data/dev/ffmpeg
 wget https://archive.mozilla.org/pub/opus/opus-1.3.1.tar.gz
 tar -zxvf opus-1.3.1.tar.gz
 cd opus-1.3.1/
 ./configure --enable-static --enable-shared
-make && make install
+make && sudo make install
 
 # libx264? --enable-gpl --enable-libx264
+cd /data/dev/ffmpeg
 git clone https://code.videolan.org/videolan/x264.git
 cd x264/
 ./configure --enable-static --enable-shared
-make && make install
+make && sudo make install
 
 # libx265? --enable-gpl --enable-libx265
+cd /data/dev/ffmpeg
 git clone https://bitbucket.org/multicoreware/x265_git
 cd x265_git/
 git checkout 3.5
 cd build/linux/
 cmake -G "Unix Makefiles" ../../source/
-make && make install
+make && sudo make install
 
 # ffmpeg
-wget http://www.ffmpeg.org/releases/ffmpeg-4.3.1.tar.xz
-tar -Jxvf ffmpeg-4.3.1.tar.xz
-cd ffmpeg-4.3.1/
+cd /data/dev/ffmpeg
+wget http://www.ffmpeg.org/releases/ffmpeg-5.1.3.tar.xz
+tar -Jxvf ffmpeg-5.1.3.tar.xz
+cd ffmpeg-5.1.3/
 PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/"
 ./configure \
 --enable-static \
@@ -319,17 +405,7 @@ PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/"
 --enable-libx265 \
 --enable-encoder=libvpx_vp8 --enable-decoder=vp8 --enable-parser=vp8 \
 --enable-encoder=libvpx_vp9 --enable-decoder=vp9 --enable-parser=vp9
-make && make install
-
-# 设置依赖
-vi /etc/ld.so.conf
-
----
-/usr/local/lib/
-/usr/local/lib64/
----
-
-ldconfig
+make && sudo make install
 
 # 验证
 ffmpeg -version
@@ -341,27 +417,22 @@ ffmpeg -encoders
 
 ```
 # 安装
-rpm -Uvh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm
-yum install nginx
+sudo apt install nginx
 
-# 配置服务
-systemctl enable nginx
+# 配置自启
+sudo systemctl enable|disable nginx
 
 # 管理服务
-systemctl start|stop|restart nginx
+sudo systemctl start|stop|restart nginx
 
 # 加载配置
-nginx -s reload
+sudo nginx -s reload
 
-# 权限问题
-vim /etc/selinux/config
-
----
-SELINUX=disabled
----
+# 配置用户
+useradd -s /sbin/nologin -M nginx
 
 # 验证
-nginx -V
+sudo nginx -V
 ```
 
 ## 下载源码
@@ -383,17 +454,17 @@ mvn clean package -D skipTests
 cp taoyao-server/target/taoyao-server-1.0.0/bin/deploy.sh ./
 
 # 配置服务
-cp /data/taoyao/docs/etc/taoyao-signal-server.service /usr/lib/systemd/system/taoyao-signal-server.service
+sudo cp /data/taoyao/docs/etc/taoyao-signal-server.service /usr/lib/systemd/system/taoyao-signal-server.service
 
 # 配置自启
-systemctl daemon-reload
-systemctl enable taoyao-signal-server
+sudo systemctl daemon-reload
+sudo systemctl enable|disable taoyao-signal-server
 
 # 执行脚本
 ./deploy.sh
 
 # 管理服务
-systemctl start|stop|restart taoyao-signal-server
+sudo systemctl start|stop|restart taoyao-signal-server
 ```
 
 ## 安装媒体
@@ -451,9 +522,9 @@ pm2 start|stop|restart taoyao-client-web
 npm run build
 
 # Nginx配置
-cp /data/taoyao/docs/etc/nginx.conf /etc/nginx/nginx.conf
+sudo cp /data/taoyao/docs/etc/nginx.conf /etc/nginx/nginx.conf
 
-nginx -s reload
+sudo nginx -s reload
 ```
 
 ## 安装Android终端
@@ -468,37 +539,43 @@ sh ./gradlew --no-daemon assembleRelease
 ./gradlew.bat --no-daemon assembleRelease
 ```
 
-## 配置防火墙
+## 防火墙
 
 ```
-# 终端服务（Web）：Nginx
-firewall-cmd --zone=public --add-port=443/tcp --permanent
-# 终端服务（Web）：PM2
-firewall-cmd --zone=public --add-port=8443/tcp --permanent
-# 信令服务（WebSocket）
-firewall-cmd --zone=public --add-port=8888/tcp --permanent
-# 信令服务（Socket）
-firewall-cmd --zone=public --add-port=9999/tcp --permanent
-# 媒体服务
-firewall-cmd --zone=public --add-port=40000-49999/udp --permanent
+# 安装
+apt install ufw
 
-firewall-cmd --reload
-firewall-cmd --list-all
-firewall-cmd --list-ports
+# 常用命令
+sudo ufw status
+sudo ufw enable|disable|reload
+
+# 禁用所有
+sudo ufw default deny
+# SSH
+sudo ufw allow ssh
+# 终端服务（Web）：Nginx
+sudo ufw allow 443/tcp
+# 终端服务（Web）：PM2
+sudo ufw allow 8443/tcp
+# 信令服务（WebSocket）
+sudo ufw allow 8888/tcp
+# 信令服务（Socket）
+sudo ufw allow 9999/tcp
+# 媒体服务
+sudo ufw allow 40000:49999/udp
 
 # 删除端口
-#firewall-cmd --zone=public --remove-port=443/tcp --permanent
-#firewall-cmd --zone=public --remove-port=8443/tcp --permanent
-#firewall-cmd --zone=public --remove-port=8888/tcp --permanent
-#firewall-cmd --zone=public --remove-port=9999/tcp --permanent
-#firewall-cmd --zone=public --remove-port=40000-49999/udp --permanent
+#sudo ufw delete allow 443/tcp
+#sudo ufw delete allow 8443/tcp
+#sudo ufw delete allow 8888/tcp
+#sudo ufw delete allow 9999/tcp
+#sudo ufw delete allow 40000:49999/tcp
 ```
 
 ## 证书
 
 ```
-mkdir /data/certs
-cd /data/certs
+mkdir /data/certs ; cd $_
 
 # CA证书
 
@@ -546,18 +623,7 @@ openssl pkcs12 -export -clcerts -in server.crt -inkey server.key -out server.p12
 # 设置密码：-deststorepass 123456
 ```
 
-## Debian
-
-如果使用`Debian`大部分命令都是通用的，使用`apt`替换`yum`即可，不用处理`Yum`中`Python`的冲突。
-
-```
-# 常用工具
-apt-get install vim wget net-tools
-# 依赖软件
-apt-get install libssl-dev zlib1g-dev build-essential
-```
-
-## GCC/G++指定路径
+## gcc/g++路径配置
 
 ```
 # 安装路径
@@ -570,8 +636,14 @@ apt-get install libssl-dev zlib1g-dev build-essential
 --includedir=/usr/local/include
 ```
 
-## 删除工具
+## 清理源码
 
 ```
-rm -rf /data/dev/cmake /data/dev/ffmpeg /data/dev/python
+sudo rm -rf \
+/data/dev/cmake \
+/data/dev/ffmpeg \
+/data/dev/python \
+/data/dev/maven/apache-maven-3.8.8-bin.tar.gz \
+/data/dev/nodejs/node-v18.16.0-linux-x64.tar.xz \
+/data/dev/java/openjdk-17.0.2_linux-x64_bin.tar.gz
 ```

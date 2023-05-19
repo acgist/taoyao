@@ -36,5 +36,5 @@ cp -rf ${project.basedir}/target/${project.artifactId}-${project.version}/* $bas
 
 # 启动服务
 echo "启动项目：${project.artifactId}-${project.version}"
-systemctl restart taoyao-signal-server
+sudo systemctl restart taoyao-signal-server
 systemctl status taoyao-signal-server
