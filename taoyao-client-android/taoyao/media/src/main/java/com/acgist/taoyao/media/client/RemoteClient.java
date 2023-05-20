@@ -3,7 +3,6 @@ package com.acgist.taoyao.media.client;
 import android.os.Handler;
 import android.util.Log;
 
-import com.acgist.taoyao.boot.utils.ListUtils;
 import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
@@ -13,10 +12,10 @@ import org.webrtc.VideoTrack;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * 房间远程终端
+ * 注意：这里媒体MediaStreamTrack使用Mediasoup方法释放不要直接调用MediaStreamTrack.dispose()释放
  *
  * @author acgist
  */
@@ -39,35 +38,67 @@ public class RemoteClient extends RoomClient {
     @Override
     public void playAudio() {
         super.playAudio();
-        ListUtils.getOnlyOne(
-            this.tracks.values().stream()
-                .filter(v -> MediaStreamTrack.AUDIO_TRACK_KIND.equals(v.kind()))
-                .map(v -> (AudioTrack) v)
-                .collect(Collectors.toList()),
-            audioTrack -> {
-                audioTrack.setVolume(Config.DEFAULT_VOLUME);
-                audioTrack.setEnabled(true);
-                return audioTrack;
-            }
-        );
+        this.tracks.values().stream()
+        .filter(v -> MediaStreamTrack.AUDIO_TRACK_KIND.equals(v.kind()))
+        .map(v -> (AudioTrack) v)
+        .forEach(audioTrack -> {
+            audioTrack.setVolume(Config.DEFAULT_VOLUME);
+            audioTrack.setEnabled(true);
+        });
+    }
+
+    @Override
+    public void pauseAudio() {
+        super.pauseAudio();
+        this.tracks.values().stream()
+        .filter(v -> MediaStreamTrack.AUDIO_TRACK_KIND.equals(v.kind()))
+        .forEach(audioTrack -> {
+            audioTrack.setEnabled(false);
+        });
+    }
+
+    @Override
+    public void resumeAudio() {
+        super.resumeAudio();
+        this.tracks.values().stream()
+        .filter(v -> MediaStreamTrack.AUDIO_TRACK_KIND.equals(v.kind()))
+        .forEach(audioTrack -> {
+            audioTrack.setEnabled(true);
+        });
     }
 
     @Override
     public void playVideo() {
         super.playVideo();
-        ListUtils.getOnlyOne(
-            this.tracks.values().stream()
-                .filter(v -> MediaStreamTrack.VIDEO_TRACK_KIND.equals(v.kind()))
-                .map(v -> (VideoTrack) v)
-                .collect(Collectors.toList()),
-            videoTrack -> {
-                videoTrack.setEnabled(true);
-                if(this.surfaceViewRenderer == null) {
-                    this.surfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(Config.WHAT_NEW_REMOTE_VIDEO, videoTrack);
-                }
-                return videoTrack;
+        this.tracks.values().stream()
+        .filter(v -> MediaStreamTrack.VIDEO_TRACK_KIND.equals(v.kind()))
+        .map(v -> (VideoTrack) v)
+        .forEach(videoTrack -> {
+            videoTrack.setEnabled(true);
+            if(this.surfaceViewRenderer == null) {
+                this.surfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(Config.WHAT_NEW_REMOTE_VIDEO, videoTrack);
             }
-        );
+        });
+    }
+
+    @Override
+    public void pauseVideo() {
+        super.pauseVideo();
+        this.tracks.values().stream()
+        .filter(v -> MediaStreamTrack.VIDEO_TRACK_KIND.equals(v.kind()))
+        .forEach(audioTrack -> {
+            audioTrack.setEnabled(false);
+        });
+    }
+
+    @Override
+    public void resumeVideo() {
+        super.resumeVideo();
+        this.tracks.values().stream()
+        .filter(v -> MediaStreamTrack.VIDEO_TRACK_KIND.equals(v.kind()))
+        .forEach(audioTrack -> {
+            audioTrack.setEnabled(true);
+        });
     }
 
     @Override
@@ -79,7 +110,7 @@ public class RemoteClient extends RoomClient {
             super.close();
             Log.i(RemoteClient.class.getSimpleName(), "关闭远程终端：" + this.clientId);
             synchronized (this.tracks) {
-                // 注意：使用nativeMediaConsumerClose释放
+                // 注意：使用nativeMediaConsumerClose释放资源
                 this.tracks.clear();
             }
         }
@@ -93,7 +124,7 @@ public class RemoteClient extends RoomClient {
     public void close(String consumerId) {
         Log.i(RemoteClient.class.getSimpleName(), "关闭远程终端消费者：" + this.clientId + " - " + consumerId);
         synchronized (this.tracks) {
-            // 注意：使用nativeMediaConsumerClose释放
+            // 注意：使用nativeMediaConsumerClose释放资源
             this.tracks.remove(consumerId);
         }
     }

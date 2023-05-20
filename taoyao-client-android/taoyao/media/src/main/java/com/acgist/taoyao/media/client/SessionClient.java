@@ -4,7 +4,6 @@ import android.os.Handler;
 import android.util.Log;
 
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.boot.utils.ListUtils;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.config.MediaProperties;
@@ -231,30 +230,33 @@ public class SessionClient extends Client {
         if(this.remoteMediaStream == null) {
             return;
         }
-        ListUtils.getOnlyOne(this.remoteMediaStream.audioTracks, audioTrack -> {
+        this.remoteMediaStream.audioTracks.forEach(audioTrack -> {
             audioTrack.setVolume(Config.DEFAULT_VOLUME);
             audioTrack.setEnabled(true);
-            return audioTrack;
         });
     }
 
     @Override
     public void pauseAudio() {
         super.pauseAudio();
-        ListUtils.getOnlyOne(this.remoteMediaStream.audioTracks, audioTrack -> {
+        if(this.remoteMediaStream == null)  {
+            return;
+        }
+        this.remoteMediaStream.audioTracks.forEach(audioTrack -> {
             audioTrack.setVolume(0);
             audioTrack.setEnabled(false);
-            return audioTrack;
         });
     }
 
     @Override
     public void resumeAudio() {
         super.resumeAudio();
-        ListUtils.getOnlyOne(this.remoteMediaStream.audioTracks, audioTrack -> {
+        if(this.remoteMediaStream == null)  {
+            return;
+        }
+        this.remoteMediaStream.audioTracks.forEach(audioTrack -> {
             audioTrack.setVolume(Config.DEFAULT_VOLUME);
             audioTrack.setEnabled(true);
-            return audioTrack;
         });
     }
 
@@ -264,74 +266,67 @@ public class SessionClient extends Client {
         if(this.remoteMediaStream == null) {
             return;
         }
-        ListUtils.getOnlyOne(this.remoteMediaStream.videoTracks, videoTrack -> {
+        this.remoteMediaStream.videoTracks.forEach(videoTrack -> {
             videoTrack.setEnabled(true);
             if(this.surfaceViewRenderer == null) {
                 this.surfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(Config.WHAT_NEW_REMOTE_VIDEO, videoTrack);
             }
-            return videoTrack;
         });
     }
 
     @Override
     public void pauseVideo() {
         super.pauseVideo();
-        ListUtils.getOnlyOne(this.remoteMediaStream.videoTracks, videoTrack -> {
+        if(this.remoteMediaStream == null)  {
+            return;
+        }
+        if(this.surfaceViewRenderer != null) {
+            // TODO：测试
+            this.surfaceViewRenderer.pauseVideo();
+        }
+        this.remoteMediaStream.videoTracks.forEach(videoTrack -> {
             videoTrack.setEnabled(false);
-            return videoTrack;
         });
     }
 
     @Override
     public void resumeVideo() {
         super.resumeVideo();
-        ListUtils.getOnlyOne(this.remoteMediaStream.videoTracks, videoTrack -> {
+        if(this.remoteMediaStream == null)  {
+            return;
+        }
+        if(this.surfaceViewRenderer != null) {
+            // TODO：测试
+            this.surfaceViewRenderer.disableFpsReduction();
+        }
+        this.remoteMediaStream.videoTracks.forEach(videoTrack -> {
             videoTrack.setEnabled(true);
-            return videoTrack;
         });
-    }
-
-    @Override
-    public void pause() {
-        super.pause();
-        this.pauseAudio();
-        this.pauseVideo();
     }
 
     public void pause(String type) {
         if(MediaStreamTrack.AUDIO_TRACK_KIND.equals(type)) {
-            ListUtils.getOnlyOne(this.mediaStream.audioTracks, audioTrack -> {
+            this.mediaStream.audioTracks.forEach(audioTrack -> {
                 audioTrack.setVolume(0);
                 audioTrack.setEnabled(false);
-                return audioTrack;
             });
         } else if(MediaStreamTrack.VIDEO_TRACK_KIND.equals(type)) {
-            ListUtils.getOnlyOne(this.mediaStream.videoTracks, videoTrack -> {
+            this.mediaStream.videoTracks.forEach(videoTrack -> {
                 videoTrack.setEnabled(false);
-                return videoTrack;
             });
         } else {
         }
     }
 
-    @Override
-    public void resume() {
-        super.resume();
-        this.resumeAudio();
-        this.resumeVideo();
-    }
-
     public void resume(String type) {
         if(MediaStreamTrack.AUDIO_TRACK_KIND.equals(type)) {
-            ListUtils.getOnlyOne(this.mediaStream.audioTracks, audioTrack -> {
+            this.mediaStream.audioTracks.forEach(audioTrack -> {
                 audioTrack.setVolume(Config.DEFAULT_VOLUME);
                 audioTrack.setEnabled(true);
-                return audioTrack;
             });
         } else if(MediaStreamTrack.VIDEO_TRACK_KIND.equals(type)) {
-            ListUtils.getOnlyOne(this.mediaStream.videoTracks, videoTrack -> {
+            this.mediaStream.videoTracks.forEach(videoTrack -> {
                 videoTrack.setEnabled(true);
-                return videoTrack;
             });
         } else {
         }

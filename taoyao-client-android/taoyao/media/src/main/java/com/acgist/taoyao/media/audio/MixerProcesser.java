@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 混音处理器
  *
- * JavaAudioDeviceModule              : 音频
+ * JavaAudioDeviceModule              : 音频模块
  * WebRtcAudioTrack#AudioTrackThread  ：远程音频
  * WebRtcAudioRecord#AudioRecordThread：本地音频
  *
@@ -33,7 +33,7 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
 
     /**
      * 音频数据来源
-     * 其实不用切换可以两个同时录制，但是有点浪费资源。
+     * 其实可以不用切换可以两个同时录制，但是有点浪费资源。
      *
      * @author acgist
      */
@@ -44,18 +44,56 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
         WEBRTC;
     }
 
+    /**
+     * 是否关闭
+     */
     private boolean close;
+    /**
+     * 音频数据来源
+     */
     private Source source;
+    /**
+     * 采样率
+     */
     private final int sampleRate;
+    /**
+     * 音频格式
+     */
     private final int audioFormat;
+    /**
+     * 音频来源
+     */
     private final int audioSource;
+    /**
+     * 通道数量
+     */
     private final int channelCount;
+    /**
+     * 通道配置
+     */
     private final int channelConfig;
+    /**
+     * 录音器
+     */
     private final AudioRecord audioRecord;
+    /**
+     * 录像机
+     */
     private final RecordClient recordClient;
+    /**
+     * 本地音频队列
+     */
     private final BlockingQueue<JavaAudioDeviceModule.AudioSamples> local;
+    /**
+     * 远程音频队列
+     */
     private final BlockingQueue<JavaAudioDeviceModule.AudioSamples> remote;
 
+    /**
+     * @param sampleRate   采样率
+     * @param channelCount 通道数量
+     * @param recordClient 录像机
+     */
     @SuppressLint("MissingPermission")
     public MixerProcesser(int sampleRate, int channelCount, RecordClient recordClient) {
         this.setDaemon(true);
@@ -79,8 +117,8 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
             .setBufferSizeInBytes(AudioRecord.getMinBufferSize(this.sampleRate, this.channelConfig, this.audioFormat))
             .build();
         this.recordClient = recordClient;
-        this.local  = new LinkedBlockingQueue<>(1024);
-        this.remote = new LinkedBlockingQueue<>(1024);
+        this.local        = new LinkedBlockingQueue<>(1024);
+        this.remote       = new LinkedBlockingQueue<>(1024);
     }
 
     @Override
@@ -101,16 +139,16 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
 
     @Override
     public void run() {
-        long pts = System.nanoTime();
+        long pts          = System.nanoTime();
+        int recordSize    = 0;
+        int mixDataLength = 0;
         byte[] mixData    = null;
         byte[] localData  = null;
         byte[] remoteData = null;
         byte[] recordData = null;
-        int mixDataLength = 0;
         JavaAudioDeviceModule.AudioSamples local  = null;
         JavaAudioDeviceModule.AudioSamples remote = null;
-        int recordSize    = 0;
-        // 采集数据大小：采样频率 / (一秒 / 回调频率) * 通道数量 * 采样数据大小
+        // 采集数据大小：采样频率 / (一千毫秒 / 回调频率毫秒) * 通道数量 * 采样数据大小
         final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(this.sampleRate / (1000 / 10) * this.channelCount * 2);
         while(!this.close) {
             try {
@@ -126,6 +164,7 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
                 } else if(this.source == Source.WEBRTC) {
                     // 平均10毫秒
                     local  = this.local.poll(64, TimeUnit.MILLISECONDS);
+                    // 远程数据不要等待
                     remote = this.remote.poll();
                     if(local != null && remote != null) {
 //                      Log.d(MixerProcesser.class.getSimpleName(), String.format("""
@@ -140,8 +179,7 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
 //                      ));
                         localData  = local.getData();
                         remoteData = remote.getData();
-                        if(mixDataLength != localData.length) {
-//                      if(mixDataLength != localData.length && mixDataLength != remoteData.length) {
+                        if(mixDataLength != localData.length && mixDataLength != remoteData.length) {
                             mixDataLength = localData.length;
                             mixData = new byte[mixDataLength];
                         }
@@ -164,7 +202,6 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
                         this.recordClient.onPcm(pts, remoteData);
                     } else {
                         Thread.yield();
-                        continue;
                     }
                 } else {
                     Thread.yield();
@@ -203,6 +240,9 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
         }
     }
 
+    /**
+     * 关闭混音
+     */
     public void close() {
         synchronized (this) {
             this.close = true;

@@ -28,9 +28,15 @@ public abstract class Client extends CloseableClient {
      */
     protected SurfaceViewRenderer surfaceViewRenderer;
 
+    /**
+     * @param name        终端名称
+     * @param clientId    终端ID
+     * @param taoyao      信令
+     * @param mainHandler MainHandler
+     */
     public Client(String name, String clientId, ITaoyao taoyao, Handler mainHandler) {
         super(taoyao, mainHandler);
-        this.name = name;
+        this.name     = name;
         this.clientId = clientId;
     }
 
@@ -40,9 +46,15 @@ public abstract class Client extends CloseableClient {
     public void playAudio() {
     }
 
+    /**
+     * 暂停音频
+     */
     public void pauseAudio() {
     }
 
+    /**
+     * 恢复音频
+     */
     public void resumeAudio() {
     }
 
@@ -52,23 +64,32 @@ public abstract class Client extends CloseableClient {
     public void playVideo() {
     }
 
+    /**
+     * 暂停视频
+     */
     public void pauseVideo() {
-        if(this.surfaceViewRenderer != null) {
-            this.surfaceViewRenderer.pauseVideo();
-        }
     }
 
+    /**
+     * 恢复视频
+     */
     public void resumeVideo() {
-        if(this.surfaceViewRenderer != null) {
-            // TODO：验证是否正确
-            this.surfaceViewRenderer.disableFpsReduction();
-        }
     }
 
+    /**
+     * 暂停音视频
+     */
     public void pause() {
+        this.pauseAudio();
+        this.pauseVideo();
     }
 
+    /**
+     * 恢复音视频
+     */
     public void resume() {
+        this.resumeAudio();
+        this.resumeVideo();
     }
 
     @Override

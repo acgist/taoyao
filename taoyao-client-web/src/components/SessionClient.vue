@@ -3,12 +3,16 @@
   <div class="client">
     <audio ref="audio"></audio>
     <video ref="video"></video>
-    <p class="title">{{ client?.name || "" }}</p>
+    <p class="title">{{ client.name || "" }}</p>
     <div class="buttons">
-      <el-button @click="taoyao.sessionResume(client.id, 'audio')" v-show="audioStream && !client.remoteAudioEnabled" type="danger"  title="打开麦克风" :icon="Mute"       circle />
-      <el-button @click="taoyao.sessionPause(client.id, 'audio')"  v-show="audioStream &&  client.remoteAudioEnabled" type="primary" title="关闭麦克风" :icon="Microphone" circle class="mic" :style="{'--volume': client?.volume}" />
-      <el-button @click="taoyao.sessionResume(client.id, 'video')" v-show="videoStream && !client.remoteVideoEnabled" type="danger"  title="打开摄像头" :icon="VideoPlay"  circle />
-      <el-button @click="taoyao.sessionPause(client.id, 'video')"  v-show="videoStream &&  client.remoteVideoEnabled" type="primary" title="关闭摄像头" :icon="VideoPause" circle />
+      <el-button @click="client.pause('audio')"  v-show="client.localAudioEnabled"  type="primary" title="关闭本地麦克风" :icon="Mic"  circle />
+      <el-button @click="client.resume('audio')" v-show="!client.localAudioEnabled" type="danger"  title="打开本地麦克风" :icon="Mic"  circle />
+      <el-button @click="client.pause('video')"  v-show="client.localVideoEnabled"  type="primary" title="关闭本地摄像头" :icon="Film" circle />
+      <el-button @click="client.resume('video')" v-show="!client.localVideoEnabled" type="danger"  title="打开本地摄像头" :icon="Film" circle />
+      <el-button @click="taoyao.sessionResume(client.id, 'audio')" v-show="audioStream && !client.remoteAudioEnabled" type="danger"  title="打开远程麦克风" :icon="Mute"       circle />
+      <el-button @click="taoyao.sessionPause(client.id, 'audio')"  v-show="audioStream &&  client.remoteAudioEnabled" type="primary" title="关闭远程麦克风" :icon="Microphone" circle class="mic" :style="{'--volume': client.volume}" />
+      <el-button @click="taoyao.sessionResume(client.id, 'video')" v-show="videoStream && !client.remoteVideoEnabled" type="danger"  title="打开远程摄像头" :icon="VideoPlay"  circle />
+      <el-button @click="taoyao.sessionPause(client.id, 'video')"  v-show="videoStream &&  client.remoteVideoEnabled" type="primary" title="关闭远程摄像头" :icon="VideoPause" circle />
       <el-button @click="taoyao.controlPhotograph(client.clientId)"                 :icon="Camera"      circle title="拍照" />
       <el-button @click="taoyao.controlRecord(client.clientId, (record = !record))" :icon="VideoCamera" circle title="录像" :type="record ? 'danger' : ''" />
       <el-popover placement="top" :width="240" trigger="hover">
@@ -27,6 +31,8 @@
 
 <script>
 import {
+  Mic,
+  Film,
   Mute,
   Camera,
   Refresh,
@@ -41,6 +47,8 @@ export default {
   name: "SessionClient",
   setup() {
     return {
+      Mic,
+      Film,
       Mute,
       Camera,
       Refresh,

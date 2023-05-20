@@ -3,10 +3,10 @@
   <div class="client">
     <audio ref="audio"></audio>
     <video ref="video"></video>
-    <p class="title">{{ client?.name || "" }}</p>
+    <p class="title">{{ client.name || "" }}</p>
     <div class="buttons">
       <el-button @click="taoyao.mediaProducerResume(audioProducer.id)" v-show="audioProducer &&  audioProducer.paused" type="danger"  title="打开麦克风" :icon="Mute"       circle />
-      <el-button @click="taoyao.mediaProducerPause(audioProducer.id)"  v-show="audioProducer && !audioProducer.paused" type="primary" title="关闭麦克风" :icon="Microphone" circle class="mic" :style="{'--volume': client?.volume}" />
+      <el-button @click="taoyao.mediaProducerPause(audioProducer.id)"  v-show="audioProducer && !audioProducer.paused" type="primary" title="关闭麦克风" :icon="Microphone" circle class="mic" :style="{'--volume': client.volume}" />
       <el-button @click="taoyao.mediaProducerResume(videoProducer.id)" v-show="videoProducer &&  videoProducer.paused" type="danger"  title="打开摄像头" :icon="VideoPlay"  circle />
       <el-button @click="taoyao.mediaProducerPause(videoProducer.id)"  v-show="videoProducer && !videoProducer.paused" type="primary" title="关闭摄像头" :icon="VideoPause" circle />
       <el-button @click="exchangeVideoSource" :icon="Refresh" circle title="交换媒体" />

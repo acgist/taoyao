@@ -6,10 +6,10 @@
   <div class="client">
     <audio ref="audio"></audio>
     <video ref="video"></video>
-    <p class="title">{{ client?.name || "" }}</p>
+    <p class="title">{{ client.name || "" }}</p>
     <div class="buttons">
       <el-button @click="taoyao.mediaConsumerResume(audioConsumer.id)" v-show="audioConsumer &&  audioConsumer.paused" type="danger"  title="打开麦克风" :icon="Mute"       circle />
-      <el-button @click="taoyao.mediaConsumerPause(audioConsumer.id)"  v-show="audioConsumer && !audioConsumer.paused" type="primary" title="关闭麦克风" :icon="Microphone" circle class="mic" :style="{'--volume': client?.volume}" />
+      <el-button @click="taoyao.mediaConsumerPause(audioConsumer.id)"  v-show="audioConsumer && !audioConsumer.paused" type="primary" title="关闭麦克风" :icon="Microphone" circle class="mic" :style="{'--volume': client.volume}" />
       <el-button @click="taoyao.mediaConsumerResume(videoConsumer.id)" v-show="videoConsumer &&  videoConsumer.paused" type="danger"  title="打开摄像头" :icon="VideoPlay"  circle />
       <el-button @click="taoyao.mediaConsumerPause(videoConsumer.id)"  v-show="videoConsumer && !videoConsumer.paused" type="primary" title="关闭摄像头" :icon="VideoPause" circle />
       <el-button @click="taoyao.controlPhotograph(client.clientId)"                 :icon="Camera"      circle title="拍照" />

@@ -16,7 +16,6 @@ public abstract class CloseableClient implements Closeable {
 
     /**
      * 是否加载
-     * 防止重复加载
      */
     protected volatile boolean init;
     /**
@@ -28,7 +27,7 @@ public abstract class CloseableClient implements Closeable {
      */
     protected final ITaoyao taoyao;
     /**
-     * Handler
+     * MainHandler
      */
     protected final Handler mainHandler;
     /**
@@ -36,11 +35,15 @@ public abstract class CloseableClient implements Closeable {
      */
     protected final MediaManager mediaManager;
 
+    /**
+     * @param taoyao      信令
+     * @param mainHandler MainHandler
+     */
     public CloseableClient(ITaoyao taoyao, Handler mainHandler) {
-        this.init = false;
-        this.close = false;
-        this.taoyao = taoyao;
-        this.mainHandler = mainHandler;
+        this.init         = false;
+        this.close        = false;
+        this.taoyao       = taoyao;
+        this.mainHandler  = mainHandler;
         this.mediaManager = MediaManager.getInstance();
     }
 
@@ -56,4 +59,5 @@ public abstract class CloseableClient implements Closeable {
     public void close() {
         this.close = true;
     }
+
 }
