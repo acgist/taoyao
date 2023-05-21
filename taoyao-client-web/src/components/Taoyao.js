@@ -253,6 +253,10 @@ class Session {
   sessionId;
   // 本地媒体流
   localStream;
+  // 是否打开音频
+  audioEnabled;
+  // 是否打开视频
+  videoEnabled;
   // 本地音频
   localAudioTrack;
   localAudioEnabled;
@@ -272,31 +276,35 @@ class Session {
     name,
     clientId,
     sessionId,
+    audioEnabled,
+    videoEnabled
   }) {
     this.id         = sessionId;
     this.name       = name;
     this.closed     = false;
     this.clientId   = clientId;
     this.sessionId  = sessionId;
+    this.audioEnabled = audioEnabled;
+    this.videoEnabled = videoEnabled;
   }
 
   async pause(type) {
-    if(type === 'audio') {
+    if(type === 'audio' && this.localAudioTrack) {
       this.localAudioEnabled = false;
       this.localAudioTrack.enabled = false;
     }
-    if(type === 'video') {
+    if(type === 'video' && this.localVideoTrack) {
       this.localVideoEnabled = false;
       this.localVideoTrack.enabled = false;
     }
   }
   
   async resume(type) {
-    if(type === 'audio') {
+    if(type === 'audio' && this.localAudioTrack) {
       this.localAudioEnabled = true;
       this.localAudioTrack.enabled = true;
     }
-    if(type === 'video') {
+    if(type === 'video' && this.localVideoTrack) {
       this.localVideoEnabled = true;
       this.localVideoTrack.enabled = true;
     }
@@ -2243,9 +2251,11 @@ class Taoyao extends RemoteClient {
   /**
    * 发起会话
    * 
-   * @param {*} clientId 接收者ID
+   * @param {*} clientId     接收者ID
+   * @param {*} audioEnabled 是否打开音频
+   * @param {*} videoEnabled 是否打开视频
    */
-  async sessionCall(clientId) {
+  async sessionCall(clientId, audioEnabled = true, videoEnabled = true) {
     const me = this;
     if (!clientId) {
       this.callbackError("无效终端");
@@ -2257,7 +2267,7 @@ class Taoyao extends RemoteClient {
       })
     );
     const { name, sessionId } = response.body;
-    const session = new Session({name, clientId, sessionId});
+    const session = new Session({name, clientId, sessionId, audioEnabled, videoEnabled});
     this.sessionClients.set(sessionId, session);
   }
 
@@ -2404,15 +2414,23 @@ class Taoyao extends RemoteClient {
         // TODO：重连
       }
     }
-    const localStream = await me.getStream();
-    session.localStream = localStream;
+    const localStream      = await me.getStream();
+    session.localStream    = localStream;
     session.peerConnection = peerConnection;
-    session.localAudioTrack = localStream.getAudioTracks()[0];
-    session.localAudioEnabled = true;
-    session.localVideoTrack = localStream.getVideoTracks()[0];
-    session.localVideoEnabled = true;
-    await session.peerConnection.addTrack(session.localAudioTrack, localStream);
-    await session.peerConnection.addTrack(session.localVideoTrack, localStream);
+    if(session.audioEnabled) {
+      session.localAudioTrack   = localStream.getAudioTracks()[0];
+      session.localAudioEnabled = true;
+      await session.peerConnection.addTrack(session.localAudioTrack, localStream);
+    } else {
+      session.localAudioEnabled = false;
+    }
+    if(session.videoEnabled) {
+      session.localVideoTrack   = localStream.getVideoTracks()[0];
+      session.localVideoEnabled = true;
+      await session.peerConnection.addTrack(session.localVideoTrack, localStream);
+    } else {
+      session.localVideoEnabled = false;
+    }
     return peerConnection;
   }
 

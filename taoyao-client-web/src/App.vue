@@ -161,6 +161,7 @@ export default {
     },
     async sessionCall() {
       this.taoyao.sessionCall(this.room.callClientId);
+      // this.taoyao.sessionCall(this.room.callClientId, false, false);
       this.roomVisible = false;
     },
     async roomCreate() {

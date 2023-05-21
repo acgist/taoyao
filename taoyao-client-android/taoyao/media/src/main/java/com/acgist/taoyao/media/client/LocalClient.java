@@ -160,9 +160,7 @@ public class LocalClient extends RoomClient {
         }
         Log.i(RemoteClient.class.getSimpleName(), "关闭本地终端生产者：" + this.clientId + " - " + producerId);
         synchronized (this.mediaStream) {
-            final Long pointer = this.tracks.get(producerId);
-            // TODO：测试remove方法
-//          final Long pointer = this.tracks.remove(producerId);
+            final Long pointer = this.tracks.remove(producerId);
             if(pointer == null) {
                 return;
             }
