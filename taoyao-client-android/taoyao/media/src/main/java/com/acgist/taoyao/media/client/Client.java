@@ -44,36 +44,42 @@ public abstract class Client extends CloseableClient {
      * 播放音频
      */
     public void playAudio() {
+        Log.i(Client.class.getSimpleName(), "播放音频：" + this.clientId);
     }
 
     /**
      * 暂停音频
      */
     public void pauseAudio() {
+        Log.i(Client.class.getSimpleName(), "暂停音频：" + this.clientId);
     }
 
     /**
      * 恢复音频
      */
     public void resumeAudio() {
+        Log.i(Client.class.getSimpleName(), "恢复音频：" + this.clientId);
     }
 
     /**
      * 播放视频
      */
     public void playVideo() {
+        Log.i(Client.class.getSimpleName(), "播放视频：" + this.clientId);
     }
 
     /**
      * 暂停视频
      */
     public void pauseVideo() {
+        Log.i(Client.class.getSimpleName(), "暂停视频：" + this.clientId);
     }
 
     /**
      * 恢复视频
      */
     public void resumeVideo() {
+        Log.i(Client.class.getSimpleName(), "恢复视频：" + this.clientId);
     }
 
     /**

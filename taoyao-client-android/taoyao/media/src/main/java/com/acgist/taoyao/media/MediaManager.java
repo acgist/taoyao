@@ -881,6 +881,7 @@ public final class MediaManager {
 
         @Override
         public void onFrameCaptured(VideoFrame videoFrame) {
+            // TODO：验证使用一个source，使用cropandscale缩放看看性能能否提升
             // 注意：VideoFrame必须释放，多线程环境需要调用retain和release方法。
             if(MediaManager.this.videoProcesser == null) {
                 this.mainObserver.onFrameCaptured(videoFrame);

@@ -46,31 +46,74 @@ import java.util.List;
 /**
  * 拍照终端
  *
+ * 没有拉流时使用Camera2拍照
+ * 拉流时使用WebRTC帧数据拍照
+ *
  * @author acgist
  */
 public class PhotographClient implements VideoSink {
 
+    /**
+     * 图片质量
+     */
     private final int quantity;
+    /**
+     * 图片名称
+     */
     private final String filename;
+    /**
+     * 图片路径
+     */
     private final String filepath;
-    private volatile boolean done;
+    /**
+     * 是否完成
+     */
     private volatile boolean finish;
+    /**
+     * 是否采集到了图片数据
+     */
+    private volatile boolean hasImage;
+    /**
+     * Camera2拍照Surface
+     */
     private Surface surface;
+    /**
+     * WebRTC VideoTrack
+     */
     private VideoTrack videoTrack;
+    /**
+     * Camera2拍照图片处理
+     */
     private ImageReader imageReader;
+    /**
+     * Camera2设备
+     */
     private CameraDevice cameraDevice;
+    /**
+     * 拍照线程
+     */
     private HandlerThread handlerThread;
+    /**
+     * Camera2图片采集线程
+     */
     private CameraCaptureSession cameraCaptureSession;
 
+    /**
+     * @param quantity 图片质量
+     * @param path     图片路径
+     */
     public PhotographClient(int quantity, String path) {
         this.quantity = quantity;
         this.filename = DateUtils.format(LocalDateTime.now(), DateUtils.DateTimeStyle.YYYYMMDDHH24MMSS) + ".jpg";
         this.filepath = Paths.get(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES).getAbsolutePath(), path, this.filename).toString();
-        this.done     = false;
         this.finish   = false;
+        this.hasImage = false;
         Log.i(RecordClient.class.getSimpleName(), "拍摄照片文件：" + this.filepath);
     }
 
+    /**
+     * 唤醒等待现场
+     */
     private void notifyWait() {
         synchronized (this) {
             this.finish = true;
@@ -78,6 +121,11 @@ public class PhotographClient implements VideoSink {
         }
     }
 
+    /**
+     * 等待拍照完成
+     *
+     * @return 图片路径
+     */
     public String waitForPhotograph() {
         synchronized (this) {
             try {
@@ -96,6 +144,12 @@ public class PhotographClient implements VideoSink {
         return this.filepath;
     }
 
+    /**
+     * WebRTC拍照
+     *
+     * @param videoSource           视频来源
+     * @param peerConnectionFactory PeerConnectionFactory
+     */
     public void photograph(VideoSource videoSource, PeerConnectionFactory peerConnectionFactory) {
         this.videoTrack = peerConnectionFactory.createVideoTrack("TaoyaoVP", videoSource);
         this.videoTrack.setEnabled(true);
@@ -104,10 +158,15 @@ public class PhotographClient implements VideoSink {
 
     @Override
     public void onFrame(VideoFrame videoFrame) {
-        if(this.done) {
+        if(this.hasImage) {
             // 已经完成忽略
         } else {
-            this.done = true;
+            synchronized(this) {
+                if(this.hasImage) {
+                    return;
+                }
+                this.hasImage      = true;
+            }
             this.handlerThread = new HandlerThread("PhotographThread");
             this.handlerThread.start();
             final Handler handler = new Handler(this.handlerThread.getLooper());
@@ -116,22 +175,27 @@ public class PhotographClient implements VideoSink {
         }
     }
 
+    /**
+     * WebRTC拍照
+     *
+     * @param videoFrame 视频帧
+     */
     private void photograph(VideoFrame videoFrame) {
         final VideoFrame.I420Buffer i420 = videoFrame.getBuffer().toI420();
         videoFrame.release();
-        final File file = new File(this.filepath);
-        final int width = i420.getWidth();
+        final File file  = new File(this.filepath);
+        final int width  = i420.getWidth();
         final int height = i420.getHeight();
         // YuvHelper转换颜色溢出
         final YuvImage image = this.i420ToYuvImage(i420, width, height);
         i420.release();
         final Rect rect = new Rect(0, 0, width, height);
         try (
-            final OutputStream output = new FileOutputStream(file);
+            final OutputStream output             = new FileOutputStream(file);
             final ByteArrayOutputStream byteArray = new ByteArrayOutputStream();
         ) {
             image.compressToJpeg(rect, this.quantity, byteArray);
-            final byte[] array = byteArray.toByteArray();
+            final byte[] array  = byteArray.toByteArray();
             final Bitmap bitmap = BitmapFactory.decodeByteArray(array, 0, array.length);
 //          final Matrix matrix = new Matrix();
 //          matrix.setRotate(90);
@@ -145,6 +209,13 @@ public class PhotographClient implements VideoSink {
         }
     }
 
+    /**
+     * @param i420   I420帧数据
+     * @param width  图片宽度
+     * @param height 图片高度
+     *
+     * @return YuvImage
+     */
     private YuvImage i420ToYuvImage(VideoFrame.I420Buffer i420, int width, int height) {
         int index = 0;
         final int yy = i420.getStrideY();
@@ -159,7 +230,7 @@ public class PhotographClient implements VideoSink {
                 nv21[index++] = y.get(col + row * yy);
             }
         }
-        final int halfWidth = width / 2;
+        final int halfWidth  = width / 2;
         final int halfHeight = height / 2;
         for (int row = 0; row < halfHeight; row++) {
             for (int col = 0; col < halfWidth; col++) {
@@ -170,6 +241,9 @@ public class PhotographClient implements VideoSink {
         return new YuvImage(nv21, ImageFormat.NV21, width, height, null);
     }
 
+    /**
+     * 关闭VideoTrack
+     */
     private void closeVideoTrack() {
         if(this.videoTrack != null) {
             this.videoTrack.removeSink(this);
@@ -178,6 +252,15 @@ public class PhotographClient implements VideoSink {
         }
     }
 
+    /**
+     * Camera2拍照
+     *
+     * @param width           图片宽度
+     * @param height          图片高度
+     * @param fps             帧率
+     * @param videoSourceType 图片来源
+     * @param context         上下文
+     */
     @SuppressLint("MissingPermission")
     public void photograph(int width, int height, int fps, VideoSourceType videoSourceType, Context context) {
         if(this.handlerThread != null) {
@@ -195,14 +278,21 @@ public class PhotographClient implements VideoSink {
                 final String[] cameraIdList = cameraManager.getCameraIdList();
                 for (String id : cameraIdList) {
                     final CameraCharacteristics cameraCharacteristics = cameraManager.getCameraCharacteristics(id);
-                    if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_BACK && videoSourceType == VideoSourceType.BACK) {
+                    final int lensFacing = cameraCharacteristics.get(CameraCharacteristics.LENS_FACING);
+                    if(
+                        lensFacing      == CameraCharacteristics.LENS_FACING_BACK &&
+                        videoSourceType == VideoSourceType.BACK
+                    ) {
                         cameraId = id;
                         break;
-                    } else if(cameraCharacteristics.get(CameraCharacteristics.LENS_FACING) == CameraCharacteristics.LENS_FACING_FRONT && videoSourceType == VideoSourceType.FRONT) {
+                    } else if(
+                        lensFacing      == CameraCharacteristics.LENS_FACING_FRONT &&
+                        videoSourceType == VideoSourceType.FRONT
+                    ) {
                         cameraId = id;
                         break;
                     } else {
-                        // TODO：截屏
+                        // 其他情况：文件、截屏
                     }
                 }
                 if(cameraId == null) {
@@ -217,6 +307,9 @@ public class PhotographClient implements VideoSink {
         });
     }
 
+    /**
+     * Camera2设备回调
+     */
     private CameraDevice.StateCallback cameraDeviceStateCallback = new CameraDevice.StateCallback() {
 
         @Override
@@ -244,15 +337,17 @@ public class PhotographClient implements VideoSink {
 
     };
 
+    /**
+     * Camera2会话回调
+     */
     private CameraCaptureSession.StateCallback cameraCaptureSessionStateCallback = new CameraCaptureSession.StateCallback() {
 
         @Override
         public void onConfigured(CameraCaptureSession cameraCaptureSession) {
             try {
                 PhotographClient.this.cameraCaptureSession = cameraCaptureSession;
-                final CaptureRequest.Builder builder = PhotographClient.this.cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
+                final CaptureRequest.Builder builder       = PhotographClient.this.cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
                 builder.set(CaptureRequest.JPEG_QUALITY, (byte) PhotographClient.this.quantity);
-//              builder.set(CaptureRequest.JPEG_ORIENTATION, 90);
                 builder.addTarget(PhotographClient.this.surface);
                 cameraCaptureSession.setRepeatingRequest(builder.build(), PhotographClient.this.cameraCaptureSessionCaptureCallback, null);
             } catch (CameraAccessException e) {
@@ -266,6 +361,9 @@ public class PhotographClient implements VideoSink {
 
     };
 
+    /**
+     * Camera2捕获回调
+     */
     private CameraCaptureSession.CaptureCallback cameraCaptureSessionCaptureCallback = new CameraCaptureSession.CaptureCallback() {
 
         private volatile int index = 0;
@@ -276,12 +374,12 @@ public class PhotographClient implements VideoSink {
             if(image == null) {
                 return;
             }
-            if(this.index++ <= 4 || PhotographClient.this.done) {
+            if(this.index++ <= 4 || PhotographClient.this.hasImage) {
                 image.close();
                 return;
             }
-            PhotographClient.this.done = true;
-            final Image.Plane[] planes = image.getPlanes();
+            PhotographClient.this.hasImage = true;
+            final Image.Plane[] planes  = image.getPlanes();
             final ByteBuffer byteBuffer = planes[0].getBuffer();
             final byte[] bytes = new byte[byteBuffer.remaining()];
             byteBuffer.get(bytes);
@@ -291,16 +389,19 @@ public class PhotographClient implements VideoSink {
 //              bitmap.compress(Bitmap.CompressFormat.JPEG, PhotographClient.this.quantity, output);
                 output.write(bytes, 0, bytes.length);
                 cameraCaptureSession.stopRepeating();
+                PhotographClient.this.notifyWait();
             } catch (IOException | CameraAccessException e) {
                 Log.e(PhotographClient.class.getSimpleName(), "拍照异常", e);
             } finally {
                 image.close();
-                PhotographClient.this.notifyWait();
             }
         }
 
     };
 
+    /**
+     * 关闭Camera2
+     */
     private void closeCamera() {
         if(this.cameraCaptureSession != null) {
             this.cameraCaptureSession.close();
@@ -311,6 +412,7 @@ public class PhotographClient implements VideoSink {
             this.cameraDevice = null;
         }
         if(this.imageReader != null) {
+            // 包含释放Surface
             this.imageReader.close();
             this.imageReader = null;
         }
