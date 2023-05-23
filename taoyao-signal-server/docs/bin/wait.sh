@@ -6,6 +6,7 @@ sleep 1
 # 等待任务
 startTime=$(date +%s)
 processId=$(ps -aux | grep "${project.artifactId}" | grep java | awk '{print $2}')
+processPortNumber=0
 if [ ! -z "$processId" ]; then
   waitIndex=0
   processPortNumber=$(netstat -anop | grep $processId | grep LISTEN | wc -l)
@@ -23,9 +24,9 @@ if [ ! -z "$processId" ]; then
   done
   echo ""
 fi
-if [ "$processPortNumber" -lt 1 ]; then
+if [ $processPortNumber -lt 1 ]; then
   echo -e "\033[31m启动失败：${project.artifactId}-${project.version}\033[0m"
-  sh bin/stop.sh
+  bash bin/stop.sh
   exit 0
 else
   finishTime=$(date +%s)

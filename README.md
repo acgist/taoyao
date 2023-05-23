@@ -56,6 +56,14 @@
 
 > 注意：Web终端不支持同时进入多个视频房间，安卓终端支持同时进入多个视频房间。
 
+## Docker
+
+```
+acgist/taoyao-client-web
+acgist/taoyao-client-media
+acgist/taoyao-signal-server
+```
+
 ## 证书
 
 本地开发测试安装`docs/certs`中的`ca.crt`证书到`受信任的根证书颁发机构`

@@ -89,6 +89,13 @@ public class RtpTest {
 		// ffmpeg不支持rtcpMux
 //		ffmpeg -re -i video.mp4 -c:v libvpx -map 0:0 -f tee "[select=v:f=rtp:ssrc=123123:payload_type=102]rtp://192.168.1.110:40793?rtcpport=47218"
 //		ffmpeg -re -i video.mp4 -c:v vp8    -map 0:0 -f tee "[select=v:f=rtp:ssrc=123123:payload_type=102]rtp://192.168.1.110:40793?rtcpport=47218"
+		// 音频视频同时传输
+//	    ffmpeg -re -i video.mp4 -c:v copy -an -f rtp rtp://192.168.8.122:6666 -c:a copy -vn -f rtp rtp://192.168.8.122:7777 -sdp_file taoyao.sdp
+//	    ffplay -protocol_whitelist "file,rtp,udp" -i taoyao.sdp
+//	    ffmpeg -protocol_whitelist "file,rtp,udp" -i taoyao.sdp taoyao.mp4
+		// 混音
+//		ffmpeg -re -i video.mp4 -i music.mp3 -map 0 -vn -c:a copy -f rtp rtp://192.168.8.122:6666 -map 0 -an -c:v copy -f rtp rtp://192.168.8.122:7777 -map 1 -c:a aac -f rtp rtp://192.168.8.122:8888 -sdp_file taoyao.sdp
+//		ffmpeg -protocol_whitelist "file,rtp,udp" -i taoyao.sdp -filter_complex "[0:0]aresample=8000[a0];[0:2]aresample=8000[a2];[a0][a2]amix=inputs=2" taoyao.mp4
 		final Scanner scanner = new Scanner(System.in);
 		do {
 		    if(StringUtils.isEmpty(line)) {
