@@ -139,7 +139,8 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
 
     @Override
     public void run() {
-        long pts          = System.nanoTime();
+//      long pts          = System.nanoTime();
+        long pts          = System.currentTimeMillis();
         int recordSize    = 0;
         int mixDataLength = 0;
         byte[] mixData    = null;
