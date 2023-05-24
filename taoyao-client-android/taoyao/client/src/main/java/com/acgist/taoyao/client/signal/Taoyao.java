@@ -1224,7 +1224,7 @@ public final class Taoyao implements ITaoyao {
             return;
         }
         final String type = MapUtils.get(body, "type");
-        sessionClient.pause(type);
+        sessionClient.pauseLocal(type);
     }
 
     /**
@@ -1241,7 +1241,7 @@ public final class Taoyao implements ITaoyao {
             return;
         }
         final String type = MapUtils.get(body, "type");
-        sessionClient.resume(type);
+        sessionClient.resumeLocal(type);
     }
 
     /**

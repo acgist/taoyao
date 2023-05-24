@@ -19,6 +19,7 @@ import org.webrtc.PeerConnection;
 import org.webrtc.PeerConnectionFactory;
 import org.webrtc.SdpObserver;
 import org.webrtc.SessionDescription;
+import org.webrtc.SurfaceViewRenderer;
 
 import java.util.HashMap;
 import java.util.List;
@@ -54,6 +55,7 @@ public class SessionClient extends Client {
     private final boolean videoProduce;
     private final MediaProperties mediaProperties;
     private final WebrtcProperties webrtcProperties;
+    private SurfaceViewRenderer localSurfaceViewRenderer;
     /**
      * 本地媒体
      */
@@ -136,7 +138,7 @@ public class SessionClient extends Client {
             this.peerConnection    = this.peerConnectionFactory.createPeerConnection(configuration, this.observer);
             this.peerConnection.addStream(this.mediaStream);
             if(this.preview) {
-                // 实现预览
+                this.previewLocal();
             }
             // 设置streamId同步
 //          final List<String> streamIds = new ArrayList<>();
@@ -243,7 +245,6 @@ public class SessionClient extends Client {
             return;
         }
         this.remoteMediaStream.audioTracks.forEach(audioTrack -> {
-            audioTrack.setVolume(0);
             audioTrack.setEnabled(false);
         });
     }
@@ -255,7 +256,6 @@ public class SessionClient extends Client {
             return;
         }
         this.remoteMediaStream.audioTracks.forEach(audioTrack -> {
-            audioTrack.setVolume(Config.DEFAULT_VOLUME);
             audioTrack.setEnabled(true);
         });
     }
@@ -280,10 +280,6 @@ public class SessionClient extends Client {
         if(this.remoteMediaStream == null)  {
             return;
         }
-        if(this.surfaceViewRenderer != null) {
-            // TODO：测试
-            this.surfaceViewRenderer.pauseVideo();
-        }
         this.remoteMediaStream.videoTracks.forEach(videoTrack -> {
             videoTrack.setEnabled(false);
         });
@@ -295,19 +291,14 @@ public class SessionClient extends Client {
         if(this.remoteMediaStream == null)  {
             return;
         }
-        if(this.surfaceViewRenderer != null) {
-            // TODO：测试
-            this.surfaceViewRenderer.disableFpsReduction();
-        }
         this.remoteMediaStream.videoTracks.forEach(videoTrack -> {
             videoTrack.setEnabled(true);
         });
     }
 
-    public void pause(String type) {
+    public void pauseLocal(String type) {
         if(MediaStreamTrack.AUDIO_TRACK_KIND.equals(type)) {
             this.mediaStream.audioTracks.forEach(audioTrack -> {
-                audioTrack.setVolume(0);
                 audioTrack.setEnabled(false);
             });
         } else if(MediaStreamTrack.VIDEO_TRACK_KIND.equals(type)) {
@@ -318,10 +309,9 @@ public class SessionClient extends Client {
         }
     }
 
-    public void resume(String type) {
+    public void resumeLocal(String type) {
         if(MediaStreamTrack.AUDIO_TRACK_KIND.equals(type)) {
             this.mediaStream.audioTracks.forEach(audioTrack -> {
-                audioTrack.setVolume(Config.DEFAULT_VOLUME);
                 audioTrack.setEnabled(true);
             });
         } else if(MediaStreamTrack.VIDEO_TRACK_KIND.equals(type)) {
@@ -332,6 +322,30 @@ public class SessionClient extends Client {
         }
     }
 
+    private void previewLocal() {
+        if(this.mediaStream == null) {
+            return;
+        }
+        this.mediaStream.videoTracks.forEach(videoTrack -> {
+            videoTrack.setEnabled(true);
+            if(this.localSurfaceViewRenderer == null) {
+                this.localSurfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(Config.WHAT_NEW_LOCAL_VIDEO, videoTrack);
+            }
+        });
+    }
+
+    private void releaseLocal() {
+        // 释放本地视频资源
+        if(this.localSurfaceViewRenderer != null) {
+            // 释放资源
+            this.localSurfaceViewRenderer.release();
+            // 移除资源：注意先释放再移除避免报错
+            this.mainHandler.obtainMessage(Config.WHAT_REMOVE_VIDEO, this.localSurfaceViewRenderer).sendToTarget();
+            // 设置为空
+            this.localSurfaceViewRenderer = null;
+        }
+    }
+
     @Override
     public void close() {
         synchronized (this) {
@@ -339,14 +353,9 @@ public class SessionClient extends Client {
                 return;
             }
             super.close();
+            this.releaseLocal();
             try {
-                // PeerConnection自动释放
-//              if(this.mediaStream != null) {
-//                  this.mediaStream.dispose();
-//              }
-//              if(this.remoteMediaStream != null) {
-//                  this.remoteMediaStream.dispose();
-//              }
+                // PeerConnection自动释放：mediaStream、remoteMediaStream
                 if(this.peerConnection != null) {
                     this.peerConnection.dispose();
                 }

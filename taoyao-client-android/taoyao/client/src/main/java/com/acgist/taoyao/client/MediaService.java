@@ -280,6 +280,7 @@ public class MediaService extends Service {
         final AudioManager audioManager = this.getApplicationContext().getSystemService(AudioManager.class);
         Log.d(MediaService.class.getSimpleName(), "当前音频模式：" + audioManager.getMode());
         Log.d(MediaService.class.getSimpleName(), "当前音频音量：" + audioManager.getStreamVolume(audioManager.getMode()));
+        Log.d(MediaService.class.getSimpleName(), "当前最大音频音量：" + audioManager.getStreamMaxVolume(audioManager.getMode()));
 //      Log.d(MediaService.class.getSimpleName(), "当前蓝牙是否打开：" + audioManager.isBluetoothScoOn());
 //      Log.d(MediaService.class.getSimpleName(), "当前耳机是否打开：" + audioManager.isWiredHeadsetOn());
 //      Log.d(MediaService.class.getSimpleName(), "当前电话扬声器是否打开：" + audioManager.isSpeakerphoneOn());

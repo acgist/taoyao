@@ -15,6 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 房间远程终端
+ *
  * 注意：这里媒体MediaStreamTrack使用Mediasoup方法释放不要直接调用MediaStreamTrack.dispose()释放
  *
  * @author acgist
@@ -24,12 +25,25 @@ public class RemoteClient extends RoomClient {
     /**
      * 媒体流Track
      * 消费者ID = 媒体流Track
+     *
      * 注意：track由mediasoup的consumer释放
      */
     protected final Map<String, MediaStreamTrack> tracks;
+    /**
+     * 音频消费者指针
+     */
     protected long audioConsumerPointer;
+    /**
+     * 视频消费指针
+     */
     protected long videoConsumerPointer;
 
+    /**
+     * @param name        终端名称
+     * @param clientId    终端ID
+     * @param taoyao      信令
+     * @param mainHandler MainHandler
+     */
     public RemoteClient(String name, String clientId, ITaoyao taoyao, Handler mainHandler) {
         super(name, clientId, taoyao, mainHandler);
         this.tracks = new ConcurrentHashMap<>();
@@ -120,12 +134,14 @@ public class RemoteClient extends RoomClient {
      * 关闭消费者
      *
      * @param consumerId 消费者ID
+     *
+     * @return MediaStreamTrack
      */
-    public void close(String consumerId) {
+    public MediaStreamTrack close(String consumerId) {
         Log.i(RemoteClient.class.getSimpleName(), "关闭远程终端消费者：" + this.clientId + " - " + consumerId);
         synchronized (this.tracks) {
             // 注意：使用nativeMediaConsumerClose释放资源
-            this.tracks.remove(consumerId);
+            return this.tracks.remove(consumerId);
         }
     }
 
