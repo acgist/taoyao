@@ -121,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
             Manifest.permission.ACCESS_FINE_LOCATION,
             Manifest.permission.ACCESS_NETWORK_STATE,
             Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.MODIFY_AUDIO_SETTINGS,
             Manifest.permission.ACCESS_COARSE_LOCATION,
             Manifest.permission.RECEIVE_BOOT_COMPLETED,
             Manifest.permission.WRITE_EXTERNAL_STORAGE
