@@ -63,7 +63,7 @@ public class MediaService extends Service {
          */
         RECONNECT,
         /**
-         * 屏幕录制
+         * 屏幕录像
          */
         SCREEN_CAPTURE;
 
@@ -222,7 +222,7 @@ public class MediaService extends Service {
     }
 
     /**
-     * 屏幕录制
+     * 屏幕录像
      *
      * @param intent Intent
      */
@@ -232,8 +232,8 @@ public class MediaService extends Service {
         final NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this, TAOYAO)
             .setSmallIcon(R.mipmap.ic_launcher_foreground)
             .setLargeIcon(BitmapFactory.decodeResource(this.getResources(), R.mipmap.ic_launcher_foreground))
-            .setContentTitle("录制屏幕")
-            .setContentText("桃夭正在录制屏幕")
+            .setContentTitle("屏幕录像")
+            .setContentText("桃夭正在屏幕录像")
             .setContentIntent(pendingIntent);
         final Notification notification = notificationBuilder.build();
         this.startForeground((int) System.currentTimeMillis(), notification);
@@ -279,13 +279,16 @@ public class MediaService extends Service {
     private void settingAudio() {
         final AudioManager audioManager = this.getApplicationContext().getSystemService(AudioManager.class);
         audioManager.setSpeakerphoneOn(true);
+//      audioManager.setMicrophoneMute(true);
+        audioManager.setMode(AudioManager.MODE_IN_CALL);
         Log.d(MediaService.class.getSimpleName(), "当前音频模式：" + audioManager.getMode());
         Log.d(MediaService.class.getSimpleName(), "当前音频音量：" + audioManager.getStreamVolume(audioManager.getMode()));
         Log.d(MediaService.class.getSimpleName(), "当前最大音频音量：" + audioManager.getStreamMaxVolume(audioManager.getMode()));
         Log.d(MediaService.class.getSimpleName(), "当前蓝牙是否打开：" + audioManager.isBluetoothScoOn());
 //      Log.d(MediaService.class.getSimpleName(), "当前耳机是否打开：" + audioManager.isWiredHeadsetOn());
         Log.d(MediaService.class.getSimpleName(), "当前扬声器是否打开：" + audioManager.isSpeakerphoneOn());
-      audioManager.setStreamVolume(AudioManager.MODE_IN_COMMUNICATION, audioManager.getStreamMaxVolume(AudioManager.MODE_IN_COMMUNICATION), AudioManager.FLAG_PLAY_SOUND);
+        audioManager.setStreamVolume(AudioManager.MODE_IN_CALL, audioManager.getStreamMaxVolume(AudioManager.MODE_IN_CALL), AudioManager.FLAG_PLAY_SOUND);
+//      audioManager.setStreamVolume(AudioManager.MODE_IN_COMMUNICATION, audioManager.getStreamMaxVolume(AudioManager.MODE_IN_COMMUNICATION), AudioManager.FLAG_PLAY_SOUND);
     }
 
     /**

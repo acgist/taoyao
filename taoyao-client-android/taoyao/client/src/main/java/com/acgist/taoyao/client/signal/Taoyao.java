@@ -786,7 +786,7 @@ public final class Taoyao implements ITaoyao {
     }
 
     /**
-     * 录制
+     * 录像
      *
      * @param message 信令消息
      * @param body    信令主体

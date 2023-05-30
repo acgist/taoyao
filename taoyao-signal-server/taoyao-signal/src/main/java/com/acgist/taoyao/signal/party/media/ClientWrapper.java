@@ -51,6 +51,10 @@ public class ClientWrapper implements AutoCloseable {
 	 */
 	private Object sctpCapabilities;
 	/**
+	 * 媒体录像
+	 */
+	private Recorder recorder;
+	/**
 	 * 发送通道
 	 */
 	private Transport sendTransport;

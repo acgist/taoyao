@@ -45,19 +45,19 @@ public class RecordClient extends Client implements VideoSink {
     private static final long WAIT_TIME_US = WAIT_TIME_MS * 1000;
 
     /**
-     * 音频录制准备完成
+     * 音频录像准备完成
      */
     private volatile boolean audioActive;
     /**
-     * 视频录制准备完成
+     * 视频录像准备完成
      */
     private volatile boolean videoActive;
     /**
-     * 录制文件名称
+     * 录像文件名称
      */
     private final String filename;
     /**
-     * 录制文件路径
+     * 录像文件路径
      */
     private final String filepath;
     /**
@@ -123,8 +123,8 @@ public class RecordClient extends Client implements VideoSink {
      */
     private Handler videoHandler;
     /**
-     * 是否已经开始录制
-     * 不能使用多线程wait/notify录制音频没有结束
+     * 是否已经开始录像
+     * 不能使用多线程wait/notify录像音频没有结束
      */
     private boolean muxerActive = false;
     /**
@@ -180,16 +180,16 @@ public class RecordClient extends Client implements VideoSink {
     }
 
     /**
-     * 开始录制
+     * 开始录像
      *
-     * @return 录制文件路径
+     * @return 录像文件路径
      */
     public String start() {
         synchronized (this) {
             if(this.init) {
                 return this.filepath;
             }
-            Log.i(RecordClient.class.getSimpleName(), "录制视频文件：" + this.filepath);
+            Log.i(RecordClient.class.getSimpleName(), "录像视频文件：" + this.filepath);
             super.init();
             this.mediaManager.newClient();
             this.initMediaMuxer();
@@ -235,7 +235,7 @@ public class RecordClient extends Client implements VideoSink {
             this.audioCodec = MediaCodec.createEncoderByType(audioType);
             this.audioCodec.configure(audioFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         } catch (Exception e) {
-            Log.e(RecordClient.class.getSimpleName(), "加载音频录制线程异常", e);
+            Log.e(RecordClient.class.getSimpleName(), "加载音频录像线程异常", e);
         }
         this.audioThread = new HandlerThread("AudioRecordThread");
         this.audioThread.start();
@@ -260,9 +260,9 @@ public class RecordClient extends Client implements VideoSink {
             } else if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                 synchronized (this) {
                     trackIndex = this.mediaMuxer.addTrack(this.audioCodec.getOutputFormat());
-                    Log.i(RecordClient.class.getSimpleName(), "开始录制音频：" + trackIndex);
+                    Log.i(RecordClient.class.getSimpleName(), "开始录像音频：" + trackIndex);
                     if (!this.close && this.videoActive) {
-                        Log.i(RecordClient.class.getSimpleName(), "开始录制文件：" + this.filename);
+                        Log.i(RecordClient.class.getSimpleName(), "开始录像文件：" + this.filename);
                         this.mediaMuxer.start();
                         this.muxerActive = true;
                     } else {
@@ -283,7 +283,7 @@ public class RecordClient extends Client implements VideoSink {
                 bufferInfo.presentationTimeUs -= pts;
                 this.mediaMuxer.writeSampleData(trackIndex, outputBuffer, bufferInfo);
                 this.audioCodec.releaseOutputBuffer(outputIndex, false);
-//              Log.d(RecordClient.class.getSimpleName(), "录制音频帧（时间戳）：" + (bufferInfo.presentationTimeUs / 1_000_000F));
+//              Log.d(RecordClient.class.getSimpleName(), "录像音频帧（时间戳）：" + (bufferInfo.presentationTimeUs / 1_000_000F));
 //              if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME == MediaCodec.BUFFER_FLAG_KEY_FRAME) {
 //              } else if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
 //              } else if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
@@ -298,14 +298,14 @@ public class RecordClient extends Client implements VideoSink {
         }
         synchronized (this) {
             if (this.audioCodec != null && this.audioActive) {
-                Log.i(RecordClient.class.getSimpleName(), "结束录制音频：" + this.filename);
+                Log.i(RecordClient.class.getSimpleName(), "结束录像音频：" + this.filename);
                 this.audioCodec.stop();
                 this.audioCodec.release();
                 this.audioCodec = null;
             }
             this.audioActive = false;
             if (this.mediaMuxer != null && !this.videoActive) {
-                Log.i(RecordClient.class.getSimpleName(), "结束录制文件：" + this.filename);
+                Log.i(RecordClient.class.getSimpleName(), "结束录像文件：" + this.filename);
                 this.muxerActive = false;
 //              this.mediaMuxer.stop();
                 this.mediaMuxer.release();
@@ -330,7 +330,7 @@ public class RecordClient extends Client implements VideoSink {
             this.videoCodec = MediaCodec.createEncoderByType(videoType);
             this.videoCodec.configure(videoFormat, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE);
         } catch (Exception e) {
-            Log.e(RecordClient.class.getSimpleName(), "加载视频录制线程异常", e);
+            Log.e(RecordClient.class.getSimpleName(), "加载视频录像线程异常", e);
         }
         this.videoThread = new HandlerThread("VideoRecordThread");
         this.videoThread.start();
@@ -355,9 +355,9 @@ public class RecordClient extends Client implements VideoSink {
             } else if (outputIndex == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED) {
                 synchronized (this) {
                     trackIndex = this.mediaMuxer.addTrack(this.videoCodec.getOutputFormat());
-                    Log.i(RecordClient.class.getSimpleName(), "开始录制视频：" + trackIndex);
+                    Log.i(RecordClient.class.getSimpleName(), "开始录像视频：" + trackIndex);
                     if (!this.close && this.audioActive) {
-                        Log.i(RecordClient.class.getSimpleName(), "开始录制文件：" + this.filename);
+                        Log.i(RecordClient.class.getSimpleName(), "开始录像文件：" + this.filename);
                         this.mediaMuxer.start();
                         this.muxerActive = true;
                     } else {
@@ -379,7 +379,7 @@ public class RecordClient extends Client implements VideoSink {
                 bufferInfo.presentationTimeUs -= pts;
                 this.mediaMuxer.writeSampleData(trackIndex, outputBuffer, bufferInfo);
                 this.videoCodec.releaseOutputBuffer(outputIndex, false);
-//              Log.d(RecordClient.class.getSimpleName(), "录制视频帧（时间戳）：" + (bufferInfo.presentationTimeUs / 1_000_000F));
+//              Log.d(RecordClient.class.getSimpleName(), "录像视频帧（时间戳）：" + (bufferInfo.presentationTimeUs / 1_000_000F));
 //              if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_KEY_FRAME == MediaCodec.BUFFER_FLAG_KEY_FRAME) {
 //              } else if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_CODEC_CONFIG == MediaCodec.BUFFER_FLAG_CODEC_CONFIG) {
 //              } else if (bufferInfo.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM == MediaCodec.BUFFER_FLAG_END_OF_STREAM) {
@@ -394,14 +394,14 @@ public class RecordClient extends Client implements VideoSink {
         }
         synchronized (this) {
             if (this.videoCodec != null && this.videoActive) {
-                Log.i(RecordClient.class.getSimpleName(), "结束录制视频：" + this.filename);
+                Log.i(RecordClient.class.getSimpleName(), "结束录像视频：" + this.filename);
                 this.videoCodec.stop();
                 this.videoCodec.release();
                 this.videoCodec = null;
             }
             this.videoActive = false;
             if (this.mediaMuxer != null && !this.audioActive) {
-                Log.i(RecordClient.class.getSimpleName(), "结束录制文件：" + this.filename);
+                Log.i(RecordClient.class.getSimpleName(), "结束录像文件：" + this.filename);
                 this.muxerActive = false;
 //              this.mediaMuxer.stop();
                 this.mediaMuxer.release();
@@ -411,7 +411,7 @@ public class RecordClient extends Client implements VideoSink {
     }
 
     /**
-     * 加载录制来源
+     * 加载录像来源
      *
      * @param videoSource           视频来源
      * @param javaAudioDeviceModule 音频设备模块
@@ -440,7 +440,7 @@ public class RecordClient extends Client implements VideoSink {
                 return;
             }
             super.close();
-            Log.i(RecordClient.class.getSimpleName(), "结束录制：" + this.filepath);
+            Log.i(RecordClient.class.getSimpleName(), "结束录像：" + this.filepath);
             if(this.javaAudioDeviceModule != null) {
                 this.javaAudioDeviceModule.removeMixerProcesser();
                 this.javaAudioDeviceModule = null;
@@ -464,7 +464,7 @@ public class RecordClient extends Client implements VideoSink {
             }
             final File file = new File(this.filepath);
             if(file.length() <= 0) {
-                Log.i(RecordClient.class.getSimpleName(), "删除没有录制数据文件：" + this.filepath);
+                Log.i(RecordClient.class.getSimpleName(), "删除没有录像数据文件：" + this.filepath);
                 file.delete();
             }
             this.mediaManager.closeClient();

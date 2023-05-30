@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- 是否预览视频 -->
-    <bool name="preview">true</bool>
+    <bool name="preview">false</bool>
     <!-- 是否开启音频播放 -->
     <bool name="playAudio">true</bool>
     <!-- 是否开启视频播放 -->

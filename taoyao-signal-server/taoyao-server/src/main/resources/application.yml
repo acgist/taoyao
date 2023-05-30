@@ -67,7 +67,7 @@ taoyao:
     max-client-index: 99999
   # 媒体配置
   media:
-    # =============== 视频配置 ===============
+    # 视频配置
     # 宽度
     min-width: 720
     max-width: 4096
@@ -80,7 +80,7 @@ taoyao:
     # 视频码率
     min-video-bitrate: 800
     max-video-bitrate: 1600
-    # =============== 音频配置 ===============
+    # 音频配置
     # 采样位数
     min-sample-size: 8
     max-sample-size: 32
@@ -196,35 +196,6 @@ taoyao:
 #       port: 3478
 #       username: taoyao
 #       password: taoyao
-  # 摄像头配置
-  camera:
-    # 混音
-    audio-mixer: false
-    # 变声
-    audio-changer: false
-    # 降噪
-    audio-denoise: true
-    # 存储目录
-    storage-path: /data/taoyao/storage
-    # 图片存储目录
-    storage-image-path: /data/taoyao/storage/image
-    # 视频存储目录
-    storage-video-path: /data/taoyao/storage/video
-    # AI识别
-    ai:
-      enabled: false
-      type: PERSON
-    # 美颜
-    beauty:
-      enabled: false
-      level: 10
-    # 水印
-    watermark:
-      enabled: false
-      text: taoyao
-      posx: 10
-      posy: 10
-      opacity: 0.8
   # 安全配置
   security:
     enabled: true
@@ -253,6 +224,36 @@ taoyao:
       - network: 192.168.8.0
         inner-host:
         outer-host:
+  ffmpeg:
+    # SDP：VP8 | H264
+    sdp: |
+      v=0
+      o=- 0 0 IN IP4 127.0.0.1
+      s=TaoyaoRecord
+      t=0 0
+      m=audio %d RTP/AVP 97
+      c=IN IP4 127.0.0.1
+      a=rtpmap:97 opus/48000/2
+      a=fmtp:97 sprop-stereo=1
+      m=video %d RTP/AVP 96
+      c=IN IP4 127.0.0.1
+      a=rtpmap:96 H264/90000
+      a=fmtp:96 packetization-mode=1
+    # 录像命令
+    record: ffmpeg -y -protocol_whitelist "file,rtp,udp" -i %s %s
+    # 截图命令
+    preview: ffmpeg -y -i %s -t %d -f image2 %s
+    # 时长命令
+    duration: ffprobe -i %s -show_entries format=duration
+    # 存储目录
+    storage-path: /data/taoyao/storage
+    # 图片存储目录
+    storage-image-path: /data/taoyao/storage/image
+    # 视频存储目录
+    storage-video-path: /data/taoyao/storage/video
+    # 端口范围
+    min-port: 50000
+    max-port: 59999
   # 脚本配置
   script:
     enabled: true

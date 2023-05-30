@@ -117,12 +117,12 @@ class WebRtcAudioRecord {
    * @Taoyao
    */
   public void setMixerProcesser(SamplesReadyCallback samplesReadyCallback) {
-    // 不用处理这个逻辑设置为空表示关闭录制
+    // 不用处理这个逻辑设置为空表示关闭录像
 //  if(this.audioSamplesReadyCallback != null && samplesReadyCallback == null) {
 //    this.audioSamplesReadyCallback.startNative();
 //  }
     this.audioSamplesReadyCallback = samplesReadyCallback;
-    // 下面逻辑最好加锁防止关闭录制导致异常
+    // 下面逻辑最好加锁防止关闭录像导致异常
     if(this.audioSamplesReadyCallback != null) {
       if(this.audioThread == null) {
         this.audioSamplesReadyCallback.startNative();

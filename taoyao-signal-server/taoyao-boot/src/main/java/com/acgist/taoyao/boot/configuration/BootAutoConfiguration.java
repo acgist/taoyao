@@ -43,6 +43,7 @@ import org.springframework.web.context.request.async.AsyncRequestTimeoutExceptio
 import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.NoHandlerFoundException;
 
+import com.acgist.taoyao.boot.config.FfmpegProperties;
 import com.acgist.taoyao.boot.config.IdProperties;
 import com.acgist.taoyao.boot.config.IpRewriteProperties;
 import com.acgist.taoyao.boot.config.MediaProperties;
@@ -86,6 +87,7 @@ import lombok.extern.slf4j.Slf4j;
 @EnableConfigurationProperties({
     IdProperties.class,
     MediaProperties.class,
+    FfmpegProperties.class,
     ScriptProperties.class,
     SocketProperties.class,
     TaoyaoProperties.class,
@@ -94,11 +96,13 @@ import lombok.extern.slf4j.Slf4j;
     IpRewriteProperties.class
 })
 public class BootAutoConfiguration {
-    
+
+    private final FfmpegProperties ffmpegProperties;
     private final TaoyaoProperties taoyaoProperties;
     private final ApplicationContext applicationContext;
     
-    public BootAutoConfiguration(TaoyaoProperties taoyaoProperties, ApplicationContext applicationContext) {
+    public BootAutoConfiguration(FfmpegProperties ffmpegProperties, TaoyaoProperties taoyaoProperties, ApplicationContext applicationContext) {
+        this.ffmpegProperties = ffmpegProperties;
         this.taoyaoProperties = taoyaoProperties;
         this.applicationContext = applicationContext;
     }
@@ -188,6 +192,8 @@ public class BootAutoConfiguration {
         this.applicationContext.getBeansOfType(TaskScheduler.class).forEach((k, v) -> {
             log.info("系统定时任务线程池：{} - {}", k, v);
         });
+        FileUtils.mkdirs(this.ffmpegProperties.getStorageImagePath());
+        FileUtils.mkdirs(this.ffmpegProperties.getStorageVideoPath());
     }
     
     /**

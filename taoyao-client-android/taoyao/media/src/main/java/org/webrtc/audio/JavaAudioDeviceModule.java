@@ -318,11 +318,11 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
   /** Called when new audio samples are ready. This should only be set for debug purposes */
   public static interface SamplesReadyCallback {
     /**
-     * 本地录制
+     * 本地录像
      */
     void startNative();
     /**
-     * 远程录制
+     * 远程录像
      */
     void startWebRTC();
     /**

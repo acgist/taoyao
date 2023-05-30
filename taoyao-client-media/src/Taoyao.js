@@ -455,6 +455,9 @@ class Taoyao {
       case "media::producer::resume":
         me.mediaProducerResume(message, body);
         break;
+      case "media::record":
+        me.mediaRecord(message, body);
+        break;
       case "media::router::rtp::capabilities":
         me.mediaRouterRtpCapabilities(message, body);
         break;
@@ -765,6 +768,70 @@ class Taoyao {
     } else {
       console.info("恢复生产者无效：", producerId);
     }
+  }
+
+  /**
+   * 媒体录像
+   * 
+   * @param {*} message 消息
+   * @param {*} body    消息主体
+   */
+  async mediaRecord(message, body) {
+    const me = this;
+    const { roomId, rtcpMux, comedia, clientId, host, audioPort, videoProt, rtpCapabilities, audioProducerId, audioStreamId, videoProducerId, videoStreamId } = body;
+    const plainTransportOptions = {
+      ...config.mediasoup.plainTransportOptions,
+      rtcpMux:         rtcpMux,
+      comedia:         comedia
+    };
+    const room = this.rooms.get(roomId);
+    const transport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
+    me.transportEvent("plain", roomId, transport);
+    transport.clientId = clientId;
+    room.transports.set(transport.id, transport);
+    let audioConsumerId;
+    let videoConsumerId;
+    await transport.connect({
+      ip: '127.0.0.1',
+      port: remoteRtpPort,
+      rtcpPort: remoteRtcpPort
+    });
+    if(audioProducerId) {
+      const audioConsumer = await transport.consume({
+        producerId: audioProducerId,
+        rtpCapabilities,
+        paused: true
+      });
+      audioConsumerId = audioConsumer.id;
+      await audioConsumer.resume();
+      audioConsumer.clientId = clientId;
+      audioConsumer.streamId = videoStreamId;
+      room.consumers.set(audioConsumer.id, audioConsumer);
+    }
+    if(videoProducerId) {
+      const videoConsumer = await transport.consume({
+        producerId: videoProducerId,
+        rtpCapabilities,
+        paused: true
+      });
+      videoConsumerId = videoConsumer.id;
+      await videoConsumer.resume();
+      videoConsumer.clientId = clientId;
+      videoConsumer.streamId = videoStreamId;
+      room.consumers.set(videoConsumer.id, videoConsumer);
+    }
+    console.info(transport.tuple)
+    console.info(transport.rtcpTuple)
+    message.body = {
+      ip          : transport.tuple.localIp,
+      port        : transport.tuple.localPort,
+      roomId      : roomId,
+      rtcpPort    : transport.rtcpTuple ? transport.rtcpTuple.localPort : undefined,
+      transportId : transport.id,
+      audioConsumerId : audioConsumerId,
+      videoConsumerId : videoConsumerId,
+    };
+    me.push(message);
   }
 
   async mediaConsume(message, body) {

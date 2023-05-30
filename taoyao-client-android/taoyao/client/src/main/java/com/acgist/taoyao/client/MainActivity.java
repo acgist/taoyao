@@ -239,7 +239,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
-     * 录制按钮
+     * 录像按钮
      *
      * @param message 消息
      */

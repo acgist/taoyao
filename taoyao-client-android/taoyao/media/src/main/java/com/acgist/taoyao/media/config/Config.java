@@ -12,7 +12,7 @@ public class Config {
      */
     public static final int WHAT_SCREEN_CAPTURE   = 1000;
     /**
-     * 视频录制
+     * 视频录像
      */
     public static final int WHAT_RECORD           = 1001;
     /**

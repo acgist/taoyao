@@ -33,7 +33,7 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
 
     /**
      * 音频数据来源
-     * 其实可以不用切换可以两个同时录制，但是有点浪费资源。
+     * 其实可以不用切换可以两个同时录像，但是有点浪费资源。
      *
      * @author acgist
      */

@@ -4,11 +4,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.acgist.taoyao.boot.config.FfmpegProperties;
 import com.acgist.taoyao.boot.config.MediaProperties;
 import com.acgist.taoyao.boot.config.SocketProperties;
 import com.acgist.taoyao.boot.config.WebrtcProperties;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.config.camera.CameraProperties;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -29,7 +29,7 @@ import lombok.RequiredArgsConstructor;
 public class ConfigController {
     
 	private final MediaProperties mediaProperties;
-	private final CameraProperties cameraProperties;
+	private final FfmpegProperties ffmpegProperties;
 	private final SocketProperties socketProperties;
 	private final WebrtcProperties webrtcProperties;
 	
@@ -40,11 +40,11 @@ public class ConfigController {
 		return Message.success(this.mediaProperties);
 	}
     
-    @Operation(summary = "摄像头配置", description = "摄像头配置")
-    @GetMapping("/camera")
-    @ApiResponse(content = @Content(schema = @Schema(implementation = CameraProperties.class)))
-    private Message camera() {
-        return Message.success(this.cameraProperties);
+    @Operation(summary = "FFmpeg配置", description = "FFmpeg配置")
+    @GetMapping("/ffmpeg")
+    @ApiResponse(content = @Content(schema = @Schema(implementation = FfmpegProperties.class)))
+    public Message ffmpeg() {
+        return Message.success(this.ffmpegProperties);
     }
     
     @Operation(summary = "Socket配置", description = "Socket配置")

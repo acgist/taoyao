@@ -148,7 +148,7 @@ public final class MediaManager {
      */
     private VideoSource shareVideoSource;
     /**
-     * 录制终端
+     * 录像终端
      */
     private RecordClient recordClient;
     /**
@@ -217,7 +217,7 @@ public final class MediaManager {
     }
 
     /**
-     * @return 是否正在录制
+     * @return 是否正在录像
      */
     public boolean isRecording() {
         return this.recordClient != null;
@@ -440,25 +440,25 @@ public final class MediaManager {
             .setAudioRecordErrorCallback(new JavaAudioDeviceModule.AudioRecordErrorCallback() {
                 @Override
                 public void onWebRtcAudioRecordInitError(String errorMessage) {
-                    Log.e(MediaManager.class.getSimpleName(), "WebRTC本地音频录制加载异常：" + errorMessage);
+                    Log.e(MediaManager.class.getSimpleName(), "WebRTC本地音频录像加载异常：" + errorMessage);
                 }
                 @Override
                 public void onWebRtcAudioRecordStartError(JavaAudioDeviceModule.AudioRecordStartErrorCode errorCode, String errorMessage) {
-                    Log.e(MediaManager.class.getSimpleName(), "WebRTC本地音频录制开始异常：" + errorMessage);
+                    Log.e(MediaManager.class.getSimpleName(), "WebRTC本地音频录像开始异常：" + errorMessage);
                 }
                 @Override
                 public void onWebRtcAudioRecordError(String errorMessage) {
-                    Log.e(MediaManager.class.getSimpleName(), "WebRTC本地音频录制异常：" + errorMessage);
+                    Log.e(MediaManager.class.getSimpleName(), "WebRTC本地音频录像异常：" + errorMessage);
                 }
             })
             .setAudioRecordStateCallback(new JavaAudioDeviceModule.AudioRecordStateCallback() {
                 @Override
                 public void onWebRtcAudioRecordStart() {
-                    Log.i(MediaManager.class.getSimpleName(), "WebRTC本地音频录制开始");
+                    Log.i(MediaManager.class.getSimpleName(), "WebRTC本地音频录像开始");
                 }
                 @Override
                 public void onWebRtcAudioRecordStop() {
-                    Log.i(MediaManager.class.getSimpleName(), "WebRTC本地音频录制结束");
+                    Log.i(MediaManager.class.getSimpleName(), "WebRTC本地音频录像结束");
                 }
             })
 //          .setUseHardwareNoiseSuppressor(true)
@@ -942,7 +942,7 @@ public final class MediaManager {
     }
 
     /**
-     * 屏幕录制回调
+     * 屏幕录像回调
      *
      * @author acgist
      */

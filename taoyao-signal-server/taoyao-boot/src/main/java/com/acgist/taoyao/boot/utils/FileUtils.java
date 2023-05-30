@@ -1,5 +1,6 @@
 package com.acgist.taoyao.boot.utils;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
@@ -54,5 +55,25 @@ public final class FileUtils {
 		}
 		return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_EVEN) + UNITS[index];
 	}
+	
+    /**
+     * @return 是否Linux平台
+     */
+    public static final boolean linux() {
+        return File.separatorChar == '/';
+    }
+
+    /**
+     * 创建目录
+     * 
+     * @param path
+     */
+    public static final void mkdirs(String path) {
+        final File file = new File(path);
+        if(file.exists()) {
+            return;
+        }
+        file.mkdirs();
+    }
 	
 }
