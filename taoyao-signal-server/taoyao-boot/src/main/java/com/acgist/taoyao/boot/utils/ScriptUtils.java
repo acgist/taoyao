@@ -1,16 +1,20 @@
 package com.acgist.taoyao.boot.utils;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.apache.commons.lang3.StringUtils;
 
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 
+import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 脚本工具
+ * 命令工具
  * 
  * @author acgist
  */
@@ -27,36 +31,176 @@ public final class ScriptUtils {
      * 
      * @return 执行结果
      */
-    public static final String execute(String script) {
+    public static final ScriptExecutor execute(String script) {
         if(StringUtils.isEmpty(script)) {
             throw MessageCodeException.of(MessageCode.CODE_1002, "无效命令：" + script);
         }
-        String result = null;
-        Process process = null;
+        final ScriptExecutor executor = new ScriptExecutor(script);
         try {
-            process = Runtime.getRuntime().exec(script);
-            try(
-                final InputStream input = process.getInputStream();
-                final InputStream error = process.getErrorStream();
-            ) {
-                final String inputValue = new String(input.readAllBytes());
-                final String errorValue = new String(input.readAllBytes());
-                log.info("""
-                    执行命令：{}
-                    执行结果：{}
-                    失败结果：{}
-                    """, script, inputValue, errorValue);
-                result = StringUtils.isEmpty(inputValue) ? errorValue : inputValue;
-            }
+            executor.execute();
         } catch (Exception e) {
             log.error("执行命令异常：{}", script, e);
-            result = e.getMessage();
-        } finally {
-            if(process != null) {
-                process.destroy();
+        }
+        return executor;
+    }
+
+    /**
+     * 命令执行器
+     * 
+     * @author acgist
+     */
+    @Getter
+    @Setter
+    public static final class ScriptExecutor {
+        
+        /**
+         * 执行结果
+         */
+        private int code;
+        /**
+         * 是否正在运行
+         */
+        private boolean running;
+        /**
+         * 命令进程
+         */
+        private Process process;
+        /**
+         * 命令进程Builder
+         */
+        private ProcessBuilder processBuilder;
+        /**
+         * 执行命令
+         */
+        private final String script;
+        /**
+         * 日志输出
+         */
+        private final StringBuilder input;
+        /**
+         * 错误输出
+         */
+        private final StringBuilder error;
+        
+        /**
+         * @param script 执行命令
+         */
+        public ScriptExecutor(String script) {
+            this.script = script;
+            this.input  = new StringBuilder();
+            this.error  = new StringBuilder();
+        }
+
+        /**
+         * 执行命令
+         * 
+         * @throws IOException          IO异常
+         * @throws InterruptedException 线程异常
+         */
+        public void execute() throws InterruptedException, IOException {
+            final boolean linux = FileUtils.linux();
+            if(linux) {
+                this.processBuilder = new ProcessBuilder("/bin/bash", "-c", this.script);
+                this.process = this.processBuilder.start();
+            } else {
+                this.processBuilder = new ProcessBuilder("cmd", "/c", this.script);
+                this.process = this.processBuilder.start();
+            }
+            log.debug("开始执行命令：{}", this.script);
+            this.running = true;
+            try (
+                final InputStream input = this.process.getInputStream();
+                final InputStream error = this.process.getErrorStream();
+            ) {
+                this.streamThread(linux, "TaoyaoScriptInput", this.input, input);
+                this.streamThread(linux, "TaoyaoScriptError", this.error, error);
+                this.code = this.process.waitFor();
+            }
+            this.running = false;
+            log.debug("""
+                结束执行命令：{}
+                执行状态：{}
+                执行日志：{}
+                错误日志：{}
+                """, this.script, this.code, this.input, this.error);
+        }
+        
+        /**
+         * @param linux   是否Linux
+         * @param name    线程名称
+         * @param builder 日志记录
+         * @param input   日志输入流
+         */
+        private void streamThread(boolean linux, String name, StringBuilder builder, InputStream input) {
+            final Thread streamThread = new Thread(() -> {
+                try {
+                    int length;
+                    final byte[] bytes = new byte[1024];
+                    while(this.running && (length = input.read(bytes)) >= 0) {
+                        builder.append(linux ? new String(bytes, 0, length) : new String(bytes, 0, length, "GBK"));
+                    }
+                } catch (Exception e) {
+                    log.error("读取执行命令日志异常", e);
+                }
+            });
+            streamThread.setName(name);
+            streamThread.setDaemon(true);
+            streamThread.start();
+        }
+        
+        /**
+         * 结束命令
+         */
+        public void stop() {
+            this.stop(null);
+        }
+        
+        /**
+         * 结束命令
+         * 
+         * @param script 结束命令
+         */
+        public void stop(String script) {
+            // 等待时间
+            long wait = 0;
+            // 使用按键结束
+            if(StringUtils.isNotEmpty(script)) {
+                try (final OutputStream output = this.process.getOutputStream();) {
+                    output.write(script.getBytes());
+                } catch (Exception e) {
+                    log.error("结束命令异常：{}", this.script, e);
+                }
+                wait = 5000;
+            }
+            // 等待正常结束
+            while(this.process.isAlive() && wait >= 0) {
+                wait -= 10;
+                try {
+                    Thread.sleep(10);
+                } catch (InterruptedException e) {
+                    Thread.yield();
+                }
+            }
+            if(this.process.isAlive()) {
+                log.info("强制结束命令：{}", this.script);
+                // 所有子进程
+                this.process.children().forEach(process -> {
+                    process.destroy();
+                });
+                // 当前父进程
+                this.process.destroy();
+            } else {
+                log.debug("正常结束命令：{}", this.script);
             }
         }
-        return result;
+        
+        /**
+         * @return 执行结果
+         */
+        public String getResult() {
+            return this.input.isEmpty() ? this.error.toString() : this.input.toString();
+        }
+        
     }
     
 }

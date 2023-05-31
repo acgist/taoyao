@@ -31,6 +31,8 @@ public class FfmpegProperties {
     private String storageImagePath;
     @Schema(title = "视频存储目录", description = "视频存储目录")
     private String storageVideoPath;
+    @Schema(title = "录像录像地址", description = "录像录像地址")
+    private String host;
     @Schema(title = "录像最小端口", description = "录像最小端口")
     private Integer minPort;
     @Schema(title = "录像最大端口", description = "录像最大端口")

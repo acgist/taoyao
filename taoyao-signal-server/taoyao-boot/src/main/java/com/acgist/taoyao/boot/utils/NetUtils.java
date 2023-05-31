@@ -1,7 +1,9 @@
 package com.acgist.taoyao.boot.utils;
 
 import java.math.BigInteger;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.BitSet;
 
@@ -209,5 +211,25 @@ public final class NetUtils {
             // 本地地址：A/B/C类本地地址
             inetAddress.isSiteLocalAddress();
     }
-
+    
+    /**
+     * 扫描端口
+     * 
+     * @param min 最小端口
+     * @param max 最大端口
+     * 
+     * @return 端口
+     */
+    public static final int scanPort(int min, int max) {
+        for (int port = min; port < max; port++) {
+            try (final DatagramSocket socket = new DatagramSocket(port)) {
+                socket.disconnect();
+                return port;
+            } catch (SocketException e) {
+                // 忽略
+            }
+        }
+        return 0;
+    }
+    
 }

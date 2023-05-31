@@ -778,25 +778,39 @@ class Taoyao {
    */
   async mediaRecord(message, body) {
     const me = this;
-    const { roomId, rtcpMux, comedia, clientId, host, audioPort, videoProt, rtpCapabilities, audioProducerId, audioStreamId, videoProducerId, videoStreamId } = body;
+    const { enabled, roomId } = body;
+    const room = this.rooms.get(roomId);
+    if(enabled) {
+      await me.mediaRecordStart(message, body, room);
+    } else {
+      await me.mediaRecordStop(message, body, room);
+    }
+  }
+
+  async mediaRecordStart(message, body, room) {
+    const { roomId, clientId, host, audioPort, videoPort, rtpCapabilities, audioStreamId, videoStreamId, audioProducerId, videoProducerId } = body;
     const plainTransportOptions = {
       ...config.mediasoup.plainTransportOptions,
-      rtcpMux:         rtcpMux,
-      comedia:         comedia
+      rtcpMux : true,
+      comedia : true
     };
-    const room = this.rooms.get(roomId);
-    const transport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
-    me.transportEvent("plain", roomId, transport);
-    transport.clientId = clientId;
-    room.transports.set(transport.id, transport);
-    let audioConsumerId;
     let videoConsumerId;
-    await transport.connect({
-      ip: '127.0.0.1',
-      port: remoteRtpPort,
-      rtcpPort: remoteRtcpPort
-    });
+    let audioConsumerId;
+    let audioTransportId;
+    let videoTransportId;
     if(audioProducerId) {
+      const audioTransport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
+      me.transportEvent("plain", roomId, audioTransport);
+      audioTransport.clientId = clientId;
+      room.transports.set(audioTransport.id, audioTransport);
+      audioTransport.observer.on("close", () => {
+        room.transports.delete(audioTransport.id)
+      });
+      await audioTransport.connect({
+        ip       : host,
+        port     : audioPort,
+        rtcpPort : audioPort
+      });
       const audioConsumer = await transport.consume({
         producerId: audioProducerId,
         rtpCapabilities,
@@ -805,10 +819,25 @@ class Taoyao {
       audioConsumerId = audioConsumer.id;
       await audioConsumer.resume();
       audioConsumer.clientId = clientId;
-      audioConsumer.streamId = videoStreamId;
+      audioConsumer.streamId = audioStreamId;
       room.consumers.set(audioConsumer.id, audioConsumer);
+      audioConsumer.observer.on("close", () => {
+        room.consumers.delete(audioConsumer.id);
+      });
     }
     if(videoProducerId) {
+      const videoTransport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
+      me.transportEvent("plain", roomId, videoTransport);
+      videoTransport.clientId = clientId;
+      room.transports.set(videoTransport.id, videoTransport);
+      videoTransport.observer.on("close", () => {
+        room.transports.delete(videoTransport.id)
+      });
+      await videoTransport.connect({
+        ip       : host,
+        port     : videoPort,
+        rtcpPort : videoPort
+      });
       const videoConsumer = await transport.consume({
         producerId: videoProducerId,
         rtpCapabilities,
@@ -819,19 +848,42 @@ class Taoyao {
       videoConsumer.clientId = clientId;
       videoConsumer.streamId = videoStreamId;
       room.consumers.set(videoConsumer.id, videoConsumer);
+      videoConsumer.observer.on("close", () => {
+        room.consumers.delete(videoConsumer.id);
+      });
     }
-    console.info(transport.tuple)
-    console.info(transport.rtcpTuple)
     message.body = {
-      ip          : transport.tuple.localIp,
-      port        : transport.tuple.localPort,
-      roomId      : roomId,
-      rtcpPort    : transport.rtcpTuple ? transport.rtcpTuple.localPort : undefined,
-      transportId : transport.id,
-      audioConsumerId : audioConsumerId,
-      videoConsumerId : videoConsumerId,
+      roomId           : roomId,
+      audioConsumerId  : audioConsumerId,
+      videoConsumerId  : videoConsumerId,
+      audioTransportId : audioTransportId,
+      videoTransportId : videoTransportId,
     };
     me.push(message);
+  }
+
+  async mediaRecordStart(message, body, room) {
+    const { audioStreamId, videoStreamId, audioConsumerId, videoConsumerId, audioTransportId, videoTransportId } = body;
+    const audioConsumer = room.consumers.get(audioConsumerId);
+    if(audioConsumer) {
+      audioConsumer.close();
+      room.consumers.delete(audioConsumerId);
+    }
+    const videoConsumer = room.consumers.get(videoConsumerId);
+    if(videoConsumer) {
+      videoConsumer.close();
+      room.consumers.delete(videoConsumerId);
+    }
+    const audioTransport = room.transports.get(audioTransportId);
+    if(audioTransport) {
+      audioTransport.close();
+      room.transports.delete(audioTransportId);
+    }
+    const videoTransport = room.transports.get(videoTransportId);
+    if(videoTransport) {
+      videoTransport.close();
+      room.transports.delete(videoTransportId);
+    }
   }
 
   async mediaConsume(message, body) {
@@ -1363,20 +1415,18 @@ class Taoyao {
     const { roomId, rtcpMux, comedia, clientId, enableSctp, numSctpStreams, enableSrtp, srtpCryptoSuite } = body;
     const plainTransportOptions = {
       ...config.mediasoup.plainTransportOptions,
-      rtcpMux:         rtcpMux,
-      comedia:         comedia,
-      enableSctp:      enableSctp || Boolean(numSctpStreams),
-      numSctpStreams:  numSctpStreams || 0,
-      enableSrtp:      enableSrtp,
-      srtpCryptoSuite: srtpCryptoSuite,
+      rtcpMux         : rtcpMux,
+      comedia         : comedia,
+      enableSctp      : enableSctp || Boolean(numSctpStreams),
+      numSctpStreams  : numSctpStreams || 0,
+      enableSrtp      : enableSrtp,
+      srtpCryptoSuite : srtpCryptoSuite,
     };
     const room = this.rooms.get(roomId);
     const transport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
     me.transportEvent("plain", roomId, transport);
     transport.clientId = clientId;
     room.transports.set(transport.id, transport);
-    console.info(transport.tuple)
-    console.info(transport.rtcpTuple)
     message.body = {
       ip          : transport.tuple.localIp,
       port        : transport.tuple.localPort,

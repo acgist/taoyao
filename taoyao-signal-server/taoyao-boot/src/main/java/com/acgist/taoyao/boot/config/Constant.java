@@ -110,6 +110,14 @@ public interface Constant {
      */
     String PASSWORD = "password";
     /**
+     * 端口
+     */
+    String PORT = "port";
+    /**
+     * 地址
+     */
+    String HOST = "host";
+    /**
      * 数据
      */
     String DATA = "data";
@@ -233,6 +241,10 @@ public interface Constant {
      * 状态
      */
     String ENABLED = "enabled";
+    /**
+     * 文件路径
+     */
+    String FILEPATH = "filepath";
     /**
      * 是否是消费者
      */

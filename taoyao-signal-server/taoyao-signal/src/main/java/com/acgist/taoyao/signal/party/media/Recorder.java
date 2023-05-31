@@ -1,14 +1,20 @@
 package com.acgist.taoyao.signal.party.media;
 
+import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.math.NumberUtils;
 
 import com.acgist.taoyao.boot.config.FfmpegProperties;
 import com.acgist.taoyao.boot.utils.FileUtils;
+import com.acgist.taoyao.boot.utils.NetUtils;
+import com.acgist.taoyao.boot.utils.ScriptUtils;
+import com.acgist.taoyao.boot.utils.ScriptUtils.ScriptExecutor;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -41,41 +47,49 @@ public class Recorder {
      */
     private Integer videoPort;
     /**
-     * 传输通道
+     * 音频流ID
      */
-    private Transport transport;
+    private String audioStreamId;
     /**
-     * 音频消费者
+     * 音频生产者ID
      */
-    private Consumer audioConsumer;
+    private String audioProducerId;
     /**
-     * 视频消费者
+     * 音频消费者ID
      */
-    private Consumer videoConsumer;
+    private String audioConsumerId;
     /**
-     * 录像进程
+     * 音频通道ID
      */
-    private Process process;
+    private String audioTransportId;
     /**
-     * 进程Builder
+     * 视频流ID
      */
-    private ProcessBuilder processBuilder;
+    private String videoStreamId;
+    /**
+     * 视频生产者ID
+     */
+    private String videoProducerId;
+    /**
+     * 视频消费者ID
+     */
+    private String videoConsumerId;
+    /**
+     * 视频通道ID
+     */
+    private String videoTransportId;
     /**
      * 录制线程
      */
     private Thread thread;
     /**
-     * 日志线程
+     * 视频时长
      */
-    private Thread inputThread;
+    private Double duration;
     /**
-     * 异常线程
+     * 命令执行器
      */
-    private Thread errorThread;
-    /**
-     * 命令
-     */
-    private String command;
+    private ScriptExecutor scriptExecutor;
     /**
      * 文件路径
      */
@@ -85,6 +99,10 @@ public class Recorder {
      */
     private final String sdpfile;
     /**
+     * 预览图片
+     */
+    private final String preview;
+    /**
      * 文件路径
      */
     private final String filepath;
@@ -93,15 +111,18 @@ public class Recorder {
      */
     private final FfmpegProperties ffmpegProperties;
 
-    public Recorder(FfmpegProperties ffmpegProperties) {
+    /**
+     * @param name             录像名称
+     * @param ffmpegProperties FFmpeg配置
+     */
+    public Recorder(String name, FfmpegProperties ffmpegProperties) {
         this.close            = false;
         this.running          = false;
         this.ffmpegProperties = ffmpegProperties;
-        final String id = UUID.randomUUID().toString();
-        this.folder     = Paths.get(ffmpegProperties.getStorageVideoPath(), id).toAbsolutePath().toString();
-        this.sdpfile    = Paths.get(this.folder, "taoyao.sdp").toAbsolutePath().toString();
-        this.filepath   = Paths.get(this.folder, "taoyao.mp4").toAbsolutePath().toString();
-        this.command    = String.format(this.ffmpegProperties.getRecord(), this.sdpfile, this.filepath);
+        this.folder           = Paths.get(ffmpegProperties.getStorageVideoPath(), name).toAbsolutePath().toString();
+        this.sdpfile          = Paths.get(this.folder, "taoyao.sdp").toAbsolutePath().toString();
+        this.preview          = Paths.get(this.folder, "taoyao.jpg").toAbsolutePath().toString();
+        this.filepath         = Paths.get(this.folder, "taoyao.mp4").toAbsolutePath().toString();
         FileUtils.mkdirs(this.folder);
     }
     
@@ -114,11 +135,11 @@ public class Recorder {
                 return;
             }
             this.running = true;
-            this.thread = new Thread(this::record);
-            this.thread.setDaemon(true);
-            this.thread.setName("TaoyaoRecord");
-            this.thread.start();
         }
+        this.thread = new Thread(this::record);
+        this.thread.setDaemon(true);
+        this.thread.setName("TaoyaoRecord");
+        this.thread.start();
     }
     
     /**
@@ -126,62 +147,19 @@ public class Recorder {
      */
     private void record() {
         this.buildSdpfile();
-        int status = 0;
-        final StringBuilder input = new StringBuilder();
-        final StringBuilder error = new StringBuilder();
+        final String recordScript = String.format(this.ffmpegProperties.getRecord(), this.sdpfile, this.filepath);
+        this.scriptExecutor = new ScriptExecutor(recordScript);
         try {
-            final boolean linux = FileUtils.linux();
-            if(linux) {
-                this.processBuilder = new ProcessBuilder("/bin/bash", "-c", this.command);
-                this.process = processBuilder.start();
-            } else {
-                this.processBuilder = new ProcessBuilder("cmd", "/c", this.command);
-                this.process = processBuilder.start();
-            }
             log.debug("""
                 开始录像：{}
-                录像命令：{}
-                """, this.filepath, this.command);
-            this.inputThread = new Thread(() -> {
-                try (final InputStream inputStream = this.process.getInputStream()) {
-                    int length;
-                    final byte[] bytes = new byte[1024];
-                    while(this.running && !this.close && (length = inputStream.read(bytes)) >= 0) {
-                        input.append(linux ? new String(bytes, 0, length) : new String(bytes, 0, length, "GBK"));
-                    }
-                } catch (Exception e) {
-                    log.error("读取录像日志异常", e);
-                }
-            });
-            this.inputThread.setDaemon(true);
-            this.inputThread.setName("TaoyaoRecordInput");
-            this.inputThread.start();
-            this.errorThread = new Thread(() -> {
-                try (final InputStream inputStream = this.process.getErrorStream();) {
-                    int length;
-                    final byte[] bytes = new byte[1024];
-                    while(this.running && !this.close && (length = inputStream.read(bytes)) >= 0) {
-                        error.append(linux ? new String(bytes, 0, length) : new String(bytes, 0, length, "GBK"));
-                    }
-                } catch (Exception e) {
-                    log.error("读取录像错误异常", e);
-                }
-            });
-            this.errorThread.setDaemon(true);
-            this.errorThread.setName("TaoyaoRecordError");
-            this.errorThread.start();
-            status = this.process.waitFor();
+                录像端口：{} - {}
+                """, this.folder, this.audioPort, this.videoPort);
+            this.scriptExecutor.execute();
         } catch (Exception e) {
-            log.error("录像异常：{}", this.command, e);
+            log.error("录像异常：{}", recordScript, e);
         } finally {
             this.stop();
         }
-        log.debug("""
-            结束录像：{}
-            结束状态：{}
-            录像日志：{}
-            异常日志：{}
-            """, this.filepath, status, input, error);
     }
     
     /**
@@ -189,14 +167,60 @@ public class Recorder {
      */
     private void buildSdpfile() {
         try {
+            this.audioPort = NetUtils.scanPort(this.ffmpegProperties.getMinPort(), this.ffmpegProperties.getMaxPort());
+            // 预留控制端口
+            this.videoPort = NetUtils.scanPort(this.audioPort + 16, this.ffmpegProperties.getMaxPort());
+            final String sdp = String.format(
+                this.ffmpegProperties.getSdp(),
+                this.ffmpegProperties.getHost(),
+                this.audioPort,
+                this.ffmpegProperties.getHost(),
+                this.videoPort,
+                this.ffmpegProperties.getHost()
+            );
             Files.write(
                 Paths.get(this.sdpfile),
-                String.format(this.ffmpegProperties.getSdp(), 8888, 9999).getBytes(),
+                sdp.getBytes(),
                 StandardOpenOption.WRITE, StandardOpenOption.CREATE
             );
         } catch (IOException e) {
             log.error("创建SDP文件异常：{}", this.sdpfile, e);
         }
+    }
+    
+    /**
+     * 视频预览截图
+     */
+    private void preview() {
+        int time = 2;
+        final File file = Paths.get(this.preview).toFile();
+        while(time > 0 && !(file.exists() && file.length() > 0L)) {
+            log.debug("视频预览截图：{}", this.preview);
+            final String previewScript = String.format(this.ffmpegProperties.getPreview(), this.filepath, time, this.preview);
+            ScriptUtils.execute(previewScript);
+            time /= 2;
+        }
+    }
+
+    /**
+     * 视频时长
+     */
+    private void duration() {
+        log.debug("视频时长：{}", this.filepath);
+        final String durationScript = String.format(this.ffmpegProperties.getDuration(), this.filepath);
+        final ScriptExecutor executor = ScriptUtils.execute(durationScript);
+        final Pattern pattern = Pattern.compile(".*duration\\=([0-9\\.]+).*");
+        final Matcher matcher = pattern.matcher(executor.getResult());
+        String duration = null;
+        if(matcher.find()) {
+            duration = matcher.group(matcher.groupCount()).strip();
+        }
+        if(NumberUtils.isCreatable(duration)) {
+            this.duration = Double.parseDouble(duration);
+        } else {
+            this.duration = 0D;
+        }
+    
     }
     
     /**
@@ -209,16 +233,13 @@ public class Recorder {
             }
             this.close = true;
         }
-        if(this.process == null) {
+        if(this.scriptExecutor == null) {
             return;
         }
-        log.debug("结束媒体录像：{}", this.filepath);
-        // 所有子进程
-        this.process.children().forEach(process -> {
-            process.destroy();
-        });
-        // 当前父进程
-        this.process.destroy();
+        log.debug("结束媒体录像：{}", this.folder);
+        this.scriptExecutor.stop("q");
+        this.preview();
+        this.duration();
     }
 
 }
