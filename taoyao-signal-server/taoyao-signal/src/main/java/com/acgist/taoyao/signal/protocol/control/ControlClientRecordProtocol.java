@@ -11,7 +11,7 @@ import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
 
 /**
- * 录像信令
+ * 终端录像信令
  * 
  * @author acgist
  */
@@ -36,12 +36,12 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
         "终端=>信令服务->目标终端->信令服务->终端"
     }
 )
-public class ControlRecordProtocol extends ProtocolControlAdapter {
+public class ControlClientRecordProtocol extends ProtocolControlAdapter {
 
-    public static final String SIGNAL = "control::record";
+    public static final String SIGNAL = "control::client::record";
     
-    public ControlRecordProtocol() {
-        super("录像信令", SIGNAL);
+    public ControlClientRecordProtocol() {
+        super("终端录像信令", SIGNAL);
     }
     
     @Override

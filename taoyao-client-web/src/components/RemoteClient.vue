@@ -12,9 +12,10 @@
       <el-button @click="taoyao.mediaConsumerPause(audioConsumer.id)"  v-show="audioConsumer && !audioConsumer.paused" type="primary" title="关闭麦克风" :icon="Microphone" circle class="mic" :style="{'--volume': client.volume}" />
       <el-button @click="taoyao.mediaConsumerResume(videoConsumer.id)" v-show="videoConsumer &&  videoConsumer.paused" type="danger"  title="打开摄像头" :icon="VideoPlay"  circle />
       <el-button @click="taoyao.mediaConsumerPause(videoConsumer.id)"  v-show="videoConsumer && !videoConsumer.paused" type="primary" title="关闭摄像头" :icon="VideoPause" circle />
-      <el-button @click="taoyao.controlPhotograph(client.clientId)"                 :icon="Camera"      circle title="拍照" />
-      <el-button @click="taoyao.controlRecord(client.clientId, (record = !record))" :icon="VideoCamera" circle title="录像" :type="record ? 'danger' : ''" />
-      <el-button @click="taoyao.mediaConsumerStatus()"                              :icon="InfoFilled"  circle title="媒体信息" />
+      <el-button @click="taoyao.controlPhotograph(client.clientId)"                                   :icon="Camera"       circle title="拍照" />
+      <el-button @click="taoyao.controlClientRecord(client.clientId, (clientRecord = !clientRecord))" :icon="VideoCamera"  circle title="终端录像"   :type="clientRecord ? 'danger' : ''" />
+      <el-button @click="taoyao.controlServerRecord(client.clientId, (serverRecord = !serverRecord))" :icon="MostlyCloudy" circle title="服务端录像" :type="serverRecord ? 'danger' : ''" />
+      <el-button @click="taoyao.mediaConsumerStatus()"                                                :icon="InfoFilled"   circle title="媒体信息" />
       <el-popover placement="top" :width="240" trigger="hover">
         <template #reference>
           <el-button>视频质量</el-button>
@@ -40,6 +41,7 @@ import {
   Microphone,
   VideoCamera,
   CircleClose,
+  MostlyCloudy,
 } from "@element-plus/icons-vue";
 export default {
   name: "RemoteClient",
@@ -54,13 +56,15 @@ export default {
       Microphone,
       VideoCamera,
       CircleClose,
+      MostlyCloudy,
     };
   },
   data() {
     return {
       audio: null,
       video: null,
-      record: false,
+      clientRecord: false,
+      serverRecord: false,
       audioStream: null,
       videoStream: null,
       dataConsumer: null,

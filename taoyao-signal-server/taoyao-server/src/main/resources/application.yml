@@ -228,17 +228,17 @@ taoyao:
     # SDP：VP8 | H264
     sdp: |
       v=0
-      o=- 0 0 IN IP4 %s
+      o=- 0 0 IN IP4 127.0.0.1
       s=TaoyaoRecord
       t=0 0
-      m=audio %d RTP/AVP 97
-      c=IN IP4 %s
-      a=rtpmap:97 OPUS/48000/2
-      a=fmtp:97 sprop-stereo=1
-      m=video %d RTP/AVP 96
-      c=IN IP4 %s
-      a=rtpmap:96 H264/90000
-      a=fmtp:96 packetization-mode=1
+      m=audio %d RTP/AVP 100
+      c=IN IP4 127.0.0.1
+      a=rtpmap:100 OPUS/48000/2
+      a=fmtp:100 sprop-stereo=1
+      m=video %d RTP/AVP 107
+      c=IN IP4 127.0.0.1
+      a=rtpmap:107 H264/90000
+      a=fmtp:107 packetization-mode=1
     # 录像命令
     record: ffmpeg -protocol_whitelist "file,rtp,udp" -y -i %s %s
     # 截图命令
@@ -252,7 +252,8 @@ taoyao:
     # 视频存储目录
     storage-video-path: /data/taoyao/storage/video
     # 录像地址
-    host: 127.0.0.1
+    #host: 127.0.0.1
+    host: 192.168.8.40
     # 端口范围
     min-port: 50000
     max-port: 59999

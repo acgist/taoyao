@@ -509,6 +509,10 @@ class Taoyao extends RemoteClient {
   remoteClients = new Map();
   // 会话终端
   sessionClients = new Map();
+  // 本地录像机
+  mediaRecorder;
+  // 本地录像数据
+  mediaRecorderChunks = [];
 
   constructor({
     name,
@@ -811,6 +815,21 @@ class Taoyao extends RemoteClient {
     }
     return stream;
   }
+  async getAudioTrack() {
+    const self = this;
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: self.audioConfig,
+    });
+    // TODO：首个？
+    const track = stream.getAudioTracks()[0];
+    // TODO：验证修改API audioTrack.applyCapabilities
+    console.debug(
+      "音频信息：",
+      track.getSettings(),
+      track.getCapabilities()
+    );
+    return track;
+  }
   async getVideoTrack() {
     let track;
     const self = this;
@@ -819,11 +838,11 @@ class Taoyao extends RemoteClient {
       // const stream = await this._getExternalVideoStream();
       // track = stream.getVideoTracks()[0].clone();
     } else if (self.videoSource === "camera") {
-      console.debug("enableWebcam() | calling getUserMedia()");
       // TODO：参数
       const stream = await navigator.mediaDevices.getUserMedia({
         video: self.videoConfig,
       });
+      // TODO：首个？
       track = stream.getVideoTracks()[0];
       // TODO：验证修改API videoTrack.applyCapabilities
       console.debug(
@@ -939,16 +958,32 @@ class Taoyao extends RemoteClient {
     );
   }
   /**
-   * 录像
+   * 终端录像信令
    * 
    * @param {*} clientId 
    * @param {*} enabled
    */
-  controlRecord(clientId, enabled) {
+  controlClientRecord(clientId, enabled) {
     const me = this;
     me.push(
-      protocol.buildMessage("control::record", {
+      protocol.buildMessage("control::client::record", {
         to: clientId,
+        enabled: enabled
+      })
+    );
+  }
+  /**
+   * 服务端录像信令
+   * 
+   * @param {*} clientId 
+   * @param {*} enabled
+   */
+   controlServerRecord(clientId, enabled) {
+    const me = this;
+    me.push(
+      protocol.buildMessage("control::server::record", {
+        to: clientId,
+        roomId: me.roomId,
         enabled: enabled
       })
     );
@@ -1923,20 +1958,7 @@ class Taoyao extends RemoteClient {
       let track;
       try {
         console.debug("打开麦克风");
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: self.audioConfig,
-        });
-        const tracks = stream.getAudioTracks();
-        if (tracks.length > 1) {
-          console.warn("多个音频轨道");
-        }
-        track = tracks[0];
-        // TODO：验证修改API audioTrack.applyCapabilities
-        console.debug(
-          "音频信息：",
-          track.getSettings(),
-          track.getCapabilities()
-        );
+        let track = self.getAudioTrack();
         this.audioProducer = await this.sendTransport.produce({
           track,
           codecOptions: {
@@ -2009,13 +2031,13 @@ class Taoyao extends RemoteClient {
    * TODO：重复点击
    */
   async produceVideo() {
-    console.debug("打开摄像头");
     const self = this;
     if (self.videoProduce && self.mediasoupDevice.canProduce("video")) {
       if (self.videoProducer) {
         return;
       }
       try {
+        console.debug("打开摄像头");
         let track = await self.getVideoTrack();
         let codec;
         let encodings;
@@ -2215,9 +2237,13 @@ class Taoyao extends RemoteClient {
       });
       if (!audioEnabled && self.audioProduce) {
         self.callbackError("没有音频媒体设备");
+        // 强制修改
+        self.audioProduce = false;
       }
       if (!videoEnabled && self.videoProduce) {
         self.callbackError("没有视频媒体设备");
+        // 强制修改
+        self.videoProduce = false;
       }
     } else {
       self.callbackError("没有媒体设备");
@@ -2251,23 +2277,22 @@ class Taoyao extends RemoteClient {
   /**
    * 发起会话
    * 
-   * @param {*} clientId     接收者ID
-   * @param {*} audioEnabled 是否打开音频
-   * @param {*} videoEnabled 是否打开视频
+   * @param {*} clientId 接收者ID
    */
-  async sessionCall(clientId, audioEnabled = true, videoEnabled = true) {
+  async sessionCall(clientId) {
     const me = this;
     if (!clientId) {
       this.callbackError("无效终端");
       return;
     }
+    me.checkDevice();
     const response = await me.request(
       protocol.buildMessage("session::call", {
         clientId
       })
     );
     const { name, sessionId } = response.body;
-    const session = new Session({name, clientId, sessionId, audioEnabled, videoEnabled});
+    const session = new Session({name, clientId, sessionId, audioEnabled: me.audioProduce, videoEnabled: me.videoProduce});
     this.sessionClients.set(sessionId, session);
   }
 
@@ -2435,6 +2460,101 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 本地截图
+   * 
+   * @param {*} video 视频
+   */
+  localPhotograph(video) {
+    const me = this;
+    const canvas  = document.createElement('canvas');
+    canvas.width  = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext('2d');
+    context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+    const dataURL = canvas.toDataURL('images/png');
+    const download = document.createElement('a');
+    download.href = dataURL;
+    download.download = 'taoyao.png';
+    download.style.display = 'none';
+    document.body.appendChild(download);
+    download.click();
+    download.remove();
+  }
+
+  // 'video/webm;codecs=aac,vp8',
+  // 'video/webm;codecs=aac,vp9',
+  // 'video/webm;codecs=aac,h264',
+  // 'video/webm;codecs=pcm,vp8',
+  // 'video/webm;codecs=pcm,vp9',
+  // 'video/webm;codecs=pcm,h264',
+  // 'video/webm;codecs=opus,vp8',
+  // 'video/webm;codecs=opus,vp9',
+  // 'video/webm;codecs=opus,h264',
+  // 'video/mp4;codecs=aac,vp8',
+  // 'video/mp4;codecs=aac,vp9',
+  // 'video/mp4;codecs=aac,h264',
+  // 'video/mp4;codecs=pcm,vp8',
+  // 'video/mp4;codecs=pcm,vp9',
+  // 'video/mp4;codecs=pcm,h264',
+  // 'video/mp4;codecs=opus,vp8',
+  // 'video/mp4;codecs=opus,vp9',
+  // 'video/mp4;codecs=opus,h264',
+  // MediaRecorder.isTypeSupported(mimeType)
+
+  /**
+   * 本地录制
+   * 
+   * video.captureStream().getTracks().forEach((v) => stream.addTrack(v));
+   * 
+   * @param {*} audio   音频
+   * @param {*} video   视频
+   * @param {*} enabled 是否录制
+   */
+  localClientRecord(audio, video, enabled) {
+    const me = this;
+    if (enabled) {
+      if (me.mediaRecorder) {
+        return;
+      }
+      const stream = new MediaStream();
+      if(audio) {
+        audio.getAudioTracks().forEach(track => stream.addTrack(track));
+      }
+      if(video) {
+        video.getVideoTracks().forEach(track => stream.addTrack(track));
+      }
+      me.mediaRecorder = new MediaRecorder(stream, {
+        audioBitsPerSecond: 128  * 1000,
+        videoBitsPerSecond: 2400 * 1000,
+        mimeType: 'video/webm;codecs=opus,h264',
+      });
+      mediaRecorder.onstop = function (e) {
+        const blob = new Blob(me.mediaRecorderChunks);
+        const objectURL = URL.createObjectURL(blob);
+        const download = document.createElement('a');
+        download.href = objectURL;
+        download.download = 'taoyao.mp4';
+        download.style.display = 'none';
+        document.body.appendChild(download);
+        download.click();
+        download.remove();
+        URL.revokeObjectURL(objectURL);
+        me.mediaRecorderChunks = [];
+      };
+      mediaRecorder.ondataavailable = (e) => {
+        me.mediaRecorderChunks.push(e.data);
+      };
+      me.mediaRecorder.start();
+    } else {
+      if (!me.mediaRecorder) {
+        return;
+      }
+      me.mediaRecorder.stop();
+      me.mediaRecorder = null;
+    }
+  }
+
+  /**
    * 关闭视频房间媒体
    */
   closeRoomMedia() {
@@ -2504,3 +2624,4 @@ class Taoyao extends RemoteClient {
 }
 
 export { Taoyao };
+

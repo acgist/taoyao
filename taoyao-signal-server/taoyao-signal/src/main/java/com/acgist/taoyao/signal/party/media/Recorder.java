@@ -15,13 +15,19 @@ import com.acgist.taoyao.boot.utils.FileUtils;
 import com.acgist.taoyao.boot.utils.NetUtils;
 import com.acgist.taoyao.boot.utils.ScriptUtils;
 import com.acgist.taoyao.boot.utils.ScriptUtils.ScriptExecutor;
+import com.acgist.taoyao.signal.event.EventPublisher;
+import com.acgist.taoyao.signal.event.room.RecorderCloseEvent;
 
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 媒体录像
+ * 媒体录像机
+ * 
+ * OPUS = 100
+ * VP8  = 101
+ * H264 = 107
  * 
  * @author acgist
  */
@@ -91,6 +97,14 @@ public class Recorder {
      */
     private ScriptExecutor scriptExecutor;
     /**
+     * 房间
+     */
+    private final Room room;
+    /**
+     * 终端
+     */
+    private final ClientWrapper clientWrapper;
+    /**
      * 文件路径
      */
     private final String folder;
@@ -113,16 +127,20 @@ public class Recorder {
 
     /**
      * @param name             录像名称
+     * @param room             房间
+     * @param clientWrapper    终端
      * @param ffmpegProperties FFmpeg配置
      */
-    public Recorder(String name, FfmpegProperties ffmpegProperties) {
+    public Recorder(String name, Room room, ClientWrapper clientWrapper, FfmpegProperties ffmpegProperties) {
         this.close            = false;
         this.running          = false;
-        this.ffmpegProperties = ffmpegProperties;
+        this.room             = room;
         this.folder           = Paths.get(ffmpegProperties.getStorageVideoPath(), name).toAbsolutePath().toString();
         this.sdpfile          = Paths.get(this.folder, "taoyao.sdp").toAbsolutePath().toString();
         this.preview          = Paths.get(this.folder, "taoyao.jpg").toAbsolutePath().toString();
         this.filepath         = Paths.get(this.folder, "taoyao.mp4").toAbsolutePath().toString();
+        this.clientWrapper    = clientWrapper;
+        this.ffmpegProperties = ffmpegProperties;
         FileUtils.mkdirs(this.folder);
     }
     
@@ -136,6 +154,7 @@ public class Recorder {
             }
             this.running = true;
         }
+        this.buildSdpfile();
         this.thread = new Thread(this::record);
         this.thread.setDaemon(true);
         this.thread.setName("TaoyaoRecord");
@@ -146,7 +165,6 @@ public class Recorder {
      * 录制视频
      */
     private void record() {
-        this.buildSdpfile();
         final String recordScript = String.format(this.ffmpegProperties.getRecord(), this.sdpfile, this.filepath);
         this.scriptExecutor = new ScriptExecutor(recordScript);
         try {
@@ -172,11 +190,11 @@ public class Recorder {
             this.videoPort = NetUtils.scanPort(this.audioPort + 16, this.ffmpegProperties.getMaxPort());
             final String sdp = String.format(
                 this.ffmpegProperties.getSdp(),
-                this.ffmpegProperties.getHost(),
+//                this.ffmpegProperties.getHost(),
                 this.audioPort,
-                this.ffmpegProperties.getHost(),
-                this.videoPort,
-                this.ffmpegProperties.getHost()
+//                this.ffmpegProperties.getHost(),
+                this.videoPort
+//                this.ffmpegProperties.getHost()
             );
             Files.write(
                 Paths.get(this.sdpfile),
@@ -240,6 +258,13 @@ public class Recorder {
         this.scriptExecutor.stop("q");
         this.preview();
         this.duration();
+    }
+
+    /**
+     * 关闭录像
+     */
+    public void close() {
+        EventPublisher.publishEvent(new RecorderCloseEvent(this));
     }
 
 }

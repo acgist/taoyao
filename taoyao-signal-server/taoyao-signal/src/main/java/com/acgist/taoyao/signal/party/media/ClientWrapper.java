@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 终端包装器：Peer
+ * 视频房间使用
  * 
  * @author acgist
  */
@@ -123,7 +124,10 @@ public class ClientWrapper implements AutoCloseable {
     
     @Override
     public void close() {
-        // 注意：不要关闭终端
+        // 注意：不要关闭终端（只是离开房间）
+        if(this.recorder != null) {
+            this.recorder.close();
+        }
         this.consumers.values().forEach(Consumer::close);
         this.producers.values().forEach(Producer::close);
         this.dataConsumers.values().forEach(DataConsumer::close);

@@ -2,6 +2,8 @@ package com.acgist.taoyao.media;
 
 import android.content.Context;
 import android.content.Intent;
+import android.media.MediaCodecInfo;
+import android.media.MediaCodecList;
 import android.media.projection.MediaProjection;
 import android.os.Handler;
 import android.speech.tts.TextToSpeech;
@@ -45,6 +47,8 @@ import org.webrtc.audio.JavaAudioDeviceModule;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * 媒体管理器
@@ -185,20 +189,23 @@ public final class MediaManager {
 //      WebRtcAudioUtils.setWebRtcBasedAcousticEchoCanceler(true);
 //      // 自动增益
 //      WebRtcAudioUtils.setWebRtcBasedAutomaticGainControl(true);
-//      // 支持的编码器
-//      final MediaCodecList mediaCodecList = new MediaCodecList(-1);
-//      for (MediaCodecInfo mediaCodecInfo : mediaCodecList.getCodecInfos()) {
-//          final String[] supportedTypes = mediaCodecInfo.getSupportedTypes();
-//          Log.d(MediaManager.class.getSimpleName(), "编码器名称：" + mediaCodecInfo.getName());
-//          Log.d(MediaManager.class.getSimpleName(), "编码器类型：" + String.join(", ", supportedTypes));
-//          for (String supportType : supportedTypes) {
-//              final MediaCodecInfo.CodecCapabilities codecCapabilities = mediaCodecInfo.getCapabilitiesForType(supportType);
-//              Log.d(MediaManager.class.getSimpleName(), "编码器支持的文件格式：" + codecCapabilities.getMimeType());
-//              // MediaCodecInfo.CodecCapabilities.COLOR_*
-//              final int[] colorFormats = codecCapabilities.colorFormats;
-//              Log.d(MediaManager.class.getSimpleName(), "编码器支持的色彩格式：" + IntStream.of(colorFormats).boxed().map(String::valueOf).collect(Collectors.joining(", ")));
-//          }
-//      }
+//      // 支持的编码解码器
+      final MediaCodecList mediaCodecList = new MediaCodecList(MediaCodecList.ALL_CODECS);
+      for (MediaCodecInfo mediaCodecInfo : mediaCodecList.getCodecInfos()) {
+          // OMX.google = 软编
+          // OMX.core   = 硬编
+          final String[] supportedTypes = mediaCodecInfo.getSupportedTypes();
+          final String type = mediaCodecInfo.isEncoder() ? "编码器" : "解码器";
+          Log.d(MediaManager.class.getSimpleName(), type + "名称：" + mediaCodecInfo.getName());
+          Log.d(MediaManager.class.getSimpleName(), type + "类型：" + String.join(", ", supportedTypes));
+          for (String supportType : supportedTypes) {
+              final MediaCodecInfo.CodecCapabilities codecCapabilities = mediaCodecInfo.getCapabilitiesForType(supportType);
+              Log.d(MediaManager.class.getSimpleName(), type + "支持的文件格式：" + codecCapabilities.getMimeType());
+              // MediaCodecInfo.CodecCapabilities.COLOR_*
+              final int[] colorFormats = codecCapabilities.colorFormats;
+              Log.d(MediaManager.class.getSimpleName(), type + "支持的色彩格式：" + IntStream.of(colorFormats).boxed().map(String::valueOf).collect(Collectors.joining(", ")));
+          }
+      }
     }
 
     private MediaManager() {

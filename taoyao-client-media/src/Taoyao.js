@@ -455,8 +455,8 @@ class Taoyao {
       case "media::producer::resume":
         me.mediaProducerResume(message, body);
         break;
-      case "media::record":
-        me.mediaRecord(message, body);
+      case "control::server::record":
+        me.controlServerRecord(message, body);
         break;
       case "media::router::rtp::capabilities":
         me.mediaRouterRtpCapabilities(message, body);
@@ -776,18 +776,19 @@ class Taoyao {
    * @param {*} message 消息
    * @param {*} body    消息主体
    */
-  async mediaRecord(message, body) {
+  async controlServerRecord(message, body) {
     const me = this;
     const { enabled, roomId } = body;
     const room = this.rooms.get(roomId);
     if(enabled) {
-      await me.mediaRecordStart(message, body, room);
+      await me.controlServerRecordStart(message, body, room);
     } else {
-      await me.mediaRecordStop(message, body, room);
+      await me.controlServerRecordStop(message, body, room);
     }
   }
 
-  async mediaRecordStart(message, body, room) {
+  async controlServerRecordStart(message, body, room) {
+    const me = this;
     const { roomId, clientId, host, audioPort, videoPort, rtpCapabilities, audioStreamId, videoStreamId, audioProducerId, videoProducerId } = body;
     const plainTransportOptions = {
       ...config.mediasoup.plainTransportOptions,
@@ -800,10 +801,12 @@ class Taoyao {
     let videoTransportId;
     if(audioProducerId) {
       const audioTransport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
+      audioTransportId = audioTransport.id;
       me.transportEvent("plain", roomId, audioTransport);
       audioTransport.clientId = clientId;
       room.transports.set(audioTransport.id, audioTransport);
       audioTransport.observer.on("close", () => {
+        console.log("controlServerRecord audioTransport close：", audioTransport.id);
         room.transports.delete(audioTransport.id)
       });
       await audioTransport.connect({
@@ -811,7 +814,7 @@ class Taoyao {
         port     : audioPort,
         rtcpPort : audioPort
       });
-      const audioConsumer = await transport.consume({
+      const audioConsumer = await audioTransport.consume({
         producerId: audioProducerId,
         rtpCapabilities,
         paused: true
@@ -822,15 +825,19 @@ class Taoyao {
       audioConsumer.streamId = audioStreamId;
       room.consumers.set(audioConsumer.id, audioConsumer);
       audioConsumer.observer.on("close", () => {
+        console.log("controlServerRecord audioConsumer close：", audioConsumer.id);
         room.consumers.delete(audioConsumer.id);
       });
+      console.log("controlServerRecord audio", audioTransportId, audioConsumerId, audioTransport.tuple);
     }
     if(videoProducerId) {
       const videoTransport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
+      videoTransportId = videoTransport.id;
       me.transportEvent("plain", roomId, videoTransport);
       videoTransport.clientId = clientId;
       room.transports.set(videoTransport.id, videoTransport);
       videoTransport.observer.on("close", () => {
+        console.log("controlServerRecord videoTransport close：", videoTransport.id);
         room.transports.delete(videoTransport.id)
       });
       await videoTransport.connect({
@@ -838,7 +845,7 @@ class Taoyao {
         port     : videoPort,
         rtcpPort : videoPort
       });
-      const videoConsumer = await transport.consume({
+      const videoConsumer = await videoTransport.consume({
         producerId: videoProducerId,
         rtpCapabilities,
         paused: true
@@ -849,8 +856,10 @@ class Taoyao {
       videoConsumer.streamId = videoStreamId;
       room.consumers.set(videoConsumer.id, videoConsumer);
       videoConsumer.observer.on("close", () => {
+        console.log("controlServerRecord videoConsumer close：", videoConsumer.id);
         room.consumers.delete(videoConsumer.id);
       });
+      console.log("controlServerRecord video：", videoTransportId, videoConsumerId, videoTransport.tuple);
     }
     message.body = {
       roomId           : roomId,
@@ -862,7 +871,8 @@ class Taoyao {
     me.push(message);
   }
 
-  async mediaRecordStart(message, body, room) {
+  async controlServerRecordStop(message, body, room) {
+    const me = this;
     const { audioStreamId, videoStreamId, audioConsumerId, videoConsumerId, audioTransportId, videoTransportId } = body;
     const audioConsumer = room.consumers.get(audioConsumerId);
     if(audioConsumer) {
@@ -884,6 +894,7 @@ class Taoyao {
       videoTransport.close();
       room.transports.delete(videoTransportId);
     }
+    me.push(message);
   }
 
   async mediaConsume(message, body) {

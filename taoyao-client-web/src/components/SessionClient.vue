@@ -13,8 +13,8 @@
       <el-button @click="taoyao.sessionPause(client.id, 'audio')"  v-show="audioStream &&  client.remoteAudioEnabled" type="primary" title="关闭远程麦克风" :icon="Microphone" circle class="mic" :style="{'--volume': client.volume}" />
       <el-button @click="taoyao.sessionResume(client.id, 'video')" v-show="videoStream && !client.remoteVideoEnabled" type="danger"  title="打开远程摄像头" :icon="VideoPlay"  circle />
       <el-button @click="taoyao.sessionPause(client.id, 'video')"  v-show="videoStream &&  client.remoteVideoEnabled" type="primary" title="关闭远程摄像头" :icon="VideoPause" circle />
-      <el-button @click="taoyao.controlPhotograph(client.clientId)"                 :icon="Camera"      circle title="拍照" />
-      <el-button @click="taoyao.controlRecord(client.clientId, (record = !record))" :icon="VideoCamera" circle title="录像" :type="record ? 'danger' : ''" />
+      <el-button @click="taoyao.controlPhotograph(client.clientId)"                                   :icon="Camera"      circle title="拍照" />
+      <el-button @click="taoyao.controlClientRecord(client.clientId, (clientRecord = !clientRecord))" :icon="VideoCamera" circle title="录像" :type="clientRecord ? 'danger' : ''" />
       <el-popover placement="top" :width="240" trigger="hover">
         <template #reference>
           <el-button>视频质量</el-button>
@@ -64,7 +64,8 @@ export default {
     return {
       audio: null,
       video: null,
-      record: false,
+      clientRecord: false,
+      serverRecord: false,
       audioStream: null,
       videoStream: null,
     };

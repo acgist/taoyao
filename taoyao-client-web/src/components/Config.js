@@ -1,7 +1,7 @@
 /**
  * 音频默认配置
  * TODO：MediaStreamTrack.applyConstraints().then().catch();
- * let setting = {
+ * const setting = {
  *   autoGainControl:  true,
  *   noiseSuppression: true
  * }

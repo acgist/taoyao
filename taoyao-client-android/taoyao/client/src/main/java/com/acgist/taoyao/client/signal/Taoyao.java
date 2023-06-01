@@ -625,10 +625,10 @@ public final class Taoyao implements ITaoyao {
             case "client::reboot"                          -> this.clientReboot(message, message.body());
             case "client::register"                        -> this.clientRegister(message, message.body());
             case "client::shutdown"                        -> this.clientShutdown(message, message.body());
+            case "control::client::record"                 -> this.controlClientRecord(message, message.body());
             case "control::config::audio"                  -> this.controlConfigAudio(message, message.body());
             case "control::config::video"                  -> this.controlConfigVideo(message, message.body());
             case "control::photograph"                     -> this.controlPhotograph(message, message.body());
-            case "control::record"                         -> this.controlRecord(message, message.body());
             case "media::audio::volume"                    -> this.mediaAudioVolume(message, message.body());
             case "media::consume"                          -> this.mediaConsume(message, message.body());
             case "media::consumer::close"                  -> this.mediaConsumerClose(message, message.body());
@@ -752,6 +752,26 @@ public final class Taoyao implements ITaoyao {
     }
 
     /**
+     * 录像
+     *
+     * @param message 信令消息
+     * @param body    信令主体
+     */
+    private void controlClientRecord(Message message, Map<String, Object> body) {
+        String filepath;
+        final Boolean enabled = MapUtils.getBoolean(body, "enabled");
+        if(Boolean.TRUE.equals(enabled)) {
+            final RecordClient recordClient = this.mediaManager.startRecord();
+            filepath = recordClient.getFilepath();
+        } else {
+            filepath = this.mediaManager.stopRecord();
+        }
+        body.put("enabled", enabled);
+        body.put("filepath", filepath);
+        this.push(message);
+    }
+
+    /**
      * 更新音频配置
      *
      * @param message 信令消息
@@ -781,26 +801,6 @@ public final class Taoyao implements ITaoyao {
      */
     private void controlPhotograph(Message message, Map<String, Object> body) {
         final String filepath = this.mediaManager.photograph();
-        body.put("filepath", filepath);
-        this.push(message);
-    }
-
-    /**
-     * 录像
-     *
-     * @param message 信令消息
-     * @param body    信令主体
-     */
-    private void controlRecord(Message message, Map<String, Object> body) {
-        String filepath;
-        final Boolean enabled = MapUtils.getBoolean(body, "enabled");
-        if(Boolean.TRUE.equals(enabled)) {
-            final RecordClient recordClient = this.mediaManager.startRecord();
-            filepath = recordClient.getFilepath();
-        } else {
-            filepath = this.mediaManager.stopRecord();
-        }
-        body.put("enabled", enabled);
         body.put("filepath", filepath);
         this.push(message);
     }

@@ -1,8 +1,10 @@
-package com.acgist.taoyao.signal.protocol.media;
+package com.acgist.taoyao.signal.protocol.control;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import org.springframework.context.ApplicationListener;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
@@ -12,14 +14,15 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
+import com.acgist.taoyao.signal.event.room.RecorderCloseEvent;
 import com.acgist.taoyao.signal.party.media.ClientWrapper;
 import com.acgist.taoyao.signal.party.media.Kind;
 import com.acgist.taoyao.signal.party.media.Recorder;
 import com.acgist.taoyao.signal.party.media.Room;
-import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
+import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
 
 /**
- * 媒体录像
+ * 服务端录像信令
  * 
  * @author acgist
  */
@@ -28,12 +31,14 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
     body = {
         """
         {
-            "clientId": "目标终端ID",
+            "to": "目标终端ID",
+            "roomId": "房间ID",
             "enabled": 是否录像（true|false）
         }
         """,
         """
         {
+            "roomId": "房间ID",
             "enabled": 是否录像（true|false）,
             "filepath": "视频文件路径"
         }
@@ -41,23 +46,33 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
     },
     flow = "终端=>信令服务->终端"
 )
-public class MediaRecordProtocol extends ProtocolRoomAdapter {
+public class ControlServerRecordProtocol extends ProtocolControlAdapter implements ApplicationListener<RecorderCloseEvent> {
 
+    public static final String SIGNAL = "control::server::record";
+    
     private final FfmpegProperties ffmpegProperties;
     
-    public MediaRecordProtocol(FfmpegProperties ffmpegProperties) {
-        super("媒体录像", "media::record");
+    public ControlServerRecordProtocol(FfmpegProperties ffmpegProperties) {
+        super("服务端录像信令", SIGNAL);
         this.ffmpegProperties = ffmpegProperties;
+    }
+    
+    @Override
+    public void onApplicationEvent(RecorderCloseEvent event) {
+        final Recorder recorder = event.getRecorder();
+        this.stop(recorder.getRoom(), recorder.getClientWrapper());
     }
 
     @Override
-    public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        final Boolean enabled = MapUtils.get(body, Constant.ENABLED, Boolean.TRUE);
+    public void execute(String clientId, ClientType clientType, Client client, Client targetClient, Message message, Map<String, Object> body) {
         String filepath;
+        final String roomId = MapUtils.get(body, Constant.ROOM_ID);
+        final Boolean enabled = MapUtils.get(body, Constant.ENABLED, Boolean.TRUE);
+        final Room room = this.roomManager.room(roomId);
         if(enabled) {
-            filepath = this.start(room, client, mediaClient);
+            filepath = this.start(room, room.clientWrapper(client));
         } else {
-            filepath = this.stop(room, client, mediaClient);
+            filepath = this.stop(room, room.clientWrapper(client));
         }
         body.put(Constant.FILEPATH, filepath);
         client.push(message);
@@ -71,16 +86,16 @@ public class MediaRecordProtocol extends ProtocolRoomAdapter {
      * @return 执行结果
      */
     public Message execute(String roomId, String clientId, Boolean enabled) {
+        String filepath;
         final Room room = this.roomManager.room(roomId);
         final Client client = this.clientManager.clients(clientId);
-        final Client mediaClient = room.getMediaClient();
-        String filepath;
         if(enabled) {
-            filepath = this.start(room, client, mediaClient);
+            filepath = this.start(room, room.clientWrapper(client));
         } else {
-            filepath = this.stop(room, client, mediaClient);
+            filepath = this.stop(room, room.clientWrapper(client));
         }
         return Message.success(Map.of(
+            Constant.ROOM_ID,  roomId,
             Constant.ENABLED,  enabled,
             Constant.FILEPATH, filepath
         ));
@@ -89,22 +104,22 @@ public class MediaRecordProtocol extends ProtocolRoomAdapter {
     /**
      * 开始录制
      * 
-     * @param room        房间
-     * @param client      终端
-     * @param mediaClient 媒体终端
+     * @param room          房间
+     * @param clientWrapper 终端
+     * @param mediaClient   媒体终端
      * 
      * @return 文件地址
      */
-    private String start(Room room, Client client, Client mediaClient) {
-        final ClientWrapper clientWrapper = room.clientWrapper(client);
+    private String start(Room room, ClientWrapper clientWrapper) {
         synchronized (clientWrapper) {
             final Recorder recorder = clientWrapper.getRecorder();
             if(recorder != null) {
                 return recorder.getFilepath();
             }
         }
+        final String name = UUID.randomUUID().toString();
         // 打开录制线程
-        final Recorder recorder = new Recorder(UUID.randomUUID().toString(), this.ffmpegProperties);
+        final Recorder recorder = new Recorder(name, room, clientWrapper, this.ffmpegProperties);
         recorder.start();
         clientWrapper.setRecorder(recorder);
         // 打开媒体录制
@@ -115,15 +130,15 @@ public class MediaRecordProtocol extends ProtocolRoomAdapter {
         body.put(Constant.HOST, this.ffmpegProperties.getHost());
         body.put(Constant.ROOM_ID, room.getRoomId());
         body.put(Constant.ENABLED, true);
-        body.put(Constant.CLIENT_ID, client.clientId());
+        body.put(Constant.CLIENT_ID, clientWrapper.getClientId());
         body.put(Constant.RTP_CAPABILITIES, clientWrapper.getRtpCapabilities());
         clientWrapper.getProducers().values().forEach(producer -> {
             if(producer.getKind() == Kind.AUDIO) {
-                recorder.setAudioStreamId(Constant.STREAM_ID_CONSUMER.apply(producer.getStreamId(), client.clientId()));
+                recorder.setAudioStreamId(Constant.STREAM_ID_CONSUMER.apply(producer.getStreamId(), clientWrapper.getClientId()));
                 body.put("audioStreamId", recorder.getAudioStreamId());
                 body.put("audioProducerId", producer.getProducerId());
             } else if(producer.getKind() == Kind.VIDEO) {
-                recorder.setAudioStreamId(Constant.STREAM_ID_CONSUMER.apply(producer.getStreamId(), client.clientId()));
+                recorder.setAudioStreamId(Constant.STREAM_ID_CONSUMER.apply(producer.getStreamId(), clientWrapper.getClientId()));
                 body.put("videoStreamId", recorder.getVideoStreamId());
                 body.put("videoProducerId", producer.getProducerId());
             } else {
@@ -131,6 +146,7 @@ public class MediaRecordProtocol extends ProtocolRoomAdapter {
             }
         });
         message.setBody(body);
+        final Client mediaClient = room.getMediaClient();
         mediaClient.request(message);
         return recorder.getFilepath();
     }
@@ -138,15 +154,13 @@ public class MediaRecordProtocol extends ProtocolRoomAdapter {
     /**
      * 关闭录像
      * 
-     * @param room        房间
-     * @param client      终端
-     * @param mediaClient 媒体终端
+     * @param room          房间
+     * @param clientWrapper 终端
      * 
      * @return 文件地址
      */
-    private String stop(Room room, Client client, Client mediaClient) {
+    private String stop(Room room, ClientWrapper clientWrapper) {
         final Recorder recorder;
-        final ClientWrapper clientWrapper = room.clientWrapper(client);
         synchronized (clientWrapper) {
             recorder = clientWrapper.getRecorder();
             if(recorder == null) {
@@ -168,6 +182,7 @@ public class MediaRecordProtocol extends ProtocolRoomAdapter {
         body.put(Constant.ROOM_ID, room.getRoomId());
         body.put(Constant.ENABLED, false);
         message.setBody(body);
+        final Client mediaClient = room.getMediaClient();
         mediaClient.request(message);
         return recorder.getFilepath();
     }

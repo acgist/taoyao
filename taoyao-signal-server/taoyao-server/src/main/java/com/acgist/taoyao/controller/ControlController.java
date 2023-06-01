@@ -10,10 +10,11 @@ import com.acgist.taoyao.boot.config.MediaAudioProperties;
 import com.acgist.taoyao.boot.config.MediaVideoProperties;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.protocol.control.ControlBellProtocol;
+import com.acgist.taoyao.signal.protocol.control.ControlClientRecordProtocol;
 import com.acgist.taoyao.signal.protocol.control.ControlConfigAudioProtocol;
 import com.acgist.taoyao.signal.protocol.control.ControlConfigVideoProtocol;
 import com.acgist.taoyao.signal.protocol.control.ControlPhotographProtocol;
-import com.acgist.taoyao.signal.protocol.control.ControlRecordProtocol;
+import com.acgist.taoyao.signal.protocol.control.ControlServerRecordProtocol;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,10 +35,11 @@ import lombok.RequiredArgsConstructor;
 public class ControlController {
     
     private final ControlBellProtocol controlBellProtocol;
-    private final ControlRecordProtocol controlRecordProtocol;
     private final ControlPhotographProtocol controlPhotographProtocol;
     private final ControlConfigAudioProtocol controlConfigAudioProtocol;
     private final ControlConfigVideoProtocol controlConfigVideoProtocol;
+    private final ControlClientRecordProtocol controlClientRecordProtocol;
+    private final ControlServerRecordProtocol controlServerRecordProtocol;
     
     @Operation(summary = "响铃", description = "响铃控制")
     @GetMapping("/bell/{clientId}")
@@ -45,10 +47,16 @@ public class ControlController {
         return this.controlBellProtocol.execute(clientId, enabled);
     }
     
-    @Operation(summary = "录像", description = "录像控制")
-    @GetMapping("/record/{clientId}")
+    @Operation(summary = "录像", description = "终端录像控制")
+    @GetMapping("/client/record/{clientId}")
     public Message record(@PathVariable String clientId, @NotNull(message = "没有指定操作状态") Boolean enabled) {
-        return this.controlRecordProtocol.execute(clientId, enabled);
+        return this.controlClientRecordProtocol.execute(clientId, enabled);
+    }
+    
+    @Operation(summary = "录像", description = "服务端录像控制")
+    @GetMapping("/server/record/{roomId}/{clientId}")
+    public Message record(@PathVariable String roomId, @PathVariable String clientId, @NotNull(message = "没有指定操作状态") Boolean enabled) {
+        return this.controlServerRecordProtocol.execute(roomId, clientId, enabled);
     }
     
     @Operation(summary = "拍照", description = "拍照控制")
