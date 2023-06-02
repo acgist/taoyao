@@ -235,13 +235,12 @@ taoyao:
       c=IN IP4 127.0.0.1
       a=rtpmap:100 OPUS/48000/2
       a=fmtp:100 sprop-stereo=1
-      m=video %d RTP/AVP 107
+      m=video %d RTP/AVP 101
       c=IN IP4 127.0.0.1
-      a=rtpmap:107 H264/90000
-      a=fmtp:107 packetization-mode=1
+      a=rtpmap:101 VP8/90000
     # 录像命令
     record: ffmpeg -protocol_whitelist "file,rtp,udp" -y -i %s %s
-    # 截图命令
+    # 预览命令
     preview: ffmpeg -y -i %s -ss %d -vframes 1 -f image2 %s
     # 时长命令
     duration: ffprobe -i %s -show_entries format=duration
@@ -251,6 +250,10 @@ taoyao:
     storage-image-path: /data/taoyao/storage/image
     # 视频存储目录
     storage-video-path: /data/taoyao/storage/video
+    # 预览时间
+    preview-time: 4
+    # 时长提取
+    duration-regex: .*duration\=([0-9\.]+).*
     # 录像地址
     #host: 127.0.0.1
     host: 192.168.8.40

@@ -1958,7 +1958,7 @@ class Taoyao extends RemoteClient {
       let track;
       try {
         console.debug("打开麦克风");
-        let track = self.getAudioTrack();
+        let track = await self.getAudioTrack();
         this.audioProducer = await this.sendTransport.produce({
           track,
           codecOptions: {
@@ -2528,7 +2528,7 @@ class Taoyao extends RemoteClient {
         videoBitsPerSecond: 2400 * 1000,
         mimeType: 'video/webm;codecs=opus,h264',
       });
-      mediaRecorder.onstop = function (e) {
+      me.mediaRecorder.onstop = function (e) {
         const blob = new Blob(me.mediaRecorderChunks);
         const objectURL = URL.createObjectURL(blob);
         const download = document.createElement('a');
@@ -2541,7 +2541,7 @@ class Taoyao extends RemoteClient {
         URL.revokeObjectURL(objectURL);
         me.mediaRecorderChunks = [];
       };
-      mediaRecorder.ondataavailable = (e) => {
+      me.mediaRecorder.ondataavailable = (e) => {
         me.mediaRecorderChunks.push(e.data);
       };
       me.mediaRecorder.start();

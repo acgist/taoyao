@@ -148,6 +148,7 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         message.setBody(body);
         final Client mediaClient = room.getMediaClient();
         mediaClient.request(message);
+        // TODO：回写ID，格式自动判断
         return recorder.getFilepath();
     }
 

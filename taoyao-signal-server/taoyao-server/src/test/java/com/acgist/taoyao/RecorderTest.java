@@ -16,29 +16,28 @@ public class RecorderTest {
         ffmpegProperties.setHost("127.0.0.1");
         ffmpegProperties.setSdp("""
         v=0
-        o=- 0 0 IN IP4 %s
+        o=- 0 0 IN IP4 127.0.0.1
         s=TaoyaoRecord
         t=0 0
         m=audio %d RTP/AVP 97
-        c=IN IP4 %s
+        c=IN IP4 127.0.0.1
         a=rtpmap:97 OPUS/48000/2
         a=fmtp:97 sprop-stereo=1
         m=video %d RTP/AVP 96
-        c=IN IP4 %s
+        c=IN IP4 127.0.0.1
         a=rtpmap:96 VP8/90000
-        a=fmtp:96 packetization-mode=1
         """);
 //        ffmpegProperties.setSdp("""
 //        v=0
-//        o=- 0 0 IN IP4 %s
+//        o=- 0 0 IN IP4 127.0.0.1
 //        s=TaoyaoRecord
 //        t=0 0
 //        m=audio %d RTP/AVP 97
-//        c=IN IP4 %s
+//        c=IN IP4 127.0.0.1
 //        a=rtpmap:97 OPUS/48000/2
 //        a=fmtp:97 sprop-stereo=1
 //        m=video %d RTP/AVP 96
-//        c=IN IP4 %s
+//        c=IN IP4 127.0.0.1
 //        a=rtpmap:96 H264/90000
 //        a=fmtp:96 packetization-mode=1
 //        """);

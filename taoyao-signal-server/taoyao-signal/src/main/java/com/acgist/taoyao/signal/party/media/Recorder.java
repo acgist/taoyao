@@ -159,6 +159,7 @@ public class Recorder {
         this.thread.setDaemon(true);
         this.thread.setName("TaoyaoRecord");
         this.thread.start();
+        log.info("开始录像：{}", this.folder);
     }
     
     /**
@@ -210,14 +211,14 @@ public class Recorder {
      * 视频预览截图
      */
     private void preview() {
-        int time = 2;
+        int time = this.ffmpegProperties.getPreviewTime();
         final File file = Paths.get(this.preview).toFile();
-        while(time > 0 && !(file.exists() && file.length() > 0L)) {
-            log.debug("视频预览截图：{}", this.preview);
+        do {
+            log.debug("视频预览：{}", this.preview);
             final String previewScript = String.format(this.ffmpegProperties.getPreview(), this.filepath, time, this.preview);
             ScriptUtils.execute(previewScript);
             time /= 2;
-        }
+        } while (time > 0 && !(file.exists() && file.length() > 0L));
     }
 
     /**
@@ -227,7 +228,7 @@ public class Recorder {
         log.debug("视频时长：{}", this.filepath);
         final String durationScript = String.format(this.ffmpegProperties.getDuration(), this.filepath);
         final ScriptExecutor executor = ScriptUtils.execute(durationScript);
-        final Pattern pattern = Pattern.compile(".*duration\\=([0-9\\.]+).*");
+        final Pattern pattern = Pattern.compile(this.ffmpegProperties.getDurationRegex());
         final Matcher matcher = pattern.matcher(executor.getResult());
         String duration = null;
         if(matcher.find()) {

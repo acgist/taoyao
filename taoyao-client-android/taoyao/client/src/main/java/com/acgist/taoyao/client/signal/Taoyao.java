@@ -363,50 +363,48 @@ public final class Taoyao implements ITaoyao {
         short messageLength     = 0;
         final byte[] bytes      = new byte[1024];
         final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
-        while (!this.close && this.connect) {
-            try {
-                while (!this.close && (length = this.input.read(bytes)) >= 0) {
-                    buffer.put(bytes, 0, length);
-                    while (buffer.position() > 0) {
-                        if (messageLength <= 0) {
-                            if (buffer.position() < Short.BYTES) {
-                                // 不够消息长度
-                                break;
-                            } else {
-                                buffer.flip();
-                                messageLength = buffer.getShort();
-                                buffer.compact();
-                                if (messageLength > 16 * 1024) {
-                                    throw new RuntimeException("超过最大数据大小：" + messageLength);
-                                }
-                            }
+        try {
+            while (!this.close && this.connect && (length = this.input.read(bytes)) >= 0) {
+                buffer.put(bytes, 0, length);
+                while (buffer.position() > 0) {
+                    if (messageLength <= 0) {
+                        if (buffer.position() < Short.BYTES) {
+                            // 不够消息长度
+                            break;
                         } else {
-                            if (buffer.position() < messageLength) {
-                                // 不够消息长度
-                                break;
-                            } else {
-                                final byte[] message = new byte[messageLength];
-                                messageLength = 0;
-                                buffer.flip();
-                                buffer.get(message);
-                                buffer.compact();
-                                final String content = new String(this.decrypt.doFinal(message));
-                                try {
-                                    this.on(content);
-                                } catch (Exception e) {
-                                    Log.e(Taoyao.class.getSimpleName(), "处理信令异常：" + content, e);
-                                    this.taoyaoListener.onError(e);
-                                }
+                            buffer.flip();
+                            messageLength = buffer.getShort();
+                            buffer.compact();
+                            if (messageLength > 16 * 1024) {
+                                throw new RuntimeException("超过最大数据大小：" + messageLength);
+                            }
+                        }
+                    } else {
+                        if (buffer.position() < messageLength) {
+                            // 不够消息长度
+                            break;
+                        } else {
+                            final byte[] message = new byte[messageLength];
+                            messageLength = 0;
+                            buffer.flip();
+                            buffer.get(message);
+                            buffer.compact();
+                            final String content = new String(this.decrypt.doFinal(message));
+                            try {
+                                this.on(content);
+                            } catch (Exception e) {
+                                Log.e(Taoyao.class.getSimpleName(), "处理信令异常：" + content, e);
+                                this.taoyaoListener.onError(e);
                             }
                         }
                     }
                 }
-            } catch (Exception e) {
-                Log.e(Taoyao.class.getSimpleName(), "接收信令异常", e);
-                this.disconnect();
             }
+        } catch (Exception e) {
+            Log.e(Taoyao.class.getSimpleName(), "接收信令异常", e);
+            this.disconnect();
         }
-        if (!this.close && !this.connect) {
+        if (!this.close) {
             this.messageHandler.post(this::connect);
         }
     }
@@ -439,7 +437,11 @@ public final class Taoyao implements ITaoyao {
      */
     @Override
     public void push(Message message) {
-        if (this.output == null) {
+        if (this.close) {
+            Log.w(Taoyao.class.getSimpleName(), "通道已经关闭：" + message);
+            return;
+        }
+        if (!this.connect) {
             Log.w(Taoyao.class.getSimpleName(), "通道没有打开：" + message);
             return;
         }
@@ -448,6 +450,7 @@ public final class Taoyao implements ITaoyao {
             this.output.write(this.encrypt(message));
         } catch (Exception e) {
             Log.e(Taoyao.class.getSimpleName(), "请求信令异常：" + message, e);
+            this.disconnect();
         }
     }
 

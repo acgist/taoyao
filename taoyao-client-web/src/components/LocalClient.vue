@@ -10,8 +10,8 @@
       <el-button @click="taoyao.mediaProducerResume(videoProducer.id)" v-show="videoProducer &&  videoProducer.paused" type="danger"  title="打开摄像头" :icon="VideoPlay"  circle />
       <el-button @click="taoyao.mediaProducerPause(videoProducer.id)"  v-show="videoProducer && !videoProducer.paused" type="primary" title="关闭摄像头" :icon="VideoPause" circle />
       <el-button @click="exchangeVideoSource"                                                         :icon="Refresh" circle title="交换媒体" />
-      <el-button @onclick="localPhotograph"                                                           :icon="Camera"       circle title="拍照" />
-      <el-button @onclick="localClientRecord"                                                         :icon="VideoCamera"  circle title="录像" :type="clientRecord ? 'danger' : ''" />
+      <el-button @click="localPhotograph"                                                             :icon="Camera"       circle title="拍照" />
+      <el-button @click="localClientRecord"                                                           :icon="VideoCamera"  circle title="录像" :type="clientRecord ? 'danger' : ''" />
       <el-button @click="taoyao.controlServerRecord(client.clientId, (serverRecord = !serverRecord))" :icon="MostlyCloudy" circle title="录像" :type="serverRecord ? 'danger' : ''" />
       <el-button @click="taoyao.mediaProducerStatus()"                                                :icon="InfoFilled"   circle title="媒体信息" />
       <el-popover placement="top" :width="240" trigger="hover">
