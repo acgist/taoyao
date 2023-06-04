@@ -795,8 +795,10 @@ class Taoyao {
       rtcpMux: false,
       comedia: false
     };
-    let videoConsumerId;
+    let audioConsumer;
+    let videoConsumer;
     let audioConsumerId;
+    let videoConsumerId;
     let audioTransportId;
     let videoTransportId;
     let audioRtpParameters;
@@ -816,14 +818,13 @@ class Taoyao {
         port    : audioPort,
         rtcpPort: audioPort
       });
-      const audioConsumer = await audioTransport.consume({
+      audioConsumer = await audioTransport.consume({
         producerId: audioProducerId,
         rtpCapabilities,
         paused: true
       });
       audioConsumerId = audioConsumer.id;
       audioRtpParameters = audioConsumer.rtpParameters;
-      await audioConsumer.resume();
       audioConsumer.clientId = clientId;
       audioConsumer.streamId = audioStreamId;
       room.consumers.set(audioConsumer.id, audioConsumer);
@@ -848,14 +849,13 @@ class Taoyao {
         port    : videoPort,
         rtcpPort: videoPort
       });
-      const videoConsumer = await videoTransport.consume({
+      videoConsumer = await videoTransport.consume({
         producerId: videoProducerId,
         rtpCapabilities,
         paused: true
       });
       videoConsumerId = videoConsumer.id;
       videoRtpParameters = videoConsumer.rtpParameters;
-      await videoConsumer.resume();
       videoConsumer.clientId = clientId;
       videoConsumer.streamId = videoStreamId;
       room.consumers.set(videoConsumer.id, videoConsumer);
@@ -864,6 +864,12 @@ class Taoyao {
         room.consumers.delete(videoConsumer.id);
       });
       console.log("controlServerRecord video：", videoTransportId, videoConsumerId, videoTransport.tuple, videoRtpParameters);
+    }
+    if(audioConsumer) {
+      await audioConsumer.resume();
+    }
+    if(videoConsumer) {
+      await videoConsumer.resume();
     }
     message.body = {
       roomId            : roomId,

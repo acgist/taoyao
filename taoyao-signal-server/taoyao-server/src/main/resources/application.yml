@@ -238,6 +238,7 @@ taoyao:
       m=video %d RTP/AVP 101
       c=IN IP4 127.0.0.1
       a=rtpmap:101 VP8/90000
+    # a=fmtp:101 packetization-mode=1
     # 录像命令
     record: ffmpeg -protocol_whitelist "file,rtp,udp" -y -i %s %s
     # 预览命令

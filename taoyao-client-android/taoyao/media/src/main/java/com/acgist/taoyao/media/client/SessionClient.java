@@ -83,20 +83,20 @@ public class SessionClient extends Client {
 
     /**
      *
-     * @param sessionId    会话ID
-     * @param name         远程终端名称
-     * @param clientId     远程终端ID
-     * @param taoyao       信令
-     * @param mainHandler  MainHandler
-     * @param preview      是否预览视频
-     * @param playAudio    是否播放音频
-     * @param playVideo    是否播放视频
-     * @param dataConsume  是否消费数据
-     * @param audioConsume 是否消费音频
-     * @param videoConsume 是否消费视频
-     * @param dataProduce  是否生产数据
-     * @param audioProduce 是否生产音频
-     * @param videoProduce 是否生产视频
+     * @param sessionId        会话ID
+     * @param name             远程终端名称
+     * @param clientId         远程终端ID
+     * @param taoyao           信令
+     * @param mainHandler      MainHandler
+     * @param preview          是否预览视频
+     * @param playAudio        是否播放音频
+     * @param playVideo        是否播放视频
+     * @param dataConsume      是否消费数据
+     * @param audioConsume     是否消费音频
+     * @param videoConsume     是否消费视频
+     * @param dataProduce      是否生产数据
+     * @param audioProduce     是否生产音频
+     * @param videoProduce     是否生产视频
      * @param mediaProperties  媒体配置
      * @param webrtcProperties WebRTC配置
      */
