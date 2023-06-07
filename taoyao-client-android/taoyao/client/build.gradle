@@ -4,12 +4,12 @@ plugins {
 
 android {
     namespace 'com.acgist.taoyao.client'
-    compileSdk 32
+    compileSdk rootProject.ext.taoyao.compileSdk
     defaultConfig {
-        minSdk 28
-        targetSdk 32
-        versionCode 100
-        versionName "1.0.0"
+        minSdk rootProject.ext.taoyao.minSdk
+        targetSdk rootProject.ext.taoyao.targetSdk
+        versionCode rootProject.ext.taoyao.versionCode
+        versionName rootProject.ext.taoyao.versionName
         consumerProguardFiles "consumer-rules.pro"
         applicationId "com.acgist.taoyao.client"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -20,12 +20,12 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    compileOptions {
+        sourceCompatibility rootProject.ext.taoyao.javaVersion
+        targetCompatibility rootProject.ext.taoyao.javaVersion
+    }
     buildFeatures {
         viewBinding true
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
     }
 }
 

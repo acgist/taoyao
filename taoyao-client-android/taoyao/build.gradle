@@ -2,3 +2,15 @@ plugins {
     id 'com.android.library' version '7.4.2' apply false
     id 'com.android.application' version '7.4.2' apply false
 }
+ext {
+    taoyao = [
+        minSdk       : 28,
+        targetSdk    : 32,
+        compileSdk   : 32,
+        versionCode  : 100,
+        versionName  : "1.0.0",
+        ndkVersion   : "23.1.7779620",
+        javaVersion  : JavaVersion.VERSION_17,
+        cmakeVersion : "3.22.1",
+    ]
+}

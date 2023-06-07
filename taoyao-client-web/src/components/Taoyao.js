@@ -2285,7 +2285,7 @@ class Taoyao extends RemoteClient {
       this.callbackError("无效终端");
       return;
     }
-    me.checkDevice();
+    await me.checkDevice();
     const response = await me.request(
       protocol.buildMessage("session::call", {
         clientId
@@ -2298,8 +2298,9 @@ class Taoyao extends RemoteClient {
 
   async defaultSessionCall(message) {
     const me = this;
+    await me.checkDevice();
     const { name, clientId, sessionId } = message.body;
-    const session = new Session({name, clientId, sessionId});
+    const session = new Session({name, clientId, sessionId, audioEnabled: me.audioProduce, videoEnabled: me.videoProduce});
     this.sessionClients.set(sessionId, session);
     await me.buildPeerConnection(session, sessionId);
     session.peerConnection.createOffer().then(async description => {
