@@ -816,7 +816,7 @@ class Taoyao {
       await audioTransport.connect({
         ip      : host,
         port    : audioPort,
-        rtcpPort: audioPort
+        rtcpPort: audioPort + 1
       });
       audioConsumer = await audioTransport.consume({
         producerId: audioProducerId,
@@ -847,7 +847,7 @@ class Taoyao {
       await videoTransport.connect({
         ip      : host,
         port    : videoPort,
-        rtcpPort: videoPort
+        rtcpPort: videoPort + 1
       });
       videoConsumer = await videoTransport.consume({
         producerId: videoProducerId,
@@ -865,11 +865,12 @@ class Taoyao {
       });
       console.log("controlServerRecord video：", videoTransportId, videoConsumerId, videoTransport.tuple, videoRtpParameters);
     }
-    if(audioConsumer) {
-      await audioConsumer.resume();
-    }
     if(videoConsumer) {
       await videoConsumer.resume();
+      videoConsumer.requestKeyFrame();
+    }
+    if(audioConsumer) {
+      await audioConsumer.resume();
     }
     message.body = {
       roomId            : roomId,

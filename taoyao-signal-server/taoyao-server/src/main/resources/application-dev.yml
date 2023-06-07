@@ -1,4 +1,14 @@
+server:
+  # 使用反向代理建议不要配置HTTPS
+  ssl:
+    key-alias: taoyao
+    key-store: classpath:server.p12
+    key-store-type: PKCS12
+    key-store-password: 123456
+    key-password: 123456
 taoyao:
+  ffmpeg:
+    host: 192.168.8.93
   security:
     permit:
       - /
@@ -8,3 +18,4 @@ taoyao:
       - /v3/api-docs/**
       - /swagger-ui/**
       - /swagger-ui.html
+    

@@ -159,7 +159,7 @@ public class Recorder {
         this.thread.setDaemon(true);
         this.thread.setName("TaoyaoRecord");
         this.thread.start();
-        log.info("开始录像：{}", this.folder);
+        log.info("开始媒体录像：{}", this.folder);
     }
     
     /**
@@ -186,16 +186,15 @@ public class Recorder {
      */
     private void buildSdpfile() {
         try {
-            this.audioPort = NetUtils.scanPort(this.ffmpegProperties.getMinPort(), this.ffmpegProperties.getMaxPort());
+            int minPort = this.ffmpegProperties.getMinPort();
+            int maxPort = this.ffmpegProperties.getMaxPort();
             // 预留控制端口
-            this.videoPort = NetUtils.scanPort(this.audioPort + 16, this.ffmpegProperties.getMaxPort());
+            this.audioPort = NetUtils.scanPort(minPort, maxPort);
+            this.videoPort = NetUtils.scanPort(this.audioPort + 2, maxPort);
             final String sdp = String.format(
                 this.ffmpegProperties.getSdp(),
-//                this.ffmpegProperties.getHost(),
-                this.audioPort,
-//                this.ffmpegProperties.getHost(),
-                this.videoPort
-//                this.ffmpegProperties.getHost()
+                this.videoPort,
+                this.audioPort
             );
             Files.write(
                 Paths.get(this.sdpfile),
@@ -255,7 +254,7 @@ public class Recorder {
         if(this.scriptExecutor == null) {
             return;
         }
-        log.debug("结束媒体录像：{}", this.folder);
+        log.info("结束媒体录像：{}", this.folder);
         this.scriptExecutor.stop("q");
         this.preview();
         this.duration();
