@@ -102,7 +102,7 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
     }
     
     /**
-     * 开始录制
+     * 开始录像
      * 
      * @param room          房间
      * @param clientWrapper 终端
@@ -118,11 +118,11 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
             }
         }
         final String name = UUID.randomUUID().toString();
-        // 打开录制线程
+        // 打开录像线程
         final Recorder recorder = new Recorder(name, room, clientWrapper, this.ffmpegProperties);
         recorder.start();
         clientWrapper.setRecorder(recorder);
-        // 打开媒体录制
+        // 打开媒体录像
         final Message message = this.build();
         final Map<String, Object> body = new HashMap<>();
         body.put(Constant.HOST, this.ffmpegProperties.getHost());
@@ -175,10 +175,10 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
                 return null;
             }
         }
-        // 关闭录制线程
+        // 关闭录像线程
         recorder.stop();
         clientWrapper.setRecorder(null);
-        // 关闭媒体录制
+        // 关闭媒体录像
         final Message message = this.build();
         final Map<String, Object> body = new HashMap<>();
         body.put(Constant.AUDIO_STREAM_ID, recorder.getAudioStreamId());

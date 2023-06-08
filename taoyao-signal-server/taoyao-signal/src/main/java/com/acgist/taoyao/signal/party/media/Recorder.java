@@ -93,7 +93,7 @@ public class Recorder {
      */
     private String videoTransportId;
     /**
-     * 录制线程
+     * 录像线程
      */
     private Thread thread;
     /**
@@ -172,7 +172,7 @@ public class Recorder {
     }
     
     /**
-     * 录制视频
+     * 录像视频
      */
     private void record() {
         final String recordScript = String.format(
