@@ -277,6 +277,38 @@ public interface Constant {
      * 视频控制端口
      */
     String VIDEO_RTCP_PORT = "videoRtcpPort";
+    /**
+     * 音频媒体流ID
+     */
+    String AUDIO_STREAM_ID = "audioStreamId";
+    /**
+     * 视频媒体流ID
+     */
+    String VIDEO_STREAM_ID = "videoStreamId";
+    /**
+     * 音频消费者ID
+     */
+    String AUDIO_CONSUMER_ID = "audioConsumerId";
+    /**
+     * 视频消费者ID
+     */
+    String VIDEO_CONSUMER_ID = "videoConsumerId";
+    /**
+     * 音频生产者ID
+     */
+    String AUDIO_PRODUCER_ID = "audioProducerId";
+    /**
+     * 视频生产者ID
+     */
+    String VIDEO_PRODUCER_ID = "videoProducerId";
+    /**
+     * 音频通道ID
+     */
+    String AUDIO_TRANSPORT_ID = "audioTransportId";
+    /**
+     * 视频通道ID
+     */
+    String VIDEO_TRANSPORT_ID = "videoTransportId";
 
     /**
      * 生产者ID生成器

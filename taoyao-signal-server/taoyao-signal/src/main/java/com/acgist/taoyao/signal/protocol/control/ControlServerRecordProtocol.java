@@ -138,20 +138,24 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         clientWrapper.getProducers().values().forEach(producer -> {
             if(producer.getKind() == Kind.AUDIO) {
                 recorder.setAudioStreamId(Constant.STREAM_ID_CONSUMER.apply(producer.getStreamId(), clientWrapper.getClientId()));
-                body.put("audioStreamId", recorder.getAudioStreamId());
-                body.put("audioProducerId", producer.getProducerId());
+                body.put(Constant.AUDIO_STREAM_ID, recorder.getAudioStreamId());
+                body.put(Constant.AUDIO_PRODUCER_ID, producer.getProducerId());
             } else if(producer.getKind() == Kind.VIDEO) {
                 recorder.setAudioStreamId(Constant.STREAM_ID_CONSUMER.apply(producer.getStreamId(), clientWrapper.getClientId()));
-                body.put("videoStreamId", recorder.getVideoStreamId());
-                body.put("videoProducerId", producer.getProducerId());
+                body.put(Constant.VIDEO_STREAM_ID, recorder.getVideoStreamId());
+                body.put(Constant.VIDEO_PRODUCER_ID, producer.getProducerId());
             } else {
                 // 忽略
             }
         });
         message.setBody(body);
         final Client mediaClient = room.getMediaClient();
-        mediaClient.request(message);
-        // TODO：回写ID，格式自动判断
+        final Message response = mediaClient.request(message);
+        final Map<String, String> responseBody = response.body();
+        recorder.setAudioConsumerId(responseBody.get(Constant.AUDIO_CONSUMER_ID));
+        recorder.setVideoConsumerId(responseBody.get(Constant.VIDEO_CONSUMER_ID));
+        recorder.setAudioTransportId(responseBody.get(Constant.AUDIO_TRANSPORT_ID));
+        recorder.setVideoTransportId(responseBody.get(Constant.VIDEO_TRANSPORT_ID));
         return recorder.getFilepath();
     }
 
@@ -177,12 +181,12 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         // 关闭媒体录制
         final Message message = this.build();
         final Map<String, Object> body = new HashMap<>();
-        body.put("audioStreamId", recorder.getAudioStreamId());
-        body.put("videoStreamId", recorder.getVideoStreamId());
-        body.put("audioConsumerId", recorder.getAudioConsumerId());
-        body.put("videoConsumerId", recorder.getVideoConsumerId());
-        body.put("audioTransportId", recorder.getAudioTransportId());
-        body.put("videoTransportId", recorder.getVideoConsumerId());
+        body.put(Constant.AUDIO_STREAM_ID, recorder.getAudioStreamId());
+        body.put(Constant.VIDEO_STREAM_ID, recorder.getVideoStreamId());
+        body.put(Constant.AUDIO_CONSUMER_ID, recorder.getAudioConsumerId());
+        body.put(Constant.VIDEO_CONSUMER_ID, recorder.getVideoConsumerId());
+        body.put(Constant.AUDIO_TRANSPORT_ID, recorder.getAudioTransportId());
+        body.put(Constant.VIDEO_TRANSPORT_ID, recorder.getVideoConsumerId());
         body.put(Constant.ROOM_ID, room.getRoomId());
         body.put(Constant.ENABLED, false);
         message.setBody(body);
