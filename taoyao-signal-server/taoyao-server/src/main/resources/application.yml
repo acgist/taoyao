@@ -153,17 +153,18 @@ taoyao:
       o=- 0 0 IN IP4 127.0.0.1
       s=TaoyaoRecord
       t=0 0
-      a=group:BUNDLE video audio
-      m=video %d RTP/AVP 101
-      c=IN IP4 0.0.0.0
-      a=rtpmap:101 VP8/90000
-      a=recvonly
       m=audio %d RTP/AVP 100
       c=IN IP4 0.0.0.0
+      a=rtcp:%d
       a=rtpmap:100 OPUS/48000/2
       a=recvonly
+      m=video %d RTP/AVP 101
+      c=IN IP4 0.0.0.0
+      a=rtcp:%d
+      a=rtpmap:101 VP8/90000
+      a=recvonly
     # 录像命令
-    record: ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -i %s -c:a aac -c:v h264 %s
+    record: ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v %d -i %s -c:a aac -c:v h264 %s
     # 预览命令
     preview: ffmpeg -y -i %s -ss %d -vframes 1 -f image2 %s
     # 时长命令

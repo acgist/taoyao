@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import com.acgist.taoyao.boot.config.FfmpegProperties;
+import com.acgist.taoyao.boot.config.MediaProperties;
+import com.acgist.taoyao.boot.config.MediaVideoProperties;
 import com.acgist.taoyao.boot.utils.FileUtils;
 import com.acgist.taoyao.boot.utils.NetUtils;
 import com.acgist.taoyao.boot.utils.ScriptUtils;
@@ -49,9 +51,17 @@ public class Recorder {
      */
     private Integer audioPort;
     /**
+     * 音频控制端口
+     */
+    private Integer audioRtcpPort;
+    /**
      * 视频端口
      */
     private Integer videoPort;
+    /**
+     * 视频控制端口
+     */
+    private Integer videoRtcpPort;
     /**
      * 音频流ID
      */
@@ -121,6 +131,10 @@ public class Recorder {
      */
     private final String filepath;
     /**
+     * 媒体配置
+     */
+    private final MediaProperties mediaProperties;
+    /**
      * FFmpeg配置
      */
     private final FfmpegProperties ffmpegProperties;
@@ -129,9 +143,13 @@ public class Recorder {
      * @param name             录像名称
      * @param room             房间
      * @param clientWrapper    终端
+     * @param mediaProperties  媒体配置
      * @param ffmpegProperties FFmpeg配置
      */
-    public Recorder(String name, Room room, ClientWrapper clientWrapper, FfmpegProperties ffmpegProperties) {
+    public Recorder(
+        String name, Room room, ClientWrapper clientWrapper,
+        MediaProperties mediaProperties, FfmpegProperties ffmpegProperties
+    ) {
         this.close            = false;
         this.running          = false;
         this.room             = room;
@@ -140,6 +158,7 @@ public class Recorder {
         this.preview          = Paths.get(this.folder, "taoyao.jpg").toAbsolutePath().toString();
         this.filepath         = Paths.get(this.folder, "taoyao.mp4").toAbsolutePath().toString();
         this.clientWrapper    = clientWrapper;
+        this.mediaProperties  = mediaProperties;
         this.ffmpegProperties = ffmpegProperties;
         FileUtils.mkdirs(this.folder);
     }
@@ -166,7 +185,13 @@ public class Recorder {
      * 录制视频
      */
     private void record() {
-        final String recordScript = String.format(this.ffmpegProperties.getRecord(), this.sdpfile, this.filepath);
+        final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideo();
+        final String recordScript = String.format(
+            this.ffmpegProperties.getRecord(),
+            mediaVideoProperties.getFrameRate(),
+            this.sdpfile,
+            this.filepath
+        );
         this.scriptExecutor = new ScriptExecutor(recordScript);
         try {
             log.debug("""
@@ -189,12 +214,16 @@ public class Recorder {
             int minPort = this.ffmpegProperties.getMinPort();
             int maxPort = this.ffmpegProperties.getMaxPort();
             // 预留控制端口
-            this.audioPort = NetUtils.scanPort(minPort, maxPort);
-            this.videoPort = NetUtils.scanPort(this.audioPort + 2, maxPort);
-            final String sdp = String.format(
+            this.audioPort     = NetUtils.scanPort(minPort, maxPort);
+            this.audioRtcpPort = NetUtils.scanPort(this.audioPort + 1, maxPort);
+            this.videoPort     = NetUtils.scanPort(this.audioPort + 2, maxPort);
+            this.videoRtcpPort = NetUtils.scanPort(this.audioPort + 3, maxPort);
+            final String sdp   = String.format(
                 this.ffmpegProperties.getSdp(),
+                this.audioPort,
+                this.audioRtcpPort,
                 this.videoPort,
-                this.audioPort
+                this.videoRtcpPort
             );
             Files.write(
                 Paths.get(this.sdpfile),
@@ -225,7 +254,7 @@ public class Recorder {
      */
     private void duration() {
         log.debug("视频时长：{}", this.filepath);
-        final String durationScript = String.format(this.ffmpegProperties.getDuration(), this.filepath);
+        final String durationScript   = String.format(this.ffmpegProperties.getDuration(), this.filepath);
         final ScriptExecutor executor = ScriptUtils.execute(durationScript);
         final Pattern pattern = Pattern.compile(this.ffmpegProperties.getDurationRegex());
         final Matcher matcher = pattern.matcher(executor.getResult());

@@ -3,6 +3,8 @@ package com.acgist.taoyao;
 import org.junit.jupiter.api.Test;
 
 import com.acgist.taoyao.boot.config.FfmpegProperties;
+import com.acgist.taoyao.boot.config.MediaProperties;
+import com.acgist.taoyao.boot.config.MediaVideoProperties;
 import com.acgist.taoyao.signal.party.media.Recorder;
 
 public class RecorderTest {
@@ -20,31 +22,25 @@ public class RecorderTest {
         s=TaoyaoRecord
         t=0 0
         m=audio %d RTP/AVP 97
-        c=IN IP4 127.0.0.1
+        c=IN IP4 0.0.0.0
+        a=rtcp:%d
         a=rtpmap:97 OPUS/48000/2
-        a=fmtp:97 sprop-stereo=1
+        a=recvonly
         m=video %d RTP/AVP 96
-        c=IN IP4 127.0.0.1
+        c=IN IP4 0.0.0.0
+        a=rtcp:%d
         a=rtpmap:96 VP8/90000
+        a=recvonly
         """);
-//        ffmpegProperties.setSdp("""
-//        v=0
-//        o=- 0 0 IN IP4 127.0.0.1
-//        s=TaoyaoRecord
-//        t=0 0
-//        m=audio %d RTP/AVP 97
-//        c=IN IP4 127.0.0.1
-//        a=rtpmap:97 OPUS/48000/2
-//        a=fmtp:97 sprop-stereo=1
-//        m=video %d RTP/AVP 96
-//        c=IN IP4 127.0.0.1
-//        a=rtpmap:96 H264/90000
-//        a=fmtp:96 packetization-mode=1
-//        """);
-        ffmpegProperties.setRecord("ffmpeg -protocol_whitelist \"file,rtp,udp\" -y -i %s %s");
+//      ffmpeg -re -i video.mp4 -c:a libopus -vn -f rtp rtp://192.168.1.100:50000 -c:v vp8 -an -f rtp rtp://192.168.1.100:50002 -sdp_file taoyao.sdp
+        ffmpegProperties.setRecord("ffmpeg -y -protocol_whitelist \"file,rtp,udp\" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v %d -i %s -c:a aac -c:v h264 %s");
         ffmpegProperties.setPreview("ffmpeg -y -i %s -ss %d -vframes 1 -f image2 %s");
         ffmpegProperties.setDuration("ffprobe -i %s -show_entries format=duration");
-        final Recorder recorder = new Recorder("taoyao", null, null, ffmpegProperties);
+        final MediaProperties mediaProperties = new MediaProperties();
+        final MediaVideoProperties mediaVideoProperties = new MediaVideoProperties();
+        mediaVideoProperties.setFrameRate(24);
+        mediaProperties.setVideo(mediaVideoProperties);
+        final Recorder recorder = new Recorder("taoyao", null, null, mediaProperties, ffmpegProperties);
         recorder.start();
         Thread.sleep(20 * 1000);
         recorder.stop();

@@ -2482,47 +2482,48 @@ class Taoyao extends RemoteClient {
     download.remove();
   }
 
-  // 'video/webm;codecs=aac,vp8',
-  // 'video/webm;codecs=aac,vp9',
-  // 'video/webm;codecs=aac,h264',
-  // 'video/webm;codecs=pcm,vp8',
-  // 'video/webm;codecs=pcm,vp9',
-  // 'video/webm;codecs=pcm,h264',
-  // 'video/webm;codecs=opus,vp8',
-  // 'video/webm;codecs=opus,vp9',
-  // 'video/webm;codecs=opus,h264',
-  // 'video/mp4;codecs=aac,vp8',
-  // 'video/mp4;codecs=aac,vp9',
-  // 'video/mp4;codecs=aac,h264',
-  // 'video/mp4;codecs=pcm,vp8',
-  // 'video/mp4;codecs=pcm,vp9',
-  // 'video/mp4;codecs=pcm,h264',
-  // 'video/mp4;codecs=opus,vp8',
-  // 'video/mp4;codecs=opus,vp9',
-  // 'video/mp4;codecs=opus,h264',
-  // MediaRecorder.isTypeSupported(mimeType)
-
   /**
-   * 本地录制
+   * 本地录像
+   * 
+   * 'video/webm;codecs=aac,vp8',
+   * 'video/webm;codecs=aac,vp9',
+   * 'video/webm;codecs=aac,h264',
+   * 'video/webm;codecs=pcm,vp8',
+   * 'video/webm;codecs=pcm,vp9',
+   * 'video/webm;codecs=pcm,h264',
+   * 'video/webm;codecs=opus,vp8',
+   * 'video/webm;codecs=opus,vp9',
+   * 'video/webm;codecs=opus,h264',
+   * 'video/mp4;codecs=aac,vp8',
+   * 'video/mp4;codecs=aac,vp9',
+   * 'video/mp4;codecs=aac,h264',
+   * 'video/mp4;codecs=pcm,vp8',
+   * 'video/mp4;codecs=pcm,vp9',
+   * 'video/mp4;codecs=pcm,h264',
+   * 'video/mp4;codecs=opus,vp8',
+   * 'video/mp4;codecs=opus,vp9',
+   * 'video/mp4;codecs=opus,h264',
+   * 
+   * MediaRecorder.isTypeSupported(mimeType)
    * 
    * video.captureStream().getTracks().forEach((v) => stream.addTrack(v));
    * 
-   * @param {*} audio   音频
-   * @param {*} video   视频
-   * @param {*} enabled 是否录制
+   * @param {*} audioStream 音频流
+   * @param {*} videoStream 视频流
+   * @param {*} enabled     是否录像
    */
-  localClientRecord(audio, video, enabled) {
+  localClientRecord(audioStream, videoStream, enabled) {
     const me = this;
     if (enabled) {
       if (me.mediaRecorder) {
         return;
       }
       const stream = new MediaStream();
-      if(audio) {
-        audio.getAudioTracks().forEach(track => stream.addTrack(track));
+      if(audioStream) {
+        audioStream.getAudioTracks().forEach(track => stream.addTrack(track));
       }
-      if(video) {
-        video.getVideoTracks().forEach(track => stream.addTrack(track));
+      if(videoStream) {
+        videoStream.getVideoTracks().forEach(track => stream.addTrack(track));
       }
       me.mediaRecorder = new MediaRecorder(stream, {
         audioBitsPerSecond: 128  * 1000,

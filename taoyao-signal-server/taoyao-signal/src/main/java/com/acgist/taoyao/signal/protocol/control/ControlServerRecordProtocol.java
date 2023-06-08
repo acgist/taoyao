@@ -10,6 +10,7 @@ import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.config.FfmpegProperties;
+import com.acgist.taoyao.boot.config.MediaProperties;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
@@ -50,10 +51,12 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
 
     public static final String SIGNAL = "control::server::record";
     
+    private final MediaProperties mediaProperties;
     private final FfmpegProperties ffmpegProperties;
     
-    public ControlServerRecordProtocol(FfmpegProperties ffmpegProperties) {
+    public ControlServerRecordProtocol(MediaProperties mediaProperties, FfmpegProperties ffmpegProperties) {
         super("服务端录像信令", SIGNAL);
+        this.mediaProperties = mediaProperties;
         this.ffmpegProperties = ffmpegProperties;
     }
     
@@ -119,18 +122,21 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         }
         final String name = UUID.randomUUID().toString();
         // 打开录制线程
-        final Recorder recorder = new Recorder(name, room, clientWrapper, this.ffmpegProperties);
+        final Recorder recorder = new Recorder(name, room, clientWrapper, this.mediaProperties, this.ffmpegProperties);
         recorder.start();
         clientWrapper.setRecorder(recorder);
         // 打开媒体录制
         final Message message = this.build();
         final Map<String, Object> body = new HashMap<>();
-        body.put("audioPort", recorder.getAudioPort());
-        body.put("videoPort", recorder.getVideoPort());
         body.put(Constant.HOST, this.ffmpegProperties.getHost());
         body.put(Constant.ROOM_ID, room.getRoomId());
         body.put(Constant.ENABLED, true);
+        body.put(Constant.FILEPATH, recorder.getFilepath());
         body.put(Constant.CLIENT_ID, clientWrapper.getClientId());
+        body.put(Constant.AUDIO_PORT, recorder.getAudioPort());
+        body.put(Constant.VIDEO_PORT, recorder.getVideoPort());
+        body.put(Constant.AUDIO_RTCP_PORT, recorder.getAudioRtcpPort());
+        body.put(Constant.VIDEO_RTCP_PORT, recorder.getVideoRtcpPort());
         body.put(Constant.RTP_CAPABILITIES, clientWrapper.getRtpCapabilities());
         clientWrapper.getProducers().values().forEach(producer -> {
             if(producer.getKind() == Kind.AUDIO) {

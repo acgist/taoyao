@@ -1,3 +1,4 @@
+const fs        = require("fs");
 const config    = require("./Config.js");
 const process   = require("child_process");
 const WebSocket = require("ws");
@@ -789,7 +790,10 @@ class Taoyao {
 
   async controlServerRecordStart(message, body, room) {
     const me = this;
-    const { roomId, clientId, host, audioPort, videoPort, rtpCapabilities, audioStreamId, videoStreamId, audioProducerId, videoProducerId } = body;
+    const {
+      roomId, clientId, host, filepath, audioPort, audioRtcpPort, videoPort, videoRtcpPort,
+      rtpCapabilities, audioStreamId, videoStreamId, audioProducerId, videoProducerId
+    } = body;
     const plainTransportOptions = {
       ...config.mediasoup.plainTransportOptions,
       rtcpMux: false,
@@ -816,7 +820,7 @@ class Taoyao {
       await audioTransport.connect({
         ip      : host,
         port    : audioPort,
-        rtcpPort: audioPort + 1
+        rtcpPort: audioRtcpPort
       });
       audioConsumer = await audioTransport.consume({
         producerId: audioProducerId,
@@ -847,7 +851,7 @@ class Taoyao {
       await videoTransport.connect({
         ip      : host,
         port    : videoPort,
-        rtcpPort: videoPort + 1
+        rtcpPort: videoRtcpPort
       });
       videoConsumer = await videoTransport.consume({
         producerId: videoProducerId,
@@ -865,13 +869,13 @@ class Taoyao {
       });
       console.log("controlServerRecord video：", videoTransportId, videoConsumerId, videoTransport.tuple, videoRtpParameters);
     }
-    if(videoConsumer) {
-      await videoConsumer.resume();
-      videoConsumer.requestKeyFrame();
-    }
     if(audioConsumer) {
       await audioConsumer.resume();
     }
+    if(videoConsumer) {
+      await videoConsumer.resume();
+    }
+    this.requestKeyFrameForRecord(0, filepath, videoConsumer);
     message.body = {
       roomId            : roomId,
       audioConsumerId   : audioConsumerId,
@@ -882,6 +886,38 @@ class Taoyao {
       videoRtpParameters: videoRtpParameters,
     };
     me.push(message);
+  }
+
+  /**
+   * 请求录像关键帧
+   * 视频录像需要通过关键帧解析视频信息，关键帧数据太慢会丢弃视频数据包，导致录像文件只有音频没有视频。
+   * 
+   * @param {*} index         重试次数
+   * @param {*} filepath      文件路径
+   * @param {*} videoConsumer 视频消费者
+   */
+  requestKeyFrameForRecord(index, filepath, videoConsumer) {
+    if(!filepath || !videoConsumer) {
+      return;
+    }
+    if(++index >= 10) {
+      console.warn("请求录像关键帧次数超限", filepath, index);
+      return;
+    }
+    if(videoConsumer.closed) {
+      console.warn("请求录像关键帧视频关闭", filepath);
+      return;
+    }
+    // 文件开始录像同时已经开始生产数据
+    if(fs.existsSync(filepath) && fs.statSync(filepath).size >= 128 * 1024) {
+      console.debug("请求录像关键帧已经开始录像", filepath);
+      return;
+    }
+    console.debug("请求录像关键帧", filepath);
+    videoConsumer.requestKeyFrame();
+    setTimeout(() => {
+      this.requestKeyFrameForRecord(index, filepath, videoConsumer);
+    }, 1000);
   }
 
   async controlServerRecordStop(message, body, room) {
@@ -1441,7 +1477,7 @@ class Taoyao {
       ...config.mediasoup.plainTransportOptions,
       rtcpMux         : rtcpMux,
       comedia         : comedia,
-      enableSctp      : enableSctp || Boolean(numSctpStreams),
+      enableSctp      : enableSctp     || Boolean(numSctpStreams),
       numSctpStreams  : numSctpStreams || 0,
       enableSrtp      : enableSrtp,
       srtpCryptoSuite : srtpCryptoSuite,

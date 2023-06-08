@@ -261,6 +261,22 @@ public interface Constant {
      * 终端列表
      */
     String CLIENTS = "clients";
+    /**
+     * 音频端口
+     */
+    String AUDIO_PORT = "audioPort";
+    /**
+     * 视频端口
+     */
+    String VIDEO_PORT = "videoPort";
+    /**
+     * 音频控制端口
+     */
+    String AUDIO_RTCP_PORT = "audioRtcpPort";
+    /**
+     * 视频控制端口
+     */
+    String VIDEO_RTCP_PORT = "videoRtcpPort";
 
     /**
      * 生产者ID生成器
