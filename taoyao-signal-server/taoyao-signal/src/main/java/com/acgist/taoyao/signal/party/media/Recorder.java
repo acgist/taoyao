@@ -11,8 +11,6 @@ import java.util.regex.Pattern;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import com.acgist.taoyao.boot.config.FfmpegProperties;
-import com.acgist.taoyao.boot.config.MediaProperties;
-import com.acgist.taoyao.boot.config.MediaVideoProperties;
 import com.acgist.taoyao.boot.utils.FileUtils;
 import com.acgist.taoyao.boot.utils.NetUtils;
 import com.acgist.taoyao.boot.utils.ScriptUtils;
@@ -131,10 +129,6 @@ public class Recorder {
      */
     private final String filepath;
     /**
-     * 媒体配置
-     */
-    private final MediaProperties mediaProperties;
-    /**
      * FFmpeg配置
      */
     private final FfmpegProperties ffmpegProperties;
@@ -146,10 +140,7 @@ public class Recorder {
      * @param mediaProperties  媒体配置
      * @param ffmpegProperties FFmpeg配置
      */
-    public Recorder(
-        String name, Room room, ClientWrapper clientWrapper,
-        MediaProperties mediaProperties, FfmpegProperties ffmpegProperties
-    ) {
+    public Recorder(String name, Room room, ClientWrapper clientWrapper, FfmpegProperties ffmpegProperties) {
         this.close            = false;
         this.running          = false;
         this.room             = room;
@@ -158,7 +149,6 @@ public class Recorder {
         this.preview          = Paths.get(this.folder, "taoyao.jpg").toAbsolutePath().toString();
         this.filepath         = Paths.get(this.folder, "taoyao.mp4").toAbsolutePath().toString();
         this.clientWrapper    = clientWrapper;
-        this.mediaProperties  = mediaProperties;
         this.ffmpegProperties = ffmpegProperties;
         FileUtils.mkdirs(this.folder);
     }
@@ -185,10 +175,9 @@ public class Recorder {
      * 录制视频
      */
     private void record() {
-        final MediaVideoProperties mediaVideoProperties = this.mediaProperties.getVideo();
         final String recordScript = String.format(
             this.ffmpegProperties.getRecord(),
-            mediaVideoProperties.getFrameRate(),
+            this.ffmpegProperties.getFrameRate(),
             this.sdpfile,
             this.filepath
         );
@@ -219,7 +208,7 @@ public class Recorder {
             this.videoPort     = NetUtils.scanPort(this.audioPort + 2, maxPort);
             this.videoRtcpPort = NetUtils.scanPort(this.audioPort + 3, maxPort);
             final String sdp   = String.format(
-                this.ffmpegProperties.getSdp(),
+                this.ffmpegProperties.getRecordSdp(),
                 this.audioPort,
                 this.audioRtcpPort,
                 this.videoPort,

@@ -71,9 +71,9 @@ taoyao:
     min-video-bitrate: 800
     max-video-bitrate: 1600
     # 音频配置
-    # 采样位数
-    min-sample-size: 8
-    max-sample-size: 32
+    # 采样位数（位深）
+    min-sample-size: 16
+    max-sample-size: 16
     # 采样率
     min-sample-rate: 8000
     max-sample-rate: 48000
@@ -85,8 +85,8 @@ taoyao:
     audio:
       format: OPUS
       bitrate: 96
-      sample-size: 32
-      sample-rate: 44100
+      sample-size: 16
+      sample-rate: 48000
     # 默认视频
     video:
       format: H264
@@ -99,26 +99,26 @@ taoyao:
       fd-audio:
         format: OPUS
         bitrate: 256
-        sample-size: 32
+        sample-size: 16
         sample-rate: 48000
       # 高清
       hd-audio:
         format: OPUS
         bitrate: 128
-        sample-size: 24
+        sample-size: 16
         sample-rate: 32000
       # 标清
       sd-audio:
         format: OPUS
         bitrate: 96
-        sample-size: 24
+        sample-size: 16
         sample-rate: 16000
     # 视频质量
     videos:
       # 4K：UD=UHD=4K
       ud-video:
         format: H264
-        bitrate: 1600
+        bitrate: 1800
         frame-rate: 45
         resolution: 4096*2160
       # 2K：QD=QHD=2K
@@ -147,8 +147,22 @@ taoyao:
         resolution: 720*480
   # FFmpeg配置
   ffmpeg:
+    # 录像地址
+    host: 127.0.0.1
+    # 最小端口
+    min-port: 50000
+    # 最大端口
+    max-port: 59999
+    # 录像帧率
+    frame-rate: ${taoyao.media.video.frame-rate:24}
+    # 录像命令
+    record: ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v %d -i %s -c:a aac -c:v h264 %s
+    # 预览命令
+    preview: ffmpeg -y -i %s -ss %d -vframes 1 -f image2 %s
+    # 时长命令
+    duration: ffprobe -i %s -show_entries format=duration
     # 录像SDP：VP8 | H264
-    sdp: |
+    record-sdp: |
       v=0
       o=- 0 0 IN IP4 127.0.0.1
       s=TaoyaoRecord
@@ -163,27 +177,16 @@ taoyao:
       a=rtcp:%d
       a=rtpmap:101 VP8/90000
       a=recvonly
-    # 录像命令
-    record: ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v %d -i %s -c:a aac -c:v h264 %s
-    # 预览命令
-    preview: ffmpeg -y -i %s -ss %d -vframes 1 -f image2 %s
-    # 时长命令
-    duration: ffprobe -i %s -show_entries format=duration
+    # 预览时间
+    preview-time: 4
+    # 时长提取
+    duration-regex: .*duration\=([0-9\.]+).*
     # 存储目录
     storage-path: /data/taoyao/storage
     # 图片存储目录
     storage-image-path: /data/taoyao/storage/image
     # 视频存储目录
     storage-video-path: /data/taoyao/storage/video
-    # 预览时间
-    preview-time: 4
-    # 时长提取
-    duration-regex: .*duration\=([0-9\.]+).*
-    # 录像地址
-    host: 127.0.0.1
-    # 端口范围
-    min-port: 50000
-    max-port: 59999
   # Socket信令
   socket:
     enabled: true

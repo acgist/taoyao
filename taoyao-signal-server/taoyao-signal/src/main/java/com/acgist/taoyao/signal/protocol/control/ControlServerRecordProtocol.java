@@ -10,7 +10,6 @@ import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.config.FfmpegProperties;
-import com.acgist.taoyao.boot.config.MediaProperties;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
@@ -51,12 +50,10 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
 
     public static final String SIGNAL = "control::server::record";
     
-    private final MediaProperties mediaProperties;
     private final FfmpegProperties ffmpegProperties;
     
-    public ControlServerRecordProtocol(MediaProperties mediaProperties, FfmpegProperties ffmpegProperties) {
+    public ControlServerRecordProtocol(FfmpegProperties ffmpegProperties) {
         super("服务端录像信令", SIGNAL);
-        this.mediaProperties = mediaProperties;
         this.ffmpegProperties = ffmpegProperties;
     }
     
@@ -122,7 +119,7 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         }
         final String name = UUID.randomUUID().toString();
         // 打开录制线程
-        final Recorder recorder = new Recorder(name, room, clientWrapper, this.mediaProperties, this.ffmpegProperties);
+        final Recorder recorder = new Recorder(name, room, clientWrapper, this.ffmpegProperties);
         recorder.start();
         clientWrapper.setRecorder(recorder);
         // 打开媒体录制

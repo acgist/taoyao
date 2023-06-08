@@ -7,8 +7,6 @@ server:
     key-store-password: 123456
     key-password: 123456
 taoyao:
-  ffmpeg:
-    host: 192.168.8.93
   security:
     permit:
       - /

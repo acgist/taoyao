@@ -908,7 +908,7 @@ class Taoyao {
       console.warn("请求录像关键帧视频关闭", filepath);
       return;
     }
-    // 文件开始录像同时已经开始生产数据
+    // 判断文件大小验证是否已经开始录制：创建文件 -> 视频信息 -> 视频数据 -> 封装视频
     if(fs.existsSync(filepath) && fs.statSync(filepath).size >= 128 * 1024) {
       console.debug("请求录像关键帧已经开始录像", filepath);
       return;

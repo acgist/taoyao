@@ -3,8 +3,6 @@ package com.acgist.taoyao;
 import org.junit.jupiter.api.Test;
 
 import com.acgist.taoyao.boot.config.FfmpegProperties;
-import com.acgist.taoyao.boot.config.MediaProperties;
-import com.acgist.taoyao.boot.config.MediaVideoProperties;
 import com.acgist.taoyao.signal.party.media.Recorder;
 
 public class RecorderTest {
@@ -12,11 +10,10 @@ public class RecorderTest {
     @Test
     public void testStart() throws InterruptedException {
         final FfmpegProperties ffmpegProperties = new FfmpegProperties();
-        ffmpegProperties.setStorageVideoPath("D:\\tmp\\video");
+        ffmpegProperties.setHost("127.0.0.1");
         ffmpegProperties.setMinPort(50000);
         ffmpegProperties.setMaxPort(59999);
-        ffmpegProperties.setHost("127.0.0.1");
-        ffmpegProperties.setSdp("""
+        ffmpegProperties.setRecordSdp("""
         v=0
         o=- 0 0 IN IP4 127.0.0.1
         s=TaoyaoRecord
@@ -36,11 +33,8 @@ public class RecorderTest {
         ffmpegProperties.setRecord("ffmpeg -y -protocol_whitelist \"file,rtp,udp\" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v %d -i %s -c:a aac -c:v h264 %s");
         ffmpegProperties.setPreview("ffmpeg -y -i %s -ss %d -vframes 1 -f image2 %s");
         ffmpegProperties.setDuration("ffprobe -i %s -show_entries format=duration");
-        final MediaProperties mediaProperties = new MediaProperties();
-        final MediaVideoProperties mediaVideoProperties = new MediaVideoProperties();
-        mediaVideoProperties.setFrameRate(24);
-        mediaProperties.setVideo(mediaVideoProperties);
-        final Recorder recorder = new Recorder("taoyao", null, null, mediaProperties, ffmpegProperties);
+        ffmpegProperties.setStorageVideoPath("D:\\tmp\\video");
+        final Recorder recorder = new Recorder("taoyao", null, null, ffmpegProperties);
         recorder.start();
         Thread.sleep(20 * 1000);
         recorder.stop();
