@@ -2,8 +2,9 @@
 
 ## 支持版本
 
-* SDK：28~32
-* Andoird：9~12
+* SDK     28~32
+* Gradle  7.5
+* Andoird 9~12
 
 ## C++终端
 

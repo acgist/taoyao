@@ -1,6 +1,9 @@
 plugins {
-    id 'com.android.library' version '8.0.1' apply false
-    id 'com.android.application' version '8.0.1' apply false
+    id 'com.android.library' version '7.4.2' apply false
+    id 'com.android.application' version '7.4.2' apply false
+//  打包体积变大
+//  id 'com.android.library' version '8.0.1' apply false
+//  id 'com.android.application' version '8.0.1' apply false
 }
 ext {
     taoyao = [
