@@ -11,6 +11,7 @@ import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.config.FfmpegProperties;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
@@ -71,9 +72,9 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         final Boolean enabled = MapUtils.get(body, Constant.ENABLED, Boolean.TRUE);
         final Room room = this.roomManager.room(roomId);
         if(enabled) {
-            filepath = this.start(room, room.clientWrapper(client));
+            filepath = this.start(room, room.clientWrapper(targetClient));
         } else {
-            filepath = this.stop(room, room.clientWrapper(client));
+            filepath = this.stop(room, room.clientWrapper(targetClient));
         }
         body.put(Constant.FILEPATH, filepath);
         body.put(Constant.CLIENT_ID, clientId);
@@ -114,6 +115,9 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
      * @return 文件地址
      */
     private String start(Room room, ClientWrapper clientWrapper) {
+        if(clientWrapper == null) {
+            throw MessageCodeException.of("终端没有进入房间");
+        }
         synchronized (clientWrapper) {
             final Recorder recorder = clientWrapper.getRecorder();
             if(recorder != null) {
