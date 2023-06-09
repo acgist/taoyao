@@ -31,16 +31,17 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
     body = {
         """
         {
-            "to": "目标终端ID",
-            "roomId": "房间ID",
+            "to"     : "目标终端ID",
+            "roomId" : "房间ID",
             "enabled": 是否录像（true|false）
         }
         """,
         """
         {
-            "roomId": "房间ID",
-            "enabled": 是否录像（true|false）,
-            "filepath": "视频文件路径"
+            "roomId"  : "房间ID",
+            "enabled" : 是否录像（true|false）,
+            "filepath": "视频文件路径",
+            "clientId": "录像终端ID"
         }
         """
     },
@@ -66,7 +67,7 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
     @Override
     public void execute(String clientId, ClientType clientType, Client client, Client targetClient, Message message, Map<String, Object> body) {
         String filepath;
-        final String roomId = MapUtils.get(body, Constant.ROOM_ID);
+        final String roomId   = MapUtils.get(body, Constant.ROOM_ID);
         final Boolean enabled = MapUtils.get(body, Constant.ENABLED, Boolean.TRUE);
         final Room room = this.roomManager.room(roomId);
         if(enabled) {
@@ -75,6 +76,7 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
             filepath = this.stop(room, room.clientWrapper(client));
         }
         body.put(Constant.FILEPATH, filepath);
+        body.put(Constant.CLIENT_ID, clientId);
         client.push(message);
     }
 
@@ -87,7 +89,7 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
      */
     public Message execute(String roomId, String clientId, Boolean enabled) {
         String filepath;
-        final Room room = this.roomManager.room(roomId);
+        final Room room     = this.roomManager.room(roomId);
         final Client client = this.clientManager.clients(clientId);
         if(enabled) {
             filepath = this.start(room, room.clientWrapper(client));
@@ -95,9 +97,10 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
             filepath = this.stop(room, room.clientWrapper(client));
         }
         return Message.success(Map.of(
-            Constant.ROOM_ID,  roomId,
-            Constant.ENABLED,  enabled,
-            Constant.FILEPATH, filepath
+            Constant.ROOM_ID,   roomId,
+            Constant.ENABLED,   enabled,
+            Constant.FILEPATH,  filepath,
+            Constant.CLIENT_ID, clientId
         ));
     }
     
@@ -181,14 +184,14 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         // 关闭媒体录像
         final Message message = this.build();
         final Map<String, Object> body = new HashMap<>();
+        body.put(Constant.ROOM_ID, room.getRoomId());
+        body.put(Constant.ENABLED, false);
         body.put(Constant.AUDIO_STREAM_ID, recorder.getAudioStreamId());
         body.put(Constant.VIDEO_STREAM_ID, recorder.getVideoStreamId());
         body.put(Constant.AUDIO_CONSUMER_ID, recorder.getAudioConsumerId());
         body.put(Constant.VIDEO_CONSUMER_ID, recorder.getVideoConsumerId());
         body.put(Constant.AUDIO_TRANSPORT_ID, recorder.getAudioTransportId());
-        body.put(Constant.VIDEO_TRANSPORT_ID, recorder.getVideoConsumerId());
-        body.put(Constant.ROOM_ID, room.getRoomId());
-        body.put(Constant.ENABLED, false);
+        body.put(Constant.VIDEO_TRANSPORT_ID, recorder.getVideoTransportId());
         message.setBody(body);
         final Client mediaClient = room.getMediaClient();
         mediaClient.request(message);

@@ -8,8 +8,6 @@ android {
     defaultConfig {
         minSdk rootProject.ext.taoyao.minSdk
         targetSdk rootProject.ext.taoyao.targetSdk
-        versionCode rootProject.ext.taoyao.versionCode
-        versionName rootProject.ext.taoyao.versionName
         consumerProguardFiles "consumer-rules.pro"
     }
     buildTypes {

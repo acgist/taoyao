@@ -900,7 +900,7 @@ class Taoyao {
     if(!filepath || !videoConsumer) {
       return;
     }
-    if(++index >= 10) {
+    if(++index > 10) {
       console.warn("请求录像关键帧次数超限", filepath, index);
       return;
     }
