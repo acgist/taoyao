@@ -31,6 +31,13 @@ module.exports = {
     // 信令密码
     password: "taoyao",
   },
+  // 录像配置
+  record: {
+    // 请求关键帧的最大次数
+    requestKeyFrameMaxIndex: 16,
+    // 请求关键帧的文件大小
+    requestKeyFrameFileSize: 32 * 1024,
+  },
   // Mediasoup
   mediasoup: {
     // 配置Worker进程数量

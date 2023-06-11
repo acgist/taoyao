@@ -1032,7 +1032,7 @@ public final class Taoyao implements ITaoyao {
             roomId,
             key -> new Room(
                 roomId, this.name,
-                this.clientId, password,
+                password, this.clientId,
                 this, this.mainHandler,
                 resources.getBoolean(R.bool.preview),
                 resources.getBoolean(R.bool.playAudio),
@@ -1043,6 +1043,7 @@ public final class Taoyao implements ITaoyao {
                 resources.getBoolean(R.bool.dataProduce),
                 resources.getBoolean(R.bool.audioProduce),
                 resources.getBoolean(R.bool.videoProduce),
+                resources.getBoolean(R.bool.roomUseIceServer),
                 this.mediaManager.getMediaProperties(),
                 this.mediaManager.getWebrtcProperties()
             )

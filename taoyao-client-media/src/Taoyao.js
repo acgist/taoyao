@@ -814,7 +814,7 @@ class Taoyao {
       audioTransport.clientId = clientId;
       room.transports.set(audioTransport.id, audioTransport);
       audioTransport.observer.on("close", () => {
-        console.log("controlServerRecord audioTransport close：", audioTransport.id);
+        console.debug("controlServerRecord audioTransport close：", audioTransport.id);
         room.transports.delete(audioTransport.id)
       });
       await audioTransport.connect({
@@ -833,10 +833,10 @@ class Taoyao {
       audioConsumer.streamId = audioStreamId;
       room.consumers.set(audioConsumer.id, audioConsumer);
       audioConsumer.observer.on("close", () => {
-        console.log("controlServerRecord audioConsumer close：", audioConsumer.id);
+        console.debug("controlServerRecord audioConsumer close：", audioConsumer.id);
         room.consumers.delete(audioConsumer.id);
       });
-      console.log("controlServerRecord audio", audioTransportId, audioConsumerId, audioTransport.tuple, audioRtpParameters);
+      console.debug("controlServerRecord audio", audioTransportId, audioConsumerId, audioTransport.tuple, audioRtpParameters);
     }
     if(videoProducerId) {
       const videoTransport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
@@ -845,7 +845,7 @@ class Taoyao {
       videoTransport.clientId = clientId;
       room.transports.set(videoTransport.id, videoTransport);
       videoTransport.observer.on("close", () => {
-        console.log("controlServerRecord videoTransport close：", videoTransport.id);
+        console.debug("controlServerRecord videoTransport close：", videoTransport.id);
         room.transports.delete(videoTransport.id)
       });
       await videoTransport.connect({
@@ -864,10 +864,10 @@ class Taoyao {
       videoConsumer.streamId = videoStreamId;
       room.consumers.set(videoConsumer.id, videoConsumer);
       videoConsumer.observer.on("close", () => {
-        console.log("controlServerRecord videoConsumer close：", videoConsumer.id);
+        console.debug("controlServerRecord videoConsumer close：", videoConsumer.id);
         room.consumers.delete(videoConsumer.id);
       });
-      console.log("controlServerRecord video：", videoTransportId, videoConsumerId, videoTransport.tuple, videoRtpParameters);
+      console.debug("controlServerRecord video：", videoTransportId, videoConsumerId, videoTransport.tuple, videoRtpParameters);
     }
     if(audioConsumer) {
       await audioConsumer.resume();
@@ -900,7 +900,7 @@ class Taoyao {
     if(!filepath || !videoConsumer) {
       return;
     }
-    if(++index > 10) {
+    if(++index > config.record.requestKeyFrameMaxIndex) {
       console.warn("请求录像关键帧次数超限", filepath, index);
       return;
     }
@@ -909,7 +909,7 @@ class Taoyao {
       return;
     }
     // 判断文件大小验证是否已经开始录像：创建文件 -> 视频信息 -> 视频数据 -> 封装视频
-    if(fs.existsSync(filepath) && fs.statSync(filepath).size >= 128 * 1024) {
+    if(fs.existsSync(filepath) && fs.statSync(filepath).size >= config.record.requestKeyFrameFileSize) {
       console.debug("请求录像关键帧已经开始录像", filepath);
       return;
     }

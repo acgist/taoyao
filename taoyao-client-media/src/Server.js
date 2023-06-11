@@ -79,7 +79,7 @@ async function connectSignalServer() {
  * 启动方法
  */
 async function main() {
-  console.log(`
+  console.debug(`
     桃之夭夭，灼灼其华。
     之子于归，宜其室家。
 

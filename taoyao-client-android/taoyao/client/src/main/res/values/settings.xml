@@ -40,6 +40,8 @@
     <integer name="channelCount">1</integer>
     <!-- 视频关键帧频率 -->
     <integer name="iFrameInterval">1</integer>
+    <!-- 视频房间是否使用iceServer -->
+    <bool name="roomUseIceServer">false</bool>
     <!-- 图片存储目录 -->
     <string name="imagePath">/taoyao</string>
     <!-- 视频存储目录 -->
