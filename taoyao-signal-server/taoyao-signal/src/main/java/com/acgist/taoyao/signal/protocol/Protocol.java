@@ -7,6 +7,7 @@ import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
 
 /**
  * 信令
+ * 注意：如果信令要被Controller调用建议提供接口防止注解失效
  * 
  * room::     房间信令
  * media::    媒体信令
