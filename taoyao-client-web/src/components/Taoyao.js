@@ -1767,7 +1767,7 @@ class Taoyao extends RemoteClient {
   }
   async clientStatus(clientId) {
     const response = await this.request(
-      protocol.buildMessage("client::list", { clientId })
+      protocol.buildMessage("client::status", { clientId })
     );
     return response.body;
   }

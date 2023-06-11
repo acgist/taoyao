@@ -70,11 +70,11 @@ export default {
       videoStream: null,
     };
   },
-  mounted() {
+  async mounted() {
     this.audio = this.$refs.audio;
     this.video = this.$refs.video;
     this.client.proxy = this;
-    const status = this.taoyao.clientStatus(this.client.clientId);
+    const status = await this.taoyao.clientStatus(this.client.clientId);
     this.clientRecord = status.clientRecording;
     this.serverRecord = status.serverRecording;
   },
