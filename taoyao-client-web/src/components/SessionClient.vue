@@ -74,6 +74,9 @@ export default {
     this.audio = this.$refs.audio;
     this.video = this.$refs.video;
     this.client.proxy = this;
+    const status = this.taoyao.clientStatus(this.client.clientId);
+    this.clientRecord = status.clientRecording;
+    this.serverRecord = status.serverRecording;
   },
   props: {
     "client": {

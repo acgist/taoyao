@@ -168,6 +168,7 @@ public class Recorder {
         this.thread.setDaemon(true);
         this.thread.setName("TaoyaoRecord");
         this.thread.start();
+        this.updateRecordStatus(true);
         log.info("开始媒体录像：{}", this.folder);
     }
     
@@ -276,6 +277,7 @@ public class Recorder {
         this.scriptExecutor.stop("q");
         this.preview();
         this.duration();
+        this.updateRecordStatus(false);
     }
 
     /**
@@ -283,6 +285,15 @@ public class Recorder {
      */
     public void close() {
         EventPublisher.publishEvent(new RecorderCloseEvent(this));
+    }
+    
+    /**
+     * 更新录像状态
+     * 
+     * @param status 状态
+     */
+    private void updateRecordStatus(boolean status) {
+        this.clientWrapper.getClient().status().setServerRecording(status);
     }
 
 }

@@ -403,12 +403,16 @@ class RemoteClient {
   audioTrack;
   // 视频Track
   videoTrack;
+  // 终端录制状态
+  clientRecording;
+  // 服务端录制状态
+  serverRecording;
 
   constructor({
     name,
     clientId,
   }) {
-    this.name = name;
+    this.name     = name;
     this.clientId = clientId;
   }
 
@@ -1761,9 +1765,16 @@ class Taoyao extends RemoteClient {
     );
     return response.body;
   }
-  async clientList() {
+  async clientStatus(clientId) {
     const response = await this.request(
-      protocol.buildMessage("client::list", { roomId: self.roomId })
+      protocol.buildMessage("client::list", { clientId })
+    );
+    return response.body;
+  }
+  async roomClientList() {
+    const me = this;
+    const response = await this.request(
+      protocol.buildMessage("room::client::list", { roomId: me.roomId })
     );
     return response.body;
   }

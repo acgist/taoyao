@@ -45,8 +45,10 @@ public class ClientStatus {
 	private Boolean alarming;
 	@Schema(title = "是否正在充电", description = "是否正在充电")
 	private Boolean charging;
-	@Schema(title = "是否正在录像", description = "是否正在录像")
-	private Boolean recording;
+	@Schema(title = "终端是否正在录像", description = "终端是否正在录像")
+	private Boolean clientRecording;
+	@Schema(title = "服务端是否正在录像", description = "服务端是否正在录像")
+	private Boolean serverRecording;
 	@Schema(title = "最后心跳时间", description = "最后心跳时间")
 	private LocalDateTime lastHeartbeat;
 	@Schema(title = "终端状态", description = "其他扩展终端状态")
@@ -68,7 +70,7 @@ public class ClientStatus {
         this.setBattery(MapUtils.getInteger(body, Constant.BATTERY));
         this.setAlarming(MapUtils.getBoolean(body, Constant.ALARMING));
         this.setCharging(MapUtils.getBoolean(body, Constant.CHARGING));
-        this.setRecording(MapUtils.getBoolean(body, Constant.RECORDING));
+        this.setClientRecording(MapUtils.getBoolean(body, Constant.CLIENT_RECORDING));
         this.status(MapUtils.get(body, Constant.STATUS));
         this.config(MapUtils.get(body, Constant.CONFIG));
         this.setLastHeartbeat(LocalDateTime.now());

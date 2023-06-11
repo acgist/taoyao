@@ -58,9 +58,13 @@ public interface Constant {
      */
     String CHARGING = "charging";
     /**
-     * 是否正在录像
+     * 终端是否正在录像
      */
-    String RECORDING = "recording";
+    String CLIENT_RECORDING = "clientRecording";
+    /**
+     * 服务端是否正在录像
+     */
+    String SERVER_RECORDING = "serverRecording";
     /**
      * 地址
      */

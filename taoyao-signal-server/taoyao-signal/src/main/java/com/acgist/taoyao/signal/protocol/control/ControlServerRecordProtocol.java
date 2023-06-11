@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
@@ -59,6 +60,7 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         this.ffmpegProperties = ffmpegProperties;
     }
     
+    @Async
     @Override
     public void onApplicationEvent(RecorderCloseEvent event) {
         final Recorder recorder = event.getRecorder();

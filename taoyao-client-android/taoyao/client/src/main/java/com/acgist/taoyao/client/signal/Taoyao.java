@@ -689,7 +689,7 @@ public final class Taoyao implements ITaoyao {
             "signal",    this.signal(),
             "battery",   this.battery(),
             "charging",  this.charging(),
-            "recording", this.mediaManager.isRecording()
+            "clientRecording", this.mediaManager.isRecording()
         ));
     }
 
@@ -718,12 +718,12 @@ public final class Taoyao implements ITaoyao {
             "clientType", this.clientType,
             "username",   this.username,
             "password",   this.password,
-            "latitude",  location == null ? -1 : location.getLatitude(),
-            "longitude", location == null ? -1 : location.getLongitude(),
-            "signal",    this.signal(),
-            "battery",   this.battery(),
-            "charging",  this.charging(),
-            "recording", this.mediaManager.isRecording()
+            "latitude",   location == null ? -1 : location.getLatitude(),
+            "longitude",  location == null ? -1 : location.getLongitude(),
+            "signal",     this.signal(),
+            "battery",    this.battery(),
+            "charging",   this.charging(),
+            "clientRecording", this.mediaManager.isRecording()
         ));
     }
 

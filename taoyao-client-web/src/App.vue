@@ -149,8 +149,8 @@ export default {
       window.taoyao = me.taoyao;
     },
     async loadList() {
-      this.rooms = await this.taoyao.roomList();
-      this.medias = await this.taoyao.mediaList();
+      this.rooms   = await this.taoyao.roomList();
+      this.medias  = await this.taoyao.mediaList();
       this.clients = await this.taoyao.clientList();
     },
     async roomLeave() {

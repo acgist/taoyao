@@ -6,6 +6,7 @@ import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
@@ -46,6 +47,7 @@ public class ControlClientRecordProtocol extends ProtocolControlAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Client client, Client targetClient, Message message, Map<String, Object> body) {
+        this.updateRecordStatus(targetClient, MapUtils.getBoolean(body, Constant.ENABLED));
         client.push(targetClient.request(message));
     }
     
@@ -56,7 +58,18 @@ public class ControlClientRecordProtocol extends ProtocolControlAdapter {
      * @return 执行结果
      */
     public Message execute(String clientId, Boolean enabled) {
+        this.updateRecordStatus(this.clientManager.clients(clientId), enabled);
         return this.request(clientId, this.build(Map.of(Constant.ENABLED, enabled)));
     }
-
+    
+    /**
+     * 设置录像状态
+     * 
+     * @param client  终端
+     * @param enabled 录像状态
+     */
+    private void updateRecordStatus(Client client, Boolean enabled) {
+        client.status().setClientRecording(enabled);
+    }
+    
 }
