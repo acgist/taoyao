@@ -29,7 +29,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
         "终端=>信令服务->终端"
     }
 )
-public class ControlConfigAudioProtocol extends ProtocolControlAdapter {
+public class ControlConfigAudioProtocol extends ProtocolControlAdapter implements IControlConfigAudioProtocol {
 
     public static final String SIGNAL = "control::config::audio";
     
@@ -42,12 +42,7 @@ public class ControlConfigAudioProtocol extends ProtocolControlAdapter {
         client.push(targetClient.request(message));
     }
     
-    /**
-     * @param clientId 终端ID
-     * @param mediaAudioProperties 音频配置
-     * 
-     * @return 执行结果
-     */
+    @Override
     public Message execute(String clientId, MediaAudioProperties mediaAudioProperties) {
         return this.request(clientId, this.build(mediaAudioProperties));
     }

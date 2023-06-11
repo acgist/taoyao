@@ -9,12 +9,12 @@ import org.springframework.web.bind.annotation.RestController;
 import com.acgist.taoyao.boot.config.MediaAudioProperties;
 import com.acgist.taoyao.boot.config.MediaVideoProperties;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.signal.protocol.control.ControlBellProtocol;
-import com.acgist.taoyao.signal.protocol.control.ControlClientRecordProtocol;
-import com.acgist.taoyao.signal.protocol.control.ControlConfigAudioProtocol;
-import com.acgist.taoyao.signal.protocol.control.ControlConfigVideoProtocol;
-import com.acgist.taoyao.signal.protocol.control.ControlPhotographProtocol;
-import com.acgist.taoyao.signal.protocol.control.ControlServerRecordProtocol;
+import com.acgist.taoyao.signal.protocol.control.IControlBellProtocol;
+import com.acgist.taoyao.signal.protocol.control.IControlClientRecordProtocol;
+import com.acgist.taoyao.signal.protocol.control.IControlConfigAudioProtocol;
+import com.acgist.taoyao.signal.protocol.control.IControlConfigVideoProtocol;
+import com.acgist.taoyao.signal.protocol.control.IControlPhotographProtocol;
+import com.acgist.taoyao.signal.protocol.control.IControlServerRecordProtocol;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,12 +34,12 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ControlController {
     
-    private final ControlBellProtocol controlBellProtocol;
-    private final ControlPhotographProtocol controlPhotographProtocol;
-    private final ControlConfigAudioProtocol controlConfigAudioProtocol;
-    private final ControlConfigVideoProtocol controlConfigVideoProtocol;
-    private final ControlClientRecordProtocol controlClientRecordProtocol;
-    private final ControlServerRecordProtocol controlServerRecordProtocol;
+    private final IControlBellProtocol controlBellProtocol;
+    private final IControlPhotographProtocol controlPhotographProtocol;
+    private final IControlConfigAudioProtocol controlConfigAudioProtocol;
+    private final IControlConfigVideoProtocol controlConfigVideoProtocol;
+    private final IControlClientRecordProtocol controlClientRecordProtocol;
+    private final IControlServerRecordProtocol controlServerRecordProtocol;
     
     @Operation(summary = "响铃", description = "响铃控制")
     @GetMapping("/bell/{clientId}")

@@ -2,9 +2,6 @@ package com.acgist.taoyao.signal.protocol;
 
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.task.TaskExecutor;
-
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
@@ -19,9 +16,6 @@ import com.acgist.taoyao.signal.client.ClientType;
  */
 public abstract class ProtocolControlAdapter extends ProtocolClientAdapter {
 
-    @Autowired
-    protected TaskExecutor taskExecutor;
-    
     protected ProtocolControlAdapter(String name, String signal) {
         super(name, signal);
     }

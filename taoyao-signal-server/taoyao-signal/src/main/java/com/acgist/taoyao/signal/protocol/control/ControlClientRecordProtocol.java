@@ -37,7 +37,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
         "终端=>信令服务->目标终端->信令服务->终端"
     }
 )
-public class ControlClientRecordProtocol extends ProtocolControlAdapter {
+public class ControlClientRecordProtocol extends ProtocolControlAdapter implements IControlClientRecordProtocol {
 
     public static final String SIGNAL = "control::client::record";
     
@@ -51,12 +51,7 @@ public class ControlClientRecordProtocol extends ProtocolControlAdapter {
         client.push(targetClient.request(message));
     }
     
-    /**
-     * @param clientId 终端ID
-     * @param enabled  状态
-     * 
-     * @return 执行结果
-     */
+    @Override
     public Message execute(String clientId, Boolean enabled) {
         this.updateRecordStatus(this.clientManager.clients(clientId), enabled);
         return this.request(clientId, this.build(Map.of(Constant.ENABLED, enabled)));

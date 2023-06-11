@@ -33,7 +33,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
         "终端=>信令服务->目标终端->信令服务->终端"
     }
 )
-public class ControlPhotographProtocol extends ProtocolControlAdapter {
+public class ControlPhotographProtocol extends ProtocolControlAdapter implements IControlPhotographProtocol {
 
     public static final String SIGNAL = "control::photograph";
     
@@ -46,11 +46,7 @@ public class ControlPhotographProtocol extends ProtocolControlAdapter {
         client.push(targetClient.request(message));
     }
     
-    /**
-     * @param clientId 终端标识
-     * 
-     * @return 执行结果
-     */
+    @Override
     public Message execute(String clientId) {
         return this.request(clientId, this.build());
     }

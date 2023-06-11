@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
@@ -48,7 +49,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
     },
     flow = "终端=>信令服务->终端"
 )
-public class ControlServerRecordProtocol extends ProtocolControlAdapter implements ApplicationListener<RecorderCloseEvent> {
+public class ControlServerRecordProtocol extends ProtocolControlAdapter implements ApplicationListener<RecorderCloseEvent>, IControlServerRecordProtocol {
 
     public static final String SIGNAL = "control::server::record";
     
@@ -59,14 +60,11 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         this.ffmpegProperties = ffmpegProperties;
     }
     
-//  @Async
+    @Async
     @Override
     public void onApplicationEvent(RecorderCloseEvent event) {
-        // 没有提供接口不能使用注解异步执行
-        this.taskExecutor.execute(() -> {
-            final Recorder recorder = event.getRecorder();
-            this.stop(recorder.getRoom(), recorder.getClientWrapper());
-        });
+        final Recorder recorder = event.getRecorder();
+        this.stop(recorder.getRoom(), recorder.getClientWrapper());
     }
 
     @Override
@@ -85,13 +83,7 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         client.push(message);
     }
 
-    /**
-     * @param roomId   房间ID
-     * @param clientId 终端ID
-     * @param enabled  状态
-     * 
-     * @return 执行结果
-     */
+    @Override
     public Message execute(String roomId, String clientId, Boolean enabled) {
         String filepath;
         final Room room     = this.roomManager.room(roomId);

@@ -28,7 +28,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
         "终端->信令服务->终端"
     }
 )
-public class ControlBellProtocol extends ProtocolControlAdapter {
+public class ControlBellProtocol extends ProtocolControlAdapter implements IControlBellProtocol {
 
     private static final String SIGNAL = "control::bell";
     
@@ -41,12 +41,7 @@ public class ControlBellProtocol extends ProtocolControlAdapter {
         client.push(targetClient.request(message));
     }
 
-    /**
-     * @param clientId 终端ID
-     * @param enabled 状态
-     * 
-     * @return 执行结果
-     */
+    @Override
     public Message execute(String clientId, Boolean enabled) {
         return this.request(clientId, this.build(Map.of(Constant.ENABLED, enabled)));
     }

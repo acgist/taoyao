@@ -29,7 +29,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
         "终端=>信令服务->终端"
     }
 )
-public class ControlConfigVideoProtocol extends ProtocolControlAdapter {
+public class ControlConfigVideoProtocol extends ProtocolControlAdapter implements IControlConfigVideoProtocol {
 
     public static final String SIGNAL = "control::config::video";
     
@@ -42,12 +42,7 @@ public class ControlConfigVideoProtocol extends ProtocolControlAdapter {
         client.push(targetClient.request(message));
     }
     
-    /**
-     * @param clientId 终端ID
-     * @param mediaVideoProperties 视频配置
-     * 
-     * @return 执行结果
-     */
+    @Override
     public Message execute(String clientId, MediaVideoProperties mediaVideoProperties) {
         return this.request(clientId, this.build(mediaVideoProperties));
     }
