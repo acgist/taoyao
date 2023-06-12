@@ -7,6 +7,7 @@ import com.acgist.taoyao.media.config.Config;
 import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.SurfaceViewRenderer;
+import org.webrtc.VideoTrack;
 
 /**
  * 终端
@@ -96,6 +97,20 @@ public abstract class Client extends CloseableClient {
     public void resume() {
         this.resumeAudio();
         this.resumeVideo();
+    }
+
+    /**
+     * 创建视频预览
+     *
+     * @param flag       Config.WHAT_*
+     * @param videoTrack 视频媒体流Track
+     */
+    protected void buildSurfaceViewRenderer(final int flag, final VideoTrack videoTrack) {
+        if(this.surfaceViewRenderer == null) {
+            this.surfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(flag, videoTrack);
+        } else {
+            Log.w(Client.class.getSimpleName(), "视频预览已经存在");
+        }
     }
 
     @Override

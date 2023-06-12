@@ -1178,7 +1178,6 @@ public final class Taoyao implements ITaoyao {
             this.mediaManager.getWebrtcProperties()
         );
         this.sessions.put(sessionId, sessionClient);
-        sessionClient.init();
         sessionClient.offer();
     }
 

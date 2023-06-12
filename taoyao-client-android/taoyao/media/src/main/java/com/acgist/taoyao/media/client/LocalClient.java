@@ -104,9 +104,7 @@ public class LocalClient extends RoomClient {
         }
         this.mediaStream.videoTracks.forEach(videoTrack -> {
             videoTrack.setEnabled(true);
-            if(this.surfaceViewRenderer == null) {
-                this.surfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(Config.WHAT_NEW_LOCAL_VIDEO, videoTrack);
-            }
+            this.buildSurfaceViewRenderer(Config.WHAT_NEW_LOCAL_VIDEO, videoTrack);
         });
     }
 

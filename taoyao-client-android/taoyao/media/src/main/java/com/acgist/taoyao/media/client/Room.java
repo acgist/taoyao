@@ -50,7 +50,7 @@ public class Room extends CloseableClient implements RouterCallback {
      */
     private final String clientId;
     /**
-     * 是否预览
+     * 是否预览视频
      */
     private final boolean preview;
     /**

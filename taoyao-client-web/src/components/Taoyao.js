@@ -2449,6 +2449,7 @@ class Taoyao extends RemoteClient {
       console.debug("buildPeerConnection onnegotiationneeded", event);
       if(peerConnection.connectionState === "connected") {
         // TODO：重连
+        peerConnection.restartIce();
       }
     }
     const localStream      = await me.getStream();

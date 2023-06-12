@@ -12,7 +12,6 @@ import com.acgist.taoyao.media.signal.ITaoyao;
 
 import org.webrtc.DataChannel;
 import org.webrtc.IceCandidate;
-import org.webrtc.MediaConstraints;
 import org.webrtc.MediaStream;
 import org.webrtc.MediaStreamTrack;
 import org.webrtc.PeerConnection;
@@ -44,26 +43,58 @@ public class SessionClient extends Client {
      * 会话ID
      */
     private final String sessionId;
-    private final boolean preview;
-    private final boolean playAudio;
-    private final boolean playVideo;
-    private final boolean dataConsume;
-    private final boolean audioConsume;
-    private final boolean videoConsume;
-    private final boolean dataProduce;
-    private final boolean audioProduce;
-    private final boolean videoProduce;
-    private final MediaProperties mediaProperties;
-    private final WebrtcProperties webrtcProperties;
-    private SurfaceViewRenderer localSurfaceViewRenderer;
     /**
-     * 本地媒体
+     * 是否预览视频
      */
-    private MediaStream mediaStream;
+    private final boolean preview;
+    /**
+     * 是否播放音频
+     */
+    private final boolean playAudio;
+    /**
+     * 是否播放视频
+     */
+    private final boolean playVideo;
+    /**
+     * 是否消费数据
+     */
+    private final boolean dataConsume;
+    /**
+     * 是否消费音频
+     */
+    private final boolean audioConsume;
+    /**
+     * 是否消费视频
+     */
+    private final boolean videoConsume;
+    /**
+     * 是否生产数据
+     */
+    private final boolean dataProduce;
+    /**
+     * 是否生产音频
+     */
+    private final boolean audioProduce;
+    /**
+     * 是否生产视频
+     */
+    private final boolean videoProduce;
+    /**
+     * 媒体配置
+     */
+    private final MediaProperties mediaProperties;
+    /**
+     * WebRTC配置
+     */
+    private final WebrtcProperties webrtcProperties;
     /**
      * 数据通道
      */
     private DataChannel dataChannel;
+    /**
+     * 本地媒体
+     */
+    private MediaStream localMediaStream;
     /**
      * 远程媒体
      */
@@ -77,12 +108,15 @@ public class SessionClient extends Client {
      */
     private PeerConnection.Observer observer;
     /**
-     * Peer连接工厂
+     * PeerConnectionFactory
      */
     private PeerConnectionFactory peerConnectionFactory;
+    /**
+     * 本地视频预览
+     */
+    private SurfaceViewRenderer localSurfaceViewRenderer;
 
     /**
-     *
      * @param sessionId        会话ID
      * @param name             远程终端名称
      * @param clientId         远程终端ID
@@ -109,7 +143,7 @@ public class SessionClient extends Client {
     ) {
         super(name, clientId, taoyao, mainHandler);
         this.sessionId = sessionId;
-        this.preview  = preview;
+        this.preview   = preview;
         this.playAudio = playAudio;
         this.playVideo = playVideo;
         this.dataConsume  = dataConsume;
@@ -134,25 +168,28 @@ public class SessionClient extends Client {
             final List<PeerConnection.IceServer> iceServers = this.webrtcProperties.getIceServers();
             final PeerConnection.RTCConfiguration configuration = new PeerConnection.RTCConfiguration(iceServers);
             this.observer          = this.observer();
-            this.mediaStream       = this.mediaManager.buildLocalMediaStream(this.audioProduce, this.videoProduce);
+            this.localMediaStream  = this.mediaManager.buildLocalMediaStream(this.audioProduce, this.videoProduce);
             this.peerConnection    = this.peerConnectionFactory.createPeerConnection(configuration, this.observer);
-            this.peerConnection.addStream(this.mediaStream);
-            if(this.preview) {
-                this.previewLocal();
-            }
-            // 设置streamId同步
+            this.peerConnection.addStream(this.localMediaStream);
 //          final List<String> streamIds = new ArrayList<>();
-//          ListUtils.getOnlyOne(this.mediaStream.audioTracks, audioTrack -> {
+//          this.localMediaStream.audioTracks.forEach(audioTrack -> {
 //              this.peerConnection.addTrack(audioTrack, streamIds);
-//              return audioTrack;
 //          });
-//          ListUtils.getOnlyOne(this.mediaStream.videoTracks, videoTrack -> {
+//          this.localMediaStream.videoTracks.forEach(videoTrack -> {
 //              this.peerConnection.addTrack(videoTrack, streamIds);
-//              return videoTrack;
 //          });
+            if(this.preview) {
+                this.previewLocalVideo();
+            }
         }
     }
 
+    /**
+     * 媒体交换
+     *
+     * @param message 信令消息
+     * @param body    消息主体
+     */
     public void exchange(Message message, Map<String, Object> body) {
         final String type = MapUtils.get(body, "type");
         switch(type) {
@@ -164,10 +201,10 @@ public class SessionClient extends Client {
     }
 
     /**
-     * 提供媒体服务
+     * 提供本地终端媒体
      */
     public synchronized void offer() {
-        final MediaConstraints mediaConstraints = this.mediaManager.buildMediaConstraints();
+        this.init();
         this.peerConnection.createOffer(this.sdpObserver(
             "主动Offer",
             sessionDescription -> {
@@ -178,9 +215,15 @@ public class SessionClient extends Client {
                 ), sessionDescription);
             },
             null
-        ), mediaConstraints);
+        ), this.mediaManager.buildMediaConstraints());
     }
 
+    /**
+     * 远程终端提供媒体
+     *
+     * @param message 信令消息
+     * @param body    消息主体
+     */
     private void offer(Message message, Map<String, Object> body) {
         this.init();
         final String sdp  = MapUtils.get(body, "sdp");
@@ -203,6 +246,12 @@ public class SessionClient extends Client {
         ), new SessionDescription(sdpType, sdp));
     }
 
+    /**
+     * 远程终端响应媒体
+     *
+     * @param message 信令消息
+     * @param body    消息主体
+     */
     private void answer(Message message, Map<String, Object> body) {
         final String sdp  = MapUtils.get(body, "sdp");
         final String type = MapUtils.get(body, "type");
@@ -214,6 +263,12 @@ public class SessionClient extends Client {
         ), new SessionDescription(sdpType, sdp));
     }
 
+    /**
+     * 远程终端媒体协商
+     *
+     * @param message 信令消息
+     * @param body    消息主体
+     */
     private void candidate(Message message, Map<String, Object> body) {
         final Map<String, Object> candidate = MapUtils.get(body, "candidate");
         final String  sdp                   = MapUtils.get(candidate, "candidate");
@@ -268,9 +323,7 @@ public class SessionClient extends Client {
         }
         this.remoteMediaStream.videoTracks.forEach(videoTrack -> {
             videoTrack.setEnabled(true);
-            if(this.surfaceViewRenderer == null) {
-                this.surfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(Config.WHAT_NEW_REMOTE_VIDEO, videoTrack);
-            }
+            this.buildSurfaceViewRenderer(Config.WHAT_NEW_REMOTE_VIDEO, videoTrack);
         });
     }
 
@@ -296,45 +349,69 @@ public class SessionClient extends Client {
         });
     }
 
+    /**
+     * 暂停本地媒体
+     *
+     * @param type 媒体类型
+     */
     public void pauseLocal(String type) {
+        if(this.localMediaStream == null) {
+            return;
+        }
         if(MediaStreamTrack.AUDIO_TRACK_KIND.equals(type)) {
-            this.mediaStream.audioTracks.forEach(audioTrack -> {
+            this.localMediaStream.audioTracks.forEach(audioTrack -> {
                 audioTrack.setEnabled(false);
             });
         } else if(MediaStreamTrack.VIDEO_TRACK_KIND.equals(type)) {
-            this.mediaStream.videoTracks.forEach(videoTrack -> {
+            this.localMediaStream.videoTracks.forEach(videoTrack -> {
                 videoTrack.setEnabled(false);
             });
         } else {
         }
     }
 
+    /**
+     * 恢复本地媒体
+     *
+     * @param type 媒体类型
+     */
     public void resumeLocal(String type) {
+        if(this.localMediaStream == null) {
+            return;
+        }
         if(MediaStreamTrack.AUDIO_TRACK_KIND.equals(type)) {
-            this.mediaStream.audioTracks.forEach(audioTrack -> {
+            this.localMediaStream.audioTracks.forEach(audioTrack -> {
                 audioTrack.setEnabled(true);
             });
         } else if(MediaStreamTrack.VIDEO_TRACK_KIND.equals(type)) {
-            this.mediaStream.videoTracks.forEach(videoTrack -> {
+            this.localMediaStream.videoTracks.forEach(videoTrack -> {
                 videoTrack.setEnabled(true);
             });
         } else {
         }
     }
 
-    private void previewLocal() {
-        if(this.mediaStream == null) {
+    /**
+     * 预览本地视频
+     */
+    private void previewLocalVideo() {
+        if(this.localMediaStream == null) {
             return;
         }
-        this.mediaStream.videoTracks.forEach(videoTrack -> {
+        this.localMediaStream.videoTracks.forEach(videoTrack -> {
             videoTrack.setEnabled(true);
             if(this.localSurfaceViewRenderer == null) {
                 this.localSurfaceViewRenderer = this.mediaManager.buildSurfaceViewRenderer(Config.WHAT_NEW_LOCAL_VIDEO, videoTrack);
+            } else {
+                Log.w(SessionClient.class.getSimpleName(), "视频预览已经存在");
             }
         });
     }
 
-    private void releaseLocal() {
+    /**
+     * 释放本地媒体
+     */
+    private void releaseLocalVideo() {
         // 释放本地视频资源
         if(this.localSurfaceViewRenderer != null) {
             // 释放资源
@@ -353,7 +430,7 @@ public class SessionClient extends Client {
                 return;
             }
             super.close();
-            this.releaseLocal();
+            this.releaseLocalVideo();
             try {
                 // PeerConnection自动释放：mediaStream、remoteMediaStream
                 if(this.peerConnection != null) {
@@ -367,28 +444,28 @@ public class SessionClient extends Client {
     }
 
     /**
-     * @return 监听
+     * @return PC观察者
      */
     private PeerConnection.Observer observer() {
         return new PeerConnection.Observer() {
 
             @Override
             public void onSignalingChange(PeerConnection.SignalingState signalingState) {
-                Log.d(SessionClient.class.getSimpleName(), "PC信令状态改变：" + signalingState);
+                Log.d(SessionClient.class.getSimpleName(), "PCSignalingState改变：" + signalingState);
                 SessionClient.this.logState();
             }
 
             @Override
             public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
-                Log.d(SessionClient.class.getSimpleName(), "PCIce收集状态改变：" + iceGatheringState);
+                Log.d(SessionClient.class.getSimpleName(), "PCIceGatheringState改变：" + iceGatheringState);
                 SessionClient.this.logState();
             }
 
             @Override
             public void onIceConnectionChange(PeerConnection.IceConnectionState iceConnectionState) {
-                Log.d(SessionClient.class.getSimpleName(), "PCIce连接状态改变：" + iceConnectionState);
-                SessionClient.this.logState();
                 // disconnected：暂时连接不上可能自我恢复
+                Log.d(SessionClient.class.getSimpleName(), "PCIceConnectionState改变：" + iceConnectionState);
+                SessionClient.this.logState();
             }
 
             @Override
@@ -397,17 +474,8 @@ public class SessionClient extends Client {
 
             @Override
             public void onIceCandidate(IceCandidate iceCandidate) {
-                Log.d(SessionClient.class.getSimpleName(), "发送媒体协商：" + SessionClient.this.sessionId);
-                final Map<String, Object> candidate = new HashMap<>();
-                candidate.put("sdpMid",        iceCandidate.sdpMid);
-                candidate.put("candidate",     iceCandidate.sdp);
-                candidate.put("sdpMLineIndex", iceCandidate.sdpMLineIndex);
-                SessionClient.this.taoyao.push(SessionClient.this.taoyao.buildMessage(
-                    "session::exchange",
-                    "type",      "candidate",
-                    "candidate", candidate,
-                    "sessionId", SessionClient.this.sessionId
-                ));
+                Log.d(SessionClient.class.getSimpleName(), "媒体协商：" + SessionClient.this.sessionId);
+                SessionClient.this.exchangeIceCandidate(iceCandidate);
             }
 
             @Override
@@ -429,6 +497,7 @@ public class SessionClient extends Client {
             public void onRemoveStream(MediaStream mediaStream) {
                 Log.i(SessionClient.class.getSimpleName(), "删除远程媒体：" + SessionClient.this.clientId);
                 mediaStream.dispose();
+                SessionClient.this.remoteMediaStream = null;
             }
 
             @Override
@@ -444,9 +513,8 @@ public class SessionClient extends Client {
             public void onRenegotiationNeeded() {
                 Log.d(SessionClient.class.getSimpleName(), "重新协商媒体：" + SessionClient.this.sessionId);
                 if(SessionClient.this.peerConnection.connectionState() == PeerConnection.PeerConnectionState.CONNECTED) {
-//                    SessionClient.this.peerConnection.restartIce();
-                // TODO：重新协商
-//                  SessionClient.this.offer();
+                    // TODO：验证
+                    SessionClient.this.peerConnection.restartIce();
                 }
             }
 
@@ -496,19 +564,44 @@ public class SessionClient extends Client {
         };
     }
 
+    /**
+     * @param iceCandidate 媒体协商
+     */
+    private void exchangeIceCandidate(IceCandidate iceCandidate) {
+        if(iceCandidate == null) {
+            return;
+        }
+        final Map<String, Object> candidate = new HashMap<>();
+        candidate.put("sdpMid",        iceCandidate.sdpMid);
+        candidate.put("candidate",     iceCandidate.sdp);
+        candidate.put("sdpMLineIndex", iceCandidate.sdpMLineIndex);
+        this.taoyao.push(this.taoyao.buildMessage(
+            "session::exchange",
+            "type",      "candidate",
+            "candidate", candidate,
+            "sessionId", this.sessionId
+        ));
+    }
+
+    /**
+     * @param sessionDescription SDP
+     */
     private void exchangeSessionDescription(SessionDescription sessionDescription) {
         if(sessionDescription == null) {
             return;
         }
         final String type = sessionDescription.type.toString().toLowerCase();
-        SessionClient.this.taoyao.push(SessionClient.this.taoyao.buildMessage(
+        this.taoyao.push(this.taoyao.buildMessage(
             "session::exchange",
             "sdp",       sessionDescription.description,
             "type",      type,
-            "sessionId", SessionClient.this.sessionId
+            "sessionId", this.sessionId
         ));
     }
 
+    /**
+     * 记录PC状态
+     */
     private void logState() {
         Log.d(SessionClient.class.getSimpleName(), String.format(
             """
