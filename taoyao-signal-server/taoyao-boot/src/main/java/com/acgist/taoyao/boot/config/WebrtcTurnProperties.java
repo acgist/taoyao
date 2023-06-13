@@ -21,6 +21,7 @@ public class WebrtcTurnProperties extends WebrtcStunProperties {
     @Schema(title = "密码", description = "密码")
     private String password;
     
+    @Override
     @Schema(title = "完整地址", description = "完整地址")
     public String getAddress() {
         return "turn:" + this.host + ":" + this.port;

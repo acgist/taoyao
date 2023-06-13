@@ -11,12 +11,23 @@ import java.util.List;
 /**
  * WebRTC配置
  *
+ * 注意：完全拷贝信令模块`WebrtcProperties`代码
+ *
  * @author acgist
  */
 public class WebrtcProperties {
 
+    /**
+     * 是否加密
+     */
     private Boolean encrypt;
+    /**
+     * STUN服务器
+     */
     private WebrtcStunProperties[] stun;
+    /**
+     * TURN服务器
+     */
     private WebrtcTurnProperties[] turn;
 
     @JsonIgnore
