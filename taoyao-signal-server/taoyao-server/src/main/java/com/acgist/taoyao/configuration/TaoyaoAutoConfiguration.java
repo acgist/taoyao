@@ -40,7 +40,10 @@ public class TaoyaoAutoConfiguration {
 	@Bean
 	@ConditionalOnProperty(prefix = "taoyao.security", name = "enabled", havingValue = "true", matchIfMissing = true)
 	@ConditionalOnMissingBean
-	public SecurityInterceptor securityInterceptor(SecurityService securityService, SecurityProperties securityProperties) {
+	public SecurityInterceptor securityInterceptor(
+	    SecurityService securityService,
+	    SecurityProperties securityProperties
+	) {
 		return new SecurityInterceptor(securityService, securityProperties);
 	}
 	

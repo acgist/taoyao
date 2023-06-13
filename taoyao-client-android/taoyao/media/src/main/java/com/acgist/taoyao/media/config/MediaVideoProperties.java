@@ -2,23 +2,25 @@ package com.acgist.taoyao.media.config;
 
 /**
  * 视频配置
- * 
+ *
+ * 注意：完全拷贝信令模块`MediaVideoProperties`代码
+ *
  * @author acgist
  */
 public class MediaVideoProperties {
 
     /**
      * 视频格式
-     * 
+     *
      * @author acgist
      */
     public enum Format {
-        
+
         VP8,
         VP9,
         H264,
         H265;
-        
+
     }
 
     /**
@@ -96,4 +98,5 @@ public class MediaVideoProperties {
     public void setHeight(Integer height) {
         this.height = height;
     }
+
 }

@@ -1,8 +1,8 @@
 package com.acgist.taoyao.boot.utils;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +15,7 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCode;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 
+import jakarta.servlet.RequestDispatcher;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.ConstraintViolation;
@@ -78,7 +79,7 @@ public final class ErrorUtils {
 	 * @return 错误消息
 	 */
 	public static final Message message(HttpServletRequest request, HttpServletResponse response) {
-		return message(null, request, response);
+		return ErrorUtils.message(null, request, response);
 	}
 	
 	/**
@@ -91,11 +92,11 @@ public final class ErrorUtils {
 	public static final Message message(Throwable t, HttpServletRequest request, HttpServletResponse response) {
 		final Message message;
 		// 错误状态编码
-		int status = globalStatus(request, response);
+		int status = ErrorUtils.globalStatus(request, response);
 		// 全局异常
-		final Object globalError = t == null ? globalError(request) : t;
+		final Object globalError = t == null ? ErrorUtils.globalError(request) : t;
 		// 原始异常
-		final Object rootError = rootException(globalError);
+		final Object rootError = ErrorUtils.rootException(globalError);
 		if(rootError instanceof MessageCodeException messageCodeException) {
 			// 状态编码异常
 			final MessageCode messageCode = messageCodeException.getMessageCode();
@@ -103,9 +104,9 @@ public final class ErrorUtils {
 			message = Message.fail(messageCode, messageCodeException.getMessage());
 		} else if(rootError instanceof Throwable throwable) {
 			// 未知异常：异常转换
-			final MessageCode messageCode = messageCode(status, throwable);
+			final MessageCode messageCode = ErrorUtils.messageCode(status, throwable);
 			status = messageCode.getStatus();
-			message = Message.fail(messageCode, message(messageCode, throwable));
+			message = Message.fail(messageCode, ErrorUtils.message(messageCode, throwable));
 		} else {
 			// 没有异常
 			final MessageCode messageCode = MessageCode.of(status);
@@ -116,9 +117,19 @@ public final class ErrorUtils {
 			status = HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 		}
 		response.setStatus(status);
-		// 打印信息
-		final String path = Objects.toString(request.getAttribute(SERVLET_REQUEST_URI), request.getServletPath());
-		final String query = request.getQueryString();
+		// 请求地址
+		final String path = ErrorUtils.getFirstParams(
+		    request.getAttribute(RequestDispatcher.FORWARD_REQUEST_URI),
+		    request.getAttribute(RequestDispatcher.FORWARD_SERVLET_PATH),
+		    request.getAttribute(SERVLET_REQUEST_URI),
+		    request.getServletPath()
+		);
+		// 请求参数
+		final String query = ErrorUtils.getFirstParams(
+		    request.getAttribute(RequestDispatcher.FORWARD_QUERY_STRING),
+		    request.getQueryString()
+	    );
+		// 请求方法
 		final String method = request.getMethod();
 		if(globalError instanceof Throwable) {
 			log.error("""
@@ -140,11 +151,11 @@ public final class ErrorUtils {
 				原始信息：{}
 				""", path, query, method, message, status, globalError);
 		}
-//		final Map<String, String> body = new HashMap<>();
-//		body.put("url", path);
-//		body.put("query", query);
-//		body.put("method", method);
-//		message.setBody(body);
+		final Map<String, String> body = new HashMap<>();
+		body.put("path",   path);
+		body.put("query",  query);
+		body.put("method", method);
+		message.setBody(body);
 		return message;
 	}
 	
@@ -241,7 +252,7 @@ public final class ErrorUtils {
 	 */
 	public static final Object rootException(Object t) {
 		if(t instanceof Throwable throwable) {
-			return rootException(throwable);
+			return ErrorUtils.rootException(throwable);
 		}
 		return t;
 	}
@@ -262,5 +273,19 @@ public final class ErrorUtils {
 		// 返回原始异常
 		return t;
 	}
+	
+    /**
+     * @param params 参数列表
+     * 
+     * @return 首个参数
+     */
+    private static final String getFirstParams(Object ... params) {
+        for (Object object : params) {
+            if(object != null) {
+                return object.toString();
+            }
+        }
+        return null;
+    }
 	
 }

@@ -5,6 +5,8 @@ import java.util.Map;
 /**
  * 媒体配置
  *
+ * 注意：完全拷贝信令模块`MediaProperties`代码
+ *
  * @author acgist
  */
 public class MediaProperties {

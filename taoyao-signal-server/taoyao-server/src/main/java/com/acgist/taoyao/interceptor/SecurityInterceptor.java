@@ -27,16 +27,22 @@ public class SecurityInterceptor extends InterceptorAdapter {
 	private final SecurityService securityService;
 	private final SecurityProperties securityProperties;
 	
-	public SecurityInterceptor(SecurityService securityService, SecurityProperties securityProperties) {
-        this.securityService = securityService;
-        this.securityProperties = securityProperties;
-        log.info("安全拦截密码：{}", securityProperties.getPassword());
-    }
-
-    /**
+	/**
+	 * 鉴权信息
+	 */
+	private final String authenticate;
+	/**
 	 * 地址匹配
 	 */
-	private final AntPathMatcher matcher = new AntPathMatcher();
+	private final AntPathMatcher matcher;
+	
+	public SecurityInterceptor(SecurityService securityService, SecurityProperties securityProperties) {
+        this.securityService    = securityService;
+        this.securityProperties = securityProperties;
+        this.authenticate       = "Basic Realm=\"" + this.securityProperties.getRealm() + "\"";
+        this.matcher            = new AntPathMatcher();
+        log.info("安全拦截密码：{}", securityProperties.getPassword());
+    }
 	
 	@Override
 	public String name() {
@@ -62,7 +68,7 @@ public class SecurityInterceptor extends InterceptorAdapter {
 			log.debug("授权失败：{}", request.getRequestURL());
 		}
 		response.setStatus(HttpStatus.UNAUTHORIZED.value());
-		response.setHeader(HttpHeaders.WWW_AUTHENTICATE, "Basic Realm=\"" + this.securityProperties.getRealm() + "\"");
+		response.setHeader(HttpHeaders.WWW_AUTHENTICATE, this.authenticate);
 		return false;
 	}
 	
@@ -72,7 +78,7 @@ public class SecurityInterceptor extends InterceptorAdapter {
 	 * @return 是否许可请求
 	 */
 	private boolean permit(HttpServletRequest request) {
-		final String uri = request.getRequestURI();
+		final String uri      = request.getRequestURI();
 		final String[] permit = this.securityProperties.getPermit();
 		if(ArrayUtils.isEmpty(permit)) {
 			return false;

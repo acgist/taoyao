@@ -2,71 +2,76 @@ package com.acgist.taoyao.media.config;
 
 /**
  * 音频配置
- * 
+ *
+ * 注意：完全拷贝信令模块`MediaAudioProperties`代码
+ *
  * @author acgist
  */
 public class MediaAudioProperties {
 
-        /**
-         * 音频格式
-         * 
-         * @author acgist
-         */
-        public enum Format {
-                
-            G722,
-            PCMA,
-			PCMU,
-			OPUS;
-                
-        }
+    /**
+     * 音频格式
+     *
+     * @author acgist
+     */
+    public enum Format {
 
-        /**
-         * 格式：G722|PCMA|PCMU|OPUS
-         */
-        private Format format;
-        /**
-         * 比特率：96|128|256
-         */
-        private Integer bitrate;
-        /**
-         * 采样位数：8|16|32
-         */
-        private Integer sampleSize;
-        /**
-         * 采样率：8000|16000|32000|48000
-         */
-        private Integer sampleRate;
+        G722,
+        // G711A
+        PCMA,
+        // G711U
+        PCMU,
+        OPUS;
 
-        public Format getFormat() {
-                return this.format;
-        }
+    }
 
-        public void setFormat(Format format) {
-                this.format = format;
-        }
+    /**
+     * 格式：G722|PCMA|PCMU|OPUS
+     */
+    private Format format;
+    /**
+     * 比特率：96|128|256
+     */
+    private Integer bitrate;
+    /**
+     * 采样位数（位深）：8|16|32
+     */
+    private Integer sampleSize;
+    /**
+     * 采样率：8000|16000|32000|48000
+     */
+    private Integer sampleRate;
 
-        public Integer getBitrate() {
-                return bitrate;
-        }
+    public Format getFormat() {
+        return this.format;
+    }
 
-        public void setBitrate(Integer bitrate) {
-                this.bitrate = bitrate;
-        }
+    public void setFormat(Format format) {
+        this.format = format;
+    }
 
-        public Integer getSampleSize() {
-                return this.sampleSize;
-        }
+    public Integer getBitrate() {
+        return bitrate;
+    }
 
-        public void setSampleSize(Integer sampleSize) {
-                this.sampleSize = sampleSize;
-        }
+    public void setBitrate(Integer bitrate) {
+        this.bitrate = bitrate;
+    }
 
-        public Integer getSampleRate() {
-                return this.sampleRate;
-        }
+    public Integer getSampleSize() {
+        return this.sampleSize;
+    }
 
-        public void setSampleRate(Integer sampleRate) {
-                this.sampleRate = sampleRate;
-        }
+    public void setSampleSize(Integer sampleSize) {
+        this.sampleSize = sampleSize;
+    }
+
+    public Integer getSampleRate() {
+        return this.sampleRate;
+    }
+
+    public void setSampleRate(Integer sampleRate) {
+        this.sampleRate = sampleRate;
+    }
+
 }

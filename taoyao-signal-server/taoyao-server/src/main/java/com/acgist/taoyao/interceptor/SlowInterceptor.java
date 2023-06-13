@@ -17,14 +17,15 @@ public class SlowInterceptor extends InterceptorAdapter {
 	
 	private final TaoyaoProperties taoyaoProperties;
 	
-	public SlowInterceptor(TaoyaoProperties taoyaoProperties) {
-        this.taoyaoProperties = taoyaoProperties;
-    }
-
-    /**
+	/**
 	 * 请求开始时间
 	 */
-	private final ThreadLocal<Long> local = new ThreadLocal<>();
+	private final ThreadLocal<Long> local;
+	
+	public SlowInterceptor(TaoyaoProperties taoyaoProperties) {
+        this.taoyaoProperties = taoyaoProperties;
+        this.local            = new ThreadLocal<>();
+    }
 	
 	@Override
 	public String name() {
@@ -52,7 +53,7 @@ public class SlowInterceptor extends InterceptorAdapter {
 		final long duration;
 		final Long last = this.local.get();
 		if(last != null && (duration = System.currentTimeMillis() - last) > this.taoyaoProperties.getTimeout()) {
-			log.info("请求执行时间过慢：{}-{}", request.getRequestURI(), duration);
+			log.info("请求执行时间过慢：{} - {}", request.getRequestURI(), duration);
 		}
 		this.local.remove();
 	}
