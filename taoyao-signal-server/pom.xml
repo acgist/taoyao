@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.0.3</version>
+		<version>3.1.0</version>
 		<relativePath />
 	</parent>
 
@@ -23,9 +23,9 @@
 	<properties>
 		<!-- 版本 -->
 		<java.version>17</java.version>
-		<lombok.version>1.18.26</lombok.version>
-		<springdoc.version>2.0.2</springdoc.version>
-		<mapstruct.version>1.5.2.Final</mapstruct.version>
+		<lombok.version>1.18.28</lombok.version>
+		<springdoc.version>2.1.0</springdoc.version>
+		<mapstruct.version>1.5.5.Final</mapstruct.version>
 		<!-- 配置 -->
 		<taoyao.maven.basedir>${project.basedir}</taoyao.maven.basedir>
 		<taoyao.maven.encoding>UTF-8</taoyao.maven.encoding>
