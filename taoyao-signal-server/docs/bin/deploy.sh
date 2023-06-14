@@ -1,5 +1,9 @@
 #!/bin/bash
 
+#########################
+#        部署任务        #
+#########################
+
 # 进入目录
 base=$(readlink -f $(dirname $0))
 cd $base
@@ -7,20 +11,16 @@ echo "环境目录：$base"
 echo "当前目录：$(pwd)"
 
 # 更新代码
-if [ -z "$gited" ]; then
-  echo "更新代码：${project.artifactId}-${project.version}"
-  git pull
-fi
+echo "更新代码：${project.artifactId}-${project.version}"
+git pull
 
 # 编译代码
-if [ -z "$mvned" ]; then
-  echo "编译代码：${project.artifactId}-${project.version}"
-  mvn clean package -D skipTests -P ${profile}
-# 指定编译模块以及依赖
+echo "编译代码：${project.artifactId}-${project.version}"
+mvn clean package -D skipTests -P ${profile}
+# 编译指定模块以及依赖
 # mvn clean package -pl "${project.groupId}:${project.artifactId}" -am -D skipTests -P ${profile}
-fi
 
-# 删除文件：注意不要删除日志
+# 删除文件
 rm -rf $base/deploy/bin
 rm -rf $base/deploy/lib
 rm -rf $base/deploy/config
@@ -37,4 +37,4 @@ cp -rf ${project.basedir}/target/${project.artifactId}-${project.version}/* $bas
 # 启动服务
 echo "启动项目：${project.artifactId}-${project.version}"
 sudo systemctl restart taoyao-signal-server
-systemctl status taoyao-signal-server
+sudo systemctl status  taoyao-signal-server

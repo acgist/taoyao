@@ -1,19 +1,24 @@
 #!/bin/bash
 
+#########################
+#        开始任务        #
+#########################
+
 # 启动目录
 bin=$(readlink -f $(dirname $0))
 base=${bin%/*}
 cd $base
-echo "启动目录：$base"
+echo "环境目录：$base"
+echo "启动目录：$(pwd)"
 
-# 结束任务
+# Java运行环境
 if [ ! -f "/.dockerenv" ]; then
-  # Java运行环境
   JAVA=$(which java)
   if [ -z "$JAVA" ] ; then
     echo "必须安装${java.version}+JDK"
     exit 1
   fi
+  # 结束任务
   bash bin/stop.sh
 else
   JAVA="java"
@@ -30,10 +35,8 @@ echo "启动参数：$JAVA_OPTS"
 # 启动应用
 echo "启动应用：${project.artifactId}-${project.version}"
 if [ ! -f "/.dockerenv" ]; then
-  # 其他启动
   nohup $JAVA $JAVA_OPTS -jar $base/lib/${project.artifactId}-${project.version}.jar > /dev/null 2>&1 &
 else
-  # 使用docker启动：后台启动不能查看控制台的信息
   $JAVA $JAVA_OPTS -jar $base/lib/${project.artifactId}-${project.version}.jar
 fi
 
