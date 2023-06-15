@@ -155,11 +155,11 @@ public class MediaService extends Service {
             resources.getInteger(R.integer.imageQuantity),
             resources.getString(R.string.audioQuantity),
             resources.getString(R.string.videoQuantity),
-            resources.getBoolean(R.bool.broadcaster),
             resources.getInteger(R.integer.channelCount),
             resources.getInteger(R.integer.iFrameInterval),
             resources.getString(R.string.imagePath),
             resources.getString(R.string.videoPath),
+            resources.getString(R.string.videoFile),
             resources.getString(R.string.watermark),
             VideoSourceType.valueOf(resources.getString(R.string.videoSourceType))
         );
@@ -237,7 +237,7 @@ public class MediaService extends Service {
             .setContentIntent(pendingIntent);
         final Notification notification = notificationBuilder.build();
         this.startForeground((int) System.currentTimeMillis(), notification);
-        MediaManager.getInstance().initScreen(intent.getParcelableExtra("data"));
+        MediaManager.getInstance().initScreenCapturer(intent.getParcelableExtra("data"));
     }
 
     /**

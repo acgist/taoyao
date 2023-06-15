@@ -34,8 +34,6 @@
     <string name="audioQuantity">fd-audio</string>
     <!-- 视频质量 -->
     <string name="videoQuantity">fd-video</string>
-    <!-- 语音播报 -->
-    <bool name="broadcaster">false</bool>
     <!-- 音频通道数量 -->
     <integer name="channelCount">1</integer>
     <!-- 视频关键帧频率 -->
@@ -46,6 +44,8 @@
     <string name="imagePath">/taoyao</string>
     <!-- 视频存储目录 -->
     <string name="videoPath">/taoyao</string>
+    <!-- 分享视频文件路径 -->
+    <string name="videoFile"></string>
     <!-- 水印 -->
     <string name="watermark">"'TAOYAO' yyyy-MM-dd HH:mm:ss"</string>
     <!-- 视频来源：FILE|BACK|FRONT|SCREEN -->

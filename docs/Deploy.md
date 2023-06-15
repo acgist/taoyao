@@ -563,6 +563,8 @@ sudo ufw allow 8888/tcp
 sudo ufw allow 9999/tcp
 # 媒体服务
 sudo ufw allow 40000:49999/udp
+# 允许网段
+#sudo ufw allow from 192.168.1.0/24 to any
 
 # 删除端口
 #sudo ufw delete allow 443/tcp
