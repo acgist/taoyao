@@ -620,7 +620,9 @@ public final class Taoyao implements ITaoyao {
      * @param message 信令消息
      */
     private void dispatch(final String content, final Header header, final Message message) {
-        if(this.taoyaoListener.preOnMessage(message)) {
+        final boolean done = this.taoyaoListener.preOnMessage(message);
+        if(done) {
+            Log.d(Taoyao.class.getSimpleName(), "信令前置处理完成：" + message);
             return;
         }
         switch (header.getSignal()) {

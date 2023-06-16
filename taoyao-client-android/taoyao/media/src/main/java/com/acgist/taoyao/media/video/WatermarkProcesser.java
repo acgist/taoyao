@@ -29,40 +29,84 @@ import java.util.TimerTask;
  */
 public class WatermarkProcesser extends VideoProcesser {
 
+    /**
+     * 字符矩阵
+     */
     private static final WatermarkMatrix[] MATRICES = new WatermarkMatrix[256];
+    /**
+     * 水印字符
+     */
+    private static final String WATERMARK = "-: 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
+    /**
+     * 时间格式
+     */
     private final String format;
+    /**
+     * 格式
+     */
+    private final DateTimeFormatter formatter;
+    /**
+     * 视频宽度
+     */
     private final int width;
+    /**
+     * 视频高度
+     */
     private final int height;
+    /**
+     * 定时器
+     */
     private final Timer timer;
+    /**
+     * 字符矩阵
+     */
     private final WatermarkMatrix[] watermark;
 
+    static {
+        final char[] chars = WATERMARK.toCharArray();
+        for (char value : chars) {
+            WatermarkProcesser.build(value);
+        }
+    }
+
+    /**
+     * @param format 时间格式
+     * @param width  视频宽度
+     * @param height 视频高度
+     */
     public WatermarkProcesser(String format, int width, int height) {
+        super("水印处理器");
         this.format = format;
-        this.width = width;
+        this.width  = width;
         this.height = height;
-        final String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern(format));
-        this.watermark = new WatermarkMatrix[date.length()];
-        this.timer = new Timer("Watermark-Timer", true);
+        this.formatter    = DateTimeFormatter.ofPattern(format);
+        final String date = LocalDateTime.now().format(this.formatter);
+        this.watermark    = new WatermarkMatrix[date.length()];
+        this.timer        = new Timer("Watermark-Timer", true);
         this.init();
     }
 
+    /**
+     * @param format         时间格式
+     * @param width          视频宽度
+     * @param height         视频高度
+     * @param videoProcesser 下个视频处理器
+     */
     public WatermarkProcesser(String format, int width, int height, VideoProcesser videoProcesser) {
         this(format, width, height);
         this.next = videoProcesser;
     }
 
+    /**
+     * 加载水印
+     */
     private void init() {
-        final String source = "-: 0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        final char[] chars = source.toCharArray();
-        for (char value : chars) {
-            this.build(value);
-        }
         this.timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 int index = 0;
-                final char[] chars = LocalDateTime.now().format(DateTimeFormatter.ofPattern(WatermarkProcesser.this.format)).toCharArray();
+                final char[] chars = LocalDateTime.now().format(WatermarkProcesser.this.formatter).toCharArray();
                 for (char value : chars) {
                     WatermarkProcesser.this.watermark[index] = MATRICES[value];
                     index++;
@@ -71,21 +115,25 @@ public class WatermarkProcesser extends VideoProcesser {
         }, 1000, 1000);
     }
 
-    private void build(char source) {
-        // TODO：优化复用bitmap
-        final String target = Character.toString(source);
+    /**
+     * 创建字符矩阵
+     *
+     * @param source 字符
+     */
+    private static void build(char source) {
         final Paint paint = new Paint();
         paint.setColor(Color.WHITE);
         paint.setDither(true);
         paint.setTextSize(40.0F);
         paint.setTextAlign(Paint.Align.LEFT);
         paint.setFilterBitmap(true);
-        final Paint.FontMetricsInt box = paint.getFontMetricsInt();
-        final int width = (int) paint.measureText(target);
-        final int height = box.descent - box.ascent;
+        final Paint.FontMetricsInt fontMetricsInt = paint.getFontMetricsInt();
+        final String target = Character.toString(source);
+        final int width     = (int) paint.measureText(target);
+        final int height    = fontMetricsInt.descent - fontMetricsInt.ascent;
         final Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         final Canvas canvas = new Canvas(bitmap);
-        canvas.drawText(target, 0, box.leading - box.ascent, paint);
+        canvas.drawText(target, 0, fontMetricsInt.leading - fontMetricsInt.ascent, paint);
         canvas.save();
         final boolean[][] matrix = new boolean[width][height];
         for (int j = 0; j < height; j++) {
@@ -97,16 +145,16 @@ public class WatermarkProcesser extends VideoProcesser {
                 }
             }
         }
-        MATRICES[source] = new WatermarkMatrix(width, height, matrix);
         bitmap.recycle();
+        WatermarkProcesser.MATRICES[source] = new WatermarkMatrix(width, height, matrix);
     }
 
     @Override
     protected void doProcess(VideoFrame.I420Buffer i420Buffer) {
-        int widthPos = 0;
+        int widthPos  = 0;
         int heightPos = 0;
         final ByteBuffer buffer = i420Buffer.getDataY();
-        for (WatermarkMatrix matrix : watermark) {
+        for (WatermarkMatrix matrix : this.watermark) {
             if(matrix == null) {
                 continue;
             }
@@ -117,7 +165,7 @@ public class WatermarkProcesser extends VideoProcesser {
                     }
                 }
             }
-            widthPos += matrix.width;
+            widthPos  += matrix.width;
             heightPos += matrix.height;
         }
     }
@@ -128,12 +176,31 @@ public class WatermarkProcesser extends VideoProcesser {
         this.timer.cancel();
     }
 
+    /**
+     * 水印矩阵
+     *
+     * @author acgist
+     */
     static class WatermarkMatrix {
 
+        /**
+         * 字符宽度
+         */
         int width;
+        /**
+         * 字符高度
+         */
         int height;
+        /**
+         * 字符矩阵
+         */
         boolean[][] matrix;
 
+        /**
+         * @param width  字符宽度
+         * @param height 字符高度
+         * @param matrix 字符矩阵
+         */
         public WatermarkMatrix(int width, int height, boolean[][] matrix) {
             this.width = width;
             this.height = height;

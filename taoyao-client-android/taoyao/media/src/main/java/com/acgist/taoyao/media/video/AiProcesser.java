@@ -11,6 +11,10 @@ import org.webrtc.VideoFrame;
  */
 public class AiProcesser extends VideoProcesser {
 
+    public AiProcesser() {
+        super("AI识别处理器");
+    }
+
     @Override
     protected void doProcess(VideoFrame.I420Buffer i420Buffer) {
     }

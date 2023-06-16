@@ -14,7 +14,7 @@ public interface ITaoyaoListener {
      *
      * @param message 信令消息
      *
-     * @return 是否继续处理信令
+     * @return 是否完成
      */
     default boolean preOnMessage(Message message) {
         return false;
