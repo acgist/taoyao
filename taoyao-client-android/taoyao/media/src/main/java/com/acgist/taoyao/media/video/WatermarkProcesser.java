@@ -5,6 +5,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.os.Build;
+import android.util.Log;
 
 import org.webrtc.VideoFrame;
 
@@ -84,6 +85,7 @@ public class WatermarkProcesser extends VideoProcesser {
         final String date = LocalDateTime.now().format(this.formatter);
         this.watermark    = new WatermarkMatrix[date.length()];
         this.timer        = new Timer("Watermark-Timer", true);
+        Log.i(WatermarkProcesser.class.getSimpleName(), "水印格式：" + format);
         this.init();
     }
 

@@ -76,7 +76,13 @@ jobs:
         with:
           repository: acgist/webrtc
           path: ./taoyao-client-android/taoyao/media/deps
-          lfs: true
+      - name: WebRTC Install
+        run: |
+          cd ./taoyao-client-android/taoyao/media/deps/webrtc/lib
+          tar zxvf x86.tar.gz
+          tar zxvf x86_64.tar.gz
+          tar zxvf arm64-v8a.tar.gz
+          tar zxvf armeabi-v7a.tar.gz
       - name: Checkout libmediasoupclient
         uses: actions/checkout@v3
         with:

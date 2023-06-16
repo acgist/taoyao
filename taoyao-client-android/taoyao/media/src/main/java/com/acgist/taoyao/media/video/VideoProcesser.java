@@ -24,6 +24,7 @@ public abstract class VideoProcesser implements Closeable {
 
     public VideoProcesser(String name) {
         this.name = name;
+        Log.i(WatermarkProcesser.class.getSimpleName(), "加载视频处理器" + name);
     }
 
     /**
