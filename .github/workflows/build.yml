@@ -12,14 +12,14 @@ jobs:
         runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
     runs-on: ${{ matrix.runs-on }}
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-    - name: Set up JDK
-      uses: actions/setup-java@v1
-      with:
-        java-version: 17
-    - name: Build with Maven
-      run: mvn clean package -P prd -D maven.test.skip=true -B -V --file ./taoyao-signal-server/pom.xml
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+      - name: Build with Maven
+        run: mvn clean package -P prd -D maven.test.skip=true -B -V --file ./taoyao-signal-server/pom.xml
   taoyao-client-web:
     name: Build taoyao client web
     strategy:
@@ -27,19 +27,19 @@ jobs:
         runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
     runs-on: ${{ matrix.runs-on }}
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-    - name: Use Node.js 16.x
-      uses: actions/setup-node@v3
-      with:
-        cache: npm
-        node-version:  16.x
-        cache-dependency-path: ./taoyao-client-web
-    - name: Build with NodeJS
-      run: |
-        npm install
-        npm run build
-      working-directory: ./taoyao-client-web
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Use Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          cache: npm
+          node-version:  16.x
+          cache-dependency-path: ./taoyao-client-web
+      - name: Build with NodeJS
+        run: |
+          npm install
+          npm run build
+        working-directory: ./taoyao-client-web
   taoyao-client-media:
     name: Build taoyao client media
     strategy:
@@ -47,18 +47,18 @@ jobs:
         runs-on: [ macos-latest, ubuntu-latest, windows-latest ]
     runs-on: ${{ matrix.runs-on }}
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-    - name: Use Node.js 16.x
-      uses: actions/setup-node@v3
-      with:
-        cache: npm
-        node-version:  16.x
-        cache-dependency-path: ./taoyao-client-media
-    - name: Build with NodeJS
-      run: |
-        npm install
-      working-directory: ./taoyao-client-media
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Use Node.js 16.x
+        uses: actions/setup-node@v3
+        with:
+          cache: npm
+          node-version:  16.x
+          cache-dependency-path: ./taoyao-client-media
+      - name: Build with NodeJS
+        run: |
+          npm install
+        working-directory: ./taoyao-client-media
   taoyao-client-android:
     name: Build taoyao client android
     strategy:
