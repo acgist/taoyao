@@ -319,22 +319,30 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
   public static interface SamplesReadyCallback {
     /**
      * 本地录像
+     *
+     * @Taoyao
      */
     void startNative();
     /**
      * 远程录像
+     *
+     * @Taoyao
      */
     void startWebRTC();
     /**
      * 远程音频
      *
      * @param samples 音频采样
+     *
+     * @Taoyao
      */
     void onWebRtcAudioTrackSamplesReady(AudioSamples samples);
     /**
      * 本地音频
      *
      * @param samples 音频采样
+     *
+     * @Taoyao
      */
     void onWebRtcAudioRecordSamplesReady(AudioSamples samples);
   }
@@ -413,6 +421,8 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
 
   /**
    * 删除录音工具
+   *
+   * @Taoyao
    */
   public void removeMixerProcesser() {
     this.audioInput.setMixerProcesser(null);

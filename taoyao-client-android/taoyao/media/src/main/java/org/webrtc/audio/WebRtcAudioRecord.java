@@ -117,17 +117,16 @@ class WebRtcAudioRecord {
    * @Taoyao
    */
   public void setMixerProcesser(SamplesReadyCallback samplesReadyCallback) {
-    // 不用处理这个逻辑设置为空表示关闭录像
-//  if(this.audioSamplesReadyCallback != null && samplesReadyCallback == null) {
-//    this.audioSamplesReadyCallback.startNative();
-//  }
-    this.audioSamplesReadyCallback = samplesReadyCallback;
-    // 下面逻辑最好加锁防止关闭录像导致异常
-    if(this.audioSamplesReadyCallback != null) {
-      if(this.audioThread == null) {
-        this.audioSamplesReadyCallback.startNative();
+    synchronized (this) {
+      this.audioSamplesReadyCallback = samplesReadyCallback;
+      if(this.audioSamplesReadyCallback != null) {
+        if(this.audioThread == null) {
+          this.audioSamplesReadyCallback.startNative();
+        } else {
+          this.audioSamplesReadyCallback.startWebRTC();
+        }
       } else {
-        this.audioSamplesReadyCallback.startWebRTC();
+        // 为空表示关闭录像
       }
     }
   }
@@ -167,14 +166,21 @@ class WebRtcAudioRecord {
           if (keepAlive) {
             nativeDataIsRecorded(nativeAudioRecord, bytesRead);
           }
-          if (audioSamplesReadyCallback != null) {
-            // Copy the entire byte buffer array. The start of the byteBuffer is not necessarily
-            // at index 0.
-            // 注意不能定义其他地方否则不能回收
-            final SamplesReadyCallback nullable = audioSamplesReadyCallback;
+          // Taoyao
+          if (WebRtcAudioRecord.this.audioSamplesReadyCallback != null) {
+            final SamplesReadyCallback nullable = WebRtcAudioRecord.this.audioSamplesReadyCallback;
             if(nullable != null) {
-              final byte[] data = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.arrayOffset(), byteBuffer.capacity() + byteBuffer.arrayOffset());
-              nullable.onWebRtcAudioRecordSamplesReady(new JavaAudioDeviceModule.AudioSamples(audioRecord.getAudioFormat(), audioRecord.getChannelCount(), audioRecord.getSampleRate(), data));
+              final byte[] data = Arrays.copyOfRange(
+                  WebRtcAudioRecord.this.byteBuffer.array(),
+                  WebRtcAudioRecord.this.byteBuffer.arrayOffset(),
+                  WebRtcAudioRecord.this.byteBuffer.arrayOffset() + WebRtcAudioRecord.this.byteBuffer.capacity()
+              );
+              nullable.onWebRtcAudioRecordSamplesReady(new JavaAudioDeviceModule.AudioSamples(
+                  WebRtcAudioRecord.this.audioRecord.getAudioFormat(),
+                  WebRtcAudioRecord.this.audioRecord.getChannelCount(),
+                  WebRtcAudioRecord.this.audioRecord.getSampleRate(),
+                  data
+              ));
             }
           }
         } else {
@@ -195,8 +201,11 @@ class WebRtcAudioRecord {
       } catch (IllegalStateException e) {
         Logging.e(TAG, "AudioRecord.stop failed: " + e.getMessage());
       }
-      if(audioSamplesReadyCallback != null) {
-        audioSamplesReadyCallback.startNative();
+      // Taoyao
+      synchronized (this) {
+        if(WebRtcAudioRecord.this.audioSamplesReadyCallback != null) {
+          WebRtcAudioRecord.this.audioSamplesReadyCallback.startNative();
+        }
       }
     }
 
@@ -392,8 +401,11 @@ class WebRtcAudioRecord {
     Logging.d(TAG, "startRecording");
     assertTrue(audioRecord != null);
     assertTrue(audioThread == null);
-    if(audioSamplesReadyCallback != null) {
-      audioSamplesReadyCallback.startWebRTC();
+    // Taoyao
+    synchronized (this) {
+      if(WebRtcAudioRecord.this.audioSamplesReadyCallback != null) {
+        WebRtcAudioRecord.this.audioSamplesReadyCallback.startWebRTC();
+      }
     }
     try {
       audioRecord.startRecording();

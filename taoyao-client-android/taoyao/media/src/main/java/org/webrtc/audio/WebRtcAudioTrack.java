@@ -145,12 +145,21 @@ class WebRtcAudioTrack {
           byteBuffer.position(0);
         }
         int bytesWritten = writeBytes(audioTrack, byteBuffer, sizeInBytes);
-        if (audioSamplesReadyCallback != null) {
-          // 注意不能定义其他地方否则不能回收
-          final SamplesReadyCallback nullable = audioSamplesReadyCallback;
+        // Taoyao
+        if (WebRtcAudioTrack.this.audioSamplesReadyCallback != null) {
+          final SamplesReadyCallback nullable = WebRtcAudioTrack.this.audioSamplesReadyCallback;
           if(nullable != null) {
-            final byte[] data = Arrays.copyOfRange(byteBuffer.array(), byteBuffer.arrayOffset(), byteBuffer.capacity() + byteBuffer.arrayOffset());
-            nullable.onWebRtcAudioTrackSamplesReady(new JavaAudioDeviceModule.AudioSamples(audioTrack.getAudioFormat(), audioTrack.getChannelCount(), audioTrack.getSampleRate(), data));
+            final byte[] data = Arrays.copyOfRange(
+                WebRtcAudioTrack.this.byteBuffer.array(),
+                WebRtcAudioTrack.this.byteBuffer.arrayOffset(),
+                WebRtcAudioTrack.this.byteBuffer.arrayOffset() + WebRtcAudioTrack.this.byteBuffer.capacity()
+            );
+            nullable.onWebRtcAudioTrackSamplesReady(new JavaAudioDeviceModule.AudioSamples(
+                WebRtcAudioTrack.this.audioTrack.getAudioFormat(),
+                WebRtcAudioTrack.this.audioTrack.getChannelCount(),
+                WebRtcAudioTrack.this.audioTrack.getSampleRate(),
+                data
+            ));
           }
         }
         if (bytesWritten != sizeInBytes) {
