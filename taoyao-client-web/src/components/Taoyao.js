@@ -1976,6 +1976,12 @@ class Taoyao extends RemoteClient {
             opusStereo: 1,
             opusDtx: 1,
           },
+					// {
+					// 	opusStereo : true,
+					// 	opusDtx    : true,
+					// 	opusFec    : true,
+					// 	opusNack   : true
+					// }
           // NOTE: for testing codec selection.
           // codec : this._mediasoupDevice.rtpCapabilities.codecs
           // 	.find((codec) => codec.mimeType.toLowerCase() === 'audio/pcma')
@@ -2053,8 +2059,8 @@ class Taoyao extends RemoteClient {
         let codec;
         let encodings;
         const codecOptions = {
-          videoGoogleStartBitrate: 400,
-          videoGoogleMaxBitrate  : 1600,
+          videoGoogleStartBitrate: 1000,
+          videoGoogleMaxBitrate  : 1800,
           videoGoogleMinBitrate  : 800
         };
 //        encodings   :
@@ -2063,10 +2069,6 @@ class Taoyao extends RemoteClient {
 //          { maxBitrate: 300000 },
 //          { maxBitrate: 900000 }
 //        ],
-//        codecOptions :
-//        {
-//          videoGoogleStartBitrate : 1000
-//        }
         if (self.forceH264) {
           codec = self.mediasoupDevice.rtpCapabilities.codecs.find(
             (c) => c.mimeType.toLowerCase() === "video/h264"

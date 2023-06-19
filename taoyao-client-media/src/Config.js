@@ -1,8 +1,11 @@
 const os = require("os");
 
-// 桃夭媒体服务地址
+/**
+ * 桃夭媒体服务地址
+ * 一半配置本机IP地址，用于Mediasoup媒体协商时SDP地址信息。
+ * 如果存在多网卡或者多子网时，需要配置信令地址重写和防火墙端口转发。
+ */
 defaultTaoyaoHost = "192.168.1.110";
-// defaultTaoyaoHost = "192.168.8.110";
 
 /**
  * 配置
@@ -10,7 +13,7 @@ defaultTaoyaoHost = "192.168.1.110";
 module.exports = {
   // 服务名称
   name: "taoyao-client-media",
-  // 信令配置
+  // 服务配置
   signal: {
     // 服务版本
     version: "1.0.0",
@@ -18,15 +21,15 @@ module.exports = {
     clientId: "taoyao-client-media",
     // 终端名称
     name: "桃夭媒体服务",
-    // 地址
+    // 信令地址
     host: "127.0.0.1",
     // host: "192.168.1.100",
     // host: "192.168.8.100",
-    // 端口
+    // 信令端口
     port: 8888,
-    // 协议
+    // 信令协议
     scheme: "wss",
-    // 信令用户
+    // 信令帐号
     username: "taoyao",
     // 信令密码
     password: "taoyao",
@@ -40,11 +43,11 @@ module.exports = {
   },
   // Mediasoup
   mediasoup: {
-    // 配置Worker进程数量
+    // Worker数量
     workerSize: Object.keys(os.cpus()).length,
-    // Worker：https://mediasoup.org/documentation/v3/mediasoup/api/#WorkerSettings
+    // Worker配置：https://mediasoup.org/documentation/v3/mediasoup/api/#WorkerSettings
     workerSettings: {
-      // 记录标记
+      // 日志标记
       logTags: [
         "bwe",
         "ice",
@@ -60,14 +63,16 @@ module.exports = {
         "message",
         "simulcast",
       ],
-      // 级别：debug | warn | error | none
+      // 日志级别：debug | warn | error | none
       logLevel: "warn",
+      // RTP端口范围
       rtcMinPort: process.env.MEDIASOUP_MIN_PORT || 40000,
       rtcMaxPort: process.env.MEDIASOUP_MAX_PORT || 49999,
     },
-    // Router：https://mediasoup.org/documentation/v3/mediasoup/api/#RouterOptions
+    // Router配置：https://mediasoup.org/documentation/v3/mediasoup/api/#RouterOptions
     routerOptions: {
       mediaCodecs: [
+        // OPUS PCMA PCMU G722
         {
           kind: "audio",
           mimeType: "audio/opus",
@@ -81,7 +86,7 @@ module.exports = {
           parameters: {
             "x-google-start-bitrate": 1000,
             // "x-google-min-bitrate": 800,
-            // "x-google-max-bitrate": 1600,
+            // "x-google-max-bitrate": 1800,
           },
         },
         {
@@ -92,7 +97,7 @@ module.exports = {
             "profile-id": 2,
             "x-google-start-bitrate": 1000,
             // "x-google-min-bitrate": 800,
-            // "x-google-max-bitrate": 1600,
+            // "x-google-max-bitrate": 1800,
           },
         },
         {
@@ -105,7 +110,7 @@ module.exports = {
             "level-asymmetry-allowed": 1,
             "x-google-start-bitrate": 1000,
             // "x-google-min-bitrate": 800,
-            // "x-google-max-bitrate": 1600,
+            // "x-google-max-bitrate": 1800,
           },
         },
         {
@@ -118,22 +123,20 @@ module.exports = {
             "level-asymmetry-allowed": 1,
             "x-google-start-bitrate": 1000,
             // "x-google-min-bitrate": 800,
-            // "x-google-max-bitrate": 1600,
+            // "x-google-max-bitrate": 1800,
           },
         },
       ],
     },
-    // WebRtcServer：https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcServerOptions
+    // WebRtcServer配置：https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcServerOptions
     webRtcServerOptions: {
       listenInfos: [
-        // UDP
         {
           protocol: "udp",
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
           port: 44444,
           announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
         },
-        // TCP
         {
           protocol: "tcp",
           ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
@@ -142,7 +145,7 @@ module.exports = {
         },
       ],
     },
-    // WebRtcTransport：https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcTransportOptions
+    // WebRtcTransport配置：https://mediasoup.org/documentation/v3/mediasoup/api/#WebRtcTransportOptions
     webRtcTransportOptions: {
       listenIps: [
         {
@@ -151,11 +154,11 @@ module.exports = {
         },
       ],
       initialAvailableOutgoingBitrate: 1000000,
-      minimumAvailableOutgoingBitrate: 600000,
+      minimumAvailableOutgoingBitrate: 800000,
       maxSctpMessageSize: 262144,
-      maxIncomingBitrate: 1500000,
+      maxIncomingBitrate: 1800000,
     },
-    // PlainTransport：https://mediasoup.org/documentation/v3/mediasoup/api/#PlainTransportOptions
+    // PlainTransport配置：https://mediasoup.org/documentation/v3/mediasoup/api/#PlainTransportOptions
     plainTransportOptions: {
       listenIp: {
         ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
@@ -165,3 +168,10 @@ module.exports = {
     },
   },
 };
+
+/**
+ * PipeTransport:   RTP(router)
+ * PlainTransport:  RTP
+ * DirectTransport: NodeJS
+ * WebRtcTransport: WebRTC
+ */
