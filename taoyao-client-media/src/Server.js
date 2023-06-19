@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const config = require("./Config");
+const config    = require("./Config");
 const mediasoup = require("mediasoup");
 const { Taoyao, signalChannel } = require("./Taoyao");
 
@@ -9,66 +9,70 @@ process.title = config.name;
 // 禁止校验无效证书
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
-// Mediasoup Worker列表
+// 工作线程
 const mediasoupWorkers = [];
-// 桃夭
+// 桃夭信令
 const taoyao = new Taoyao(mediasoupWorkers);
 
 /**
- * 创建Mediasoup Worker列表
+ * 创建工作线程
  */
 async function buildMediasoupWorkers() {
-  // 监听事件
-  // mediasoup.observer.on("newworker", fn(worker));
+  mediasoup.observer.on("newworker", (worker) => {
+    console.info("mediasoup newworker", worker);
+  });
   const { workerSize } = config.mediasoup;
-  console.info("创建Mediasoup Worker数量：", workerSize);
+  console.info("工作线程数量", workerSize);
   for (let index = 0; index < workerSize; index++) {
+    // 创建工作线程
     const worker = await mediasoup.createWorker({
-      logTags: config.mediasoup.workerSettings.logTags,
-      logLevel: config.mediasoup.workerSettings.logLevel,
+      logTags   : config.mediasoup.workerSettings.logTags,
+      logLevel  : config.mediasoup.workerSettings.logLevel,
       rtcMinPort: Number(config.mediasoup.workerSettings.rtcMinPort),
       rtcMaxPort: Number(config.mediasoup.workerSettings.rtcMaxPort),
     });
-    // 配置WebRTC服务
-    const webRtcServerOptions = JSON.parse(
-      JSON.stringify(config.mediasoup.webRtcServerOptions)
-    );
-    for (const listenInfo of webRtcServerOptions.listenInfos) {
-      listenInfo.port = listenInfo.port + mediasoupWorkers.length;
-    }
-    const webRtcServer = await worker.createWebRtcServer(webRtcServerOptions);
-    worker.appData.webRtcServer = webRtcServer;
-    mediasoupWorkers.push(worker);
+    // 监听事件
     worker.on("died", (error) => {
-      console.warn("worker died：", worker.pid, error);
-      setTimeout(() => process.exit(1), 2000);
+      // 正常情况不会出现
+      console.error("worker died", worker.pid, error);
     });
     worker.observer.on("close", () => {
-      console.info("worker close：", worker.pid);
+      console.debug("worker close", worker.pid);
     });
-    // worker.observer.on("newrouter", (router) => {
-    //   console.info("worker newrouter：", worker.pid, router.id);
-    // });
-    // worker.observer.on("newwebrtcserver", (webRtcServer) => {
-    //   console.info("worker newwebrtcserver：", worker.pid, webRtcServer.id);
-    // });
-    // webRtcServer.on("workerclose", () => {
-    //   console.info("webRtcServer workerclose：", worker.pid, webRtcServer.id);
-    // });
-    // webRtcServer.observer.on("close", () => {
-    //   console.info("webRtcServer close：", worker.pid, webRtcServer.id);
-    // });
-    // webRtcServer.observer.on("webrtctransporthandled", (webRtcTransport) => {
-    //   console.info("webRtcServer webrtctransporthandled：", worker.pid, webRtcServer.id, webRtcTransport.id);
-    // });
-    // webRtcServer.observer.on("webrtctransportunhandled", (webRtcTransport) => {
-    //   console.info("webRtcServer webrtctransportunhandled：", worker.pid, webRtcServer.id, webRtcTransport.id);
-    // });
+    worker.observer.on("newrouter", (router) => {
+      console.debug("worker newrouter", worker.pid, router.id);
+    });
+    worker.observer.on("newwebrtcserver", (webRtcServer) => {
+      console.debug("worker newwebrtcserver", worker.pid, webRtcServer.id);
+    });
+    // 创建WebRTC服务
+    const webRtcServerOptions = JSON.parse(JSON.stringify(config.mediasoup.webRtcServerOptions));
+    for (const listenInfos of webRtcServerOptions.listenInfos) {
+      listenInfos.port = listenInfos.port + mediasoupWorkers.length;
+    }
+    const webRtcServer = await worker.createWebRtcServer(webRtcServerOptions);
+    // 监听事件
+    webRtcServer.on("workerclose", () => {
+      console.debug("webRtcServer workerclose", worker.pid, webRtcServer.id);
+    });
+    webRtcServer.observer.on("close", () => {
+      console.debug("webRtcServer close", worker.pid, webRtcServer.id);
+    });
+    webRtcServer.observer.on("webrtctransporthandled", (webRtcTransport) => {
+      console.debug("webRtcServer webrtctransporthandled", worker.pid, webRtcServer.id, webRtcTransport.id);
+    });
+    webRtcServer.observer.on("webrtctransportunhandled", (webRtcTransport) => {
+      console.debug("webRtcServer webrtctransportunhandled", worker.pid, webRtcServer.id, webRtcTransport.id);
+    });
+    // 配置WebRTC服务
+    worker.appData.webRtcServer = webRtcServer;
+    // 添加工作线程
+    mediasoupWorkers.push(worker);
   }
 }
 
 /**
- * 连接信令服务
+ * 连接信令
  */
 async function connectSignalServer() {
   signalChannel.taoyao = taoyao;
@@ -85,10 +89,10 @@ async function main() {
 
     :: https://gitee.com/acgist/taoyao
   `);
-  console.info("开始启动：", config.name);
+  console.info("开始启动", config.name);
   await buildMediasoupWorkers();
   await connectSignalServer();
-  console.info("启动完成：", config.name);
+  console.info("启动完成", config.name);
 }
 
 main();

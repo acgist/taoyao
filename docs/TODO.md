@@ -28,6 +28,15 @@
 * 排版优化：优化顺序
 * 代码优化：逻辑调整、性能优化、安全优化、增强稳定性
 
+## Mediasoup功能集成
+
+持续集成`mediasoup`功能：
+
+* 上次集成`mediasoup-demo`日期：`2023-06-19`
+* 上次集成`libmediasoupclient`日期：`2023-06-19`
+
+> `mediasoup-demo`包含`mediasoup`和`mediasoup-client`
+
 ## 计划任务
 
 * E2E
@@ -44,4 +53,3 @@
 * 浏览器WebRTC监控页面关闭：`chrome://webrtc-internals/`
 
 ## 完成任务
-

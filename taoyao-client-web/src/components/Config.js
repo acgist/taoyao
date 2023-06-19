@@ -56,6 +56,14 @@ const defaultKsvcEncodings = [{ scalabilityMode: "S3T3_KEY" }];
 
 /**
  * simulcast默认配置
+ * TODO：update
+ * https://gitee.com/acgist/mediasoup-demo/commit/090c82920d1b8015d457e4fafbb06607cb232885
+ * https://gitee.com/acgist/mediasoup-demo/commit/e4f70da0c69226b997d174c477d82f8dbb997e91
+ * https://gitee.com/acgist/mediasoup-demo/commit/2c67601d0a231bf901242c8e14cdd0d1ba39f3a4
+ * https://gitee.com/acgist/mediasoup-demo/commit/b9f3f28d2eab314b95392fa698d518177d5ad767
+ * https://gitee.com/acgist/mediasoup-demo/commit/1c59132ca926a6f9ca0c5c2bb155fac58eed9b06
+ * https://gitee.com/acgist/mediasoup-demo/commit/d15a859306e1ba5d031cde90d02593e095719cbc
+ * https://gitee.com/acgist/mediasoup-demo/commit/13cf71cc608690ff96ec12e6d3f1262b40c4d8f3
  */
 const defaultSimulcastEncodings = [
   { scaleResolutionDownBy: 4, maxBitrate: 500000, scalabilityMode: "S1T2" },

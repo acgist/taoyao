@@ -1,8 +1,7 @@
 const fs        = require("fs");
-const config    = require("./Config.js");
+const config    = require("./Config");
 const process   = require("child_process");
 const WebSocket = require("ws");
-const { trace } = require("console");
 
 /**
  * 信令协议

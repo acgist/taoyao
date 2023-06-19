@@ -1976,6 +1976,8 @@ class Taoyao extends RemoteClient {
             opusStereo: 1,
             opusDtx: 1,
           },
+          // TODO：opus
+          // https://gitee.com/acgist/mediasoup-demo/commit/1cab7cb245dc77b7f952a282290fcea8c9841d6e
 					// {
 					// 	opusStereo : true,
 					// 	opusDtx    : true,
