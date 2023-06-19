@@ -74,15 +74,15 @@ module.exports = {
       mediaCodecs: [
         // OPUS PCMA PCMU G722
         {
-          kind: "audio",
-          mimeType: "audio/opus",
+          kind     : "audio",
+          mimeType : "audio/opus",
           clockRate: 48000,
-          channels: 2,
+          channels : 2,
         },
         {
-          kind: "video",
-          mimeType: "video/VP8",
-          clockRate: 90000,
+          kind      : "video",
+          mimeType  : "video/VP8",
+          clockRate : 90000,
           parameters: {
             "x-google-start-bitrate": 1000,
             // "x-google-min-bitrate": 800,
@@ -90,38 +90,38 @@ module.exports = {
           },
         },
         {
-          kind: "video",
-          mimeType: "video/VP9",
-          clockRate: 90000,
+          kind      : "video",
+          mimeType  : "video/VP9",
+          clockRate : 90000,
           parameters: {
-            "profile-id": 2,
+            "profile-id"            : 2,
             "x-google-start-bitrate": 1000,
             // "x-google-min-bitrate": 800,
             // "x-google-max-bitrate": 1800,
           },
         },
         {
-          kind: "video",
-          mimeType: "video/h264",
-          clockRate: 90000,
+          kind      : "video",
+          mimeType  : "video/h264",
+          clockRate : 90000,
           parameters: {
-            "packetization-mode": 1,
-            "profile-level-id": "4d0032",
+            "packetization-mode"     : 1,
+            "profile-level-id"       : "4d0032",
             "level-asymmetry-allowed": 1,
-            "x-google-start-bitrate": 1000,
+            "x-google-start-bitrate" : 1000,
             // "x-google-min-bitrate": 800,
             // "x-google-max-bitrate": 1800,
           },
         },
         {
-          kind: "video",
-          mimeType: "video/h264",
-          clockRate: 90000,
+          kind      : "video",
+          mimeType  : "video/h264",
+          clockRate : 90000,
           parameters: {
-            "packetization-mode": 1,
-            "profile-level-id": "42e01f",
+            "packetization-mode"     : 1,
+            "profile-level-id"       : "42e01f",
             "level-asymmetry-allowed": 1,
-            "x-google-start-bitrate": 1000,
+            "x-google-start-bitrate" : 1000,
             // "x-google-min-bitrate": 800,
             // "x-google-max-bitrate": 1800,
           },
@@ -132,15 +132,15 @@ module.exports = {
     webRtcServerOptions: {
       listenInfos: [
         {
-          protocol: "udp",
-          ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-          port: 44444,
+          protocol   : "udp",
+          ip         : process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
+          port       : 44444,
           announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
         },
         {
-          protocol: "tcp",
-          ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-          port: 44444,
+          protocol   : "tcp",
+          ip         : process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
+          port       : 44444,
           announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
         },
       ],
@@ -149,19 +149,19 @@ module.exports = {
     webRtcTransportOptions: {
       listenIps: [
         {
-          ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
+          ip         : process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
           announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
         },
       ],
       initialAvailableOutgoingBitrate: 1000000,
       minimumAvailableOutgoingBitrate: 800000,
-      maxSctpMessageSize: 262144,
-      maxIncomingBitrate: 1800000,
+      maxSctpMessageSize             : 262144,
+      maxIncomingBitrate             : 1800000,
     },
     // PlainTransport配置：https://mediasoup.org/documentation/v3/mediasoup/api/#PlainTransportOptions
     plainTransportOptions: {
       listenIp: {
-        ip: process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
+        ip         : process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
         announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
       },
       maxSctpMessageSize: 262144,
@@ -170,8 +170,8 @@ module.exports = {
 };
 
 /**
- * PipeTransport:   RTP(router)
- * PlainTransport:  RTP
+ * PipeTransport  : RTP(router)
+ * PlainTransport : RTP
  * DirectTransport: NodeJS
  * WebRtcTransport: WebRTC
  */
