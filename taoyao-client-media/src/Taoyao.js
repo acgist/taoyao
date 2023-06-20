@@ -124,7 +124,7 @@ const signalChannel = {
     me.reconnection = reconnection;
     return new Promise((resolve, reject) => {
       console.debug("连接信令通道：", me.address);
-      me.channel = new WebSocket(me.address, { handshakeTimeout: 5000 });
+      me.channel = new WebSocket(me.address, { rejectUnauthorized: false, handshakeTimeout: 5000 });
       me.channel.on("open", async function () {
         console.info("打开信令通道：", me.address);
         // TODO：电池信息

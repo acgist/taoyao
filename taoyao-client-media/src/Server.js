@@ -6,8 +6,6 @@ const { Taoyao, signalChannel } = require("./Taoyao");
 
 // 线程名称
 process.title = config.name;
-// 禁止校验无效证书
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 // 工作线程
 const mediasoupWorkers = [];
