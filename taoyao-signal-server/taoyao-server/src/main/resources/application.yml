@@ -11,6 +11,9 @@ server:
       port-header: X-Forwarded-Port
       protocol-header: X-Forwarded-Proto
       remote-ip-header: X-Forwarded-For
+# 服务前缀
+# servlet:
+#   context-path: /taoyao
 spring:
 # 快速启动
 # main:
@@ -262,6 +265,3 @@ taoyao:
 #     - network: 192.168.8.0
 #       inner-host:
 #       outer-host:
-# 服务前缀
-# servlet:
-#   context-path: /taoyao

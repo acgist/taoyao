@@ -12,9 +12,9 @@ import {
  */
 const protocol = {
   // 当前索引
-  index: 0,
+  index      : 0,
   // 最大索引
-  maxIndex: 999,
+  maxIndex   : 999,
   // 终端索引
   clientIndex: 99999,
   /**
@@ -44,13 +44,14 @@ const protocol = {
    * @returns 信令消息
    */
   buildMessage(signal, body = {}, id, v) {
+    const me = this;
     const message = {
       header: {
-        v:      v  || "1.0.0",
-        id:     id || this.buildId(),
+        v     : v  || "1.0.0",
+        id    : id || me.buildId(),
         signal: signal,
       },
-      body:     body,
+      body: body,
     };
     return message;
   },
@@ -65,28 +66,28 @@ const taoyaoProtocol = protocol;
  * 信令通道
  */
 const signalChannel = {
-  // 桃夭
-  taoyao: null,
-  // 通道
+  // 桃夭信令
+  taoyao : null,
+  // 信令通道
   channel: null,
-  // 地址
+  // 信令地址
   address: null,
   // 心跳时间
-  heartbeatTime: 30 * 1000,
+  heartbeatTime : 30 * 1000,
   // 心跳定时器
   heartbeatTimer: null,
   // 是否重连
-  reconnection: true,
+  reconnection  : true,
+  // 防止重复重连
+  lockReconnect : false,
   // 重连定时器
   reconnectTimer: null,
-  // 防止重复重连
-  lockReconnect: false,
   // 当前重连时间
-  reconnectionTimeout: 5 * 1000,
+  reconnectionTimeout : 5 * 1000,
   // 最小重连时间
   minReconnectionDelay: 5 * 1000,
   // 最大重连时间
-  maxReconnectionDelay: 60 * 1000,
+  maxReconnectionDelay: 30 * 1000,
   /**
    * 心跳
    */
@@ -100,13 +101,13 @@ const signalChannel = {
         const battery = await navigator.getBattery();
         me.push(
           protocol.buildMessage("client::heartbeat", {
-            battery: battery.level * 100,
+            battery : battery.level * 100,
             charging: battery.charging,
           })
         );
         me.heartbeat();
       } else {
-        console.warn("心跳失败：", me.address);
+        console.warn("心跳失败", me.address);
       }
     }, me.heartbeatTime);
   },
@@ -118,9 +119,9 @@ const signalChannel = {
     return me.channel && me.channel.readyState === WebSocket.OPEN;
   },
   /**
-   * 连接
+   * 连接信令
    *
-   * @param {*} address 地址
+   * @param {*} address      信令地址
    * @param {*} reconnection 是否重连
    *
    * @returns Promise
@@ -132,32 +133,32 @@ const signalChannel = {
         resolve(me.channel);
       });
     }
-    me.address = address;
+    me.address      = address;
     me.reconnection = reconnection;
     return new Promise((resolve, reject) => {
-      console.debug("连接信令通道：", me.address);
+      console.debug("连接信令通道", me.address);
       me.channel = new WebSocket(me.address);
       me.channel.onopen = async function () {
-        console.debug("打开信令通道：", me.address);
+        console.info("打开信令通道", me.address);
         const battery = await navigator.getBattery();
         me.push(
           protocol.buildMessage("client::register", {
-            name: me.taoyao.name,
-            clientId: me.taoyao.clientId,
+            name      : me.taoyao.name,
+            clientId  : me.taoyao.clientId,
             clientType: "WEB",
-            username: me.taoyao.username,
-            password: me.taoyao.password,
-            battery: battery.level * 100,
-            charging: battery.charging,
+            username  : me.taoyao.username,
+            password  : me.taoyao.password,
+            battery   : battery.level * 100,
+            charging  : battery.charging,
           })
         );
         me.reconnectionTimeout = me.minReconnectionDelay;
-        me.taoyao.connect = true;
+        me.taoyao.connect      = true;
         me.heartbeat();
         resolve(me.channel);
       };
       me.channel.onclose = async function () {
-        console.warn("信令通道关闭：", me.channel);
+        console.warn("信令通道关闭", me.channel);
         me.taoyao.connect = false;
         if(!me.connected()) {
           me.taoyao.closeRoomMedia();
@@ -169,21 +170,22 @@ const signalChannel = {
         // 不要失败回调
       };
       me.channel.onerror = async function (e) {
-        console.error("信令通道异常：", me.channel, e);
+        console.error("信令通道异常", me.channel, e);
         // 不要失败回调
       };
       me.channel.onmessage = async function (e) {
+        const content = e.data;
         try {
-          console.debug("信令通道消息：", e.data);
-          me.taoyao.on(JSON.parse(e.data));
+          console.debug("信令通道消息", content);
+          me.taoyao.on(JSON.parse(content));
         } catch (error) {
-          console.error("处理信令消息异常：", e, error);
+          console.error("处理信令通道消息异常", e, error);
         }
       };
     });
   },
   /**
-   * 重连
+   * 重连信令
    */
   reconnect() {
     const me = this;
@@ -200,7 +202,7 @@ const signalChannel = {
     }
     // 定时重连
     me.reconnectTimer = setTimeout(function () {
-      console.info("重连信令通道：", me.address);
+      console.info("重连信令通道", me.address);
       me.connect(me.address, me.reconnection);
       me.lockReconnect = false;
     }, me.reconnectionTimeout);
@@ -215,10 +217,11 @@ const signalChannel = {
    * @param {*} message 消息
    */
   push(message) {
+    const me = this;
     try {
-      signalChannel.channel.send(JSON.stringify(message));
+      me.channel.send(JSON.stringify(message));
     } catch (error) {
-      console.error("异步请求异常：", message, error);
+      console.error("异步请求异常", message, error);
     }
   },
   /**
