@@ -224,6 +224,7 @@ const signalChannel = {
    */
   close() {
     const me = this;
+    console.info("关闭通道", me.address);
     clearTimeout(me.heartbeatTimer);
     clearTimeout(me.reconnectTimer);
     me.reconnection = false;
@@ -232,17 +233,15 @@ const signalChannel = {
   },
 };
 
-// TODO: continue
-
 /**
  * 房间
  */
 class Room {
   // 是否关闭
-  close = false;
+  close  = null;
   // 房间ID
   roomId = null;
-  // 桃夭
+  // 桃夭信令
   taoyao = null;
   // WebRTCServer
   webRtcServer = null;
@@ -254,12 +253,12 @@ class Room {
   activeSpeakerObserver = null;
   // 消费者复制数量
   consumerReplicas = 0;
-  // 通道
+  // 媒体通道
   transports = new Map();
-  // 生产者
-  producers = new Map();
-  // 消费者
-  consumers = new Map();
+  // 媒体生产者
+  producers  = new Map();
+  // 媒体消费者
+  consumers  = new Map();
   // 数据通道生产者
   dataProducers = new Map();
   // 数据通道消费者
@@ -273,9 +272,8 @@ class Room {
     audioLevelObserver,
     activeSpeakerObserver,
   }) {
-    this.close = false;
+    this.close  = false;
     this.roomId = roomId;
-    this.networkThrottled = false;
     this.taoyao = taoyao;
     this.webRtcServer = webRtcServer;
     this.mediasoupRouter = mediasoupRouter;
@@ -289,7 +287,7 @@ class Room {
    */
   handleAudioLevelObserver() {
     const me = this;
-    // 静音
+    // 静音监控
     me.audioLevelObserver.on("silence", () => {
       signalChannel.push(
         protocol.buildMessage("media::audio::volume", {
@@ -297,69 +295,78 @@ class Room {
         })
       );
     });
-    // me.audioLevelObserver.observer.on("silence", fn());
-    // 音量
+    // me.audioLevelObserver.observer.on("silence", () => {});
+    // 音量监控
     me.audioLevelObserver.on("volumes", (volumes) => {
-      const volumeArray = [];
+      const notifyVolumes = [];
       for (const value of volumes) {
-        const { producer, volume } = value;
-        volumeArray.push({ volume: volume, clientId: producer.clientId });
+        const { volume, producer } = value;
+        notifyVolumes.push({
+          volume  : volume,
+          clientId: producer.clientId
+        });
       }
       signalChannel.push(
         protocol.buildMessage("media::audio::volume", {
-          roomId: me.roomId,
-          volumes: volumeArray
+          roomId : me.roomId,
+          volumes: notifyVolumes
         })
       );
     });
-    // me.audioLevelObserver.observer.on("volumes", fn(volumes));
+    // me.audioLevelObserver.observer.on("volumes", (volumes) => {});
   }
   /**
-   * 采样监控
+   * 当前讲话终端监控
    */
   handleActiveSpeakerObserver() {
     const me = this;
+    // 不用通知直接使用音量监控即可
     me.activeSpeakerObserver.on("dominantspeaker", (dominantSpeaker) => {
+      const producer = dominantSpeaker.producer;
       console.debug(
-        "dominantspeaker：",
-        dominantSpeaker.producer.id,
-        dominantSpeaker.producer.clientId
+        "handleActiveSpeakerObserver dominantspeaker",
+        producer.id,
+        producer.clientId
       );
     });
-    // me.activeSpeakerObserver.observer.on("dominantspeaker", fn(dominantSpeaker));
+    // me.activeSpeakerObserver.observer.on("dominantspeaker", (dominantSpeaker) => {});
   }
   /**
-   * 使用情况
+   * 房间使用情况
    */
   usage() {
-    console.info("房间标识：", this.roomId);
-    console.info("房间通道数量：", this.transports.size);
-    console.info("房间生产者数量：", this.producers.size);
-    console.info("房间消费者数量：", this.consumers.size);
-    console.info("房间数据生产者数量：", this.dataProducers.size);
-    console.info("房间数据消费者数量：", this.dataConsumers.size);
+    const me = this;
+    console.info("房间标识",          me.roomId);
+    console.info("房间媒体通道数量",   me.transports.size);
+    console.info("房间媒体生产者数量", me.producers.size);
+    console.info("房间媒体消费者数量", me.consumers.size);
+    console.info("房间数据生产者数量", me.dataProducers.size);
+    console.info("房间数据消费者数量", me.dataConsumers.size);
   }
 
   /**
-   * 关闭资源
+   * 关闭房间
    */
   closeAll() {
     const me = this;
     if (me.close) {
       return;
     }
-    console.info("关闭房间：", me.roomId);
+    console.info("关闭房间", me.roomId);
     me.close = true;
-    me.producers.forEach(v => v.close());
-    me.consumers.forEach(v => v.close());
-    me.dataProducers.forEach(v => v.close());
-    me.dataConsumers.forEach(v => v.close());
-    me.transports.forEach(v => v.close());
     me.audioLevelObserver.close();
     me.activeSpeakerObserver.close();
+    me.consumers.forEach(v => v.close());
+    me.producers.forEach(v => v.close());
+    me.dataConsumers.forEach(v => v.close());
+    me.dataProducers.forEach(v => v.close());
+    me.transports.forEach(v => v.close());
     me.mediasoupRouter.close();
   }
+
 }
+
+// TODO:continue
 
 /**
  * 桃夭
