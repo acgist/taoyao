@@ -601,11 +601,18 @@ class Taoyao extends RemoteClient {
   async request(message) {
     const me = this;
     return new Promise((resolve, reject) => {
-      let done = false;
+      const { header, body } = message;
+      const { id }           = header;
+      // 设置超时
+      const rejectTimeout = setTimeout(() => {
+        me.callbackMapping.delete(id);
+        reject("请求超时", message);
+      }, 5000);
       // 请求回调
-      me.callbackMapping.set(message.header.id, (response) => {
+      me.callbackMapping.set(id, (response) => {
         resolve(response);
-        done = true;
+        clearTimeout(rejectTimeout);
+        // 默认不用继续处理
         return true;
       });
       // 发送消息
@@ -614,13 +621,6 @@ class Taoyao extends RemoteClient {
       } catch (error) {
         reject("同步请求异常", error);
       }
-      // 设置超时
-      setTimeout(() => {
-        if (!done) {
-          me.callbackMapping.delete(message.header.id);
-          reject("请求超时", message);
-        }
-      }, 5000);
     });
   }
   /************************ 回调 ************************/
@@ -939,8 +939,8 @@ class Taoyao extends RemoteClient {
    * @param {*} message 消息
    */
   defaultClientRegister(message) {
-    const { index } = message.body;
-    protocol.clientIndex = index;
+    protocol.clientIndex = message.body.index;
+    console.debug("终端序号", protocol.clientIndex);
   }
   /**
    * 关闭终端信令

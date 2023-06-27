@@ -102,7 +102,7 @@ export default {
           this.audioStream.addTrack(track);
           this.audio.srcObject = this.audioStream;
         }
-        this.audio.play().catch((error) => console.warn("视频播放失败", error));
+        this.audio.play().catch((error) => console.warn("音频播放失败", error));
       } else if(track.kind === 'video') {
         this.videoConsumer = consumer;
         if (this.videoStream) {

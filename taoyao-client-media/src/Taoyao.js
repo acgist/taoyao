@@ -363,20 +363,17 @@ class Room {
     me.transports.forEach(v => v.close());
     me.mediasoupRouter.close();
   }
-
-}
-
-// TODO:continue
+};
 
 /**
- * 桃夭
+ * 桃夭信令
  */
 class Taoyao {
   // 是否连接
   connect = false;
-  // 房间列表
+  // 房间列表：房间ID=房间
   rooms = new Map();
-  // 回调事件
+  // 回调事件：消息ID=事件
   callbackMapping = new Map();
   // Worker列表
   mediasoupWorkers = [];
@@ -384,6 +381,7 @@ class Taoyao {
   nextMediasoupWorkerIndex = 0;
 
   constructor(mediasoupWorkers) {
+    console.info("加载媒体桃夭信令");
     this.mediasoupWorkers = mediasoupWorkers;
     // 定时打印使用情况
     setInterval(async () => {
@@ -398,29 +396,31 @@ class Taoyao {
    */
   on(message) {
     const me = this;
+    // 解构
+    const { header, body } = message;
+    const { id, signal }   = header;
     // 请求回调
-    if (me.callbackMapping.has(message.header.id)) {
+    if (me.callbackMapping.has(id)) {
       try {
-        me.callbackMapping.get(message.header.id)(message);
+        me.callbackMapping.get(id)(message);
       } finally {
-        me.callbackMapping.delete(message.header.id);
+        me.callbackMapping.delete(id);
       }
       return;
     }
     // 执行信令
-    const body = message.body;
-    switch (message.header.signal) {
+    switch (signal) {
       case "client::reboot":
         me.clientReboot(message, body);
+        break;
+      case "client::register":
+        me.clientRegister(message, body);
         break;
       case "client::shutdown":
         me.clientShutdown(message, body);
         break;
-      case "client::register":
-        protocol.clientIndex = body.index;
-        break;
-      case "media::ice::restart":
-        me.mediaIceRestart(message, body);
+      case "control::server::record":
+        me.controlServerRecord(message, body);
         break;
       case "media::consume":
         me.mediaConsume(message, body);
@@ -467,9 +467,6 @@ class Taoyao {
       case "media::producer::resume":
         me.mediaProducerResume(message, body);
         break;
-      case "control::server::record":
-        me.controlServerRecord(message, body);
-        break;
       case "media::router::rtp::capabilities":
         me.mediaRouterRtpCapabilities(message, body);
         break;
@@ -506,7 +503,7 @@ class Taoyao {
     try {
       signalChannel.channel.send(JSON.stringify(message));
     } catch (error) {
-      console.error("异步请求异常：", message, error);
+      console.error("异步请求异常", message, error);
     }
   }
 
@@ -520,11 +517,18 @@ class Taoyao {
   async request(message) {
     const me = this;
     return new Promise((resolve, reject) => {
-      let done = false;
-      // 注册回调
-      me.callbackMapping.set(message.header.id, (response) => {
+      const { header, body } = message;
+      const { id }           = header;
+      // 设置超时
+      const rejectTimeout = setTimeout(() => {
+        me.callbackMapping.delete(id);
+        reject("请求超时", message);
+      }, 5000);
+      // 请求回调
+      me.callbackMapping.set(id, (response) => {
         resolve(response);
-        done = true;
+        clearTimeout(rejectTimeout);
+        return true;
       });
       // 发送消息
       try {
@@ -532,15 +536,10 @@ class Taoyao {
       } catch (error) {
         reject("同步请求异常", error);
       }
-      // 设置超时
-      setTimeout(() => {
-        if (!done) {
-          me.callbackMapping.delete(message.header.id);
-          reject("请求超时", message);
-        }
-      }, 5000);
     });
   }
+
+  // TODO:continue
 
   /**
    * 打印日志
@@ -588,6 +587,17 @@ class Taoyao {
       }
     );
     // this.push(message);
+  }
+
+  /**
+   * 终端注册信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body    消息主体
+   */
+  clientRegister(message, body) {
+    protocol.clientIndex = body.index;
+    console.debug("终端序号", protocol.clientIndex);
   }
 
   /**
@@ -1766,6 +1776,6 @@ class Taoyao {
     //   console.info("mediasoupRouter newrtpobserver：", roomId, mediasoupRouter.id, rtpObserver.id);
     // });
   }
-}
+};
 
 module.exports = { Taoyao, signalChannel };
