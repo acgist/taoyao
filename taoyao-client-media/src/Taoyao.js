@@ -567,53 +567,12 @@ class Taoyao {
    * 关闭所有房间
    */
   closeAllRoom() {
+    if(this.rooms.size <= 0) {
+      return;
+    }
     console.info("关闭所有房间", this.rooms.size);
     this.rooms.forEach((room, roomId) => room.closeAll());
     this.rooms.clear();
-  }
-
-  /**
-   * 校验房间
-   * 
-   * @param {*} room 房间
-   */
-  checkRoom(room) {
-    if(!room) {
-      throw new Error("无效房间");
-    }
-  }
-
-  /**
-   * 校验通道
-   * 
-   * @param {*} transport 通道
-   */
-  checkTransport(transport) {
-    if(!transport) {
-      throw new Error("无效通道");
-    }
-  }
-
-  /**
-   * 校验生产者
-   * 
-   * @param {*} producer 生产者
-   */
-  checkProducer(producer) {
-    if(!producer) {
-      throw new Error("无效生产者");
-    }
-  }
-
-  /**
-   * 校验消费者
-   * 
-   * @param {*} consumer 消费者
-   */
-  checkConsumer(consumer) {
-    if(!consumer) {
-      throw new Error("无效消费者");
-    }
   }
 
   /**
@@ -669,7 +628,11 @@ class Taoyao {
     const me                  = this;
     const { enabled, roomId } = body;
     const room                = me.rooms.get(roomId);
-    me.checkRoom(room);
+    if(!room) {
+      // 直接关闭房间时，房间关闭可能早于结束录像。
+      console.debug("服务端录像房间无效", roomId);
+      return;
+    }
     if(enabled) {
       await me.controlServerRecordStart(message, body, room);
     } else {
@@ -677,17 +640,27 @@ class Taoyao {
     }
   }
 
-  // TODO:continue
-
+  /**
+   * 开始服务端录像
+   * 
+   * @param {*} message 消息
+   * @param {*} body    消息主体
+   * @param {*} room    房间
+   */
   async controlServerRecordStart(message, body, room) {
     const me = this;
     const {
-      roomId, clientId, host, filepath, audioPort, audioRtcpPort, videoPort, videoRtcpPort,
-      rtpCapabilities, audioStreamId, videoStreamId, audioProducerId, videoProducerId
+      host, roomId, filepath, clientId,
+      audioPort, audioRtcpPort, videoPort, videoRtcpPort,
+      rtpCapabilities,
+      audioStreamId, videoStreamId, audioProducerId, videoProducerId
     } = body;
+    console.info("服务端开始录像", clientId, audioStreamId, videoStreamId);
     const plainTransportOptions = {
       ...config.mediasoup.plainTransportOptions,
+      // RTP和RTCP端口复用
       rtcpMux: false,
+      // 自动终端端口
       comedia: false
     };
     let audioConsumer;
@@ -700,65 +673,57 @@ class Taoyao {
     let videoRtpParameters;
     if(audioProducerId) {
       const audioTransport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
-      audioTransportId = audioTransport.id;
+      audioTransportId     = audioTransport.id;
+      room.transports.set(audioTransportId, audioTransport);
       me.transportEvent("plain", roomId, audioTransport);
       audioTransport.clientId = clientId;
-      room.transports.set(audioTransport.id, audioTransport);
-      audioTransport.observer.on("close", () => {
-        console.debug("controlServerRecord audioTransport close：", audioTransport.id);
-        room.transports.delete(audioTransport.id)
-      });
       await audioTransport.connect({
         ip      : host,
         port    : audioPort,
         rtcpPort: audioRtcpPort
       });
       audioConsumer = await audioTransport.consume({
+        paused    : true,
         producerId: audioProducerId,
         rtpCapabilities,
-        paused: true
       });
-      audioConsumerId = audioConsumer.id;
+      audioConsumerId    = audioConsumer.id;
       audioRtpParameters = audioConsumer.rtpParameters;
       audioConsumer.clientId = clientId;
       audioConsumer.streamId = audioStreamId;
-      room.consumers.set(audioConsumer.id, audioConsumer);
+      room.consumers.set(audioConsumerId, audioConsumer);
       audioConsumer.observer.on("close", () => {
-        console.debug("controlServerRecord audioConsumer close：", audioConsumer.id);
-        room.consumers.delete(audioConsumer.id);
+        console.debug("controlServerRecordStart audioConsumer close", audioConsumerId);
+        room.consumers.delete(audioConsumerId);
       });
-      console.debug("controlServerRecord audio", audioTransportId, audioConsumerId, audioTransport.tuple, audioRtpParameters);
+      console.debug("controlServerRecordStart audio", audioTransportId, audioConsumerId, audioTransport.tuple, audioRtpParameters);
     }
     if(videoProducerId) {
       const videoTransport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
-      videoTransportId = videoTransport.id;
+      videoTransportId     = videoTransport.id;
+      room.transports.set(videoTransportId, videoTransport);
       me.transportEvent("plain", roomId, videoTransport);
       videoTransport.clientId = clientId;
-      room.transports.set(videoTransport.id, videoTransport);
-      videoTransport.observer.on("close", () => {
-        console.debug("controlServerRecord videoTransport close：", videoTransport.id);
-        room.transports.delete(videoTransport.id)
-      });
       await videoTransport.connect({
         ip      : host,
         port    : videoPort,
         rtcpPort: videoRtcpPort
       });
       videoConsumer = await videoTransport.consume({
+        paused    : true,
         producerId: videoProducerId,
         rtpCapabilities,
-        paused: true
       });
-      videoConsumerId = videoConsumer.id;
+      videoConsumerId    = videoConsumer.id;
       videoRtpParameters = videoConsumer.rtpParameters;
       videoConsumer.clientId = clientId;
       videoConsumer.streamId = videoStreamId;
-      room.consumers.set(videoConsumer.id, videoConsumer);
+      room.consumers.set(videoConsumerId, videoConsumer);
       videoConsumer.observer.on("close", () => {
-        console.debug("controlServerRecord videoConsumer close：", videoConsumer.id);
-        room.consumers.delete(videoConsumer.id);
+        console.debug("controlServerRecordStart videoConsumer close：", videoConsumerId);
+        room.consumers.delete(videoConsumerId);
       });
-      console.debug("controlServerRecord video：", videoTransportId, videoConsumerId, videoTransport.tuple, videoRtpParameters);
+      console.debug("controlServerRecordStart video：", videoTransportId, videoConsumerId, videoTransport.tuple, videoRtpParameters);
     }
     if(audioConsumer) {
       await audioConsumer.resume();
@@ -791,7 +756,11 @@ class Taoyao {
     if(!filepath || !videoConsumer) {
       return;
     }
-    if(++index > config.record.requestKeyFrameMaxIndex) {
+    const {
+      requestKeyFrameMaxIndex,
+      requestKeyFrameFileSize
+    } = config.record;
+    if(++index > requestKeyFrameMaxIndex) {
       console.warn("请求录像关键帧次数超限", filepath, index);
       return;
     }
@@ -800,39 +769,38 @@ class Taoyao {
       return;
     }
     // 判断文件大小验证是否已经开始录像：创建文件 -> 视频信息 -> 视频数据 -> 封装视频
-    if(fs.existsSync(filepath) && fs.statSync(filepath).size >= config.record.requestKeyFrameFileSize) {
+    if(fs.existsSync(filepath) && fs.statSync(filepath).size >= requestKeyFrameFileSize) {
       console.debug("请求录像关键帧已经开始录像", filepath);
       return;
     }
-    console.debug("请求录像关键帧", filepath);
+    console.debug("请求录像关键帧", filepath, index);
     videoConsumer.requestKeyFrame();
     setTimeout(() => {
       this.requestKeyFrameForRecord(index, filepath, videoConsumer);
     }, 1000);
   }
 
+  // TODO；continue
+
   async controlServerRecordStop(message, body, room) {
     const me = this;
     const { audioStreamId, videoStreamId, audioConsumerId, videoConsumerId, audioTransportId, videoTransportId } = body;
+    console.info("服务端结束录像", audioStreamId, videoStreamId);
     const audioConsumer = room.consumers.get(audioConsumerId);
     if(audioConsumer) {
       audioConsumer.close();
-      room.consumers.delete(audioConsumerId);
     }
     const videoConsumer = room.consumers.get(videoConsumerId);
     if(videoConsumer) {
       videoConsumer.close();
-      room.consumers.delete(videoConsumerId);
     }
     const audioTransport = room.transports.get(audioTransportId);
     if(audioTransport) {
       audioTransport.close();
-      room.transports.delete(audioTransportId);
     }
     const videoTransport = room.transports.get(videoTransportId);
     if(videoTransport) {
       videoTransport.close();
-      room.transports.delete(videoTransportId);
     }
     me.push(message);
   }
