@@ -34,6 +34,7 @@ vim /etc/ufw/before.rules
 *nat
 :PREROUTING ACCEPT [0:0]
 :POSTROUTING ACCEPT [0:0]
+# TODO：补充完整规则
 -A PREROUTING -p tcp --dport 80 -j REDIRECT --to-port 8080
 -A POSTROUTING -j MASQUERADE
 COMMIT
@@ -47,7 +48,7 @@ ufw reload
 `ip-rewrite`
 ```
 
-## 端口转发
+## 端口转发规则
 
 * DNAT：      目标IP转换
 * SNAT：      源IP转换
@@ -66,6 +67,8 @@ ufw reload
 ```
 
 ## iptables
+
+### 清除端口转发规则
 
 ```
 # 查看nat

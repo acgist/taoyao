@@ -224,7 +224,7 @@ const signalChannel = {
    */
   close() {
     const me = this;
-    console.info("关闭通道", me.address);
+    console.info("关闭信令通道", me.address);
     clearTimeout(me.heartbeatTimer);
     clearTimeout(me.reconnectTimer);
     me.reconnection = false;
@@ -323,11 +323,7 @@ class Room {
     // 不用通知直接使用音量监控即可
     me.activeSpeakerObserver.on("dominantspeaker", (dominantSpeaker) => {
       const producer = dominantSpeaker.producer;
-      console.debug(
-        "handleActiveSpeakerObserver dominantspeaker",
-        producer.id,
-        producer.clientId
-      );
+      console.debug("当前讲话终端", producer.id, producer.clientId);
     });
     // me.activeSpeakerObserver.observer.on("dominantspeaker", (dominantSpeaker) => {});
   }
@@ -599,7 +595,7 @@ class Taoyao {
    */
   clientRegister(message, body) {
     protocol.clientIndex = body.index;
-    console.debug("终端注册成功", protocol.clientIndex);
+    console.info("终端注册成功", protocol.clientIndex);
   }
 
   /**
@@ -630,7 +626,7 @@ class Taoyao {
     const room                = me.rooms.get(roomId);
     if(!room) {
       // 直接关闭房间时，房间关闭可能早于结束录像。
-      console.debug("服务端录像房间无效", roomId);
+      console.info("服务端录像房间无效", roomId);
       return;
     }
     if(enabled) {
@@ -650,12 +646,17 @@ class Taoyao {
   async controlServerRecordStart(message, body, room) {
     const me = this;
     const {
-      host, roomId, filepath, clientId,
-      audioPort, audioRtcpPort, videoPort, videoRtcpPort,
+      host,
+      roomId,
+      filepath,
+      clientId,
+      audioPort, audioRtcpPort,
+      videoPort, videoRtcpPort,
       rtpCapabilities,
-      audioStreamId, videoStreamId, audioProducerId, videoProducerId
+      audioStreamId,   videoStreamId,
+      audioProducerId, videoProducerId
     } = body;
-    console.info("服务端开始录像", clientId, audioStreamId, videoStreamId);
+    console.info("开始服务端录像", clientId, audioStreamId, videoStreamId);
     const plainTransportOptions = {
       ...config.mediasoup.plainTransportOptions,
       // RTP和RTCP端口复用
@@ -693,10 +694,10 @@ class Taoyao {
       audioConsumer.streamId = audioStreamId;
       room.consumers.set(audioConsumerId, audioConsumer);
       audioConsumer.observer.on("close", () => {
-        console.debug("controlServerRecordStart audioConsumer close", audioConsumerId);
+        console.info("关闭服务端录像音频消费者", audioConsumerId);
         room.consumers.delete(audioConsumerId);
       });
-      console.debug("controlServerRecordStart audio", audioTransportId, audioConsumerId, audioTransport.tuple, audioRtpParameters);
+      console.debug("创建服务器录像音频消费者", audioTransportId, audioConsumerId, audioTransport.tuple, audioRtpParameters);
     }
     if(videoProducerId) {
       const videoTransport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
@@ -720,10 +721,10 @@ class Taoyao {
       videoConsumer.streamId = videoStreamId;
       room.consumers.set(videoConsumerId, videoConsumer);
       videoConsumer.observer.on("close", () => {
-        console.debug("controlServerRecordStart videoConsumer close：", videoConsumerId);
+        console.info("关闭服务器录像视频消费者", videoConsumerId);
         room.consumers.delete(videoConsumerId);
       });
-      console.debug("controlServerRecordStart video：", videoTransportId, videoConsumerId, videoTransport.tuple, videoRtpParameters);
+      console.debug("创建服务器录像视频消费者", videoTransportId, videoConsumerId, videoTransport.tuple, videoRtpParameters);
     }
     if(audioConsumer) {
       await audioConsumer.resume();
@@ -770,7 +771,7 @@ class Taoyao {
     }
     // 判断文件大小验证是否已经开始录像：创建文件 -> 视频信息 -> 视频数据 -> 封装视频
     if(fs.existsSync(filepath) && fs.statSync(filepath).size >= requestKeyFrameFileSize) {
-      console.debug("请求录像关键帧已经开始录像", filepath);
+      console.info("请求录像关键帧已经开始录像", filepath);
       return;
     }
     console.debug("请求录像关键帧", filepath, index);
@@ -780,12 +781,21 @@ class Taoyao {
     }, 1000);
   }
 
-  // TODO；continue
-
+  /**
+   * 结束服务端录像
+   * 
+   * @param {*} message 消息
+   * @param {*} body    消息主体
+   * @param {*} room    房间
+   */
   async controlServerRecordStop(message, body, room) {
     const me = this;
-    const { audioStreamId, videoStreamId, audioConsumerId, videoConsumerId, audioTransportId, videoTransportId } = body;
-    console.info("服务端结束录像", audioStreamId, videoStreamId);
+    const {
+      audioStreamId,    videoStreamId,
+      audioConsumerId,  videoConsumerId,
+      audioTransportId, videoTransportId
+    } = body;
+    console.info("结束服务端录像", audioStreamId, videoStreamId);
     const audioConsumer = room.consumers.get(audioConsumerId);
     if(audioConsumer) {
       audioConsumer.close();
@@ -815,28 +825,37 @@ class Taoyao {
     const me = this;
     const { roomId, transportId } = body;
     const room          = me.rooms.get(roomId);
-    const transport     = room.transports.get(transportId);
+    const transport     = room?.transports.get(transportId);
     const iceParameters = await transport.restartIce();
     message.body.iceParameters = iceParameters;
     me.push(message);
   }
 
+  /**
+   * 生产媒体信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body    消息主体
+   */
   async mediaProduce(message, body) {
-    const self = this;
+    const me = this;
     const {
       kind,
       roomId,
       clientId,
       streamId,
-      appData,
       transportId,
-      rtpParameters,
+      appData,
+      rtpParameters
     } = body;
-    const room = self.rooms.get(roomId);
-    const transport = room.transports.get(transportId);
+    const room      = me.rooms.get(roomId);
+    const transport = room?.transports.get(transportId);
+    if(!transport) {
+      console.warn("生成媒体通道无效", roomId, transportId);
+      return;
+    }
     const producer = await transport.produce({
       kind,
-      appData,
       rtpParameters,
       // 关键帧延迟时间
       // keyFrameRequestDelay: 5000
@@ -845,79 +864,87 @@ class Taoyao {
     producer.streamId = streamId;
     room.producers.set(producer.id, producer);
     producer.on("transportclose", () => {
-      console.info("producer transportclose：", producer.id);
+      console.info("生产者关闭（通道关闭）", producer.id, streamId);
       producer.close();
     });
-    producer.on("score", (score) => {
-      console.info("producer score：", producer.id, score);
-      self.push(
-        protocol.buildMessage("media::producer::score", {
-          score: score,
-          roomId: roomId,
-          producerId: producer.id,
-        })
-      );
-    });
-    producer.on("videoorientationchange", (videoOrientation) => {
-      console.info("producer videoorientationchange：", producer.id, videoOrientation);
-      self.push(protocol.buildMessage("media::video::orientation::change", {
-        ...videoOrientation,
-        roomId: roomId,
-      }));
-    });
-    // await producer.enableTraceEvent([ 'rtp', 'keyframe', 'nack', 'pli', 'fir' ]);
-    // producer.on("trace", (trace) => {
-    //   console.info("producer trace：", producer.id, trace);
-    // });
     producer.observer.on("close", () => {
       if(room.producers.delete(producer.id)) {
-        console.info("producer close：", producer.id);
+        console.info("生产者关闭", producer.id, streamId);
         this.push(
           protocol.buildMessage("media::producer::close", {
-            roomId: roomId,
+            roomId    : roomId,
             producerId: producer.id
           })
         );
       } else {
-        console.info("producer close non：", producer.id);
+        console.info("生产者关闭（无效）", producer.id, streamId);
       }
     });
     producer.observer.on("pause", () => {
-      console.info("producer pause：", producer.id);
+      console.debug("生产者暂停", producer.id, streamId);
       this.push(
         protocol.buildMessage("media::producer::pause", {
-          roomId: roomId,
+          roomId    : roomId,
           producerId: producer.id
         })
       );
     });
     producer.observer.on("resume", () => {
-      console.info("producer resume：", producer.id);
+      console.debug("生产者恢复", producer.id, streamId);
       this.push(
         protocol.buildMessage("media::producer::resume", {
-          roomId: roomId,
+          roomId    : roomId,
           producerId: producer.id
         })
       );
     });
     // producer.observer.on("score", fn(score));
+    producer.on("score", (score) => {
+      console.debug("生产者评分", producer.id, streamId, score);
+      me.push(
+        protocol.buildMessage("media::producer::score", {
+          score     : score,
+          roomId    : roomId,
+          producerId: producer.id,
+        })
+      );
+    });
     // producer.observer.on("videoorientationchange", fn(videoOrientation));
+    producer.on("videoorientationchange", (videoOrientation) => {
+      console.debug("生产者视频方向改变", producer.id, streamId, videoOrientation);
+      me.push(
+        protocol.buildMessage("media::video::orientation::change", {
+          ...videoOrientation,
+          roomId: roomId,
+        })
+      );
+    });
+    // await producer.enableTraceEvent([ 'pli', 'fir', 'rtp', 'nack', 'keyframe' ]);
     // producer.observer.on("trace", fn(trace));
-    message.body = { kind: kind, roomId: roomId, producerId: producer.id };
+    // producer.on("trace", (trace) => {
+    //   console.debug("生产者跟踪", producer.id, trace);
+    // });
+    message.body = {
+      kind      : kind,
+      roomId    : roomId,
+      producerId: producer.id
+    };
     this.push(message);
     if (producer.kind === "audio") {
       room.audioLevelObserver
         .addProducer({ producerId: producer.id })
         .catch((error) => {
-          console.error("音量监听异常：", error);
+          console.error("音量监听异常", error);
         });
       room.activeSpeakerObserver
         .addProducer({ producerId: producer.id })
         .catch((error) => {
-          console.error("声音监听异常：", error);
+          console.error("声音监听异常", error);
         });
     }
   }
+
+  // TODO:continue
 
   /**
    * 关闭生产者信令
@@ -926,10 +953,7 @@ class Taoyao {
    * @param {*} body 消息主体
    */
   async mediaProducerClose(message, body) {
-    const {
-      roomId,
-      producerId,
-    } = body;
+    const { roomId, producerId } = body;
     const room = this.rooms.get(roomId);
     const producer = room?.producers.get(producerId);
     if(producer) {
@@ -947,10 +971,7 @@ class Taoyao {
    * @param {*} body 消息主体
    */
    async mediaProducerPause(message, body) {
-    const {
-      roomId,
-      producerId,
-    } = body;
+    const { roomId, producerId } = body;
     const room = this.rooms.get(roomId);
     const producer = room.producers.get(producerId);
     if(producer) {
@@ -968,10 +989,7 @@ class Taoyao {
    * @param {*} body 消息主体
    */
    async mediaProducerResume(message, body) {
-    const {
-      roomId,
-      producerId,
-    } = body;
+    const { roomId, producerId } = body;
     const room = this.rooms.get(roomId);
     const producer = room.producers.get(producerId);
     if(producer) {
@@ -990,6 +1008,7 @@ class Taoyao {
       streamId,
       producerId,
       transportId,
+      appData,
       rtpCapabilities,
     } = body;
     const room = this.rooms.get(roomId);
@@ -1170,7 +1189,6 @@ class Taoyao {
         })()
       );
     }
-
     try {
       await Promise.all(promises);
     } catch (error) {
@@ -1263,7 +1281,12 @@ class Taoyao {
    */
   async mediaConsumerSetPreferredLayers(message, body) {
     const me = this;
-    const { roomId, consumerId, spatialLayer, temporalLayer } = body;
+    const {
+      roomId,
+      consumerId,
+      spatialLayer,
+      temporalLayer
+    } = body;
     const room = this.rooms.get(roomId);
     const consumer = room?.consumers.get(consumerId);
     if(consumer) {
@@ -1454,22 +1477,6 @@ class Taoyao {
   }
 
   /**
-   * 重启ICE信令
-   * 
-   * @param {*} message 消息
-   * @param {*} body 消息主体
-   */
-  async mediaIceRestart(message, body) {
-    const me = this;
-    const { roomId, transportId } = body;
-    const room = this.rooms.get(roomId);
-    const transport = room?.transports.get(transportId);
-    const iceParameters = await transport.restartIce();
-    message.body.iceParameters = iceParameters;
-    me.push(message);
-  }
-
-  /**
    * 路由RTP协商信令
    *
    * @param {*} message 消息
@@ -1508,7 +1515,14 @@ class Taoyao {
    */
   async mediaTransportPlain(message, body) {
     const me = this;
-    const { roomId, rtcpMux, comedia, clientId, enableSctp, numSctpStreams, enableSrtp, srtpCryptoSuite } = body;
+    const {
+      roomId,
+      clientId,
+      rtcpMux,
+      comedia,
+      enableSctp, numSctpStreams,
+      enableSrtp, srtpCryptoSuite
+    } = body;
     const plainTransportOptions = {
       ...config.mediasoup.plainTransportOptions,
       rtcpMux         : rtcpMux,

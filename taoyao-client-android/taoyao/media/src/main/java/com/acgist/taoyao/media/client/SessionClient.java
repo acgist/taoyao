@@ -32,8 +32,8 @@ import java.util.function.Consumer;
  * TODO：通过setRemoteDescription设置x-google-start-bitrate、x-google-min-bitrate、x-google-max-bitrate
  *
  * 注意：
- * 2. offer/answer/candidate枚举大小
- * 1. candidate格式安卓和浏览器格式不同
+ * 1. offer/answer/candidate枚举大小
+ * 2. candidate格式安卓和浏览器格式不同
  *
  * @author acgist
  */
