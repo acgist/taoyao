@@ -2300,6 +2300,7 @@ class Taoyao extends RemoteClient {
   async sessionCall(clientId) {
     const me = this;
     if (!clientId) {
+      // TODO：判断自己
       this.callbackError("无效终端");
       return;
     }
