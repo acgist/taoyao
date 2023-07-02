@@ -21,8 +21,8 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
         {
             "name": "房间名称",
             "passowrd": "房间密码",
-            "mediaId": "媒体服务标识",
-            "clientSize": "终端数量"
+            "clientSize": "终端数量",
+            "mediaClientId": "媒体服务标识"
         },
         ...
     ]

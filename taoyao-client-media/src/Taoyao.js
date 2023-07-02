@@ -1281,6 +1281,8 @@ class Taoyao {
   /**
    * 消费数据信令
    * 
+   * TODO：重复
+   * 
    * @param {*} message 消息
    * @param {*} body    消息主体
    */
