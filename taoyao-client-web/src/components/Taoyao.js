@@ -1510,8 +1510,15 @@ class Taoyao extends RemoteClient {
         console.error("dataConsumer error：", dataConsumer.id, error);
         dataConsumer.close();
       });
-      dataConsumer.on('message', (message) => {
+    // dataConsumer.on("bufferedamountlow", fn(bufferedAmount));
+    // dataConsumer.on("sctpsendbufferfull", fn());
+      dataConsumer.on('message', (message, ppid) => {
         console.info("dataConsume message：", dataConsumer.id, message);
+        if (ppid === 51) {
+          console.log("文本", message.toString("utf-8"));
+        } else if (ppid === 53) {
+          console.log("二进制");
+        }
       });
     } catch (error) {
       console.error("打开数据消费者异常", error);
@@ -2141,6 +2148,7 @@ class Taoyao extends RemoteClient {
    */
   async produceData() {
     const me = this;
+    // TODO：判断dataProduce
     try {
       const dataProducer = await me.sendTransport.produceData({
         ordered: false,
@@ -2162,9 +2170,6 @@ class Taoyao extends RemoteClient {
       me.dataProducer.on("transportclose", () => {
         console.debug("dataProducer transportclose：", me.dataProducer.id);
         me.dataProducer.close();
-      });
-      me.dataProducer.on("bufferedamountlow", () => {
-        console.debug("dataProducer bufferedamountlow：", me.dataProducer.id);
       });
     } catch (error) {
       me.callbackError("生产数据异常", error);
