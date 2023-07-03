@@ -2,6 +2,8 @@ package com.acgist.taoyao.signal.protocol.media;
 
 import java.util.Map;
 
+import com.acgist.taoyao.boot.annotation.Description;
+import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
@@ -14,6 +16,16 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
  * 
  * @author acgist
  */
+@Protocol
+@Description(
+    body = """
+    {
+        "roomId": "房间ID"
+        "routerType": "路由类型"
+    }
+    """,
+    flow = "终端->信令服务->终端"
+)
 public class MediaSetRouterTypeProtocol extends ProtocolRoomAdapter {
 
     public static final String SIGNAL = "media::set::router::type";

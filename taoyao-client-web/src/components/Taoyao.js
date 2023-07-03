@@ -1781,10 +1781,22 @@ class Taoyao extends RemoteClient {
     );
     return response.body;
   }
+  async roomClientListId(clientId) {
+    const me = this;
+    const response = await this.request(
+      protocol.buildMessage("room::client::list::id", {
+        roomId  : me.roomId,
+        clientId: clientId
+      })
+    );
+    return response.body;
+  }
   async roomClientList() {
     const me = this;
     const response = await this.request(
-      protocol.buildMessage("room::client::list", { roomId: me.roomId })
+      protocol.buildMessage("room::client::list", {
+        roomId: me.roomId
+      })
     );
     return response.body;
   }

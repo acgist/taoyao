@@ -1454,18 +1454,17 @@ class Taoyao {
     }
   }
 
-  // TODO：continue
-
   /**
    * 路由RTP协商信令
    *
    * @param {*} message 消息
-   * @param {*} body 消息主体
+   * @param {*} body    消息主体
    */
   mediaRouterRtpCapabilities(message, body) {
+    const me = this;
     const { roomId } = body;
-    const room = this.rooms.get(roomId);
-    message.body.rtpCapabilities = room.mediasoupRouter.rtpCapabilities;
+    const room = me.rooms.get(roomId);
+    message.body.rtpCapabilities = room?.mediasoupRouter.rtpCapabilities;
     this.push(message);
   }
 
@@ -1473,19 +1472,22 @@ class Taoyao {
    * 关闭传输通道信令
    * 
    * @param {*} message 消息
-   * @param {*} body 消息主体
+   * @param {*} body    消息主体
    */
   async mediaTransportClose(message, body) {
+    const me = this;
     const { roomId, transportId } = body;
-    const room = this.rooms.get(roomId);
+    const room      = me.rooms.get(roomId);
     const transport = room?.transports.get(transportId);
     if(transport) {
-      console.info("关闭传输通道：", transportId);
-      transport.close();
+      console.info("关闭传输通道", transportId);
+      await transport.close();
     } else {
-      console.info("关闭传输通道无效：", transportId);
+      console.debug("关闭传输通道（无效）", transportId);
     }
   }
+
+  // TODO：continue
 
   /**
    * 创建RTP输入通道信令

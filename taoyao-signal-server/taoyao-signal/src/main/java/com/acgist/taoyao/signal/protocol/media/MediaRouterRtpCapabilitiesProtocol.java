@@ -30,7 +30,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
         }
         """
     },
-    flow = { "终端->信令服务->媒体服务->信令服务->终端"}
+    flow = { "终端=>信令服务->媒体服务->信令服务->终端"}
 )
 public class MediaRouterRtpCapabilitiesProtocol extends ProtocolRoomAdapter {
 
