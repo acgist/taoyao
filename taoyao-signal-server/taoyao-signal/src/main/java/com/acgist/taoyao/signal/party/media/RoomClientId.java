@@ -1,5 +1,6 @@
 package com.acgist.taoyao.signal.party.media;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -32,5 +33,14 @@ public class RoomClientId {
     private List<String> audioConsumers;
     @Schema(title = "视频消费者ID", description = "视频消费者ID")
     private List<String> videoConsumers;
+    
+    public RoomClientId() {
+        this.dataProducers  = new ArrayList<>();
+        this.dataConsumers  = new ArrayList<>();
+        this.audioProducers = new ArrayList<>();
+        this.videoProducers = new ArrayList<>();
+        this.audioConsumers = new ArrayList<>();
+        this.videoConsumers = new ArrayList<>();
+    }
     
 }

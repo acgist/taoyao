@@ -75,11 +75,11 @@ public class RoomClientListProtocol extends ProtocolRoomAdapter implements Appli
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        message.setBody(room.clientStatus());
-        client.push(this.build(Map.of(
+        message.setBody(Map.of(
             Constant.ROOM_ID, room.getRoomId(),
             Constant.CLIENTS, room.clientStatus()
-        )));
+        ));
+        client.push(message);
     }
     
 }
