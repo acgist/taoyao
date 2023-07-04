@@ -100,3 +100,8 @@ acgist/taoyao-signal-server
 ### 媒体重连
 
 信令没有断开媒体重连依赖具体协议支持，如果信令断开默认关闭所有媒体，信令重连以后需要自己实现媒体重连（控制方主动邀请或者重连方主动进入）。
+
+## 终端预览
+
+![Web终端](./docs/image/web.jpg)
+![Android终端](./docs/image/android.jpg)
