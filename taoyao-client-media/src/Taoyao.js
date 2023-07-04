@@ -931,6 +931,13 @@ class Taoyao {
       producerId: producer.id
     };
     me.push(message);
+    // me.push(
+    //   protocol.buildMessage("media::producer::score", {
+    //     roomId    : roomId,
+    //     producerId: producer.id,
+    //     score     : producer.score,
+    //   })
+    // );
     if (producer.kind === "audio") {
       room.audioLevelObserver
         .addProducer({ producerId: producer.id })
@@ -1158,13 +1165,13 @@ class Taoyao {
           );
           await consumer.resume();
           consumer.localPaused = false;
-          me.push(
-            protocol.buildMessage("media::consumer::score", {
-              roomId    : roomId,
-              consumerId: consumer.id,
-              score     : consumer.score,
-            })
-          );
+          // me.push(
+          //   protocol.buildMessage("media::consumer::score", {
+          //     roomId    : roomId,
+          //     consumerId: consumer.id,
+          //     score     : consumer.score,
+          //   })
+          // );
         })()
       );
     }
