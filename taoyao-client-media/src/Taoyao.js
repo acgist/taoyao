@@ -904,9 +904,9 @@ class Taoyao {
       console.debug("生产者评分", producer.id, streamId, score);
       me.push(
         protocol.buildMessage("media::producer::score", {
-          score     : score,
           roomId    : roomId,
           producerId: producer.id,
+          score     : score,
         })
       );
     });
@@ -1160,9 +1160,9 @@ class Taoyao {
           consumer.localPaused = false;
           me.push(
             protocol.buildMessage("media::consumer::score", {
-              score     : consumer.score,
               roomId    : roomId,
               consumerId: consumer.id,
+              score     : consumer.score,
             })
           );
         })()
@@ -1487,13 +1487,11 @@ class Taoyao {
     }
   }
 
-  // TODO：continue
-
   /**
    * 创建RTP输入通道信令
    * 
    * @param {*} message 消息
-   * @param {*} body 消息主体
+   * @param {*} body    消息主体
    */
   async mediaTransportPlain(message, body) {
     const me = this;
@@ -1514,17 +1512,18 @@ class Taoyao {
       enableSrtp      : enableSrtp,
       srtpCryptoSuite : srtpCryptoSuite,
     };
-    const room = this.rooms.get(roomId);
-    const transport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
+    const room      = me.rooms.get(roomId);
+    const transport = await room?.mediasoupRouter.createPlainTransport(plainTransportOptions);
+    console.info("创建RTP输入通道", transport.id);
     me.transportEvent("plain", roomId, transport);
     transport.clientId = clientId;
     room.transports.set(transport.id, transport);
     message.body = {
-      ip          : transport.tuple.localIp,
-      port        : transport.tuple.localPort,
-      roomId      : roomId,
-      rtcpPort    : transport.rtcpTuple ? transport.rtcpTuple.localPort : undefined,
-      transportId : transport.id,
+      roomId     : roomId,
+      transportId: transport.id,
+      ip         : transport.tuple.localIp,
+      port       : transport.tuple.localPort,
+      rtcpPort   : transport.rtcpTuple?.localPort,
     };
     me.push(message);
   }
@@ -1533,19 +1532,22 @@ class Taoyao {
    * 连接WebRTC通道信令
    *
    * @param {*} message 消息
-   * @param {*} body 消息主体
+   * @param {*} body    消息主体
    */
   async mediaTransportWebrtcConnect(message, body) {
     const { roomId, transportId, dtlsParameters } = body;
     const room = this.rooms.get(roomId);
     const transport = room?.transports.get(transportId);
     if(transport) {
-      console.info("连接WebRTC通道：", transportId);
       await transport.connect({ dtlsParameters });
-      message.body = { roomId: roomId, transportId: transport.id };
+      console.info("连接WebRTC通道", transportId);
+      message.body = {
+        roomId     : roomId,
+        transportId: transport.id
+      };
       this.push(message);
     } else {
-      console.info("连接WebRTC通道无效：", transportId);
+      console.warn("连接WebRTC通道（无效）", transportId);
     }
   }
 
@@ -1553,10 +1555,10 @@ class Taoyao {
    * 创建WebRTC通道信令
    *
    * @param {*} message 消息
-   * @param {*} body 消息主体
+   * @param {*} body    消息主体
    */
   async mediaTransportWebrtcCreate(message, body) {
-    const self = this;
+    const me = this;
     const {
       roomId,
       clientId,
@@ -1567,39 +1569,42 @@ class Taoyao {
     } = body;
     const webRtcTransportOptions = {
       ...config.mediasoup.webRtcTransportOptions,
-      appData: { producing, consuming },
-      enableSctp: Boolean(sctpCapabilities),
+      appData       : { producing, consuming },
+      enableSctp    : Boolean(sctpCapabilities),
       numSctpStreams: (sctpCapabilities || {}).numStreams,
     };
     if (forceTcp) {
       webRtcTransportOptions.enableUdp = false;
       webRtcTransportOptions.enableTcp = true;
     }
-    const room = this.rooms.get(roomId);
+    const room      = me.rooms.get(roomId);
     const transport = await room.mediasoupRouter.createWebRtcTransport({
       ...webRtcTransportOptions,
       webRtcServer: room.webRtcServer,
     });
-    self.transportEvent("webrtc", roomId, transport);
+    console.info("创建WebRTC通道", transport.id);
+    me.transportEvent("webrtc", roomId, transport);
     transport.clientId = clientId;
     room.transports.set(transport.id, transport);
     message.body = {
-      roomId: roomId,
-      transportId: transport.id,
-      iceCandidates: transport.iceCandidates,
-      iceParameters: transport.iceParameters,
+      roomId        : roomId,
+      transportId   : transport.id,
+      iceCandidates : transport.iceCandidates,
+      iceParameters : transport.iceParameters,
       dtlsParameters: transport.dtlsParameters,
       sctpParameters: transport.sctpParameters,
     };
-    self.push(message);
+    me.push(message);
     const { maxIncomingBitrate } = config.mediasoup.webRtcTransportOptions;
-    // If set, apply max incoming bitrate limit.
     if (maxIncomingBitrate) {
       try {
         await transport.setMaxIncomingBitrate(maxIncomingBitrate);
-      } catch (error) {}
+      } catch (error) {
+        console.error("设置最大传入比特率", maxIncomingBitrate);
+      }
     }
   }
+
   /**
    * 通道事件
    * 
@@ -1608,65 +1613,45 @@ class Taoyao {
    * @param {*} transport 通道
    */
   transportEvent(type, roomId, transport) {
-    const self = this;
-    const room = self.rooms.get(roomId);
-    if(!room) {
-      // TODO：提示
-      return;
-    }
+    const me   = this;
+    const room = me.rooms.get(roomId);
     /********************* 通用通道事件 *********************/
     transport.on("routerclose", () => {
-      console.info("transport routerclose：", transport.id);
+      console.info("通道关闭（路由关闭）", transport.id);
       transport.close();
     });
     transport.on("listenserverclose", () => {
-      console.info("transport listenserverclose：", transport.id);
+      console.info("通道关闭（监听服务关闭）", transport.id);
       transport.close();
     });
-    // await transport.enableTraceEvent([ 'bwe', 'probation' ]);
-    // transport.on("trace", (trace) => {
-    //   console.debug("通道跟踪事件（trace）", transport.id, trace);
-    // });
     transport.observer.on("close", () => {
       if(room.transports.delete(transport.id)) {
-        console.info("transport close：", transport.id);
-        self.push(
+        console.info("通道关闭", transport.id);
+        me.push(
           protocol.buildMessage("media::transport::close", {
-            roomId: roomId,
+            roomId     : roomId,
             transportId: transport.id,
           })
         );
       } else {
-        console.info("transport close non：", transport.id);
+        console.info("通道关闭（无效）", transport.id);
       }
     });
-    // transport.observer.on("newproducer", (producer) => {
-    //   console.info("transport newproducer：", transport.id, producer.id);
-    // });
-    // transport.observer.on("newconsumer", (consumer) => {
-    //   console.info("transport newconsumer：", transport.id, consumer.id);
-    // });
-    // transport.observer.on("newdataproducer", (dataProducer) => {
-    //   console.info("transport newdataproducer：", transport.id, dataProducer.id);
-    // });
-    // transport.observer.on("newdataconsumer", (dataConsumer) => {
-    //   console.info("transport newdataconsumer：", transport.id, dataProducer.id);
-    // });
+    // transport.observer.on("newproducer", (producer) => {});
+    // transport.observer.on("newconsumer", (consumer) => {});
+    // transport.observer.on("newdataproducer", (dataProducer) => {});
+    // transport.observer.on("newdataconsumer", (dataConsumer) => {});
     // transport.observer.on("trace", fn(trace));
+    // await transport.enableTraceEvent([ 'bwe', 'probation' ]);
+    // transport.on("trace", (trace) => {
+    //   console.debug("通道跟踪事件（trace）", transport.id, trace);
+    // });
     /********************* webRtcTransport通道事件 *********************/
     if("webrtc" === type) {
-      // transport.on("icestatechange", (iceState) => {
-      //   console.info("transport icestatechange：", transport.id, iceState);
-      // });
-      // transport.on("iceselectedtuplechange", (iceSelectedTuple) => {
-      //   console.info("transport iceselectedtuplechange：", transport.id, iceSelectedTuple);
-      // });
-      // transport.on("dtlsstatechange", (dtlsState) => {
-      //   console.info("transport dtlsstatechange：", transport.id, dtlsState);
-      // });
-      // transport.on("sctpstatechange", (sctpState) => {
-      //   console.info("transport sctpstatechange：", transport.id, sctpState);
-      // });
+      // transport.on("icestatechange", (iceState) => {});
+      // transport.on("iceselectedtuplechange", (iceSelectedTuple) => {});
+      // transport.on("dtlsstatechange", (dtlsState) => {});
+      // transport.on("sctpstatechange", (sctpState) => {});
       // transport.observer.on("icestatechange", fn(iceState));
       // transport.observer.on("iceselectedtuplechange", fn(iceSelectedTuple));
       // transport.observer.on("dtlsstatechange", fn(dtlsState));
@@ -1691,29 +1676,35 @@ class Taoyao {
       // transport.on("rtcp", fn(rtcpPacket));
     }
   }
+
   /**
    * 平台异常信令
    * 
    * @param {*} message 消息
-   * @param {*} body 消息主体
+   * @param {*} body    消息主体
    */
   platformError(message, body) {
     const { code } = message;
     if(code === "3401") {
       signalChannel.close();
+      console.warn("授权异常（关闭信令）", message);
+    } else {
+      console.warn("平台异常", message);
     }
   }
+
   /**
    * 关闭房间信令
    * 
    * @param {*} message 消息
-   * @param {*} body 消息主体
+   * @param {*} body    消息主体
    */
   async roomClose(message, body) {
-    const roomId = body.roomId;
-    const room = this.rooms.get(roomId);
+    const me         = this;
+    const { roomId } = body;
+    const room       = me.rooms.get(roomId);
     if(!room) {
-      console.warn("房间无效：", roomId);
+      console.debug("关闭房间（无效）", roomId);
       return;
     }
     room.closeAll();
@@ -1723,14 +1714,14 @@ class Taoyao {
    * 创建房间信令
    *
    * @param {*} message 消息
-   * @param {*} body 消息主体
+   * @param {*} body    消息主体
    */
   async roomCreate(message, body) {
-    const me = this;
-    const roomId = body.roomId;
-    let room = me.rooms.get(roomId);
+    const me         = this;
+    const { roomId } = body;
+    let room         = me.rooms.get(roomId);
     if (room) {
-      console.debug("创建房间已经存在：", room);
+      console.debug("创建房间已经存在", room);
       me.push(message);
       return;
     }
@@ -1739,9 +1730,9 @@ class Taoyao {
     const mediasoupRouter = await mediasoupWorker.createRouter({ mediaCodecs });
     // 音量监控
     const audioLevelObserver = await mediasoupRouter.createAudioLevelObserver({
-      interval: 2000,
+      interval  : 2000,
       // 范围：-127~0
-      threshold: -80,
+      threshold : -80,
       // 监控数量
       maxEntries: 2,
     });
@@ -1756,32 +1747,32 @@ class Taoyao {
       audioLevelObserver,
       activeSpeakerObserver,
     });
+    console.info("创建房间", roomId, mediasoupRouter.id);
     me.rooms.set(roomId, room);
     me.push(message);
-    console.info("创建房间：", roomId, mediasoupRouter.id);
     mediasoupRouter.on("workerclose", () => {
-      console.info("mediasoupRouter workerclose：", roomId, mediasoupRouter.id);
-      room.closeAll();
+      console.info("路由关闭（工作线程关闭）", roomId, mediasoupRouter.id);
+      mediasoupRouter.close();
     });
     mediasoupRouter.observer.on("close", () => {
       if(me.rooms.delete(roomId)) {
-        console.info("mediasoupRouter close：", roomId, mediasoupRouter.id);
+        console.info("路由关闭", roomId, mediasoupRouter.id);
+        room.closeAll();
         me.push(
           protocol.buildMessage("room::close", {
             roomId: roomId
           })
         );
       } else {
-        console.info("mediasoupRouter close non：", roomId, mediasoupRouter.id);
+        console.info("路由关闭（无效）", roomId, mediasoupRouter.id);
       }
     });
-    // mediasoupRouter.observer.on("newtransport", (transport) => {
-    //   console.info("mediasoupRouter newtransport：", roomId, mediasoupRouter.id, transport.id);
-    // });
-    // mediasoupRouter.observer.on("newrtpobserver", (rtpObserver) => {
-    //   console.info("mediasoupRouter newrtpobserver：", roomId, mediasoupRouter.id, rtpObserver.id);
-    // });
+    // mediasoupRouter.observer.on("newtransport", (transport) => {});
+    // mediasoupRouter.observer.on("newrtpobserver", (rtpObserver) => {});
   }
 };
 
-module.exports = { Taoyao, signalChannel };
+module.exports = {
+  Taoyao,
+  signalChannel
+};
