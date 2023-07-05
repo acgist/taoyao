@@ -1,8 +1,8 @@
 <!-- 桃夭 -->
 <template>
   <div id="taoyao">
-    <!-- 信令 -->
-    <el-dialog center width="30%" title="终端设置" :show-close="false" v-model="signalVisible">
+    <!-- 终端设置 -->
+    <el-dialog center width="30%" title="终端设置" v-model="signalVisible" :show-close="false">
       <el-form ref="SignalSetting">
         <el-form-item label="终端标识">
           <el-input v-model="config.clientId" placeholder="终端标识" />
@@ -27,13 +27,14 @@
         <el-button type="primary" @click="connectSignal">连接信令</el-button>
       </template>
     </el-dialog>
-    <!-- 房间 -->
-    <el-dialog center width="30%" title="房间设置" :show-close="false" v-model="roomVisible" @open="loadList">
+
+    <!-- 房间设置 -->
+    <el-dialog center width="30%" title="房间设置" v-model="roomVisible" :show-close="false" @open="loadList">
       <el-form ref="RoomSetting">
         <el-tabs v-model="roomActive">
           <el-tab-pane label="监控终端" name="call">
             <el-form-item label="终端标识">
-              <el-select v-model="room.callClientId" placeholder="终端标识">
+              <el-select v-model="room.callClientId" placeholder="监控终端标识">
                 <el-option v-for="value in clients" :key="value.clientId" :label="value.name || value.clientId" :value="value.clientId" />
               </el-select>
             </el-form-item>
@@ -50,14 +51,14 @@
           </el-tab-pane>
           <el-tab-pane label="选择房间" name="enter">
             <el-form-item label="房间标识">
-              <el-select v-model="room.roomId" placeholder="房间标识">
+              <el-select v-model="room.roomId" placeholder="进入房间标识">
                 <el-option v-for="value in rooms" :key="value.roomId" :label="value.name || value.roomId" :value="value.roomId" />
               </el-select>
             </el-form-item>
           </el-tab-pane>
           <el-tab-pane label="邀请终端" name="invite">
             <el-form-item label="终端标识">
-              <el-select v-model="room.inviteClientId" placeholder="终端标识">
+              <el-select v-model="room.inviteClientId" placeholder="邀请终端标识">
                 <el-option v-for="value in clients" :key="value.clientId" :label="value.name || value.clientId" :value="value.clientId" />
               </el-select>
             </el-form-item>
@@ -77,7 +78,7 @@
 
     <!-- 菜单 -->
     <div class="menus">
-      <el-button @click="signalVisible = true"                       :disabled="taoyao && taoyao.connect"                      type="primary">连接信令</el-button>
+      <el-button @click="signalVisible = true"                       :disabled="taoyao  && taoyao.connect"                     type="primary">连接信令</el-button>
       <el-button @click="roomActive = 'call';   roomVisible = true;" :disabled="!taoyao || !taoyao.connect"                                  >监控终端</el-button>
       <el-button @click="roomActive = 'create'; roomVisible = true;" :disabled="!taoyao || !taoyao.connect"                    type="primary">创建房间</el-button>
       <el-button @click="roomActive = 'enter';  roomVisible = true;" :disabled="!taoyao || !taoyao.connect"                    type="primary">选择房间</el-button>
@@ -89,11 +90,11 @@
     <!-- 终端 -->
     <div class="clients">
       <!-- 本地终端 -->
-      <LocalClient v-if="taoyao && taoyao.roomId" ref="local-client" :client="taoyao" :taoyao="taoyao"></LocalClient>
+      <LocalClient   v-if="taoyao && taoyao.roomId"                                ref="local-client"               :client="taoyao" :taoyao="taoyao"></LocalClient>
       <!-- 远程终端 -->
-      <RemoteClient v-for="kv in remoteClients"   :key="'remote-client-' + kv[0]"  :ref="'remote-client-' + kv[0]"  :client="kv[1]" :taoyao="taoyao"></RemoteClient>
+      <RemoteClient  v-for="kv in remoteClients"  :key="'remote-client-' + kv[0]"  :ref="'remote-client-' + kv[0]"  :client="kv[1]"  :taoyao="taoyao"></RemoteClient>
       <!-- 远程会话 -->
-      <SessionClient v-for="kv in sessionClients" :key="'session-client-' + kv[0]" :ref="'session-client-' + kv[0]" :client="kv[1]" :taoyao="taoyao"></SessionClient>
+      <SessionClient v-for="kv in sessionClients" :key="'session-client-' + kv[0]" :ref="'session-client-' + kv[0]" :client="kv[1]"  :taoyao="taoyao"></SessionClient>
     </div>
   </div>
 </template>
@@ -109,23 +110,42 @@ export default {
   name: "Taoyao",
   data() {
     return {
-      room: {},
-      rooms: null,
-      medias: null,
+      room: {
+        // 房间ID
+        roomId        : null,
+        // 房间名称
+        name          : null,
+        // 房间密码
+        password      : null,
+        // 监控终端ID
+        callClientId  : null,
+        // 媒体终端ID
+        mediaClientId : null,
+        // 邀请终端ID
+        inviteClientId: null,
+      },
+      // 房间列表
+      rooms  : null,
+      // 媒体服务列表
+      medias : null,
+      // 终端列表
       clients: null,
       config: {
         clientId: "taoyao",
-        name: "taoyao",
-        host: "localhost",
-        port: 8888,
+        name    : "taoyao",
+        host    : "localhost",
+        port    : 8888,
         username: "taoyao",
         password: "taoyao",
       },
-      taoyao: null,
-      roomActive: "call",
-      roomVisible: false,
-      signalVisible: false,
-      remoteClients: new Map(),
+      // 信令
+      taoyao        : null,
+      roomActive    : "call",
+      roomVisible   : false,
+      signalVisible : false,
+      // 会议终端
+      remoteClients : new Map(),
+      // 监控终端
       sessionClients: new Map(),
     };
   },
@@ -139,25 +159,18 @@ export default {
   },
   methods: {
     async connectSignal() {
-      const me = this;
-      me.taoyao = new Taoyao({ ...this.config });
-      await me.taoyao.connectSignal(me.callback);
-      me.signalVisible = false;
-      me.remoteClients = me.taoyao.remoteClients;
-      me.sessionClients = me.taoyao.sessionClients;
+      this.taoyao = new Taoyao({ ...this.config });
+      await this.taoyao.connectSignal(this.callback);
+      this.signalVisible  = false;
+      this.remoteClients  = this.taoyao.remoteClients;
+      this.sessionClients = this.taoyao.sessionClients;
       // 全局绑定
-      window.taoyao = me.taoyao;
+      window.taoyao = this.taoyao;
     },
     async loadList() {
       this.rooms   = await this.taoyao.roomList();
       this.medias  = await this.taoyao.mediaList();
       this.clients = await this.taoyao.clientList();
-    },
-    async roomLeave() {
-      this.taoyao.roomLeave();
-    },
-    async roomClose() {
-      this.taoyao.roomClose();
     },
     async sessionCall() {
       this.taoyao.sessionCall(this.room.callClientId);
@@ -169,7 +182,11 @@ export default {
       await this.roomEnter();
     },
     async roomEnter() {
-      await this.taoyao.roomEnter(this.room.roomId, this.room.password);
+      const response = await this.taoyao.roomEnter(this.room.roomId, this.room.password);
+      const { code, message } = response;
+      if(code !== '0000') {
+        return;
+      }
       await this.taoyao.mediaProduce();
       this.roomVisible = false;
     },
@@ -177,29 +194,33 @@ export default {
       this.taoyao.roomInvite(this.room.inviteClientId);
       this.roomVisible = false;
     },
+    async roomLeave() {
+      this.taoyao.roomLeave();
+    },
+    async roomClose() {
+      this.taoyao.roomClose();
+    },
     /**
      * 信令回调
      *
-     * @param {*} message 消息
-     * @param {*} error 异常
+     * @param {*} response 回调
+     * @param {*} error    异常
      *
      * @return 是否继续执行
      */
-    async callback(message, error) {
+    async callback(response, error) {
       const me = this;
-      switch (message.header.signal) {
+      const { code, message, header, body } = response;
+      const { signal } = header;
+      switch (signal) {
         case "client::config":
           me.roomVisible = true;
           break;
         case "platform::error":
-          if (error) {
-            console.error("发生异常：", message, error);
-          } else {
-            console.warn("发生错误：", message);
-          }
+          console.error(`发生${error ? "异常" : "错误"}`, response, error);
           ElMessage({
-            type: "error",
-            message: message.message,
+            type   : "error",
+            message: message,
           });
           return true;
       }

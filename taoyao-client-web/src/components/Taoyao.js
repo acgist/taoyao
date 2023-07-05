@@ -1611,15 +1611,15 @@ class Taoyao extends RemoteClient {
     }
     // TODO：已经进入房间忽略
     me.roomId = roomId;
-    const response = await me.request(
+    let response = await me.request(
       protocol.buildMessage("media::router::rtp::capabilities", {
         roomId: me.roomId,
       })
     );
     if(response.code !== '0000') {
-      // TODO：提示
       me.roomId = null;
-      return;
+      this.callbackError(response.message);
+      return response;
     }
     const routerRtpCapabilities = response.body.rtpCapabilities;
     me.mediasoupDevice = new mediasoupClient.Device();
@@ -1632,7 +1632,7 @@ class Taoyao extends RemoteClient {
 //    mediasoupClient.parseScalabilityMode(undefined);
 //    // => { spatialLayers: 1, temporalLayers: 1 }
     await me.mediasoupDevice.load({ routerRtpCapabilities });
-    await me.request(
+    response = await me.request(
       protocol.buildMessage("room::enter", {
         roomId: roomId,
         password: password,
@@ -1640,6 +1640,12 @@ class Taoyao extends RemoteClient {
         sctpCapabilities: me.dataConsume || me.dataProduce ? me.mediasoupDevice.sctpCapabilities : undefined,
       })
     );
+    if(response.code !== '0000') {
+      me.roomId = null;
+      this.callbackError(response.message);
+      return response;
+    }
+    return response;
   }
   /**
    * 进入房间信令
