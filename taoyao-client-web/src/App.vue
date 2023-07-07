@@ -92,7 +92,7 @@
       <!-- 本地终端 -->
       <LocalClient   v-if="taoyao && taoyao.roomId"                                ref="local-client"               :client="taoyao" :taoyao="taoyao"></LocalClient>
       <!-- 远程终端 -->
-      <RemoteClient  v-for="kv in remoteClients"  :key="'remote-client-' + kv[0]"  :ref="'remote-client-' + kv[0]"  :client="kv[1]"  :taoyao="taoyao"></RemoteClient>
+      <RemoteClient  v-for="kv in remoteClients"  :key="'remote-client-'  + kv[0]" :ref="'remote-client-'  + kv[0]" :client="kv[1]"  :taoyao="taoyao"></RemoteClient>
       <!-- 远程会话 -->
       <SessionClient v-for="kv in sessionClients" :key="'session-client-' + kv[0]" :ref="'session-client-' + kv[0]" :client="kv[1]"  :taoyao="taoyao"></SessionClient>
     </div>
@@ -206,7 +206,7 @@ export default {
      * @param {*} response 回调
      * @param {*} error    异常
      *
-     * @return 是否继续执行
+     * @return 是否执行完成
      */
     async callback(response, error) {
       const me = this;

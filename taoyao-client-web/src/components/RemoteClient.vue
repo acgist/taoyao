@@ -18,6 +18,7 @@
       <el-button @click="taoyao.mediaConsumerStatus()"                                                :icon="InfoFilled"   circle title="媒体信息" />
       <el-popover placement="top" :width="240" trigger="hover">
         <template #reference>
+
           <el-button>视频质量</el-button>
         </template>
         <el-table :data="taoyao.options">
@@ -120,6 +121,7 @@ export default {
   }
 };
 </script>
+
 <style scoped>
 .client .mic{background:linear-gradient(to top, var(--el-color-primary) var(--volume, 100%), transparent 0%);}
 </style>

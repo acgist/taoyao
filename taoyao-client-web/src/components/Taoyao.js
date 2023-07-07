@@ -2,7 +2,8 @@ import * as mediasoupClient from "mediasoup-client";
 import {
   defaultAudioConfig,
   defaultVideoConfig,
-  defaultKsvcEncodings,
+  defaultShareScreenConfig,
+  defaultSvcEncodings,
   defaultSimulcastEncodings,
   defaultRTCPeerConnectionConfig,
 } from "./Config.js";
@@ -484,12 +485,14 @@ class Taoyao extends RemoteClient {
   videoSource = "camera";
   // 强制使用TCP
   forceTcp;
+  // 强制使用VP8
+  forceVP8;
   // 强制使用VP9
   forceVP9;
   // 强制使用H264
   forceH264;
   // 同时上送多种质量媒体
-  useSimulcast;
+  useLayers;
   // 是否消费数据
   dataConsume;
   // 是否消费音频
@@ -858,6 +861,7 @@ class Taoyao extends RemoteClient {
         track.getCapabilities()
       );
     } else if (self.videoSource === "screen") {
+      // TODO：默认配置
       const stream = await navigator.mediaDevices.getDisplayMedia({
         // 如果需要共享声音
         audio: false,
@@ -1605,10 +1609,6 @@ class Taoyao extends RemoteClient {
    */
   async roomEnter(roomId, password) {
     const me = this;
-    if (!roomId) {
-      this.callbackError("无效房间");
-      return;
-    }
     // TODO：已经进入房间忽略
     me.roomId = roomId;
     let response = await me.request(
@@ -1983,6 +1983,7 @@ class Taoyao extends RemoteClient {
     // await this.produceAudio();
     // await this.produceVideo();
     // await this.produceData();
+    // TODO：返回通道还有音视频生产者
   }
   /**
    * 生产音频
@@ -2113,17 +2114,23 @@ class Taoyao extends RemoteClient {
           if (!codec) {
             self.callbackError("不支持VP9视频编码");
           }
+        } else if(self.forceVP8) {
+          codec = self.mediasoupDevice.rtpCapabilities.codecs.find(
+            (c) => c.mimeType.toLowerCase() === "video/vp8"
+          );
+          if (!codec) {
+            self.callbackError("不支持VP8视频编码");
+          }
         }
-        if (this.useSimulcast) {
-          const firstVideoCodec =
-            this.mediasoupDevice.rtpCapabilities.codecs.find(
-              (c) => c.kind === "video"
-            );
+        if (this.useLayers) {
+          const firstVideoCodec = this.mediasoupDevice.rtpCapabilities.codecs.find(
+            (c) => c.kind === "video"
+          );
           if (
             (this.forceVP9 && codec) ||
             firstVideoCodec.mimeType.toLowerCase() === "video/vp9"
           ) {
-            encodings = defaultKsvcEncodings;
+            encodings = defaultSvcEncodings;
           } else {
             encodings = defaultSimulcastEncodings;
           }
@@ -2597,6 +2604,26 @@ class Taoyao extends RemoteClient {
       me.mediaRecorder.stop();
       me.mediaRecorder = null;
     }
+  }
+
+  /**
+   * TODO：设置track配置
+   * 
+   * @param {*} track 
+   * @param {*} setting 
+   */
+  setTrack(track, setting) {
+  /*
+    * TODO：MediaStreamTrack.applyConstraints().then().catch();
+    * const setting = {
+    *   autoGainControl:  true,
+    *   noiseSuppression: true
+    * }
+     await track.applyConstraints(Object.assign(track.getSettings(), setting));
+    * TODO：播放音量（audio标签配置）、采集音量
+    * 支持属性：navigator.mediaDevices.getSupportedConstraints()
+    * https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackSettings
+    */
   }
 
   /**
