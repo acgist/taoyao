@@ -75,9 +75,10 @@ acgist/taoyao-signal-server
 
 本地开发测试安装`docs/certs`中的`ca.crt`证书到`受信任的根证书颁发机构`
 
-## 部署
+## 文档
 
-[部署文档](./docs/Deploy.md)
+* [部署文档](./docs/Deploy.md)
+* [设计文档](./docs/Design.md)
 
 ## 终端预览
 
