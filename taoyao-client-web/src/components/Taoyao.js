@@ -1809,8 +1809,10 @@ class Taoyao extends RemoteClient {
   /************************ 媒体 ************************/
   /**
    * 生产媒体
+   * 
+   * TODO：优先使用外部传入数据
    */
-  async mediaProduce() {
+  async mediaProduce(audioTrack, videoTrack) {
     const self = this;
     if (!self.roomId) {
       this.callbackError("无效房间");
@@ -1943,8 +1945,8 @@ class Taoyao extends RemoteClient {
       } = response.body;
       self.recvTransport = self.mediasoupDevice.createRecvTransport({
         id: transportId,
-        iceParameters,
         iceCandidates,
+        iceParameters,
         dtlsParameters: {
           ...dtlsParameters,
           role: "auto",
@@ -1987,6 +1989,7 @@ class Taoyao extends RemoteClient {
   }
   /**
    * 生产音频
+   * 
    * TODO：重复点击
    */
   async produceAudio() {
@@ -2240,6 +2243,28 @@ class Taoyao extends RemoteClient {
   async resumeVideoProducer() {
     console.debug("恢复摄像头");
     this.mediaProducerResume(this.videoProducer.id);
+  }
+
+  /**
+   * 切换视频来源
+   */
+  async exchangeVideoSource(videoSource) {
+    const me = this;
+    if(videoSource) {
+      me.videoSource = videoSource;
+    } else {
+      if(me.videoSource === "file") {
+        me.videoSource = "camera";
+      } else if(me.videoSource === "camera") {
+        me.videoSource = "screen";
+      } else if(me.videoSource === "screen") {
+        me.videoSource = "file";
+      } else {
+        me.videoSource = "camera";
+      }
+    }
+    console.debug("切换视频来源", videoSource, me.videoSource);
+    await me.updateVideoProducer();
   }
 
   /**
@@ -2607,6 +2632,30 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 配置视频
+   * 
+   * @param {*} label 配置
+   */
+  setLocalVideoConfig(label) {
+    const me = this;
+    // TODO：设置本地配置
+    me.updateVideoProducer();
+  }
+
+  /**
+   * 配置视频
+   * 
+   * @param {*} label 配置
+   */
+  setVideoConfig(clientId, label) {
+    const me = this;
+    if(clientId === me.clientId) {
+      me.setLocalVideoConfig(label);
+    }
+    // TODO：更新远程配置
+  }
+
+  /**
    * TODO：设置track配置
    * 
    * @param {*} track 
@@ -2624,6 +2673,25 @@ class Taoyao extends RemoteClient {
     * 支持属性：navigator.mediaDevices.getSupportedConstraints()
     * https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackSettings
     */
+  }
+
+  /**
+   * 关闭媒体资源
+   * 
+   * @param {*} mediaStream 媒体资源
+   */
+  closeMediaStream(mediaStream) {
+    if(!mediaStream) {
+      return;
+    }
+    mediaStream.getAudioTracks().forEach(oldTrack => {
+      console.debug("关闭音频媒体", oldTrack);
+      oldTrack.stop();
+    });
+    mediaStream.getVideoTracks().forEach(oldTrack => {
+      console.debug("关闭视频媒体", oldTrack);
+      oldTrack.stop();
+    });
   }
 
   /**
@@ -2696,4 +2764,3 @@ class Taoyao extends RemoteClient {
 }
 
 export { Taoyao };
-

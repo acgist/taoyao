@@ -100,7 +100,7 @@
 </template>
 
 <script>
-import { ElMessage } from 'element-plus'
+import { ElMessage } from 'element-plus';
 import { Taoyao }    from './components/Taoyao.js';
 import LocalClient   from './components/LocalClient.vue';
 import RemoteClient  from './components/RemoteClient.vue';
