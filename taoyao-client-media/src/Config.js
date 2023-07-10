@@ -5,7 +5,7 @@ const os = require("os");
  * 一半配置本机IP地址，用于Mediasoup媒体协商时SDP地址信息。
  * 如果存在多网卡或者多子网时，需要配置信令地址重写和防火墙端口转发。
  */
-defaultTaoyaoHost = "192.168.1.110";
+const defaultTaoyaoHost = "192.168.1.110";
 
 /**
  * 配置
@@ -13,25 +13,27 @@ defaultTaoyaoHost = "192.168.1.110";
 module.exports = {
   // 服务名称
   name: "taoyao-client-media",
-  // 服务配置
+  // 信令配置
   signal: {
-    // 服务版本
-    version: "1.0.0",
+    // 信令版本
+    version   : "1.0.0",
     // 终端标识
-    clientId: "taoyao-client-media",
+    clientId  : "taoyao-client-media",
+    // 终端类型
+    clientType: "MEDIA",
     // 终端名称
-    name: "桃夭媒体服务",
+    name      : "桃夭媒体服务",
     // 信令地址
-    host: "127.0.0.1",
-    // host: "192.168.1.100",
+    host      : "127.0.0.1",
+    // host   : "192.168.1.100",
     // 信令端口
-    port: 8888,
+    port      : 8888,
     // 信令协议
-    scheme: "wss",
+    scheme    : "wss",
     // 信令帐号
-    username: "taoyao",
+    username  : "taoyao",
     // 信令密码
-    password: "taoyao",
+    password  : "taoyao",
   },
   // 录像配置
   record: {

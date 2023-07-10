@@ -92,7 +92,7 @@ const signalChannel = {
     if (me.heartbeatTimer) {
       clearTimeout(me.heartbeatTimer);
     }
-    me.heartbeatTimer = setTimeout(async function () {
+    me.heartbeatTimer = setTimeout(async () => {
       if (me.connected()) {
         me.push(
           protocol.buildMessage("client::heartbeat", {
@@ -120,7 +120,7 @@ const signalChannel = {
    * @param {*} address      信令地址
    * @param {*} reconnection 是否重连
    *
-   * @returns Promise
+   * @returns Promise<WebSocket>
    */
   async connect(address, reconnection = true) {
     const me = this;
@@ -134,13 +134,13 @@ const signalChannel = {
     return new Promise((resolve, reject) => {
       console.debug("连接信令通道", me.address);
       me.channel = new WebSocket(me.address, { rejectUnauthorized: false, handshakeTimeout: 5000 });
-      me.channel.on("open", async function () {
+      me.channel.on("open", async () => {
         console.info("打开信令通道", me.address);
         me.push(
           protocol.buildMessage("client::register", {
             name      : config.signal.name,
             clientId  : config.signal.clientId,
-            clientType: "MEDIA",
+            clientType: config.signal.clientType,
             username  : config.signal.username,
             password  : config.signal.password,
             // TODO：电池信息
@@ -153,7 +153,7 @@ const signalChannel = {
         me.heartbeat();
         resolve(me.channel);
       });
-      me.channel.on("close", async function () {
+      me.channel.on("close", async () => {
         console.warn("信令通道关闭", me.address);
         me.taoyao.connect = false;
         if(!me.connected()) {
@@ -164,11 +164,11 @@ const signalChannel = {
         }
         // 不要失败回调
       });
-      me.channel.on("error", async function (e) {
+      me.channel.on("error", async (e) => {
         console.error("信令通道异常", me.address, e);
         // 不要失败回调
       });
-      me.channel.on("message", async function (data) {
+      me.channel.on("message", async (data) => {
         const content = data.toString();
         try {
           console.debug("信令通道消息", content);
@@ -196,7 +196,7 @@ const signalChannel = {
       clearTimeout(me.reconnectTimer);
     }
     // 定时重连
-    me.reconnectTimer = setTimeout(function () {
+    me.reconnectTimer = setTimeout(() => {
       console.info("重连信令通道", me.address);
       me.connect(me.address, me.reconnection);
       me.lockReconnect = false;
@@ -227,9 +227,9 @@ const signalChannel = {
     console.info("关闭信令通道", me.address);
     clearTimeout(me.heartbeatTimer);
     clearTimeout(me.reconnectTimer);
-    me.reconnection = false;
-    me.channel.close();
+    me.reconnection   = false;
     me.taoyao.connect = false;
+    me.channel.close();
   },
 };
 

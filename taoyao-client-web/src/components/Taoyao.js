@@ -1,5 +1,6 @@
 import * as mediasoupClient from "mediasoup-client";
 import {
+  config,
   defaultAudioConfig,
   defaultVideoConfig,
   defaultShareScreenConfig,
@@ -9,7 +10,7 @@ import {
 } from "./Config.js";
 
 /**
- * 信令
+ * 信令协议
  */
 const protocol = {
   // 当前索引
@@ -48,7 +49,7 @@ const protocol = {
     const me = this;
     const message = {
       header: {
-        v     : v  || "1.0.0",
+        v     : v  || config.signal.version,
         id    : id || me.buildId(),
         signal: signal,
       },
@@ -97,7 +98,7 @@ const signalChannel = {
     if (me.heartbeatTimer) {
       clearTimeout(me.heartbeatTimer);
     }
-    me.heartbeatTimer = setTimeout(async function () {
+    me.heartbeatTimer = setTimeout(async () => {
       if (me.connected()) {
         const battery = await navigator.getBattery();
         me.push(
@@ -125,7 +126,7 @@ const signalChannel = {
    * @param {*} address      信令地址
    * @param {*} reconnection 是否重连
    *
-   * @returns Promise
+   * @returns Promise<WebSocket>
    */
   async connect(address, reconnection = true) {
     const me = this;
@@ -139,14 +140,14 @@ const signalChannel = {
     return new Promise((resolve, reject) => {
       console.debug("连接信令通道", me.address);
       me.channel = new WebSocket(me.address);
-      me.channel.onopen = async function () {
+      me.channel.onopen = async () => {
         console.info("打开信令通道", me.address);
         const battery = await navigator.getBattery();
         me.push(
           protocol.buildMessage("client::register", {
             name      : me.taoyao.name,
             clientId  : me.taoyao.clientId,
-            clientType: "WEB",
+            clientType: config.signal.clientType,
             username  : me.taoyao.username,
             password  : me.taoyao.password,
             battery   : battery.level * 100,
@@ -158,7 +159,7 @@ const signalChannel = {
         me.heartbeat();
         resolve(me.channel);
       };
-      me.channel.onclose = async function () {
+      me.channel.onclose = async () => {
         console.warn("信令通道关闭", me.channel);
         me.taoyao.connect = false;
         if(!me.connected()) {
@@ -170,11 +171,11 @@ const signalChannel = {
         }
         // 不要失败回调
       };
-      me.channel.onerror = async function (e) {
+      me.channel.onerror = async (e) => {
         console.error("信令通道异常", me.channel, e);
         // 不要失败回调
       };
-      me.channel.onmessage = async function (e) {
+      me.channel.onmessage = async (e) => {
         const content = e.data;
         try {
           console.debug("信令通道消息", content);
@@ -202,7 +203,7 @@ const signalChannel = {
       clearTimeout(me.reconnectTimer);
     }
     // 定时重连
-    me.reconnectTimer = setTimeout(function () {
+    me.reconnectTimer = setTimeout(() => {
       console.info("重连信令通道", me.address);
       me.connect(me.address, me.reconnection);
       me.lockReconnect = false;
@@ -230,27 +231,27 @@ const signalChannel = {
    */
   close() {
     const me = this;
+    console.info("关闭信令通道", me.address);
     clearTimeout(me.heartbeatTimer);
     clearTimeout(me.reconnectTimer);
-    me.reconnection = false;
-    me.channel.close();
+    me.reconnection   = false;
     me.taoyao.connect = false;
+    me.channel.close();
   },
 };
 
 /**
- * 会话
+ * 视频会话
  */
 class Session {
-
   // 会话ID
   id;
-  // 远程终端名称
-  name;
-  // 音量
-  volume = "100%";
   // 是否关闭
   closed;
+  // 音量
+  volume;
+  // 远程终端名称
+  name;
   // 远程终端ID
   clientId;
   // 会话ID
@@ -263,17 +264,21 @@ class Session {
   videoEnabled;
   // 本地音频
   localAudioTrack;
+  // 本地音频是否可用（暂停关闭）
   localAudioEnabled;
   // 本地视频
   localVideoTrack;
+  // 本地视频是否可用（暂停关闭）
   localVideoEnabled;
   // 远程音频
   remoteAudioTrack;
+  // 远程音频是否可用（暂停关闭）
   remoteAudioEnabled;
   // 远程视频
   remoteVideoTrack;
+  // 远程视频是否可用（暂停关闭）
   remoteVideoEnabled;
-  // PeerConnection
+  // WebRTC PeerConnection
   peerConnection;
 
   constructor({
@@ -283,67 +288,91 @@ class Session {
     audioEnabled,
     videoEnabled
   }) {
-    this.id         = sessionId;
-    this.name       = name;
-    this.closed     = false;
-    this.clientId   = clientId;
-    this.sessionId  = sessionId;
+    this.id           = sessionId;
+    this.closed       = false;
+    this.volume       = "100%";
+    this.name         = name;
+    this.clientId     = clientId;
+    this.sessionId    = sessionId;
     this.audioEnabled = audioEnabled;
     this.videoEnabled = videoEnabled;
   }
 
+  /**
+   * 暂停本地媒体
+   * 
+   * @param {*} type 媒体类型
+   */
   async pause(type) {
     if(type === 'audio' && this.localAudioTrack) {
-      this.localAudioEnabled = false;
+      this.localAudioEnabled       = false;
       this.localAudioTrack.enabled = false;
     }
     if(type === 'video' && this.localVideoTrack) {
-      this.localVideoEnabled = false;
+      this.localVideoEnabled       = false;
       this.localVideoTrack.enabled = false;
     }
   }
   
+  /**
+   * 恢复本地媒体
+   * 
+   * @param {*} type 媒体类型
+   */
   async resume(type) {
     if(type === 'audio' && this.localAudioTrack) {
-      this.localAudioEnabled = true;
+      this.localAudioEnabled       = true;
       this.localAudioTrack.enabled = true;
     }
     if(type === 'video' && this.localVideoTrack) {
-      this.localVideoEnabled = true;
+      this.localVideoEnabled       = true;
       this.localVideoTrack.enabled = true;
     }
   }
   
+  /**
+   * 暂停远程媒体
+   * 
+   * @param {*} type 媒体类型
+   */
   async pauseRemote(type) {
-    if(type === 'audio') {
-      this.remoteAudioEnabled = false;
+    if(type === 'audio' && this.remoteAudioTrack) {
+      this.remoteAudioEnabled       = false;
       this.remoteAudioTrack.enabled = false;
     }
-    if(type === 'video') {
-      this.remoteVideoEnabled = false;
+    if(type === 'video' && this.remoteVideoTrack) {
+      this.remoteVideoEnabled       = false;
       this.remoteVideoTrack.enabled = false;
     }
   }
   
+  /**
+   * 恢复远程媒体
+   * 
+   * @param {*} type 媒体类型
+   */
   async resumeRemote(type) {
-    if(type === 'audio') {
-      this.remoteAudioEnabled = true;
+    if(type === 'audio' && this.remoteAudioTrack) {
+      this.remoteAudioEnabled       = true;
       this.remoteAudioTrack.enabled = true;
     }
-    if(type === 'video') {
-      this.remoteVideoEnabled = true;
+    if(type === 'video' && this.remoteVideoTrack) {
+      this.remoteVideoEnabled       = true;
       this.remoteVideoTrack.enabled = true;
     }
   }
   
+  /**
+   * 关闭视频会话
+   */
   async close() {
     if(this.closed) {
       return;
     }
     console.debug("会话关闭", this.sessionId);
     this.closed = true;
-    this.localAudioEnabled = false;
-    this.localVideoEnabled = false;
+    this.localAudioEnabled  = false;
+    this.localVideoEnabled  = false;
     this.remoteAudioEnabled = false;
     this.remoteVideoEnabled = false;
     if(this.localAudioTrack) {
@@ -368,21 +397,39 @@ class Session {
     }
   }
 
-  async addIceCandidate(candidate) {
+  /**
+   * 添加媒体协商
+   * 
+   * @param {*} candidate 媒体协商
+   * @param {*} index     重试次数
+   */
+  async addIceCandidate(candidate, index = 0) {
     if(this.closed) {
       return;
     }
-    if(!candidate || candidate.sdpMid === undefined || candidate.sdpMLineIndex === undefined && candidate.candidate === undefined) {
+    if(index >= 8) {
+      console.debug("添加媒体协商次数超限", candidate, index);
+      return;
+    }
+    if(
+      !candidate ||
+      candidate.sdpMid        === undefined ||
+      candidate.candidate     === undefined ||
+      candidate.sdpMLineIndex === undefined
+    ) {
+      console.debug("无效媒体协商", candidate);
       return;
     }
     if(this.peerConnection) {
       await this.peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
     } else {
-      setTimeout(() => this.addIceCandidate(candidate), 50);
+      console.debug("延迟添加媒体协商", candidate, index);
+      setTimeout(() => this.addIceCandidate(candidate, ++index), 100);
     }
   }
+};
 
-}
+// TODO:continue
 
 /**
  * 远程终端
@@ -2692,6 +2739,18 @@ class Taoyao extends RemoteClient {
       console.debug("关闭视频媒体", oldTrack);
       oldTrack.stop();
     });
+  }
+
+  /**
+   * 关闭媒体轨道
+   * 
+   * @param {*} mediaTrack 媒体轨道
+   */
+  closeMediaTrack(mediaTrack) {
+    if(!mediaTrack) {
+      return;
+    }
+    mediaTrack.stop();
   }
 
   /**

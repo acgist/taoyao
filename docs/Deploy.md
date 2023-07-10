@@ -629,13 +629,17 @@ openssl pkcs12 -export -clcerts -in server.crt -inkey server.key -out server.p12
 
 ```
 # 安装路径
---prefix=/data/dev/ffmpeg/build
+--prefix=/usr/local
+--prefix=/usr/local/ffmpeg
 # 执行文件路径
---bindir=/data/dev/ffmpeg/bin
+--bindir=/usr/local/bin
+--bindir=/usr/local/ffmpeg/bin
 # 库文件路径
 --libdir=/usr/local/lib
+--libdir=/usr/local/ffmpeg/lib
 # 头文件路径
 --includedir=/usr/local/include
+--includedir=/usr/local/ffmpeg/include
 ```
 
 ## 清理源码

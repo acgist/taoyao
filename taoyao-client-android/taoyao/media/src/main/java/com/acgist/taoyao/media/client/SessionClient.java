@@ -277,6 +277,7 @@ public class SessionClient extends Client {
         if(sdp == null || sdpMid == null || sdpMLineIndex == null) {
             Log.w(SessionClient.class.getSimpleName(), "无效媒体协商：" + body);
         } else {
+            // TODO：验证是否可能为空PC
             this.peerConnection.addIceCandidate(new IceCandidate(sdpMid, sdpMLineIndex, sdp));
         }
     }

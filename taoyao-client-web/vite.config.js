@@ -1,6 +1,6 @@
-import fs from "node:fs";
-import vue from "@vitejs/plugin-vue";
-import { defineConfig } from "vite";
+import fs                     from "node:fs";
+import vue                    from "@vitejs/plugin-vue";
+import { defineConfig }       from "vite";
 import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
@@ -9,8 +9,8 @@ export default defineConfig({
     port: 8443,
     host: "0.0.0.0",
     https: {
+      key : fs.readFileSync("src/certs/server.key"),
       cert: fs.readFileSync("src/certs/server.crt"),
-      key: fs.readFileSync("src/certs/server.key"),
     },
   },
   resolve: {

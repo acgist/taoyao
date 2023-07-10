@@ -1,8 +1,18 @@
 /**
- * 配置：{ min: 8000, exact: 32000, ideal: 32000, max: 48000 }
+ * 配置
  */
+const config = {
+  // 信令配置
+  signal: {
+    // 信令版本
+    version   : "1.0.0",
+    // 终端类型
+    clientType: "WEB",
+  }
+}
 /**
  * 音频默认配置
+ * 配置：{ min: 8000, exact: 32000, ideal: 32000, max: 48000 }
  * 
  * https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackSettings
  */
@@ -31,6 +41,7 @@ const defaultAudioConfig = {
 
 /**
  * 视频默认配置
+ * 配置：{ min: 8000, exact: 32000, ideal: 32000, max: 48000 }
  * 
  * https://developer.mozilla.org/en-US/docs/Web/API/MediaTrackSettings
  */
@@ -147,6 +158,7 @@ const defaultRTCPeerConnectionConfig = {
 };
 
 export {
+  config,
   defaultAudioConfig,
   defaultVideoConfig,
   defaultShareScreenConfig,

@@ -150,12 +150,6 @@ export default {
     };
   },
   mounted() {
-    console.info(`
-      中庭地白树栖鸦，冷露无声湿桂花。
-      今夜月明人尽望，不知秋思落谁家。
-      
-      :: https://gitee.com/acgist/taoyao
-    `);
   },
   methods: {
     async connectSignal() {
