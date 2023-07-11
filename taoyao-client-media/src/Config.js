@@ -2,8 +2,6 @@ const os = require("os");
 
 /**
  * 桃夭媒体服务地址
- * 一半配置本机IP地址，用于Mediasoup媒体协商时SDP地址信息。
- * 如果存在多网卡或者多子网时，需要配置信令地址重写和防火墙端口转发。
  */
 const defaultTaoyaoHost = "192.168.1.110";
 

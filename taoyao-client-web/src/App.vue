@@ -4,11 +4,11 @@
     <!-- 终端设置 -->
     <el-dialog center width="30%" title="终端设置" v-model="signalVisible" :show-close="false">
       <el-form ref="SignalSetting">
-        <el-form-item label="终端标识">
-          <el-input v-model="config.clientId" placeholder="终端标识" />
-        </el-form-item>
         <el-form-item label="终端名称">
           <el-input v-model="config.name" placeholder="终端名称" />
+        </el-form-item>
+        <el-form-item label="终端标识">
+          <el-input v-model="config.clientId" placeholder="终端标识" />
         </el-form-item>
         <el-form-item label="信令地址">
           <el-input v-model="config.host" placeholder="信令地址" />
@@ -111,10 +111,10 @@ export default {
   data() {
     return {
       room: {
-        // 房间ID
-        roomId        : null,
         // 房间名称
         name          : null,
+        // 房间ID
+        roomId        : null,
         // 房间密码
         password      : null,
         // 监控终端ID
@@ -131,8 +131,8 @@ export default {
       // 终端列表
       clients: null,
       config: {
+        name    : "桃夭",
         clientId: "taoyao",
-        name    : "taoyao",
         host    : "localhost",
         port    : 8888,
         username: "taoyao",
@@ -154,6 +154,7 @@ export default {
   methods: {
     async connectSignal() {
       this.taoyao = new Taoyao({ ...this.config });
+      // this.taoyao = new Taoyao({ ...this.config, fileVideo: video标签对象, videoSource: "file" });
       await this.taoyao.connectSignal(this.callback);
       this.signalVisible  = false;
       this.remoteClients  = this.taoyao.remoteClients;
@@ -211,7 +212,11 @@ export default {
           me.roomVisible = true;
           break;
         case "platform::error":
-          console.error(`发生${error ? "异常" : "错误"}`, response, error);
+          if (error) {
+            console.error("发生异常", response, error);
+          } else {
+            console.warn("发生错误", response);
+          }
           ElMessage({
             type   : "error",
             message: message,

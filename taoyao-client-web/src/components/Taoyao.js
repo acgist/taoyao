@@ -248,6 +248,8 @@ class Session {
   id;
   // 是否关闭
   closed;
+  // 代理对象
+  proxy;
   // 音量
   volume;
   // 远程终端名称
@@ -407,7 +409,7 @@ class Session {
     if(this.closed) {
       return;
     }
-    if(index >= 8) {
+    if(index >= 32) {
       console.debug("添加媒体协商次数超限", candidate, index);
       return;
     }
@@ -429,21 +431,22 @@ class Session {
   }
 };
 
-// TODO:continue
-
 /**
  * 远程终端
  */
 class RemoteClient {
-
+  // 终端ID
+  id;
+  // 是否关闭
+  closed;
+  // 代理对象
+  proxy;
+  // 音量
+  volume;
   // 终端名称
   name;
   // 终端标识
   clientId;
-  // 音量
-  volume = "100%";
-  // 代理对象
-  proxy;
   // 数据消费者
   dataConsumer;
   // 音频消费者
@@ -463,7 +466,10 @@ class RemoteClient {
     name,
     clientId,
   }) {
+    this.id       = clientId;
+    this.closed   = false;
     this.name     = name;
+    this.volume   = "100%";
     this.clientId = clientId;
   }
 
@@ -473,29 +479,48 @@ class RemoteClient {
    * @param {*} volume 音量
    */
   setVolume(volume) {
-    this.volume = ((volume + 127) / 127 * 100) + "%";
+    const me = this;
+    me.volume = ((volume + 127) / 127 * 100) + "%";
   }
 
+  /**
+   * 关闭媒体
+   */
   close() {
-    if(this.audioTrack) {
-      this.audioTrack.stop();
-      this.audioTrack = null;
+    const me = this;
+    if(me.closed) {
+      return;
     }
-    if(this.videoTrack) {
-      this.videoTrack.stop();
-      this.videoTrack = null;
+    me.closed = true;
+    if(me.audioTrack) {
+      me.audioTrack.stop();
+      me.audioTrack = null;
+    }
+    if(me.videoTrack) {
+      me.videoTrack.stop();
+      me.videoTrack = null;
+    }
+    if(me.dataConsumer) {
+      me.dataConsumer.close();
+      me.dataConsumer = null;
+    }
+    if(me.audioConsumer) {
+      me.audioConsumer.close();
+      me.audioConsumer = null;
+    }
+    if(me.videoConsumer) {
+      me.videoConsumer.close();
+      me.videoConsumer = null;
     }
   }
-
 }
 
 /**
- * 桃夭
+ * 桃夭终端
  */
 class Taoyao extends RemoteClient {
-
   // 信令连接
-  connect = false;
+  connect;
   // 信令地址
   host;
   // 信令端口
@@ -513,9 +538,9 @@ class Taoyao extends RemoteClient {
   // 请求回调
   callbackMapping = new Map();
   // 音频媒体配置
-  audioConfig = defaultAudioConfig;
+  audioConfig     = defaultAudioConfig;
   // 视频媒体配置
-  videoConfig = defaultVideoConfig;
+  videoConfig     = defaultVideoConfig;
   // 媒体配置
   mediaConfig;
   // WebRTC配置
@@ -528,8 +553,10 @@ class Taoyao extends RemoteClient {
   recvTransport;
   // 媒体设备
   mediasoupDevice;
-  // 视频来源：file | camera | screen
-  videoSource = "camera";
+  // 文件共享
+  fileVideo;
+  // 视频来源：file|camera|screen
+  videoSource;
   // 强制使用TCP
   forceTcp;
   // 强制使用VP8
@@ -538,7 +565,7 @@ class Taoyao extends RemoteClient {
   forceVP9;
   // 强制使用H264
   forceH264;
-  // 同时上送多种质量媒体
+  // 多种质量媒体
   useLayers;
   // 是否消费数据
   dataConsume;
@@ -559,11 +586,11 @@ class Taoyao extends RemoteClient {
   // 视频生产者
   videoProducer;
   // 消费者：音频、视频
-  consumers = new Map();
+  consumers      = new Map();
   // 消费者：数据
-  dataConsumers = new Map();
+  dataConsumers  = new Map();
   // 远程终端
-  remoteClients = new Map();
+  remoteClients  = new Map();
   // 会话终端
   sessionClients = new Map();
   // 本地录像机
@@ -571,6 +598,7 @@ class Taoyao extends RemoteClient {
   // 本地录像数据
   mediaRecorderChunks = [];
 
+  // TODO：默认关闭data通道
   constructor({
     name,
     clientId,
@@ -578,32 +606,43 @@ class Taoyao extends RemoteClient {
     port,
     username,
     password,
-    roomId,
-    // TODO：修改默认关闭
-    dataConsume = true,
+    roomId       = null,
+    dataConsume  = true,
     audioConsume = true,
     videoConsume = true,
-    // TODO：修改默认关闭
-    dataProduce = true,
+    dataProduce  = true,
     audioProduce = true,
     videoProduce = true,
-    forceTcp = false,
+    fileVideo    = null,
+    videoSource  = "camera",
+    forceTcp  = false,
+    forceVP8  = false,
+    forceVP9  = false,
+    forceH264 = false,
+    useLayers = false,
   }) {
     super({ name, clientId });
-    this.name = name;
+    this.connect  = false;
+    this.name     = name;
     this.clientId = clientId;
-    this.host = host;
-    this.port = port;
+    this.host     = host;
+    this.port     = port;
     this.username = username;
     this.password = password;
-    this.roomId = roomId;
-    this.dataConsume = dataConsume;
+    this.roomId   = roomId;
+    this.dataConsume  = dataConsume;
     this.audioConsume = audioConsume;
     this.videoConsume = videoConsume;
-    this.dataProduce = dataProduce;
+    this.dataProduce  = dataProduce;
     this.audioProduce = audioProduce;
     this.videoProduce = videoProduce;
-    this.forceTcp = forceTcp;
+    this.fileVideo    = fileVideo;
+    this.videoSource  = videoSource;
+    this.forceTcp  = forceTcp;
+    this.forceVP8  = forceVP8;
+    this.forceVP9  = forceVP9;
+    this.forceH264 = forceH264;
+    this.useLayers = useLayers;
   }
 
   /**
@@ -611,40 +650,41 @@ class Taoyao extends RemoteClient {
    *
    * @param {*} callback 回调事件
    *
-   * @returns
+   * @returns Promise<WebSocket>
    */
   async connectSignal(callback) {
-    const self = this;
-    self.callback = callback;
-    self.signalChannel = signalChannel;
-    signalChannel.taoyao = self;
-    return self.signalChannel.connect(
-      `wss://${self.host}:${self.port}/websocket.signal`
+    const me = this;
+    me.callback          = callback;
+    signalChannel.taoyao = me;
+    return await signalChannel.connect(
+      `wss://${me.host}:${me.port}/websocket.signal`
     );
   }
   /**
    * 异步请求
    *
-   * @param {*} message 消息
-   * @param {*} callback 回调
+   * @param {*} message  信令消息
+   * @param {*} callback 信令回调
    */
   push(message, callback) {
     const me = this;
+    const { header, body } = message;
+    const { id }           = header;
     // 请求回调
     if (callback) {
-      me.callbackMapping.set(message.header.id, callback);
+      me.callbackMapping.set(id, callback);
     }
     // 发送消息
     try {
       signalChannel.channel.send(JSON.stringify(message));
     } catch (error) {
-      console.error("异步请求异常：", message, error);
+      console.error("异步请求异常", message, error);
     }
   }
   /**
    * 同步请求
    *
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    *
    * @returns Promise
    */
@@ -673,48 +713,56 @@ class Taoyao extends RemoteClient {
       }
     });
   }
-  /************************ 回调 ************************/
+
   /**
    * 回调策略：
+   * 
    * 1. 如果注册请求回调，同时执行结果返回true不再执行后面所有回调。
    * 2. 执行前置回调
    * 3. 如果注册全局回调，同时执行结果返回true不再执行后面所有回调。
    * 4. 执行后置回调
    *
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    */
   async on(message) {
     const me = this;
-    let done = false;
+    const { header, body } = message;
+    const { id }           = header;
     // 请求回调
-    if (me.callbackMapping.has(message.header.id)) {
+    if (me.callbackMapping.has(id)) {
       try {
-        done = me.callbackMapping.get(message.header.id)(message);
+        if(
+          me.callbackMapping.get(id)(message)
+        ) {
+          return;
+        }
       } finally {
-        me.callbackMapping.delete(message.header.id);
+        me.callbackMapping.delete(id);
       }
     }
     // 前置回调
-    if (!done) {
-      await me.preCallback(message);
-    }
+    await me.preCallback(message);
     // 全局回调
-    if (!done && me.callback) {
-      done = await me.callback(message);
+    if (
+      me.callback &&
+      await me.callback(message)
+    ) {
+      return;
     }
     // 后置回调
-    if (!done) {
-      await me.postCallback(message);
-    }
+    await me.postCallback(message);
   }
+
   /**
    * 前置回调
-   *
+   * 
    * @param {*} message 消息
    */
   async preCallback(message) {
     const me = this;
-    switch (message.header.signal) {
+    const { header, body } = message;
+    const { signal }       = header;
+    switch (signal) {
       case "client::config":
         me.defaultClientConfig(message);
         break;
@@ -732,14 +780,17 @@ class Taoyao extends RemoteClient {
         break;
     }
   }
+
   /**
    * 后置回调
    *
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    */
   async postCallback(message) {
     const me = this;
-    switch (message.header.signal) {
+    const { header, body } = message;
+    const { signal }       = header;
+    switch (signal) {
       case "client::reboot":
         me.defaultClientReboot(message);
         break;
@@ -829,7 +880,12 @@ class Taoyao extends RemoteClient {
         break;
     }
   }
-  /************************ 管理 ************************/
+
+  /**
+   * @param {*} producerId 生产者ID
+   * 
+   * @returns 生产者
+   */
   getProducer(producerId) {
     const me = this;
     if(me.audioProducer?.id === producerId) {
@@ -842,36 +898,55 @@ class Taoyao extends RemoteClient {
       return null;
     }
   }
+
+  /**
+   * @returns 媒体
+   */
   async getStream() {
+    const me = this;
     let stream;
-    const self = this;
-    if (self.videoSource === "file") {
-      // TODO：实现文件分享
-      // const stream = await this._getExternalVideoStream();
-      // track = stream.getVideoTracks()[0].clone();
-    } else if (self.videoSource === "camera") {
-      // TODO：参数
+    if (me.videoSource === "file") {
+      stream = me.fileVideo.captureStream();
+    } else if (me.videoSource === "camera") {
+      console.debug("媒体配置", me.audioConfig, me.videoConfig);
       stream = await navigator.mediaDevices.getUserMedia({
-        audio: self.audioConfig,
-        video: self.videoConfig,
+        audio: me.audioConfig,
+        video: me.videoConfig,
       });
-    } else if (self.videoSource === "screen") {
+    } else if (me.videoSource === "screen") {
+      // 可能没有音频
+      const audioConfig = {
+        ...me.audioConfig
+      };
+      // 删除min/max
+      delete audioConfig.sampleSize.min;
+      delete audioConfig.sampleSize.max;
+      delete audioConfig.sampleRate.min;
+      delete audioConfig.sampleRate.max;
+      const videoConfig = {
+        ...this.videoConfig,
+        ...defaultShareScreenConfig
+      };
+      // 删除min/max
+      delete videoConfig.width.min;
+      delete videoConfig.width.max;
+      delete videoConfig.height.min;
+      delete videoConfig.height.max;
+      delete videoConfig.frameRate.min;
+      delete videoConfig.frameRate.max;
+      console.debug("媒体配置", audioConfig, videoConfig);
       stream = await navigator.mediaDevices.getDisplayMedia({
-        audio: self.audioConfig,
-        video: {
-          cursor: true,
-          width: { max: 1920 },
-          height: { max: 1080 },
-          frameRate: { max: 30 },
-          logicalSurface: true,
-          displaySurface: "monitor",
-        },
+        audio: audioConfig,
+        video: videoConfig,
       });
     } else {
-      // TODO：异常
+      console.warn("不支持的视频来源", me.videoSource);
     }
     return stream;
   }
+
+  // TODO：continue
+
   async getAudioTrack() {
     const self = this;
     const stream = await navigator.mediaDevices.getUserMedia({
@@ -887,6 +962,7 @@ class Taoyao extends RemoteClient {
     );
     return track;
   }
+
   async getVideoTrack() {
     let track;
     const self = this;
@@ -1540,6 +1616,7 @@ class Taoyao extends RemoteClient {
         console.info("dataConsumer transportclose：", dataConsumer.id);
         dataConsumer.close();
       });
+      // TODO：绑定remoteclient
       dataConsumer.on('open', () => {
         console.info("dataConsumer open：", dataConsumer.id);
         window.dataConsumer = dataConsumer;
@@ -1796,9 +1873,9 @@ class Taoyao extends RemoteClient {
     const self = this;
     if (!self.callback) {
       if (error) {
-        console.error("没有注册回调：", message, error);
+        console.error("发生异常", message, error);
       } else {
-        console.warn("没有注册回调：", message);
+        console.warn("发生错误", message);
       }
       return;
     }
@@ -2565,17 +2642,26 @@ class Taoyao extends RemoteClient {
     const localStream      = await me.getStream();
     session.localStream    = localStream;
     session.peerConnection = peerConnection;
-    if(session.audioEnabled) {
+    if(session.audioEnabled && localStream.getAudioTracks().length >= 0) {
       session.localAudioTrack   = localStream.getAudioTracks()[0];
-      session.localAudioEnabled = true;
-      await session.peerConnection.addTrack(session.localAudioTrack, localStream);
+      if(session.localAudioTrack) {
+        session.localAudioEnabled = true;
+        await session.peerConnection.addTrack(session.localAudioTrack, localStream);
+      } else {
+        // TODO：如果没有音频默认获取麦克风
+        session.localAudioEnabled = false;
+      }
     } else {
       session.localAudioEnabled = false;
     }
-    if(session.videoEnabled) {
+    if(session.videoEnabled && localStream.getVideoTracks().length >= 0) {
       session.localVideoTrack   = localStream.getVideoTracks()[0];
-      session.localVideoEnabled = true;
-      await session.peerConnection.addTrack(session.localVideoTrack, localStream);
+      if(session.localVideoTrack) {
+        session.localVideoEnabled = true;
+        await session.peerConnection.addTrack(session.localVideoTrack, localStream);
+      } else {
+        session.localVideoEnabled = false;
+      }
     } else {
       session.localVideoEnabled = false;
     }
@@ -2814,11 +2900,13 @@ class Taoyao extends RemoteClient {
    */
   closeAll() {
     const me = this;
+    if(me.closed) {
+      return;
+    }
+    me.closed = true;
     me.closeRoomMedia();
     me.closeSessionMedia();
-    if (me.signalChannel) {
-      me.signalChannel.close();
-    }
+    signalChannel.close();
   }
 }
 
