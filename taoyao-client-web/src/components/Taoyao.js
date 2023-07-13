@@ -803,14 +803,8 @@ class Taoyao extends RemoteClient {
       case "media::consumer::pause":
         this.defaultMediaConsumerPause(message);
         break;
-      case "media::consumer::request::key::frame":
-        me.defaultMediaConsumerRequestKeyFrame(message);
-        break;
       case "media::consumer::resume":
         this.defaultMediaConsumerResume(message);
-        break;
-      case "media::consumer::set::preferred::layers":
-        me.defaultMediaConsumerSetPreferredLayers(message);
         break;
       case "media::consumer::status":
         this.defaultMediaConsumerStatus(message);
@@ -1129,10 +1123,6 @@ class Taoyao extends RemoteClient {
    */
    controlServerRecord(clientId, enabled) {
     const me = this;
-    if(!me.roomId) {
-      me.callbackError("没有进入房间");
-      return;
-    }
     me.push(protocol.buildMessage("control::server::record", {
       to     : clientId,
       roomId : me.roomId,
@@ -1175,10 +1165,6 @@ class Taoyao extends RemoteClient {
    */
   mediaConsumerClose(consumerId) {
     const me = this;
-    if(!me.roomId) {
-      me.callbackError("没有进入房间");
-      return;
-    }
     me.push(protocol.buildMessage("media::consumer::close", {
       roomId    : me.roomId,
       consumerId: consumerId,
@@ -1210,10 +1196,6 @@ class Taoyao extends RemoteClient {
    */
   mediaConsumerPause(consumerId) {
     const me = this;
-    if(!me.roomId) {
-      me.callbackError("没有进入房间");
-      return;
-    }
     const consumer = me.consumers.get(consumerId);
     if(consumer) {
       if(consumer.paused) {
@@ -1246,10 +1228,8 @@ class Taoyao extends RemoteClient {
     }
   }
 
-  // TODO：continue
-
   /**
-   * 请求关键帧
+   * 请求关键帧信令
    * 
    * @param {*} consumerId 消费者ID
    */
@@ -1257,28 +1237,21 @@ class Taoyao extends RemoteClient {
     const me = this;
     const consumer = me.consumers.get(consumerId);
     if(!consumer) {
-      me.callbackError("消费者无效：" + consumerId);
+      me.callbackError("请求关键帧消费者无效");
       return;
     }
     if(consumer.kind !== "video") {
-      me.callbackError("消费者不是视频媒体：" + consumerId);
+      me.callbackError("只能请求视频消费者关键帧");
       return;
     }
     me.push(protocol.buildMessage("media::consumer::request::key::frame", {
-      roomId: me.roomId,
+      roomId    : me.roomId,
       consumerId: consumerId,
     }));
   }
+
   /**
-   * 请求关键帧信令
-   * 
-   * @param {*} message 消息
-   */
-  defaultMediaConsumerRequestKeyFrame(message) {
-    console.debug("defaultMediaConsumerRequestKeyFrame：", message);
-  }
-  /**
-   * 恢复消费者
+   * 恢复消费者信令
    * 
    * @param {*} consumerId 消费者ID
    */
@@ -1289,47 +1262,48 @@ class Taoyao extends RemoteClient {
       if(!consumer.paused) {
         return;
       }
-      console.debug("mediaConsumerResume：", consumerId);
+      console.debug("恢复消费者", consumerId);
       me.push(protocol.buildMessage("media::consumer::resume", {
-        roomId: me.roomId,
+        roomId    : me.roomId,
         consumerId: consumerId,
       }));
     } else {
-      console.debug("mediaConsumerResume non：", consumerId);
+      console.debug("恢复消费者无效", consumerId);
     }
   }
+
   /**
   * 恢复消费者信令
   * 
-  * @param {*} message 消息
+  * @param {*} message 信令消息
   */
   defaultMediaConsumerResume(message) {
     const me = this;
     const { roomId, consumerId } = message.body;
     const consumer = me.consumers.get(consumerId);
     if (consumer) {
-      console.debug("恢复消费者：", consumerId);
+      console.debug("恢复消费者", consumerId);
       consumer.resume();
     } else {
-      console.debug("恢复消费者无效：", consumerId);
+      console.debug("恢复消费者无效", consumerId);
     }
   }
   /**
-   * 修改最佳空间层和时间层
+   * 修改最佳空间层和时间层信令
    * 
-   * @param {*} consumerId 消费者ID
-   * @param {*} spatialLayer 空间层
+   * @param {*} consumerId    消费者ID
+   * @param {*} spatialLayer  空间层
    * @param {*} temporalLayer 时间层
    */
   mediaConsumerSetPreferredLayers(consumerId, spatialLayer, temporalLayer) {
     const me = this;
     const consumer = me.consumers.get(consumerId);
     if(!consumer) {
-      me.callbackError("消费者无效：" + consumerId);
+      me.callbackError("修改最佳空间层和时间层消费者无效");
       return;
     }
     if(consumer.kind !== "video") {
-      me.callbackError("消费者不是视频媒体：" + consumerId);
+      me.callbackError("只能修改视频消费者最佳空间层和时间层");
       return;
     }
     me.push(protocol.buildMessage("media::consumer::set::preferred::layers", {
@@ -1339,91 +1313,95 @@ class Taoyao extends RemoteClient {
       temporalLayer,
     }));
   }
-  /**
-   * 修改最佳空间层和时间层信令
-   * 
-   * @param {*} message 消息
-   */
-  defaultMediaConsumerSetPreferredLayers(message) {
-    console.debug("defaultMediaConsumerSetPreferredLayers：", message);
-  }
+
   /**
   * 查询消费者状态信令
   * 
   * @param {*} message 消息
   */
   defaultMediaConsumerStatus(message) {
-    console.info("defaultMediaConsumerStatus：", message);
+    console.debug("消费者状态", message);
   }
+
   /**
    * 关闭数据消费者信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    */
   defaultMediaDataConsumerClose(message) {
     const me = this;
     const { roomId, consumerId } = message.body;
     const dataConsumer = me.dataConsumers.get(consumerId);
     if (dataConsumer) {
-      console.info("关闭数据消费者：", consumerId);
+      console.debug("关闭数据消费者", consumerId);
       dataConsumer.close();
       me.dataConsumers.delete(consumerId);
     } else {
-      console.debug("关闭数据消费者无效：", consumerId);
+      console.debug("关闭数据消费者无效", consumerId);
     }
   }
+
   /**
    * 查询数据消费者状态信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    */
   defaultMediaDataConsumerStatus(message) {
-    console.info("defaultMediaDataConsumerStatus：", message);
+    console.debug("数据消费者状态", message);
   }
+
   /**
    * 关闭数据生产者信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    */
   defaultMediaDataProducerClose(message) {
     const me = this;
     const { roomId, producerId } = message.body;
-    const producer = me.dataProducer;
+    const producer = me.getProducer(producerId);
     if (producer) {
-      console.debug("关闭数据生产者：", producerId);
+      console.debug("关闭数据生产者", producerId);
       producer.close();
-      // TODO：类型判断设置为空
+      me.dataProducer = null;
     } else {
-      console.debug("关闭数据生产者无效：", producerId);
+      console.debug("关闭数据生产者无效", producerId);
     }
   }
+
   /**
    * 关闭数据消费者信令
    * 
    * @param {*} message 消息
    */
   defaultMediaDataProducerStatus(message) {
-    console.info("defaultMediaDataProducerStatus：", message);
+    console.info("数据生产者状态", message);
   }
+
   /**
    * 关闭生产者信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    */
   async defaultMediaProducerClose(message) {
     const me = this;
     const { roomId, producerId } = message.body;
     const producer = me.getProducer(producerId);
     if (producer) {
-      console.debug("关闭生产者：", producerId);
+      console.debug("关闭生产者", producerId);
       producer.close();
-      // TODO：类型判断设置为空
+      if(producer.kind === "audio") {
+        me.audioProducer = null;
+      } else if(producer.kind === "video") {
+        me.videoProducer = null;
+      } else {
+      }
     } else {
-      console.debug("关闭生产者无效：", producerId);
+      console.debug("关闭生产者无效", producerId);
     }
   }
+
   /**
-   * 暂停生产者
+   * 暂停生产者信令
    * 
    * @param {*} producerId 生产者ID
    */
@@ -1434,15 +1412,16 @@ class Taoyao extends RemoteClient {
       if(producer.paused) {
         return;
       }
-      console.debug("mediaProducerPause：", producerId);
+      console.debug("暂停生产者", producerId);
       me.push(protocol.buildMessage("media::producer::pause", {
-        roomId: me.roomId,
+        roomId    : me.roomId,
         producerId: producerId,
       }));
     } else {
-      console.debug("mediaProducerPause non：", producerId);
+      console.debug("暂停生产者无效", producerId);
     }
   }
+
   /**
    * 暂停生产者信令
    * 
@@ -1453,14 +1432,15 @@ class Taoyao extends RemoteClient {
     const { roomId, producerId } = message.body;
     const producer = me.getProducer(producerId);
     if (producer) {
-      console.debug("暂停生产者：", producerId);
+      console.debug("暂停生产者", producerId);
       producer.pause();
     } else {
-      console.debug("暂停生产者无效：", producerId);
+      console.debug("暂停生产者无效", producerId);
     }
   }
+
   /**
-   * 恢复生产者
+   * 恢复生产者信令
    * 
    * @param {*} producerId 生产者ID
    */
@@ -1471,65 +1451,71 @@ class Taoyao extends RemoteClient {
       if(!producer.paused) {
         return;
       }
-      console.debug("mediaProducerResume：", producerId);
+      console.debug("恢复生产者", producerId);
       me.push(protocol.buildMessage("media::producer::resume", {
-        roomId: me.roomId,
+        roomId    : me.roomId,
         producerId: producerId,
       }));
     } else {
-      console.debug("mediaProducerResume non：", producerId);
+      console.debug("恢复生产者无效", producerId);
     }
   }
+
   /**
    * 恢复生产者信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    */
   async defaultMediaProducerResume(message) {
     const me = this;
     const { roomId, producerId } = message.body;
     const producer = me.getProducer(producerId);
     if (producer) {
-      console.debug("恢复生产者：", producerId);
+      console.debug("恢复生产者", producerId);
       producer.resume();
     } else {
-      console.debug("恢复生产者无效：", producerId);
+      console.debug("恢复生产者无效", producerId);
     }
   }
+
   /**
-   * 重启ICE
+   * 重启ICE信令
    */
   async mediaIceRestart() {
     const me = this;
     if (me.sendTransport) {
-      const response = await me.request(protocol.buildMessage(
-        'media::ice::restart',
-        { transportId: me.sendTransport.id }
-      ));
+      const response = await me.request(protocol.buildMessage('media::ice::restart', {
+        transportId: me.sendTransport.id
+      }));
       const { iceParameters } = response.body;
       await me.sendTransport.restartIce({ iceParameters });
     }
-    if (me.recvTransport)
-    {
-      const response = await me.request(protocol.buildMessage(
-        'media::ice::restart',
-        { transportId: me.recvTransport.id }
-      ));
+    if (me.recvTransport) {
+      const response = await me.request(protocol.buildMessage('media::ice::restart', {
+        transportId: me.recvTransport.id
+      }));
       const { iceParameters } = response;
       await me.recvTransport.restartIce({ iceParameters });
     }
-
   }
+
   /**
    * 视频方向变化信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    */
   defaultMediaVideoOrientationChange(message) {
-    console.debug("视频方向变化信令：", message);
+    console.debug("视频方向变化信令", message);
   }
+
+  // TODO：continue
+
   /**
    * 消费媒体信令
+   * 如果需要加密：consumer.rtpReceiver
+   * const receiverStreams = receiver.createEncodedStreams();
+   * const readableStream = receiverStreams.readable || receiverStreams.readableStream;
+   * const writableStream = receiverStreams.writable || receiverStreams.writableStream;
    *
    * @param {*} message 消息
    */
@@ -1824,10 +1810,6 @@ class Taoyao extends RemoteClient {
    */
    roomExpel(clientId) {
     const me = this;
-    if(!me.roomId) {
-      this.callbackError("没有进入房间");
-      return;
-    }
     me.push(protocol.buildMessage("room::expel", {
       roomId: this.roomId,
       clientId,
@@ -1849,10 +1831,6 @@ class Taoyao extends RemoteClient {
    */
   roomInvite(clientId) {
     const me = this;
-    if(!me.roomId) {
-      this.callbackError("没有进入房间");
-      return;
-    }
     me.push(protocol.buildMessage("room::invite", {
       roomId: this.roomId,
       clientId,
@@ -1964,6 +1942,10 @@ class Taoyao extends RemoteClient {
   /************************ 媒体 ************************/
   /**
    * 生产媒体
+   * 如果需要加密：producer.rtpSender
+   * const senderStreams = sender.createEncodedStreams();
+   * const readableStream = senderStreams.readable || senderStreams.readableStream;
+   * const writableStream = senderStreams.writable || senderStreams.writableStream;
    * 
    * TODO：优先使用外部传入数据
    */
@@ -2005,6 +1987,7 @@ class Taoyao extends RemoteClient {
       } = response.body;
       self.sendTransport = self.mediasoupDevice.createSendTransport({
         id: transportId,
+        iceServers: [],
         iceCandidates,
         iceParameters,
         dtlsParameters: {
@@ -2012,15 +1995,8 @@ class Taoyao extends RemoteClient {
           role: "auto",
         },
         sctpParameters,
-        // TODO:iceservers
-        iceServers: [],
-        // Google配置
         proprietaryConstraints: {
           optional: [{ googDscp: true }],
-        },
-        additionalSettings: {
-          // TODO：加密解密
-          encodedInsertableStreams: false
         },
       });
       self.sendTransport.on(
@@ -2100,6 +2076,7 @@ class Taoyao extends RemoteClient {
       } = response.body;
       self.recvTransport = self.mediasoupDevice.createRecvTransport({
         id: transportId,
+        iceServers: [],
         iceCandidates,
         iceParameters,
         dtlsParameters: {
@@ -2107,10 +2084,8 @@ class Taoyao extends RemoteClient {
           role: "auto",
         },
         sctpParameters,
-        iceServers: [],
-        additionalSettings: {
-          // TODO：加密解密
-          encodedInsertableStreams: false,
+        proprietaryConstraints: {
+          optional: [{ googDscp: true }],
         },
       });
       self.recvTransport.on(

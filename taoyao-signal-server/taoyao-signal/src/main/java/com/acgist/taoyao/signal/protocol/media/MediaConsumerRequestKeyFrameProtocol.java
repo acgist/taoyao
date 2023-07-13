@@ -6,7 +6,6 @@ import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
-import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.party.media.Room;
@@ -41,9 +40,6 @@ public class MediaConsumerRequestKeyFrameProtocol extends ProtocolRoomAdapter {
         if(clientType.mediaClient()) {
             body.put(Constant.CLIENT_ID, clientId);
             mediaClient.push(message);
-        } else if(clientType.mediaServer()) {
-            final String requestClientId = MapUtils.remove(body, Constant.CLIENT_ID);
-            room.unicast(requestClientId, message);
         } else {
             this.logNoAdapter(clientType);
         }

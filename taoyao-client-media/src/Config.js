@@ -2,6 +2,7 @@ const os = require("os");
 
 /**
  * 桃夭媒体服务地址
+ * 注意：这里即使是本机也不能配置127.0.0.1
  */
 const defaultTaoyaoHost = "192.168.1.110";
 
