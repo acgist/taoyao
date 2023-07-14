@@ -856,6 +856,7 @@ class Taoyao {
     }
     const producer = await transport.produce({
       kind,
+      appData,
       rtpParameters,
       // 关键帧延迟时间
       // keyFrameRequestDelay: 5000

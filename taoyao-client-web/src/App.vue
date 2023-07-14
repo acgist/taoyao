@@ -208,7 +208,11 @@ export default {
       const { code, message, header, body } = response;
       const { signal } = header;
       switch (signal) {
-        case "client::config":
+        case "media::track"   :
+          const { clientId, track } = body;
+          console.info("新增媒体轨道", clientId, track);
+          break;
+        case "client::config" :
           me.roomVisible = true;
           break;
         case "platform::error":
