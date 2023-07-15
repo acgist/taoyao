@@ -16,14 +16,14 @@ import lombok.Setter;
 @Schema(title = "音频配置", description = "音频配置")
 public class MediaAudioProperties {
 
-	/**
-	 * 音频格式
-	 * 
-	 * @author acgist
-	 */
-	public enum Format {
+    /**
+     * 音频格式
+     * 
+     * @author acgist
+     */
+    public enum Format {
 
-	    // G722
+        // G722
         G722,
         // G711A
         PCMA,
@@ -32,15 +32,15 @@ public class MediaAudioProperties {
         // OPUS
         OPUS;
 
-	}
-	
-	@Schema(title = "格式", description = "格式", example = "G722|PCMA|PCMU|OPUS")
-	private Format format;
-	@Schema(title = "比特率", description = "比特率", example = "96|128|256")
-	private Integer bitrate;
-	@Schema(title = "采样位数（位深）", description = "采样位数（位深）", example = "8|16|32")
-	private Integer sampleSize;
-	@Schema(title = "采样率", description = "采样率", example = "8000|16000|32000|48000")
-	private Integer sampleRate;
-	
+    }
+
+    @Schema(title = "格式", description = "格式", example = "G722|PCMA|PCMU|OPUS")
+    private Format format;
+    @Schema(title = "比特率", description = "比特率", example = "96|128|256")
+    private Integer bitrate;
+    @Schema(title = "采样位数（位深）", description = "采样位数（位深）", example = "8|16|32")
+    private Integer sampleSize;
+    @Schema(title = "采样率", description = "采样率", example = "8000|16000|32000|48000")
+    private Integer sampleRate;
+
 }

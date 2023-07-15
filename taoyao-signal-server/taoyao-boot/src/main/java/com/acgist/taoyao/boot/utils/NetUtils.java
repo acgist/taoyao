@@ -9,8 +9,8 @@ import java.util.BitSet;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.acgist.taoyao.boot.config.IpRewriteProperties;
-import com.acgist.taoyao.boot.config.IpRewriteRuleProperties;
+import com.acgist.taoyao.boot.config.RewriteProperties;
+import com.acgist.taoyao.boot.config.RewriteRuleProperties;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,14 +36,14 @@ public final class NetUtils {
     /**
      * 地址重写
      */
-    private static IpRewriteProperties ipRewriteProperties;
+    private static RewriteProperties rewriteProperties;
     
     /**
      * 加载配置
      */
-    public static final void init(IpRewriteProperties ipRewriteProperties) {
+    public static final void init(RewriteProperties rewriteProperties) {
         try {
-            NetUtils.ipRewriteProperties = ipRewriteProperties;
+            NetUtils.rewriteProperties = rewriteProperties;
             final InetAddress localHost = InetAddress.getLocalHost();
             final InetAddress loopbackAddress = InetAddress.getLoopbackAddress();
             NetUtils.localIp = localHost.getHostAddress();
@@ -89,8 +89,8 @@ public final class NetUtils {
                 final int length = (sourceBytes.length & clientBytes.length) * Byte.SIZE;
                 final BitSet sourceBit = BitSet.valueOf(sourceBytes);
                 final BitSet clientBit = BitSet.valueOf(clientBytes);
-                sourceBit.set(NetUtils.ipRewriteProperties.getPrefix(), length, true);
-                clientBit.set(NetUtils.ipRewriteProperties.getPrefix(), length, true);
+                sourceBit.set(NetUtils.rewriteProperties.getPrefix(), length, true);
+                clientBit.set(NetUtils.rewriteProperties.getPrefix(), length, true);
                 final BigInteger source = new BigInteger(sourceBit.toByteArray());
                 final BigInteger client = new BigInteger(clientBit.toByteArray());
                 return source.equals(client);
@@ -110,10 +110,10 @@ public final class NetUtils {
      * @return 替换IP
      */
     public static final String rewriteIp(final String sourceIp, final String clientIp) {
-        if(Boolean.FALSE.equals(NetUtils.ipRewriteProperties.getEnabled())) {
+        if(Boolean.FALSE.equals(NetUtils.rewriteProperties.getEnabled())) {
             return sourceIp;
         }
-        final IpRewriteRuleProperties rule = NetUtils.ipRewriteProperties.getRule().stream()
+        final RewriteRuleProperties rule = NetUtils.rewriteProperties.getRule().stream()
             .filter(v -> NetUtils.subnetIp(v.getNetwork(), clientIp))
             .findFirst()
             .orElse(null);
@@ -138,7 +138,7 @@ public final class NetUtils {
                 final BitSet sourceBit = BitSet.valueOf(sourceBytes);
                 final BitSet clientBit = BitSet.valueOf(clientBytes);
                 // 替换网络号保留主机号
-                for (int index = 0; index < NetUtils.ipRewriteProperties.getPrefix(); index++) {
+                for (int index = 0; index < NetUtils.rewriteProperties.getPrefix(); index++) {
                     sourceBit.set(index, clientBit.get(index));
                 }
                 final byte[] bytes = sourceBit.toByteArray();

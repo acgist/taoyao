@@ -18,5 +18,5 @@ import org.springframework.stereotype.Component;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 public @interface Protocol {
-    
+
 }

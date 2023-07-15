@@ -15,6 +15,8 @@ import java.lang.annotation.Target;
  * -[消息类型]) 全员广播：对所有的终端广播信令（排除自己）
  * +[消息类型]) 全员广播：对所有的终端广播信令（包含自己）
  * 
+ * 消息类型可以省略表示和前面一致
+ * 
  * @author acgist
  */
 @Target(ElementType.TYPE)
@@ -26,15 +28,15 @@ public @interface Description {
     /**
      * @return 消息主体
      */
-    String[] body() default { "{}" };
+    String[] body() default "{}";
     
     /**
      * @return 数据流向
      */
-    String[] flow() default { "终端->信令服务->终端" };
+    String[] flow() default "终端->信令服务->终端";
 
     /**
-     * @return 描述信息
+     * @return 详细描述
      */
     String memo() default "";
 

@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.acgist.taoyao.boot.config.FfmpegProperties;
+import com.acgist.taoyao.boot.config.RewriteProperties;
 import com.acgist.taoyao.boot.config.MediaProperties;
 import com.acgist.taoyao.boot.config.SocketProperties;
 import com.acgist.taoyao.boot.config.WebrtcProperties;
@@ -32,6 +33,7 @@ public class ConfigController {
 	private final FfmpegProperties ffmpegProperties;
 	private final SocketProperties socketProperties;
 	private final WebrtcProperties webrtcProperties;
+	private final RewriteProperties rewriteProperties;
 	
     @Operation(summary = "媒体配置", description = "媒体配置")
 	@GetMapping("/media")
@@ -59,6 +61,13 @@ public class ConfigController {
 	@ApiResponse(content = @Content(schema = @Schema(implementation = WebrtcProperties.class)))
 	public Message webrtc() {
 		return Message.success(this.webrtcProperties);
+	}
+	
+	@Operation(summary = "地址重写配置", description = "地址重写配置")
+	@GetMapping("/rewrite")
+	@ApiResponse(content = @Content(schema = @Schema(implementation = WebrtcProperties.class)))
+	public Message rewrite() {
+	    return Message.success(this.rewriteProperties);
 	}
 	
 }

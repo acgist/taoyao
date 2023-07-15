@@ -47,13 +47,13 @@ public class MediaProperties {
     private Integer minAudioBitrate;
     @Schema(title = "最大音频码率", description = "最大音频码率")
     private Integer maxAudioBitrate;
-	@Schema(title = "音频默认配置", description = "音频默认配置")
-	private MediaAudioProperties audio;
-	@Schema(title = "视频默认配置", description = "视频默认配置")
-	private MediaVideoProperties video;
-	@Schema(title = "音频配置", description = "音频配置")
-	private Map<String, MediaAudioProperties> audios;
-	@Schema(title = "视频配置", description = "视频配置")
-	private Map<String, MediaVideoProperties> videos;
+    @Schema(title = "音频默认配置", description = "音频默认配置")
+    private MediaAudioProperties audio;
+    @Schema(title = "视频默认配置", description = "视频默认配置")
+    private MediaVideoProperties video;
+    @Schema(title = "音频配置", description = "音频配置")
+    private Map<String, MediaAudioProperties> audios;
+    @Schema(title = "视频配置", description = "视频配置")
+    private Map<String, MediaVideoProperties> videos;
 
 }

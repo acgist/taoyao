@@ -45,7 +45,7 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.acgist.taoyao.boot.config.FfmpegProperties;
 import com.acgist.taoyao.boot.config.IdProperties;
-import com.acgist.taoyao.boot.config.IpRewriteProperties;
+import com.acgist.taoyao.boot.config.RewriteProperties;
 import com.acgist.taoyao.boot.config.MediaProperties;
 import com.acgist.taoyao.boot.config.ScriptProperties;
 import com.acgist.taoyao.boot.config.SecurityProperties;
@@ -92,8 +92,8 @@ import lombok.extern.slf4j.Slf4j;
     SocketProperties.class,
     TaoyaoProperties.class,
     WebrtcProperties.class,
+    RewriteProperties.class,
     SecurityProperties.class,
-    IpRewriteProperties.class
 })
 public class BootAutoConfiguration {
 
@@ -150,12 +150,12 @@ public class BootAutoConfiguration {
     public CommandLineRunner successCommandLineRunner(
         TaskExecutor taskExecutor,
         TaoyaoProperties taoyaoProperties,
-        IpRewriteProperties ipRewriteProperties
+        RewriteProperties rewriteProperties
     ) {
         return new OrderedCommandLineRunner() {
             @Override
             public void run(String ... args) throws Exception {
-                NetUtils.init(ipRewriteProperties);
+                NetUtils.init(rewriteProperties);
                 HTTPUtils.init(taoyaoProperties.getTimeout(), taskExecutor);
                 BootAutoConfiguration.this.registerException();
             }

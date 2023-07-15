@@ -9,8 +9,8 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
-import com.acgist.taoyao.boot.config.IpRewriteProperties;
-import com.acgist.taoyao.boot.config.IpRewriteRuleProperties;
+import com.acgist.taoyao.boot.config.RewriteProperties;
+import com.acgist.taoyao.boot.config.RewriteRuleProperties;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -18,15 +18,15 @@ import lombok.extern.slf4j.Slf4j;
 public class NetUtilsTest {
 
     private void init() {
-        final IpRewriteRuleProperties ipRewriteRuleProperties1 = new IpRewriteRuleProperties();
-        ipRewriteRuleProperties1.setNetwork("192.168.1.0");
-        final IpRewriteRuleProperties ipRewriteRuleProperties10 = new IpRewriteRuleProperties();
-        ipRewriteRuleProperties10.setNetwork("192.168.10.0");
-        final IpRewriteProperties ipRewriteProperties = new IpRewriteProperties();
-        ipRewriteProperties.setEnabled(true);
-        ipRewriteProperties.setPrefix(24);
-        ipRewriteProperties.setRule(List.of(ipRewriteRuleProperties1, ipRewriteRuleProperties10));
-        NetUtils.init(ipRewriteProperties);
+        final RewriteRuleProperties rewriteRuleProperties1 = new RewriteRuleProperties();
+        rewriteRuleProperties1.setNetwork("192.168.1.0");
+        final RewriteRuleProperties rewriteRuleProperties10 = new RewriteRuleProperties();
+        rewriteRuleProperties10.setNetwork("192.168.10.0");
+        final RewriteProperties rewriteProperties = new RewriteProperties();
+        rewriteProperties.setEnabled(true);
+        rewriteProperties.setPrefix(24);
+        rewriteProperties.setRule(List.of(rewriteRuleProperties1, rewriteRuleProperties10));
+        NetUtils.init(rewriteProperties);
     }
     
     @Test

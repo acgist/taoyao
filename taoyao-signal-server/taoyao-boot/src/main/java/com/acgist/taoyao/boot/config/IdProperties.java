@@ -24,9 +24,9 @@ import lombok.Setter;
 @Schema(title = "ID配置", description = "ID配置")
 @ConfigurationProperties(prefix = "taoyao.id")
 public class IdProperties {
-	
+
     @Schema(title = "最大序号", description = "最大序号")
-	private Integer maxIndex;
+    private Integer maxIndex;
     @Schema(title = "机器序号", description = "机器序号")
     private Integer serverIndex;
     @Schema(title = "最小终端序号", description = "最小终端序号")

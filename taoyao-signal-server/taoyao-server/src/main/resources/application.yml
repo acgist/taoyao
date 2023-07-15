@@ -236,6 +236,18 @@ taoyao:
 #       port: 3478
 #       username: taoyao
 #       password: taoyao
+  # 地址重写
+  rewrite:
+    enabled: true
+    prefix: 24
+    # 重写规则
+    rule:
+#     - network: 192.168.1.0
+#       inner-host: 
+#       outer-host: 
+#     - network: 192.168.8.0
+#       inner-host: 
+#       outer-host: 
   # 安全配置
   security:
     enabled: true
@@ -253,15 +265,3 @@ taoyao:
     room: 0 0/5 * * * ?
     # 清理无效终端连接
     client: 0 * * * * ?
-  # 地址重写
-  ip-rewrite:
-    enabled: true
-    prefix: 24
-    # 重写规则
-    rule:
-#     - network: 192.168.1.0
-#       inner-host:
-#       outer-host:
-#     - network: 192.168.8.0
-#       inner-host:
-#       outer-host:

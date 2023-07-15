@@ -14,7 +14,7 @@ public interface Constant {
      */
     String TO = "to";
     /**
-     * IP
+     * IP地址
      */
     String IP = "ip";
     /**
@@ -58,21 +58,13 @@ public interface Constant {
      */
     String CHARGING = "charging";
     /**
-     * 终端是否正在录像
+     * 终端是否正在录像（录像端）
      */
     String CLIENT_RECORDING = "clientRecording";
     /**
-     * 服务端是否正在录像
+     * 终端是否正在录像（服务端）
      */
     String SERVER_RECORDING = "serverRecording";
-    /**
-     * 地址
-     */
-    String URLS = "urls";
-    /**
-     * 凭证
-     */
-    String CREDENTIAL = "credential";
     /**
      * 最小
      */
@@ -118,7 +110,7 @@ public interface Constant {
      */
     String PORT = "port";
     /**
-     * 地址
+     * 主机
      */
     String HOST = "host";
     /**
@@ -154,10 +146,6 @@ public interface Constant {
      */
     String WEBRTC = "webrtc";
     /**
-     * 音量
-     */
-    String VOLUMES = "volumes";
-    /**
      * 日期时间
      */
     String DATETIME = "datetime";
@@ -181,6 +169,10 @@ public interface Constant {
      * 来源终端ID
      */
     String SOURCE_ID = "sourceId";
+    /**
+     * 目标终端ID
+     */
+    String TARGET_ID = "targetId";
     /**
      * 会话ID
      */
@@ -209,6 +201,14 @@ public interface Constant {
      * 媒体服务ID
      */
     String MEDIA_CLIENT_ID = "mediaClientId";
+    /**
+     * 地址列表
+     */
+    String URLS = "urls";
+    /**
+     * 凭证信息
+     */
+    String CREDENTIAL = "credential";
     /**
      * ICE服务
      */
@@ -316,12 +316,20 @@ public interface Constant {
 
     /**
      * 生产者ID生成器
+     * type       媒体类型
+     * producerId 生产者终端ID
      */
-    public static final BiFunction<String, String, String> STREAM_ID_PRODUCER = (type, producerId) -> type + "::" + producerId;
+    public static final BiFunction<String, String, String> STREAM_ID_PRODUCER
+    =
+    (type, producerId) -> type + "::" + producerId;
     
     /**
      * 消费者ID生成器
+     * producerStreamId 生产者媒体ID
+     * consumerId       消费者终端ID
      */
-    public static final BiFunction<String, String, String> STREAM_ID_CONSUMER = (producerStreamId, consumerId) -> producerStreamId + "->" + consumerId;
+    public static final BiFunction<String, String, String> STREAM_ID_CONSUMER
+    =
+    (producerStreamId, consumerId) -> producerStreamId + "->" + consumerId;
     
 }
