@@ -1,7 +1,6 @@
 package com.acgist.taoyao.boot.configuration;
 
 import java.lang.management.ManagementFactory;
-import java.lang.management.RuntimeMXBean;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.stream.Collectors;
@@ -45,8 +44,8 @@ import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.acgist.taoyao.boot.config.FfmpegProperties;
 import com.acgist.taoyao.boot.config.IdProperties;
-import com.acgist.taoyao.boot.config.RewriteProperties;
 import com.acgist.taoyao.boot.config.MediaProperties;
+import com.acgist.taoyao.boot.config.RewriteProperties;
 import com.acgist.taoyao.boot.config.ScriptProperties;
 import com.acgist.taoyao.boot.config.SecurityProperties;
 import com.acgist.taoyao.boot.config.SocketProperties;
@@ -70,6 +69,7 @@ import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import jakarta.validation.ConstraintViolationException;
 import jakarta.validation.ValidationException;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -95,17 +95,12 @@ import lombok.extern.slf4j.Slf4j;
     RewriteProperties.class,
     SecurityProperties.class,
 })
+@RequiredArgsConstructor
 public class BootAutoConfiguration {
 
-    private final FfmpegProperties ffmpegProperties;
-    private final TaoyaoProperties taoyaoProperties;
+    private final FfmpegProperties   ffmpegProperties;
+    private final TaoyaoProperties   taoyaoProperties;
     private final ApplicationContext applicationContext;
-    
-    public BootAutoConfiguration(FfmpegProperties ffmpegProperties, TaoyaoProperties taoyaoProperties, ApplicationContext applicationContext) {
-        this.ffmpegProperties = ffmpegProperties;
-        this.taoyaoProperties = taoyaoProperties;
-        this.applicationContext = applicationContext;
-    }
     
     @Bean
     @ConditionalOnMissingBean
@@ -148,8 +143,8 @@ public class BootAutoConfiguration {
     
     @Bean
     public CommandLineRunner successCommandLineRunner(
-        TaskExecutor taskExecutor,
-        TaoyaoProperties taoyaoProperties,
+        TaskExecutor      taskExecutor,
+        TaoyaoProperties  taoyaoProperties,
         RewriteProperties rewriteProperties
     ) {
         return new OrderedCommandLineRunner() {
@@ -164,10 +159,9 @@ public class BootAutoConfiguration {
 
     @PostConstruct
     public void init() {
-        final Runtime runtime = Runtime.getRuntime();
-        final RuntimeMXBean runtimeMXBean = ManagementFactory.getRuntimeMXBean();
-        final String maxMemory = FileUtils.formatSize(runtime.maxMemory());
-        final String freeMemory = FileUtils.formatSize(runtime.freeMemory());
+        final Runtime runtime    = Runtime.getRuntime();
+        final String maxMemory   = FileUtils.formatSize(runtime.maxMemory());
+        final String freeMemory  = FileUtils.formatSize(runtime.freeMemory());
         final String totalMemory = FileUtils.formatSize(runtime.totalMemory());
         log.info("操作系统架构：{}", System.getProperty("os.arch"));
         log.info("操作系统名称：{}", System.getProperty("os.name"));
@@ -178,7 +172,7 @@ public class BootAutoConfiguration {
         log.info("Java库目录：{}", System.getProperty("java.library.path"));
         log.info("ClassPath：{}", System.getProperty("java.class.path"));
         log.info("虚拟机名称：{}", System.getProperty("java.vm.name"));
-        log.info("虚拟机参数：{}", runtimeMXBean.getInputArguments().stream().collect(Collectors.joining(" ")));
+        log.info("虚拟机参数：{}", ManagementFactory.getRuntimeMXBean().getInputArguments().stream().collect(Collectors.joining(" ")));
         log.info("虚拟机最大内存：{}", maxMemory);
         log.info("虚拟机空闲内存：{}", freeMemory);
         log.info("虚拟机已用内存：{}", totalMemory);

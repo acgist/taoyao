@@ -22,27 +22,27 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Header implements Cloneable, Serializable {
 
-	private static final long serialVersionUID = 1L;
-	
-	/**
-	 * 消息版本
-	 */
-	@Schema(title = "消息版本", description = "消息版本")
-	private String v;
-	/**
-	 * 消息标识
-	 */
-	@Schema(title = "消息标识", description = "消息标识")
-	private Long id;
-	/**
-	 * 信令标识
-	 */
-	@Schema(title = "信令标识", description = "信令标识")
-	private String signal;
-	
-	@Override
-	public Header clone() {
-		return new Header(this.v, this.id, this.signal);
-	}
-	
+    private static final long serialVersionUID = 1L;
+    
+    /**
+     * 消息版本
+     */
+    @Schema(title = "消息版本", description = "消息版本")
+    private String v;
+    /**
+     * 消息标识
+     */
+    @Schema(title = "消息标识", description = "消息标识")
+    private Long id;
+    /**
+     * 信令标识
+     */
+    @Schema(title = "信令标识", description = "信令标识")
+    private String signal;
+    
+    @Override
+    public Header clone() {
+        return new Header(this.v, this.id, this.signal);
+    }
+    
 }

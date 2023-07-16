@@ -18,7 +18,7 @@ import lombok.Setter;
 public class SocketProperties {
 
     /**
-     * 机密策略
+     * 加密策略
      * 
      * @author acgist
      */
@@ -44,30 +44,30 @@ public class SocketProperties {
     }
 
     @Schema(title = "是否启用", description = "是否启用")
-	private Boolean enabled;
+    private Boolean enabled;
     @Schema(title = "监听地址", description = "监听地址")
-	private String host;
+    private String host;
     @Schema(title = "监听端口", description = "监听端口")
-	private Integer port;
+    private Integer port;
     @Schema(title = "加密策略", description = "加密策略")
     private Encrypt encrypt;
     @Schema(title = "加密密钥", description = "加密密钥：为空自动生成")
     private String encryptSecret;
     @Schema(title = "超时时间", description = "超时时间")
-	private Long timeout;
+    private Long timeout;
     @Schema(title = "队列长度", description = "队列长度")
-	private Integer queueSize;
+    private Integer queueSize;
     @Schema(title = "最小线程数量", description = "最小线程数量")
-	private Integer minThread;
+    private Integer minThread;
     @Schema(title = "最大线程数量", description = "最大线程数量")
-	private Integer maxThread;
+    private Integer maxThread;
     @Schema(title = "线程池的前缀", description = "线程池的前缀")
-	private String threadNamePrefix;
+    private String threadNamePrefix;
     @Schema(title = "线程销毁时间", description = "线程销毁时间")
-	private Long keepAliveTime;
+    private Long keepAliveTime;
     @Schema(title = "缓冲大小", description = "缓冲大小")
-	private Integer bufferSize;
+    private Integer bufferSize;
     @Schema(title = "最大缓冲大小", description = "最大缓冲大小")
     private Integer maxBufferSize;
-	
+    
 }

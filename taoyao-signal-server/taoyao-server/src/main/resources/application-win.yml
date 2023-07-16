@@ -1,0 +1,6 @@
+taoyao:
+  script:
+    system-reboot: shutdown /r /t 0
+    system-shutdown: shutdown /s /t 0
+    platform-reboot: net stop taoyao-signal-server && net start taoyao-signal-server
+    platform-shutdown: net stop taoyao-signal-server

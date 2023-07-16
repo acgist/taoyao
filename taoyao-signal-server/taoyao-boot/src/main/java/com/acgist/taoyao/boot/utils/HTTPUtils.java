@@ -48,7 +48,7 @@ public final class HTTPUtils {
      * @param executor 线程池
      */
     public static final void init(long timeout, Executor executor) {
-        HTTPUtils.timeout = timeout;
+        HTTPUtils.timeout  = timeout;
         HTTPUtils.executor = executor;
     }
     

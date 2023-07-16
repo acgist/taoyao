@@ -119,7 +119,9 @@ public class SocketSignal {
 	public void destroy() {
 		log.debug("关闭Socket信令服务：{}", this.channel);
 		CloseableUtils.close(this.channel);
-		this.group.shutdown();
+		if(this.group != null) {
+		    this.group.shutdown();
+		}
 	}
 	
 }

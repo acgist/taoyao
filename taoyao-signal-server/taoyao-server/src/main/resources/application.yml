@@ -214,7 +214,7 @@ taoyao:
     platform-shutdown: systemctl stop taoyao-signal-server
   # WebRTC配置
   webrtc:
-    # 是否加密：E2E
+    # 是否终端加密：E2E
     encrypt: false
     # STUN服务
     stun:
