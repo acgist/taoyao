@@ -92,7 +92,7 @@ public class MediaTransportPlainProtocol extends ProtocolRoomAdapter {
         // 媒体服务返回IP
         final String mediaIp = (String) body.get(Constant.IP);
         if(StringUtils.isNotEmpty(mediaIp)) {
-            final String rewriteIp = NetUtils.rewriteIp(mediaIp, clientIp);
+            final String rewriteIp = NetUtils.rewriteIP(mediaIp, clientIp);
             log.debug("重写地址：{} + {} -> {}", mediaIp, clientIp, rewriteIp);
             body.put(Constant.IP, rewriteIp);
         }

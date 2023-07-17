@@ -1,5 +1,7 @@
 package com.acgist.taoyao.boot.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -19,6 +21,7 @@ public class MessageTest {
             .body(Map.of("1", "2"))
             .build();
         final String json = JSONUtils.toJSON(message);
+        assertEquals("{\"code\":\"0000\",\"message\":\"acgist\",\"body\":{\"1\":\"2\"}}", json);
         log.info("{}", json);
     }
     

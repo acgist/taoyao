@@ -38,13 +38,15 @@ public final class HTTPUtils {
     /**
      * 无效IP验证
      */
-    private static final Function<String, Boolean> NEXT_IP = ip -> StringUtils.isEmpty(ip) || "unknown".equalsIgnoreCase(ip);
+    private static final Function<String, Boolean> NEXT_IP
+    =
+    ip -> StringUtils.isEmpty(ip) || "unknown".equalsIgnoreCase(ip);
     
     private HTTPUtils() {
     }
     
     /**
-     * @param timeout 超时时间
+     * @param timeout  超时时间
      * @param executor 线程池
      */
     public static final void init(long timeout, Executor executor) {
@@ -71,7 +73,7 @@ public final class HTTPUtils {
      * 
      * @return IP地址
      */
-    public static final String httpIp(HttpServletRequest request) {
+    public static final String clientIP(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
         if (NEXT_IP.apply(ip)) {
             ip = request.getHeader("X-Real-IP");
@@ -91,7 +93,9 @@ public final class HTTPUtils {
             final SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
             sslContext.init(
                 new KeyManager[0],
-                new X509TrustManager[] { TaoyaoTrustManager.INSTANCE },
+                new X509TrustManager[] {
+                    TaoyaoTrustManager.INSTANCE
+                },
                 new SecureRandom()
             );
             return sslContext;
@@ -105,7 +109,7 @@ public final class HTTPUtils {
         }
         return null;
     }
-
+    
     /**
      * 证书验证
      * 

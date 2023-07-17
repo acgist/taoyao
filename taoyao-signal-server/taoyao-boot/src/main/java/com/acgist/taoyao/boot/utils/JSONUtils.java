@@ -140,7 +140,30 @@ public final class JSONUtils {
             throw MessageCodeException.of(e, "JSON转Map失败：" + json);
         }
     }
-
+    
+    /**
+     * JSON转Map
+     * 
+     * @param <K>    K类型
+     * @param <V>    V类型
+     * @param json   JSON
+     * @param kClazz Java类型
+     * @param vClass Java类型
+     * 
+     * @return Map
+     */
+    public static final <K, V> Map<K, V> toMap(String json, Class<K> kClazz, Class<V> vClass) {
+        if (Objects.isNull(json)) {
+            return Map.of();
+        }
+        try {
+            return MAPPER.readValue(json, new TypeReference<Map<K, V>>() {
+            });
+        } catch (IOException e) {
+            throw MessageCodeException.of(e, "JSON转Map失败：" + json);
+        }
+    }
+    
     /**
      * JSON转List
      * 
@@ -202,7 +225,7 @@ public final class JSONUtils {
     private static final Module buildCustomModule() {
         final SimpleModule customModule = new SimpleModule("CustomModule");
         // 注意不能转换Long类型数据：请求数据类型变化
-//        customModule.addSerializer(Long.class, ToStringSerializer.instance);
+//      customModule.addSerializer(Long.class, ToStringSerializer.instance);
         return customModule;
     }
     

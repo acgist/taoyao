@@ -116,7 +116,7 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
             // 媒体服务返回IP
             final String mediaIp = (String) map.get(Constant.IP);
             if(StringUtils.isNotEmpty(mediaIp)) {
-                final String rewriteIp = NetUtils.rewriteIp(mediaIp, clientIp);
+                final String rewriteIp = NetUtils.rewriteIP(mediaIp, clientIp);
                 log.debug("重写地址：{} + {} -> {}", mediaIp, clientIp, rewriteIp);
                 map.put(Constant.IP, rewriteIp);
             }

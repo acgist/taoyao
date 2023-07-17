@@ -134,7 +134,7 @@ const defaultRTCPeerConnectionConfig = {
   // ICE代理服务器
   iceServers          : [
     {
-      // { "url": "stun:stun1.l.google.com:19302" },
+      // { "urls": "stun:stun1.l.google.com:19302" },
       urls: [
         "stun:stun1.l.google.com:19302",
         "stun:stun2.l.google.com:19302",

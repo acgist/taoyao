@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration scan="false" scanPeriod="60 seconds" debug="false">
 
-	<springProperty scope="context" name="log.name" source="spring.application.name" />
-	
-	<contextName>${log.name}</contextName>
+    <springProperty scope="context" name="log.name" source="spring.application.name" />
+    
+    <contextName>${log.name}</contextName>
 
-	<property name="log.path" value="logs" />
-	<property name="log.queue" value="2048" />
-	<property name="log.buffer" value="8192" />
-	<property name="log.history" value="30" />
-	<property name="log.charset" value="UTF-8" />
-	<property name="log.pattern" value="[${log.name}] %d{YYYY-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} %file:%line - %m%n" />
+    <property name="log.path" value="logs" />
+    <property name="log.queue" value="2048" />
+    <property name="log.buffer" value="8192" />
+    <property name="log.history" value="30" />
+    <property name="log.charset" value="UTF-8" />
+    <property name="log.pattern" value="[${log.name}] %d{YYYY-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} %file:%line - %m%n" />
 
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -22,90 +22,90 @@
         </filter>
     </appender>
 
-	<appender name="fileDebug" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${log.path}/${log.name}.debug.log</file>
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<maxHistory>${log.history}</maxHistory>
-			<fileNamePattern>${log.path}/%d{yyyy-MM, aux}/${log.name}.debug.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-		</rollingPolicy>
-		<bufferSize>${log.buffer}</bufferSize>
-		<immediateFlush>false</immediateFlush>
-		<encoder>
-			<charset>${log.charset}</charset>
-			<pattern>${log.pattern}</pattern>
-		</encoder>
-		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-			<level>DEBUG</level>
-		</filter>
-	</appender>
-	<appender name="fileDebugAsync" class="ch.qos.logback.classic.AsyncAppender">
-		<appender-ref ref="fileDebug" />
-		<queueSize>${log.queue}</queueSize>
-		<includeCallerData>true</includeCallerData>
-		<discardingThreshold>0</discardingThreshold>
-	</appender>
+    <appender name="fileDebug" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path}/${log.name}.debug.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <maxHistory>${log.history}</maxHistory>
+            <fileNamePattern>${log.path}/%d{yyyy-MM, aux}/${log.name}.debug.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+        </rollingPolicy>
+        <bufferSize>${log.buffer}</bufferSize>
+        <immediateFlush>false</immediateFlush>
+        <encoder>
+            <charset>${log.charset}</charset>
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+    </appender>
+    <appender name="fileDebugAsync" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="fileDebug" />
+        <queueSize>${log.queue}</queueSize>
+        <includeCallerData>true</includeCallerData>
+        <discardingThreshold>0</discardingThreshold>
+    </appender>
 
-	<appender name="fileInfo" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${log.path}/${log.name}.info.log</file>
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<maxHistory>${log.history}</maxHistory>
-			<fileNamePattern>${log.path}/%d{yyyy-MM, aux}/${log.name}.info.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-		</rollingPolicy>
-		<bufferSize>${log.buffer}</bufferSize>
-		<immediateFlush>false</immediateFlush>
-		<encoder>
-			<charset>${log.charset}</charset>
-			<pattern>${log.pattern}</pattern>
-		</encoder>
-		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-			<level>INFO</level>
-		</filter>
-	</appender>
-	<appender name="fileInfoAsync" class="ch.qos.logback.classic.AsyncAppender">
-		<appender-ref ref="fileInfo" />
-		<queueSize>${log.queue}</queueSize>
-		<includeCallerData>true</includeCallerData>
-		<discardingThreshold>0</discardingThreshold>
-	</appender>
+    <appender name="fileInfo" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path}/${log.name}.info.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <maxHistory>${log.history}</maxHistory>
+            <fileNamePattern>${log.path}/%d{yyyy-MM, aux}/${log.name}.info.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+        </rollingPolicy>
+        <bufferSize>${log.buffer}</bufferSize>
+        <immediateFlush>false</immediateFlush>
+        <encoder>
+            <charset>${log.charset}</charset>
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>INFO</level>
+        </filter>
+    </appender>
+    <appender name="fileInfoAsync" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="fileInfo" />
+        <queueSize>${log.queue}</queueSize>
+        <includeCallerData>true</includeCallerData>
+        <discardingThreshold>0</discardingThreshold>
+    </appender>
 
-	<appender name="fileError" class="ch.qos.logback.core.rolling.RollingFileAppender">
-		<file>${log.path}/${log.name}.error.log</file>
-		<rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-			<maxHistory>${log.history}</maxHistory>
-			<fileNamePattern>${log.path}/%d{yyyy-MM, aux}/${log.name}.error.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
-		</rollingPolicy>
-		<bufferSize>${log.buffer}</bufferSize>
-		<immediateFlush>false</immediateFlush>
-		<encoder>
-			<charset>${log.charset}</charset>
-			<pattern>${log.pattern}</pattern>
-		</encoder>
-		<filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-			<level>ERROR</level>
-		</filter>
-	</appender>
-	<appender name="fileErrorAsync" class="ch.qos.logback.classic.AsyncAppender">
-		<appender-ref ref="fileError" />
-		<queueSize>${log.queue}</queueSize>
-		<includeCallerData>true</includeCallerData>
-		<discardingThreshold>0</discardingThreshold>
-	</appender>
-	
-	<springProfile name="uat | prd">
-		<root level="DEBUG">
-			<appender-ref ref="fileDebugAsync" />
-			<appender-ref ref="fileInfoAsync" />
-			<appender-ref ref="fileErrorAsync" />
-		</root>
-	</springProfile>
+    <appender name="fileError" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${log.path}/${log.name}.error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <maxHistory>${log.history}</maxHistory>
+            <fileNamePattern>${log.path}/%d{yyyy-MM, aux}/${log.name}.error.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
+        </rollingPolicy>
+        <bufferSize>${log.buffer}</bufferSize>
+        <immediateFlush>false</immediateFlush>
+        <encoder>
+            <charset>${log.charset}</charset>
+            <pattern>${log.pattern}</pattern>
+        </encoder>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+    </appender>
+    <appender name="fileErrorAsync" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="fileError" />
+        <queueSize>${log.queue}</queueSize>
+        <includeCallerData>true</includeCallerData>
+        <discardingThreshold>0</discardingThreshold>
+    </appender>
+    
+    <springProfile name="uat | prd">
+        <root level="DEBUG">
+            <appender-ref ref="fileDebugAsync" />
+            <appender-ref ref="fileInfoAsync" />
+            <appender-ref ref="fileErrorAsync" />
+        </root>
+    </springProfile>
 
-	<springProfile name="!(uat | prd)">
-		<root level="DEBUG">
-			<appender-ref ref="console" />
-			<appender-ref ref="fileDebugAsync" />
-			<appender-ref ref="fileInfoAsync" />
-			<appender-ref ref="fileErrorAsync" />
-		</root>
-	</springProfile>
+    <springProfile name="!(uat | prd)">
+        <root level="DEBUG">
+            <appender-ref ref="console" />
+            <appender-ref ref="fileDebugAsync" />
+            <appender-ref ref="fileInfoAsync" />
+            <appender-ref ref="fileErrorAsync" />
+        </root>
+    </springProfile>
 
 </configuration>

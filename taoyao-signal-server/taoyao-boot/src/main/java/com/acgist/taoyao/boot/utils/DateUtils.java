@@ -43,7 +43,7 @@ public final class DateUtils {
         private final DateTimeFormatter dateTimeFormatter;
 
         private DateStyle(String format) {
-            this.format = format;
+            this.format            = format;
             this.dateTimeFormatter = DateTimeFormatter.ofPattern(format);
         }
 
@@ -75,7 +75,7 @@ public final class DateUtils {
         private final DateTimeFormatter dateTimeFormatter;
 
         private TimeStyle(String format) {
-            this.format = format;
+            this.format            = format;
             this.dateTimeFormatter = DateTimeFormatter.ofPattern(format);
         }
 
@@ -128,7 +128,7 @@ public final class DateUtils {
         private final DateTimeFormatter dateTimeFormatter;
 
         private DateTimeStyle(String format) {
-            this.format = format;
+            this.format            = format;
             this.dateTimeFormatter = DateTimeFormatter.ofPattern(format);
         }
 

@@ -28,11 +28,11 @@ public final class NetUtils {
     /**
      * 本机IP
      */
-    private static String localIp;
+    private static String localIP;
     /**
      * 环回IP
      */
-    private static String loopbackIp;
+    private static String loopbackIP;
     /**
      * 地址重写
      */
@@ -43,13 +43,13 @@ public final class NetUtils {
      */
     public static final void init(RewriteProperties rewriteProperties) {
         try {
-            NetUtils.rewriteProperties = rewriteProperties;
+            NetUtils.rewriteProperties  = rewriteProperties;
             final InetAddress localHost = InetAddress.getLocalHost();
             final InetAddress loopbackAddress = InetAddress.getLoopbackAddress();
-            NetUtils.localIp = localHost.getHostAddress();
-            NetUtils.loopbackIp = loopbackAddress.getHostAddress();
-            log.info("本机IP：{}", NetUtils.localIp);
-            log.info("环回IP：{}", NetUtils.loopbackIp);
+            NetUtils.localIP    = localHost.getHostAddress();
+            NetUtils.loopbackIP = loopbackAddress.getHostAddress();
+            log.info("本机IP：{}", NetUtils.localIP);
+            log.info("环回IP：{}", NetUtils.loopbackIP);
         } catch (UnknownHostException e) {
             log.error("加载网络配置异常", e);
         }
@@ -58,29 +58,29 @@ public final class NetUtils {
     /**
      * @return 本机IP
      */
-    public static final String localIp() {
-        return NetUtils.localIp;
+    public static final String localIP() {
+        return NetUtils.localIP;
     }
     
     /**
      * @return 环回IP
      */
-    public static final String loopbackIp() {
-        return NetUtils.loopbackIp;
+    public static final String loopbackIP() {
+        return NetUtils.loopbackIP;
     }
     
     /**
      * 内网是否相同网段
      * 
-     * @param sourceIp 原始IP
-     * @param clientIp 终端IP
+     * @param sourceIP 原始IP
+     * @param clientIP 终端IP
      * 
      * @return 是否匹配
      */
-    public static final boolean subnetIp(final String sourceIp, final String clientIp) {
+    public static final boolean subnetIP(final String sourceIP, final String clientIP) {
         try {
-            final InetAddress sourceAddress = NetUtils.realAddress(sourceIp);
-            final InetAddress clientAddress = NetUtils.realAddress(clientIp);
+            final InetAddress sourceAddress = NetUtils.realAddress(sourceIP);
+            final InetAddress clientAddress = NetUtils.realAddress(clientIP);
             final boolean sourceLocal = NetUtils.localAddress(sourceAddress);
             final boolean clientLocal = NetUtils.localAddress(clientAddress);
             if(sourceLocal && clientLocal) {
@@ -96,37 +96,38 @@ public final class NetUtils {
                 return source.equals(client);
             }
         } catch (UnknownHostException e) {
-            log.error("IP地址转换异常：{}-{}", sourceIp, clientIp, e);
+            log.error("IP地址转换异常：{} - {}", sourceIP, clientIP, e);
         }
-        return true;
+        return false;
     }
     
     /**
      * 重写地址
      * 
-     * @param sourceIp 原始IP
-     * @param clientIp 终端IP
+     * @param sourceIP 原始IP
+     * @param clientIP 终端IP
      * 
-     * @return 替换IP
+     * @return 重写IP
      */
-    public static final String rewriteIp(final String sourceIp, final String clientIp) {
+    public static final String rewriteIP(final String sourceIP, final String clientIP) {
         if(Boolean.FALSE.equals(NetUtils.rewriteProperties.getEnabled())) {
-            return sourceIp;
+            return sourceIP;
         }
-        final RewriteRuleProperties rule = NetUtils.rewriteProperties.getRule().stream()
-            .filter(v -> NetUtils.subnetIp(v.getNetwork(), clientIp))
-            .findFirst()
-            .orElse(null);
-        if(rule == null) {
-            return sourceIp;
-        }
-        log.debug("地址重写：{} - {} - {}", sourceIp, clientIp, rule.getNetwork());
         try {
-            final InetAddress sourceAddress = NetUtils.realAddress(sourceIp);
-            final InetAddress clientAddress = NetUtils.realAddress(clientIp);
+            final InetAddress sourceAddress = NetUtils.realAddress(sourceIP);
+            final InetAddress clientAddress = NetUtils.realAddress(clientIP);
             final boolean sourceLocal = NetUtils.localAddress(sourceAddress);
             final boolean clientLocal = NetUtils.localAddress(clientAddress);
+            // 内网服务 && 内网设备
             if(sourceLocal && clientLocal) {
+                final RewriteRuleProperties rule = NetUtils.rewriteProperties.getRule().stream()
+                    .filter(v -> NetUtils.subnetIP(v.getNetwork(), clientIP))
+                    .findFirst()
+                    .orElse(null);
+                if(rule == null) {
+                    return sourceIP;
+                }
+                log.debug("地址重写：{} - {} - {}", sourceIP, clientIP, rule.getNetwork());
                 // 明确配置
                 if(StringUtils.isNotEmpty(rule.getInnerHost())) {
                     return rule.getInnerHost();
@@ -150,18 +151,36 @@ public final class NetUtils {
                     return InetAddress.getByAddress(bytes).getHostAddress();
                 }
             }
-            // 公网服务 && 内网设备
-            if(sourceLocal && !clientLocal && StringUtils.isNotEmpty(rule.getInnerHost())) {
-                return rule.getInnerHost();
-            }
             // 内网服务 && 公网设备
-            if(!sourceLocal && clientLocal && StringUtils.isNotEmpty(rule.getOuterHost())) {
-                return rule.getOuterHost();
+            if(sourceLocal && !clientLocal) {
+                final RewriteRuleProperties rule = NetUtils.rewriteProperties.getRule().stream()
+                    .filter(v -> NetUtils.subnetIP(v.getNetwork(), sourceIP))
+                    .findFirst()
+                    .orElse(null);
+                if(rule == null) {
+                    return sourceIP;
+                }
+                if(StringUtils.isNotEmpty(rule.getOuterHost())) {
+                    return rule.getOuterHost();
+                }
+            }
+            // 公网服务 && 内网设备
+            if(!sourceLocal && clientLocal) {
+                final RewriteRuleProperties rule = NetUtils.rewriteProperties.getRule().stream()
+                    .filter(v -> NetUtils.subnetIP(v.getNetwork(), clientIP))
+                    .findFirst()
+                    .orElse(null);
+                if(rule == null) {
+                    return sourceIP;
+                }
+                if(StringUtils.isNotEmpty(rule.getInnerHost())) {
+                    return rule.getInnerHost();
+                }
             }
         } catch (UnknownHostException e) {
-            log.error("地址重写异常：{}-{}", sourceIp, clientIp, e);
+            log.error("地址重写异常：{} - {}", sourceIP, clientIP, e);
         }
-        return sourceIp;
+        return sourceIP;
     }
     
     /**
@@ -175,7 +194,7 @@ public final class NetUtils {
         final InetAddress address = InetAddress.getByName(ip);
         if(NetUtils.localAnyOrLoopAddress(address)) {
             // 通配地址或者换回地址使用本机地址
-            return InetAddress.getByName(NetUtils.localIp);
+            return InetAddress.getByName(NetUtils.localIP);
         }
         return address;
     }
