@@ -25,14 +25,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/platform")
 public class PlatformController {
     
-    private final PlatformRebootProtocol platformRebootProtocol;
+    private final PlatformRebootProtocol   platformRebootProtocol;
     private final PlatformShutdownProtocol platformShutdownProtocol;
 
     public PlatformController(
-        @Autowired(required = false) PlatformRebootProtocol platformRebootProtocol,
+        @Autowired(required = false) PlatformRebootProtocol   platformRebootProtocol,
         @Autowired(required = false) PlatformShutdownProtocol platformShutdownProtocol
     ) {
-        this.platformRebootProtocol = platformRebootProtocol;
+        this.platformRebootProtocol   = platformRebootProtocol;
         this.platformShutdownProtocol = platformShutdownProtocol;
     }
 

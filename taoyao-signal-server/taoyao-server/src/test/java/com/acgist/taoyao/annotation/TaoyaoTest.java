@@ -25,7 +25,7 @@ import org.springframework.test.context.TestExecutionListeners.MergeMode;
 @TestExecutionListeners(listeners = CostedTestTestExecutionListener.class, mergeMode = MergeMode.MERGE_WITH_DEFAULTS)
 public @interface TaoyaoTest {
 
-	@AliasFor(annotation = SpringBootTest.class)
-	Class<?>[] classes() default {};
+    @AliasFor(annotation = SpringBootTest.class)
+    Class<?>[] classes() default {};
 
 }

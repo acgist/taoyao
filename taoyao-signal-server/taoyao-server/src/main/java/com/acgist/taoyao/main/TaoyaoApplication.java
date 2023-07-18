@@ -8,8 +8,8 @@ import org.springframework.context.annotation.ComponentScan;
 @SpringBootApplication
 public class TaoyaoApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(TaoyaoApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(TaoyaoApplication.class, args);
+    }
 
 }

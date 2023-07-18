@@ -22,29 +22,29 @@ import com.acgist.taoyao.signal.service.impl.SecurityServiceImpl;
 @AutoConfiguration
 public class TaoyaoAutoConfiguration {
 
-	@Bean
-	@ConditionalOnMissingBean
-	public SlowInterceptor slowInterceptor(TaoyaoProperties taoyaoProperties) {
-		return new SlowInterceptor(taoyaoProperties);
-	}
-	
+    @Bean
+    @ConditionalOnMissingBean
+    public SlowInterceptor slowInterceptor(TaoyaoProperties taoyaoProperties) {
+        return new SlowInterceptor(taoyaoProperties);
+    }
+    
     @Bean
     @ConditionalOnMissingBean
     public SecurityService securityService(
-        SecurityProperties securityProperties,
+        @Autowired(required = true)  SecurityProperties      securityProperties,
         @Autowired(required = false) UsernamePasswordService usernamePasswordService
     ) {
         return new SecurityServiceImpl(securityProperties, usernamePasswordService);
     }
-	
-	@Bean
-	@ConditionalOnProperty(prefix = "taoyao.security", name = "enabled", havingValue = "true", matchIfMissing = true)
-	@ConditionalOnMissingBean
-	public SecurityInterceptor securityInterceptor(
-	    SecurityService securityService,
-	    SecurityProperties securityProperties
-	) {
-		return new SecurityInterceptor(securityService, securityProperties);
-	}
-	
+    
+    @Bean
+    @ConditionalOnProperty(prefix = "taoyao.security", name = "enabled", havingValue = "true", matchIfMissing = true)
+    @ConditionalOnMissingBean
+    public SecurityInterceptor securityInterceptor(
+        SecurityService    securityService,
+        SecurityProperties securityProperties
+    ) {
+        return new SecurityInterceptor(securityService, securityProperties);
+    }
+    
 }

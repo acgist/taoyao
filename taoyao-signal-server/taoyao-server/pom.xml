@@ -2,52 +2,52 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>com.acgist</groupId>
-		<artifactId>taoyao</artifactId>
-		<version>1.0.0</version>
-	</parent>
+    <parent>
+        <groupId>com.acgist</groupId>
+        <artifactId>taoyao</artifactId>
+        <version>1.0.0</version>
+    </parent>
 
-	<artifactId>taoyao-server</artifactId>
-	<packaging>jar</packaging>
+    <artifactId>taoyao-server</artifactId>
+    <packaging>jar</packaging>
 
-	<name>taoyao-server</name>
-	<description>启动服务</description>
+    <name>taoyao-server</name>
+    <description>启动服务</description>
 
-	<properties>
-		<taoyao.maven.basedir>${project.parent.basedir}</taoyao.maven.basedir>
-		<taoyao.maven.skip.assembly>false</taoyao.maven.skip.assembly>
-	</properties>
+    <properties>
+        <taoyao.maven.basedir>${project.parent.basedir}</taoyao.maven.basedir>
+        <taoyao.maven.skip.assembly>false</taoyao.maven.skip.assembly>
+    </properties>
 
-	<dependencies>
-		<dependency>
-			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-signal</artifactId>
-		</dependency>
+    <dependencies>
+        <dependency>
+            <groupId>com.acgist</groupId>
+            <artifactId>taoyao-signal</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.hibernate.validator</groupId>
             <artifactId>hibernate-validator</artifactId>
         </dependency>
-	</dependencies>
+    </dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>com.acgist.taoyao.main.TaoyaoApplication</mainClass>
-							<addClasspath>true</addClasspath>
-							<classpathPrefix>./</classpathPrefix>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
-		</plugins>
-	</build>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <mainClass>com.acgist.taoyao.main.TaoyaoApplication</mainClass>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>./</classpathPrefix>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

@@ -17,6 +17,7 @@ import com.acgist.taoyao.signal.protocol.control.IControlPhotographProtocol;
 import com.acgist.taoyao.signal.protocol.control.IControlServerRecordProtocol;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -34,29 +35,20 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ControlController {
     
-    private final IControlBellProtocol controlBellProtocol;
-    private final IControlPhotographProtocol controlPhotographProtocol;
-    private final IControlConfigAudioProtocol controlConfigAudioProtocol;
-    private final IControlConfigVideoProtocol controlConfigVideoProtocol;
+    private final IControlBellProtocol         controlBellProtocol;
+    private final IControlPhotographProtocol   controlPhotographProtocol;
+    private final IControlConfigAudioProtocol  controlConfigAudioProtocol;
+    private final IControlConfigVideoProtocol  controlConfigVideoProtocol;
     private final IControlClientRecordProtocol controlClientRecordProtocol;
     private final IControlServerRecordProtocol controlServerRecordProtocol;
     
     @Operation(summary = "响铃", description = "响铃控制")
     @GetMapping("/bell/{clientId}")
-    public Message bell(@PathVariable String clientId, @NotNull(message = "没有指定操作状态") Boolean enabled) {
+    public Message bell(
+        @PathVariable String clientId,
+        @NotNull(message = "没有指定操作状态") Boolean enabled
+    ) {
         return this.controlBellProtocol.execute(clientId, enabled);
-    }
-    
-    @Operation(summary = "录像", description = "终端录像控制")
-    @GetMapping("/client/record/{clientId}")
-    public Message record(@PathVariable String clientId, @NotNull(message = "没有指定操作状态") Boolean enabled) {
-        return this.controlClientRecordProtocol.execute(clientId, enabled);
-    }
-    
-    @Operation(summary = "录像", description = "服务端录像控制")
-    @GetMapping("/server/record/{roomId}/{clientId}")
-    public Message record(@PathVariable String roomId, @PathVariable String clientId, @NotNull(message = "没有指定操作状态") Boolean enabled) {
-        return this.controlServerRecordProtocol.execute(roomId, clientId, enabled);
     }
     
     @Operation(summary = "拍照", description = "拍照控制")
@@ -67,14 +59,39 @@ public class ControlController {
     
     @Operation(summary = "配置音频", description = "配置音频")
     @GetMapping("/config/audio/{clientId}")
-    public Message configAudio(@PathVariable String clientId, @Valid MediaAudioProperties mediaAudioProperties) {
+    public Message configAudio(
+        @PathVariable String clientId,
+        @Valid @RequestBody MediaAudioProperties mediaAudioProperties
+    ) {
         return this.controlConfigAudioProtocol.execute(clientId, mediaAudioProperties);
     }
     
     @Operation(summary = "配置视频", description = "配置视频")
     @GetMapping("/config/video/{clientId}")
-    public Message configVideo(@PathVariable String clientId, @Valid MediaVideoProperties mediaVideoProperties) {
+    public Message configVideo(
+        @PathVariable String clientId,
+        @Valid @RequestBody MediaVideoProperties mediaVideoProperties
+    ) {
         return this.controlConfigVideoProtocol.execute(clientId, mediaVideoProperties);
+    }
+    
+    @Operation(summary = "录像", description = "终端录像控制")
+    @GetMapping("/client/record/{clientId}")
+    public Message record(
+        @PathVariable String clientId,
+        @NotNull(message = "没有指定操作状态") Boolean enabled
+    ) {
+        return this.controlClientRecordProtocol.execute(clientId, enabled);
+    }
+    
+    @Operation(summary = "录像", description = "服务端录像控制")
+    @GetMapping("/server/record/{roomId}/{clientId}")
+    public Message record(
+        @PathVariable String roomId,
+        @PathVariable String clientId,
+        @NotNull(message = "没有指定操作状态") Boolean enabled
+    ) {
+        return this.controlServerRecordProtocol.execute(roomId, clientId, enabled);
     }
     
 }

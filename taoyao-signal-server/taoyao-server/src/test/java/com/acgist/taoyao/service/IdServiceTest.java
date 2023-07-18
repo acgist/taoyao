@@ -15,29 +15,29 @@ import lombok.extern.slf4j.Slf4j;
 //@SpringBootTest(classes = TaoyaoApplication.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class IdServiceTest {
 
-	@Autowired
-	private IdService idService;
-	
-	@Test
-//	@Timeout(value = 1000, unit = TimeUnit.MILLISECONDS)
-//	@Rollback()
-//	@RepeatedTest(10)
-	void testId() {
-		final long id = this.idService.buildId();
-		log.info("生成ID：{}", id);
-		log.info("生成ID：{}", String.valueOf(id).length());
-	}
-	
-	@Test
-	@CostedTest(count = 100000, thread = 10)
-	void testIdCosted() {
-		this.idService.buildId();
-	}
-	
-	@Test
-	@CostedTest(count = 100000, thread = 10)
-	void testUuidCosted() {
-	    this.idService.buildUuid();
-	}
-	
+    @Autowired
+    private IdService idService;
+    
+    @Test
+//  @Timeout(value = 1000, unit = TimeUnit.MILLISECONDS)
+//  @Rollback()
+//  @RepeatedTest(10)
+    void testId() {
+        final long id = this.idService.buildId();
+        log.info("生成ID：{}", id);
+        log.info("生成ID：{}", String.valueOf(id).length());
+    }
+    
+    @Test
+    @CostedTest(count = 100000, thread = 10)
+    void testIdCosted() {
+        this.idService.buildId();
+    }
+    
+    @Test
+    @CostedTest(count = 100000, thread = 10)
+    void testUuidCosted() {
+        this.idService.buildUuid();
+    }
+    
 }

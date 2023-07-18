@@ -25,14 +25,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RequestMapping("/system")
 public class SystemController {
     
-    private final SystemRebootProtocol systemRebootProtocol;
+    private final SystemRebootProtocol   systemRebootProtocol;
     private final SystemShutdownProtocol systemShutdownProtocol;
     
     public SystemController(
-        @Autowired(required = false) SystemRebootProtocol systemRebootProtocol,
+        @Autowired(required = false) SystemRebootProtocol   systemRebootProtocol,
         @Autowired(required = false) SystemShutdownProtocol systemShutdownProtocol
     ) {
-        this.systemRebootProtocol = systemRebootProtocol;
+        this.systemRebootProtocol   = systemRebootProtocol;
         this.systemShutdownProtocol = systemShutdownProtocol;
     }
     

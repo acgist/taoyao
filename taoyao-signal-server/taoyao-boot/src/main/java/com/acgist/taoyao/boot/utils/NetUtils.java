@@ -118,8 +118,11 @@ public final class NetUtils {
             final InetAddress clientAddress = NetUtils.realAddress(clientIP);
             final boolean sourceLocal = NetUtils.localAddress(sourceAddress);
             final boolean clientLocal = NetUtils.localAddress(clientAddress);
-            // 内网服务 && 内网设备
+            // 内网服务 && 内网设备 => 重写服务地址
             if(sourceLocal && clientLocal) {
+                if(NetUtils.subnetIP(sourceIP, clientIP)) {
+                    return sourceIP;
+                }
                 final RewriteRuleProperties rule = NetUtils.rewriteProperties.getRule().stream()
                     .filter(v -> NetUtils.subnetIP(v.getNetwork(), clientIP))
                     .findFirst()
@@ -127,11 +130,10 @@ public final class NetUtils {
                 if(rule == null) {
                     return sourceIP;
                 }
-                log.debug("地址重写：{} - {} - {}", sourceIP, clientIP, rule.getNetwork());
-                // 明确配置
                 if(StringUtils.isNotEmpty(rule.getInnerHost())) {
                     return rule.getInnerHost();
                 }
+                log.debug("地址重写：{} - {} - {}", sourceIP, clientIP, rule.getNetwork());
                 // 地址 = 网络号 + 主机号
                 final byte[] sourceBytes = sourceAddress.getAddress();
                 final byte[] clientBytes = clientAddress.getAddress();
@@ -151,7 +153,7 @@ public final class NetUtils {
                     return InetAddress.getByAddress(bytes).getHostAddress();
                 }
             }
-            // 内网服务 && 公网设备
+            // 内网服务 && 公网设备 => 公网服务地址
             if(sourceLocal && !clientLocal) {
                 final RewriteRuleProperties rule = NetUtils.rewriteProperties.getRule().stream()
                     .filter(v -> NetUtils.subnetIP(v.getNetwork(), sourceIP))
@@ -164,7 +166,7 @@ public final class NetUtils {
                     return rule.getOuterHost();
                 }
             }
-            // 公网服务 && 内网设备
+            // 公网服务 && 内网设备 => 内网服务地址
             if(!sourceLocal && clientLocal) {
                 final RewriteRuleProperties rule = NetUtils.rewriteProperties.getRule().stream()
                     .filter(v -> NetUtils.subnetIP(v.getNetwork(), clientIP))
