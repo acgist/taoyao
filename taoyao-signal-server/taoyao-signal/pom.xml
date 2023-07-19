@@ -2,33 +2,33 @@
 
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 
-	<modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
-	<parent>
-		<groupId>com.acgist</groupId>
-		<artifactId>taoyao</artifactId>
-		<version>1.0.0</version>
-	</parent>
+    <parent>
+        <groupId>com.acgist</groupId>
+        <artifactId>taoyao</artifactId>
+        <version>1.0.0</version>
+    </parent>
 
-	<artifactId>taoyao-signal</artifactId>
-	<packaging>jar</packaging>
+    <artifactId>taoyao-signal</artifactId>
+    <packaging>jar</packaging>
 
-	<name>taoyao-signal</name>
-	<description>信令模块</description>
+    <name>taoyao-signal</name>
+    <description>信令模块</description>
 
-	<dependencies>
-		<dependency>
-			<groupId>com.acgist</groupId>
-			<artifactId>taoyao-boot</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-websocket</artifactId>
-		</dependency>
-	</dependencies>
+    <dependencies>
+        <dependency>
+            <groupId>com.acgist</groupId>
+            <artifactId>taoyao-boot</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+    </dependencies>
 
 </project>
