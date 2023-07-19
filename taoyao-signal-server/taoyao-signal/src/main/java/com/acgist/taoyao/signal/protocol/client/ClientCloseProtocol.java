@@ -61,11 +61,11 @@ public class ClientCloseProtocol extends ProtocolClientAdapter implements Applic
 	 * @param client 终端
 	 */
 	private void close(Client client) {
-        if(client == null || !client.authorized()) {
+        if(client == null || client.unauthorized()) {
             // 没有授权终端
             return;
         }
-        final String clientId = client.clientId();
+        final String clientId = client.getClientId();
         log.info("关闭终端：{}", clientId);
         // 释放房间终端
         this.roomManager.leave(client);

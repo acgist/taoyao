@@ -53,7 +53,7 @@ public class ClientOnlineProtocol extends ProtocolClientAdapter implements Appli
         final String clientId = event.getClientId();
         this.clientManager.broadcast(
             clientId,
-            this.build(client.status())
+            this.build(client.getStatus())
         );
     }
 	

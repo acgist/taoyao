@@ -52,15 +52,15 @@ public class SessionCallProtocol extends ProtocolSessionAdapter {
         }
         final Session session = this.sessionManager.call(client, target);
         message.setBody(Map.of(
-            Constant.NAME,       target.status().getName(),
-            Constant.CLIENT_ID,  target.clientId(),
+            Constant.NAME,       target.getName(),
+            Constant.CLIENT_ID,  target.getClientId(),
             Constant.SESSION_ID, session.getId()
         ));
         client.push(message);
         final Message callMessage = message.cloneWithoutBody();
         callMessage.setBody(Map.of(
-            Constant.NAME,       client.status().getName(),
-            Constant.CLIENT_ID,  client.clientId(),
+            Constant.NAME,       client.getName(),
+            Constant.CLIENT_ID,  client.getClientId(),
             Constant.SESSION_ID, session.getId(),
             Constant.AUDIO,      MapUtils.get(body, Constant.AUDIO, true),
             Constant.VIDEO,      MapUtils.get(body, Constant.VIDEO, true)

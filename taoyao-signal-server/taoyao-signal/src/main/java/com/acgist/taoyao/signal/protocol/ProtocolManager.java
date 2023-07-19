@@ -120,7 +120,7 @@ public class ProtocolManager {
 			return;
 		}
 		if(log.isDebugEnabled()) {
-		    log.debug("执行信令消息：{} - {}", client.clientId(), content);
+		    log.debug("执行信令消息：{} - {}", client.getClientId(), content);
 		}
 		if(protocol instanceof ClientRegisterProtocol) {
 			protocol.execute(client, message);

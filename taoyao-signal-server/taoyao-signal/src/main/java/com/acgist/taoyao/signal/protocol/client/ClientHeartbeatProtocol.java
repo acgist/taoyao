@@ -46,7 +46,7 @@ public class ClientHeartbeatProtocol extends ProtocolClientAdapter {
 	@Override
 	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
 		client.push(message.cloneWithoutBody());
-		final ClientStatus status = client.status();
+		final ClientStatus status = client.getStatus();
 		status.copy(body);
 	}
 	

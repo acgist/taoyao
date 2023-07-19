@@ -84,7 +84,7 @@ public class Transport extends OperatorAdapter {
         this.room = room;
         this.client = client;
         this.roomId = room.getRoomId();
-        this.clientId = client.clientId();
+        this.clientId = client.getClientId();
     }
     
     /**

@@ -37,7 +37,7 @@ public abstract class ClientEventAdapter extends ApplicationEventAdapter {
 	public ClientEventAdapter(Client client, Message message, Map<String, Object> body) {
 		super(client, message, body);
 		this.client = client;
-		this.clientId = client.clientId();
+		this.clientId = client.getClientId();
 	}
 	
 }

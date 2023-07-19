@@ -19,7 +19,7 @@ public abstract class ProtocolClientAdapter extends ProtocolAdapter {
 
     @Override
     public void execute(Client client, Message message) {
-        this.execute(client.clientId(), client.clientType(), client, message, message.body());
+        this.execute(client.getClientId(), client.getClientType(), client, message, message.body());
     }
 
     /**

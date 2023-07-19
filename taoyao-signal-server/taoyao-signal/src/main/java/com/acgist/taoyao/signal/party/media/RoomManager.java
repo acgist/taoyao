@@ -91,7 +91,7 @@ public class RoomManager {
 	 */
 	public void recreate(Client mediaClient, Message message) {
 	    this.rooms.stream()
-	    .filter(room -> mediaClient.clientId().equals(room.getMediaClient().clientId()))
+	    .filter(room -> mediaClient.getClientId().equals(room.getMediaClient().getClientId()))
 	    .forEach(room -> {
 	        log.info("重建房间：{}", room.getRoomId());
 	        final Message clone = message.cloneWithoutBody();

@@ -110,8 +110,8 @@ public class ClientRegisterProtocol extends ProtocolClientAdapter {
 	 * @return 终端状态
 	 */
 	private ClientStatus buildStatus(String clientId, ClientType clientType, Client client, Map<String, Object> body) {
-        final ClientStatus status = client.status();
-        status.setIp(client.ip());
+        final ClientStatus status = client.getStatus();
+        status.setIp(client.getIP());
         status.setName(MapUtils.get(body, Constant.NAME));
         status.setClientId(clientId);
         status.setClientType(clientType);

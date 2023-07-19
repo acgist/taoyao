@@ -54,7 +54,7 @@ public class ClientAlarmProtocol extends ProtocolClientAdapter {
             alarmMessage,
             alarmDatetime
         );
-        final ClientStatus status = client.status();
+        final ClientStatus status = client.getStatus();
         status.setAlarming(Boolean.TRUE);
         // 业务逻辑
     }

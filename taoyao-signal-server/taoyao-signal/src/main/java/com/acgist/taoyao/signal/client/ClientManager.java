@@ -9,7 +9,6 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import com.acgist.taoyao.boot.annotation.Manager;
-import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.event.client.ClientCloseEvent;
 
@@ -24,7 +23,6 @@ import lombok.extern.slf4j.Slf4j;
 @Manager
 public class ClientManager {
 	
-	private final TaoyaoProperties taoyaoProperties;
 	private final ApplicationContext applicationContext;
 	
 	/**
@@ -32,8 +30,7 @@ public class ClientManager {
 	 */
 	private final List<Client> clients;
 	
-	public ClientManager(TaoyaoProperties taoyaoProperties, ApplicationContext applicationContext) {
-        this.taoyaoProperties = taoyaoProperties;
+	public ClientManager(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
         this.clients = new CopyOnWriteArrayList<>();
     }
@@ -60,7 +57,7 @@ public class ClientManager {
 	 */
 	public void unicast(String to, Message message) {
 		this.clients().stream()
-		.filter(v -> Objects.equals(to, v.clientId()))
+		.filter(v -> Objects.equals(to, v.getClientId()))
 		.forEach(v -> v.push(message));
 	}
 	
@@ -72,7 +69,7 @@ public class ClientManager {
 	 */
 	public void unicast(Client to, Message message) {
 		this.clients().stream()
-		.filter(v -> v.instance() == to)
+		.filter(v -> v.getInstance() == to)
 		.forEach(v -> v.push(message));
 	}
 	
@@ -95,7 +92,7 @@ public class ClientManager {
 	 */
 	public void broadcast(String from, Message message, ClientType ... clientTypes) {
 		this.clients(clientTypes).stream()
-		.filter(v -> !Objects.equals(from, v.clientId()))
+		.filter(v -> !Objects.equals(from, v.getClientId()))
 		.forEach(v -> v.push(message));
 	}
 	
@@ -108,7 +105,7 @@ public class ClientManager {
 	 */
 	public void broadcast(Client from, Message message, ClientType ... clientTypes) {
 		this.clients(clientTypes).stream()
-		.filter(v -> v.instance() != from)
+		.filter(v -> v.getInstance() != from)
 		.forEach(v -> v.push(message));
 	}
 	
@@ -119,7 +116,7 @@ public class ClientManager {
 	 */
 	public Client clients(AutoCloseable instance) {
 		return this.clients.stream()
-			.filter(v -> v.instance() == instance)
+			.filter(v -> v.getInstance() == instance)
 			.findFirst()
 			.orElse(null);
 	}
@@ -131,7 +128,7 @@ public class ClientManager {
 	 */
 	public Client clients(String clientId) {
 		return this.clients().stream()
-			.filter(v -> Objects.equals(clientId, v.clientId()))
+			.filter(v -> Objects.equals(clientId, v.getClientId()))
 			.findFirst()
 			.orElse(null);
 	}
@@ -144,7 +141,7 @@ public class ClientManager {
 	public List<Client> clients(ClientType ... clientTypes) {
 		return this.clients.stream()
 			.filter(Client::authorized)
-			.filter(client -> ArrayUtils.isEmpty(clientTypes) || ArrayUtils.contains(clientTypes, client.clientType()))
+			.filter(client -> ArrayUtils.isEmpty(clientTypes) || ArrayUtils.contains(clientTypes, client.getClientType()))
 			.toList();
 	}
 	
@@ -155,7 +152,7 @@ public class ClientManager {
 	 */
 	public ClientStatus status(AutoCloseable instance) {
 		final Client client = this.clients(instance);
-		return client == null ? null : client.status();
+		return client == null ? null : client.getStatus();
 	}
 	
 	/**
@@ -165,7 +162,7 @@ public class ClientManager {
 	 */
 	public ClientStatus status(String clientId) {
 	    final Client client = this.clients(clientId);
-	    return client == null ? null : client.status();
+	    return client == null ? null : client.getStatus();
 	}
 
 	/**
@@ -175,7 +172,7 @@ public class ClientManager {
 	 */
 	public List<ClientStatus> status(ClientType ... clientTypes) {
 		return this.clients(clientTypes).stream()
-			.map(Client::status)
+			.map(Client::getStatus)
 			.toList();
 	}
 
@@ -225,8 +222,8 @@ public class ClientManager {
 	private void closeTimeout() {
 	    final int oldSize = this.clients.size();
 		this.clients.stream()
-		.filter(v -> !v.authorized())
-		.filter(v -> v.timeout(this.taoyaoProperties.getTimeout()))
+		.filter(v -> v.unauthorized())
+		.filter(v -> v.timeout())
 		.forEach(v -> {
 			log.debug("关闭超时终端：{}", v);
 			this.close(v);

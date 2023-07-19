@@ -53,7 +53,7 @@ public class Session implements Closeable {
      * @param message  消息
      */
     public void pushOther(String clientId, Message message) {
-        if(this.source.clientId().equals(clientId)) {
+        if(this.source.getClientId().equals(clientId)) {
             this.target.push(message);
         } else {
             this.source.push(message);

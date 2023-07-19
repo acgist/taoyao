@@ -103,7 +103,7 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
         message.setBody(Map.of(
             Constant.ROOM_ID, room.getRoomId(),
             Constant.CLIENT_ID, clientId,
-            Constant.STATUS, client.status()
+            Constant.STATUS, client.getStatus()
         ));
         room.broadcast(message);
         // 进入房间事件

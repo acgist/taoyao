@@ -64,7 +64,7 @@ public class ControlClientRecordProtocol extends ProtocolControlAdapter implemen
      * @param enabled 录像状态
      */
     private void updateRecordStatus(Client client, Boolean enabled) {
-        client.status().setClientRecording(enabled);
+        client.getStatus().setClientRecording(enabled);
     }
     
 }

@@ -293,7 +293,7 @@ public class Recorder {
      * @param status 状态
      */
     private void updateRecordStatus(boolean status) {
-        this.clientWrapper.getClient().status().setServerRecording(status);
+        this.clientWrapper.getClient().getStatus().setServerRecording(status);
     }
 
 }

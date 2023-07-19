@@ -64,7 +64,7 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
         final Map<String, Transport> transports = room.getTransports();
         final String transportId = MapUtils.get(responseBody, Constant.TRANSPORT_ID);
         // 重写地址
-        this.rewriteIp(client.ip(), responseBody);
+        this.rewriteIp(client.getIP(), responseBody);
         // 处理逻辑
         final ClientWrapper clientWrapper = room.clientWrapper(client);
         // 消费者

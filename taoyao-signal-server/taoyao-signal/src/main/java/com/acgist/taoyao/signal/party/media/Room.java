@@ -105,7 +105,7 @@ public class Room extends OperatorAdapter {
 	 */
 	public List<ClientStatus> clientStatus() {
 		return this.clients.keySet().stream()
-			.map(Client::status)
+			.map(Client::getStatus)
 			.toList();
 	}
 	
@@ -122,7 +122,7 @@ public class Room extends OperatorAdapter {
 			if(clientWrapper != null) {
 				return clientWrapper;
 			}
-			log.info("终端进入房间：{} - {}", this.roomId, client.clientId());
+			log.info("终端进入房间：{} - {}", this.roomId, client.getClientId());
 			clientWrapper = new ClientWrapper(this, client);
 			this.clients.put(client, clientWrapper);
 			this.roomStatus.setClientSize(this.roomStatus.getClientSize() + 1);
@@ -139,7 +139,7 @@ public class Room extends OperatorAdapter {
 		synchronized (this.clients) {
 		    final ClientWrapper wrapper = this.clients.remove(client);
 			if(wrapper != null) {
-			    log.info("终端离开房间：{} - {}", this.roomId, client.clientId());
+			    log.info("终端离开房间：{} - {}", this.roomId, client.getClientId());
 			    try {
                     wrapper.close();
                 } catch (Exception e) {
@@ -179,7 +179,7 @@ public class Room extends OperatorAdapter {
      */
     public void unicast(String to, Message message) {
         this.clients.keySet().stream()
-        .filter(v -> Objects.equals(to, v.clientId()))
+        .filter(v -> Objects.equals(to, v.getClientId()))
         .forEach(v -> v.push(message));
     }
     
@@ -200,7 +200,7 @@ public class Room extends OperatorAdapter {
 	 */
 	public void broadcast(String from, Message message) {
 		this.clients.keySet().stream()
-		.filter(v -> !Objects.equals(from, v.clientId()))
+		.filter(v -> !Objects.equals(from, v.getClientId()))
 		.forEach(v -> v.push(message));
 	}
 	

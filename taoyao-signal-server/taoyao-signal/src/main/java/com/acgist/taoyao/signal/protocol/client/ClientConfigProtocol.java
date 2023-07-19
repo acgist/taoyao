@@ -53,7 +53,7 @@ public class ClientConfigProtocol extends ProtocolClientAdapter implements Appli
 	@Override
     public void onApplicationEvent(ClientConfigEvent event) {
 	    final Client client = event.getClient();
-	    final ClientType clientType = client.clientType();
+	    final ClientType clientType = client.getClientType();
 	    client.push(this.build(clientType));
     }
 	

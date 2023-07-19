@@ -88,7 +88,7 @@ public class ClientWrapper implements AutoCloseable {
         this.room = room;
         this.client = client;
         this.roomId = room.getRoomId();
-        this.clientId = client.clientId();
+        this.clientId = client.getClientId();
         this.producers = new ConcurrentHashMap<>();
         this.consumers = new ConcurrentHashMap<>();
         this.dataProducers = new ConcurrentHashMap<>();
