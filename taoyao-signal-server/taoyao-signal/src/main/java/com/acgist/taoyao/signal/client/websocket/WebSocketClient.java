@@ -21,7 +21,6 @@ public class WebSocketClient extends ClientAdapter<Session> {
 
 	public WebSocketClient(long timeout, Session instance) {
 		super(timeout, instance);
-		this.ip = (String) instance.getUserProperties().get(Constant.IP);
 	}
 	
 	@Override
@@ -37,6 +36,11 @@ public class WebSocketClient extends ClientAdapter<Session> {
 				log.error("WebSocket终端发送消息异常：{}", message, e);
 			}
 		}
+	}
+	
+	@Override
+	protected String getClientIP(Session instance) {
+	    return (String) instance.getUserProperties().get(Constant.IP);
 	}
 
 }

@@ -67,7 +67,7 @@ public class RoomCreateProtocol extends ProtocolClientAdapter implements Applica
             );
 	        message.setBody(room.getRoomStatus());
 	        // 通知媒体终端
-	        this.clientManager.broadcast(message, ClientType.MEDIA_CLIENT);
+	        this.clientManager.broadcast(message, ClientType.MEDIA_CLIENT_TYPE);
 	    } else {
 	        this.logNoAdapter(clientType);
 	    }

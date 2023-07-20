@@ -21,47 +21,47 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public final class SocketSignalAcceptHandler implements CompletionHandler<AsynchronousSocketChannel, AsynchronousServerSocketChannel> {
 
-	private ClientManager clientManager;
-	private ProtocolManager protocolManager;
-	private SocketProperties socketProperties;
-	private PlatformErrorProtocol platformErrorProtocol;
-	
-	public SocketSignalAcceptHandler(
-		ClientManager clientManager,
-		ProtocolManager protocolManager,
-		SocketProperties socketProperties,
-		PlatformErrorProtocol platformErrorProtocol
-	) {
-		this.clientManager = clientManager;
-		this.protocolManager = protocolManager;
-		this.socketProperties = socketProperties;
-		this.platformErrorProtocol = platformErrorProtocol;
-	}
+    private final ClientManager         clientManager;
+    private final ProtocolManager       protocolManager;
+    private final SocketProperties      socketProperties;
+    private final PlatformErrorProtocol platformErrorProtocol;
+    
+    public SocketSignalAcceptHandler(
+        ClientManager         clientManager,
+        ProtocolManager       protocolManager,
+        SocketProperties      socketProperties,
+        PlatformErrorProtocol platformErrorProtocol
+    ) {
+        this.clientManager         = clientManager;
+        this.protocolManager       = protocolManager;
+        this.socketProperties      = socketProperties;
+        this.platformErrorProtocol = platformErrorProtocol;
+    }
 
-	@Override
-	public void completed(AsynchronousSocketChannel channel, AsynchronousServerSocketChannel server) {
-		try {
-			channel.setOption(StandardSocketOptions.SO_KEEPALIVE, Boolean.TRUE);
-			this.clientManager.open(new SocketClient(this.socketProperties, channel));
-			final SocketSignalMessageHandler messageHandler = new SocketSignalMessageHandler(
-				this.clientManager,
-				this.protocolManager,
-				this.socketProperties,
-				channel,
-				this.platformErrorProtocol
-			);
-			messageHandler.loopMessage();
-			log.debug("Socket信令终端连接成功：{}", channel);
-		} catch (IOException e) {
-			log.error("Socket信令终端连接异常：", channel, e);
-		} finally {
-			server.accept(server, this);
-		}
-	}
-	
-	@Override
-	public void failed(Throwable throwable, AsynchronousServerSocketChannel server) {
-		log.error("Socket信令终端连接异常：{}", server, throwable);
-	}
-	
+    @Override
+    public void completed(AsynchronousSocketChannel channel, AsynchronousServerSocketChannel server) {
+        try {
+            channel.setOption(StandardSocketOptions.SO_KEEPALIVE, Boolean.TRUE);
+            this.clientManager.open(new SocketClient(this.socketProperties, channel));
+            final SocketSignalMessageHandler messageHandler = new SocketSignalMessageHandler(
+                this.clientManager,
+                this.protocolManager,
+                this.socketProperties,
+                this.platformErrorProtocol,
+                channel
+            );
+            messageHandler.loopMessage();
+            log.debug("Socket信令终端连接成功：{}", channel);
+        } catch (IOException e) {
+            log.error("Socket信令终端连接异常：", channel, e);
+        } finally {
+            server.accept(server, this);
+        }
+    }
+    
+    @Override
+    public void failed(Throwable throwable, AsynchronousServerSocketChannel server) {
+        log.error("Socket信令终端连接异常：{}", server, throwable);
+    }
+    
 }

@@ -14,10 +14,25 @@ import lombok.Getter;
 @Getter
 public enum ClientType {
 
+    /**
+     * 通过浏览器接入的终端
+     */
     WEB("Web"),
+    /**
+     * 媒体服务终端
+     */
     MEDIA("媒体服务"),
+    /**
+     * 没有界面的摄像头
+     */
     CAMERA("摄像头"),
+    /**
+     * 手机APP、平板APP
+     */
     MOBILE("移动端"),
+    /**
+     * 其他智能终端
+     */
     OTHER("其他终端");
     
     /**
@@ -33,7 +48,10 @@ public enum ClientType {
      * @return 是否是媒体终端
      */
     public boolean mediaClient() {
-        return this == WEB || this == CAMERA || this == MOBILE;
+        return
+            this == WEB    ||
+            this == CAMERA ||
+            this == MOBILE;
     }
     
     /**
@@ -49,7 +67,8 @@ public enum ClientType {
      * @return 类型
      */
     public static final ClientType of(String value) {
-        for (ClientType type : ClientType.values()) {
+        final ClientType[] types = ClientType.values();
+        for (ClientType type : types) {
             if(type.name().equalsIgnoreCase(value)) {
                 return type;
             }
@@ -58,12 +77,17 @@ public enum ClientType {
     }
     
     /**
-     * 媒体终端
+     * 媒体终端类型列表
      */
-    public static final ClientType[] MEDIA_CLIENT = Stream.of(ClientType.values()).filter(ClientType::mediaClient).toArray(ClientType[]::new);
+    public static final ClientType[] MEDIA_CLIENT_TYPE
+    =
+    Stream.of(ClientType.values()).filter(ClientType::mediaClient).toArray(ClientType[]::new);
+    
     /**
-     * 媒体服务
+     * 媒体服务类型列表
      */
-    public static final ClientType[] MEDIA_SERVER = Stream.of(ClientType.values()).filter(ClientType::mediaServer).toArray(ClientType[]::new);
+    public static final ClientType[] MEDIA_SERVER_TYPE
+    =
+    Stream.of(ClientType.values()).filter(ClientType::mediaServer).toArray(ClientType[]::new);
     
 }

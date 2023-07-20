@@ -58,6 +58,7 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
      * @param instance 终端实例
      */
     protected ClientAdapter(long timeout, T instance) {
+        this.ip             = this.getClientIP(instance);
         this.time           = System.currentTimeMillis();
         this.timeout        = timeout;
         this.instance       = instance;
@@ -151,8 +152,18 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
     
     @Override
     public void close() throws Exception {
+        log.info("关闭终端实例：{} - {}", this.ip, this.clientId);
         this.instance.close();
     }
+    
+    /**
+     * 解析终端IP
+     * 
+     * @param instance 终端实例
+     * 
+     * @return 终端IP
+     */
+    protected abstract String getClientIP(T instance);
     
     @Override
     public String toString() {

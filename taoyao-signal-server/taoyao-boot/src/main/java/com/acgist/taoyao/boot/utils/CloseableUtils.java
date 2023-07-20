@@ -1,6 +1,7 @@
 package com.acgist.taoyao.boot.utils;
 
 import java.io.Closeable;
+import java.nio.channels.AsynchronousChannelGroup;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -42,6 +43,21 @@ public final class CloseableUtils {
             }
         } catch (Exception e) {
             log.error("关闭资源异常", e);
+        }
+    }
+    
+    /**
+     * 关闭通道线程池
+     * 
+     * @param group 通道线程池
+     */
+    public static final void shutdown(AsynchronousChannelGroup group) {
+        try {
+            if(group != null) {
+                group.shutdown();
+            }
+        } catch (Exception e) {
+            log.error("关闭通道线程池异常", e);
         }
     }
     

@@ -37,31 +37,31 @@ public class ClientStatus {
     private Double humidity;
     @Schema(title = "温度", description = "温度")
     private Double temperature;
-	@Schema(title = "信号强度（0~100）", description = "信号强度（0~100）")
-	private Integer signal;
-	@Schema(title = "电池电量（0~100）", description = "电池电量（0~100）")
-	private Integer battery;
-	@Schema(title = "是否发生告警", description = "是否发生告警")
-	private Boolean alarming;
-	@Schema(title = "是否正在充电", description = "是否正在充电")
-	private Boolean charging;
-	@Schema(title = "终端是否正在录像", description = "终端是否正在录像")
-	private Boolean clientRecording;
-	@Schema(title = "服务端是否正在录像", description = "服务端是否正在录像")
-	private Boolean serverRecording;
-	@Schema(title = "最后心跳时间", description = "最后心跳时间")
-	private LocalDateTime lastHeartbeat;
-	@Schema(title = "终端状态", description = "其他扩展终端状态")
-	private Map<String, Object> status = new HashMap<>();
-	@Schema(title = "终端配置", description = "其他扩展终端配置")
-	private Map<String, Object> config = new HashMap<>();
-	
-	/**
-	 * 拷贝属性
-	 * 
-	 * @param body 消息主体
-	 */
-	public void copy(Map<String, Object> body) {
+    @Schema(title = "信号强度（0~100）", description = "信号强度（0~100）")
+    private Integer signal;
+    @Schema(title = "电池电量（0~100）", description = "电池电量（0~100）")
+    private Integer battery;
+    @Schema(title = "是否发生告警", description = "是否发生告警")
+    private Boolean alarming;
+    @Schema(title = "是否正在充电", description = "是否正在充电")
+    private Boolean charging;
+    @Schema(title = "终端是否正在录像", description = "终端是否正在录像")
+    private Boolean clientRecording;
+    @Schema(title = "服务端是否正在录像", description = "服务端是否正在录像")
+    private Boolean serverRecording;
+    @Schema(title = "终端状态", description = "其他扩展终端状态")
+    private Map<String, Object> status = new HashMap<>();
+    @Schema(title = "终端配置", description = "其他扩展终端配置")
+    private Map<String, Object> config = new HashMap<>();
+    @Schema(title = "最后心跳时间", description = "最后心跳时间")
+    private LocalDateTime lastHeartbeat;
+    
+    /**
+     * 拷贝属性
+     * 
+     * @param body 消息主体
+     */
+    public void copy(Map<String, Object> body) {
         this.setLatitude(MapUtils.getDouble(body, Constant.LATITUDE));
         this.setLongitude(MapUtils.getDouble(body, Constant.LONGITUDE));
         this.setHumidity(MapUtils.getDouble(body, Constant.HUMIDITY));
@@ -74,30 +74,30 @@ public class ClientStatus {
         this.status(MapUtils.get(body, Constant.STATUS));
         this.config(MapUtils.get(body, Constant.CONFIG));
         this.setLastHeartbeat(LocalDateTime.now());
-	}
-	
-	/**
-	 * 拷贝状态
-	 * 
-	 * @param map 状态
-	 */
-	public void status(Map<String, Object> map) {
-	    if(map == null) {
-	        return;
-	    }
-	    map.forEach(this.status::put);
-	}
-	
-	/**
-	 * 拷贝配置
-	 * 
-	 * @param map 配置
-	 */
-	public void config(Map<String, Object> map) {
-	    if(map == null) {
-	        return;
-	    }
-	    map.forEach(this.config::put);
-	}
-	
+    }
+    
+    /**
+     * 拷贝状态
+     * 
+     * @param map 状态
+     */
+    public void status(Map<String, Object> map) {
+        if(map == null) {
+            return;
+        }
+        map.forEach(this.status::put);
+    }
+    
+    /**
+     * 拷贝配置
+     * 
+     * @param map 配置
+     */
+    public void config(Map<String, Object> map) {
+        if(map == null) {
+            return;
+        }
+        map.forEach(this.config::put);
+    }
+    
 }
