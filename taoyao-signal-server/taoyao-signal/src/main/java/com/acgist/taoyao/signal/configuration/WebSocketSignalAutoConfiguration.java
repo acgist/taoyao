@@ -17,16 +17,16 @@ import com.acgist.taoyao.signal.client.websocket.WebSocketSignal;
 @AutoConfiguration
 public class WebSocketSignalAutoConfiguration {
 
-	@Bean
-	@ConditionalOnMissingBean
-	public WebSocketSignal webSocketSignal() {
-		return new WebSocketSignal();
-	}
-	
-	@Bean
-	@ConditionalOnMissingBean
-	public ServerEndpointExporter serverEndpointExporter() {
-		return new ServerEndpointExporter();
-	}
-	
+    @Bean
+    @ConditionalOnMissingBean
+    public WebSocketSignal webSocketSignal() {
+        return new WebSocketSignal();
+    }
+    
+    @Bean
+    @ConditionalOnMissingBean
+    public ServerEndpointExporter serverEndpointExporter() {
+        return new ServerEndpointExporter();
+    }
+    
 }

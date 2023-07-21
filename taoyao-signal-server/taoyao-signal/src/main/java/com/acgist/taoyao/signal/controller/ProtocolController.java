@@ -41,13 +41,13 @@ public class ProtocolController {
             
             ```
             {
+                "code"   : "状态编码",
+                "message": "状态描述",
                 "header": {
-                    "v": "消息版本",
-                    "id": "消息标识",
+                    "v"     : "消息版本",
+                    "id"    : "消息标识",
                     "signal": "信令标识"
                 },
-                "code": "状态编码",
-                "message": "状态描述",
                 "body": {
                     ...
                 }
@@ -64,49 +64,60 @@ public class ProtocolController {
             ...：其他自定义的透传内容
             ```
             
-            > 没有指定消息类型时表示和信令消息类型相同
+            > 消息类型可以省略表示和前面一致
             
             """);
         this.applicationContext.getBeansOfType(Protocol.class).entrySet().stream()
         .sorted((a, z) -> a.getValue().signal().compareTo(z.getValue().signal()))
         .forEach(e -> {
-            final String key = e.getKey();
+            final String key        = e.getKey();
             final Protocol protocol = e.getValue();
-            final String name = protocol.name();
-            final String signal = protocol.signal();
+            final String name       = protocol.name();
+            final String signal     = protocol.signal();
             final Class<?> clazz;
-            final Description description;
-            if(AopUtils.isAopProxy(e) || AopUtils.isCglibProxy(protocol) || AopUtils.isJdkDynamicProxy(protocol)) {
+            if(
+                AopUtils.isAopProxy(e)              ||
+                AopUtils.isCglibProxy(protocol)     ||
+                AopUtils.isJdkDynamicProxy(protocol)
+            ) {
                 // 代理获取
                 clazz = AopUtils.getTargetClass(protocol);
-                description = AnnotationUtils.findAnnotation(clazz, Description.class);
             } else {
                 // 直接获取
                 clazz = protocol.getClass();
-                description = AnnotationUtils.findAnnotation(clazz, Description.class);
             }
+            final Description description = AnnotationUtils.findAnnotation(clazz, Description.class);
             if(description == null) {
                 log.info("信令没有注解：{} - {}", key, name);
                 return;
             }
             // 信令名称
-            builder.append("### ").append(name)
-            .append("（").append(signal).append("）")
-            .append(newLine).append(newLine);
+            builder
+                .append("### ").append(name)
+                .append("（").append(signal).append("）")
+                .append(newLine).append(newLine);
             // 描述信息
             final String memo = description.memo().strip();
             if(StringUtils.isNotEmpty(memo)) {
-                builder.append(memo).append(newLine).append(newLine);
+                builder
+                    .append(memo)
+                    .append(newLine).append(newLine);
             }
             // 消息主体
             builder
-            .append("```").append(newLine)
-            .append("# 消息主体").append(newLine);
+                .append("```")
+                .append(newLine)
+                .append("# 消息主体")
+                .append(newLine);
             Stream.of(description.body()).forEach(line -> builder.append(line.strip()).append(newLine));
             // 数据流向
-            builder.append("# 数据流向").append(newLine);
+            builder
+                .append("# 数据流向")
+                .append(newLine);
             Stream.of(description.flow()).forEach(line -> builder.append(line.strip()).append(newLine));
-            builder.append("```").append(newLine).append(newLine);
+            builder
+                .append("```")
+                .append(newLine).append(newLine);
         });
         return builder.toString();
     }

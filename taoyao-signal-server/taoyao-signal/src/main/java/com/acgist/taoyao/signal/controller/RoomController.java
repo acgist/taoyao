@@ -32,36 +32,36 @@ import lombok.RequiredArgsConstructor;
 @RequestMapping("/room")
 @RequiredArgsConstructor
 public class RoomController {
-	
-	private final RoomManager roomManager;
-	
+    
+    private final RoomManager roomManager;
+    
     @Operation(summary = "房间信息", description = "房间信息")
     @GetMapping("/log")
-	public Message log() {
-	    this.roomManager.log();
-	    return Message.success();
-	}
-	
+    public Message log() {
+        this.roomManager.log();
+        return Message.success();
+    }
+    
     @Operation(summary = "房间列表", description = "房间列表")
-	@GetMapping("/list")
-	@ApiResponse(content = @Content(schema = @Schema(implementation = RoomStatus.class)))
-	public Message list() {
-		return Message.success(this.roomManager.status());
-	}
+    @GetMapping("/list")
+    @ApiResponse(content = @Content(schema = @Schema(implementation = RoomStatus.class)))
+    public Message list() {
+        return Message.success(this.roomManager.status());
+    }
 
-	@Operation(summary = "房间状态", description = "房间状态")
-	@GetMapping("/status/{roomId}")
-	@ApiResponse(content = @Content(schema = @Schema(implementation = RoomStatus.class)))
-	public Message status(@PathVariable String roomId) {
-		return Message.success(this.roomManager.status(roomId));
-	}
-	
-	@Operation(summary = "房间终端列表", description = "房间终端列表")
-	@GetMapping("/list/client/{roomId}")
-	@ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
-	public Message listClient(@PathVariable String roomId) {
-		final Room room = this.roomManager.room(roomId);
-		return Message.success(room == null ? List.of() : room.clientStatus());
-	}
-	
+    @Operation(summary = "房间状态", description = "房间状态")
+    @GetMapping("/status/{roomId}")
+    @ApiResponse(content = @Content(schema = @Schema(implementation = RoomStatus.class)))
+    public Message status(@PathVariable String roomId) {
+        return Message.success(this.roomManager.status(roomId));
+    }
+    
+    @Operation(summary = "房间终端列表", description = "房间终端列表")
+    @GetMapping("/list/client/{roomId}")
+    @ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
+    public Message listClient(@PathVariable String roomId) {
+        final Room room = this.roomManager.room(roomId);
+        return Message.success(room == null ? List.of() : room.clientStatus());
+    }
+    
 }

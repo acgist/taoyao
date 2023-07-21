@@ -21,34 +21,34 @@ import com.acgist.taoyao.signal.protocol.system.SystemShutdownProtocol;
 @ConditionalOnProperty(prefix = "taoyao.script", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class ScriptAutoConfiguration {
 
-	@Bean
-	@ConditionalOnMissingBean
-	public SystemRebootProtocol systemRebootProtocol(ScriptProperties scriptProperties) {
-		return new SystemRebootProtocol(scriptProperties);
-	}
-	
-	@Bean
-	@ConditionalOnMissingBean
-	public SystemShutdownProtocol systemShutdownProtocol(ScriptProperties scriptProperties) {
-		return new SystemShutdownProtocol(scriptProperties);
-	}
-	
-	@Bean
-	@ConditionalOnMissingBean
-	public PlatformRebootProtocol platformRebootProtocol(ScriptProperties scriptProperties) {
-		return new PlatformRebootProtocol(scriptProperties);
-	}
-	
-	@Bean
-	@ConditionalOnMissingBean
-	public PlatformShutdownProtocol platformShutdownProtocol(ScriptProperties scriptProperties) {
-		return new PlatformShutdownProtocol(scriptProperties);
-	}
-	
-	@Bean
-	@ConditionalOnMissingBean
-	public PlatformScriptProtocol platformScriptProtocol() {
-	    return new PlatformScriptProtocol();
-	}
-	
+    @Bean
+    @ConditionalOnMissingBean
+    public SystemRebootProtocol systemRebootProtocol(ScriptProperties scriptProperties) {
+        return new SystemRebootProtocol(scriptProperties);
+    }
+    
+    @Bean
+    @ConditionalOnMissingBean
+    public SystemShutdownProtocol systemShutdownProtocol(ScriptProperties scriptProperties) {
+        return new SystemShutdownProtocol(scriptProperties);
+    }
+    
+    @Bean
+    @ConditionalOnMissingBean
+    public PlatformRebootProtocol platformRebootProtocol(ScriptProperties scriptProperties) {
+        return new PlatformRebootProtocol(scriptProperties);
+    }
+    
+    @Bean
+    @ConditionalOnMissingBean
+    public PlatformShutdownProtocol platformShutdownProtocol(ScriptProperties scriptProperties) {
+        return new PlatformShutdownProtocol(scriptProperties);
+    }
+    
+    @Bean
+    @ConditionalOnMissingBean
+    public PlatformScriptProtocol platformScriptProtocol() {
+        return new PlatformScriptProtocol();
+    }
+    
 }

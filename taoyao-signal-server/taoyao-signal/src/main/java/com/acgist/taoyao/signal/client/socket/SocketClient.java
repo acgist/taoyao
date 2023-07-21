@@ -17,8 +17,6 @@ import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.signal.client.ClientAdapter;
 import com.acgist.taoyao.signal.utils.CipherUtils;
 
-import lombok.Getter;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -27,8 +25,6 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-@Getter
-@Setter
 public class SocketClient extends ClientAdapter<AsynchronousSocketChannel> {
 
     /**

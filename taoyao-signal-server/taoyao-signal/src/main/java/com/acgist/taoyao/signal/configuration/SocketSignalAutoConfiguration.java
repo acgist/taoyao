@@ -30,53 +30,53 @@ import lombok.extern.slf4j.Slf4j;
 @ConditionalOnProperty(prefix = "taoyao.socket", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class SocketSignalAutoConfiguration {
 
-	@Bean
-	@ConditionalOnMissingBean
-	public SocketSignal socketSignal(
-		ClientManager clientManager,
-		ProtocolManager protocolManager,
-		SocketProperties socketProperties,
-		PlatformErrorProtocol platformErrorProtocol
-	) {
-	    this.buildSecret(socketProperties);
-		return new SocketSignal(clientManager, protocolManager, socketProperties, platformErrorProtocol);
-	}
-	
-	@Bean
-	@ConditionalOnBean(SocketSignal.class)
-	public CommandLineRunner socketSignalCommandLineRunner(SocketSignal socketSignal) {
-		return new OrderedCommandLineRunner() {
-			@Override
-			public void run(String ... args) throws Exception {
-				socketSignal.init();
-			}
-		};
-	}
-
-	/**
-	 * @param socketProperties 加密配置
-	 */
-	private void buildSecret(SocketProperties socketProperties) {
-	    log.info("Socket信令加密策略：{}", socketProperties.getEncrypt());
-	    if(socketProperties.getEncrypt() == null) {
-	        return;
-	    }
-	    if(StringUtils.isNotEmpty(socketProperties.getEncryptSecret())) {
-	        log.info("Socket信令加密密码（固定）：{}", socketProperties.getEncryptSecret());
-	        return;
-	    }
-	    final byte[] bytes = switch (socketProperties.getEncrypt()) {
-	    case AES -> new byte[16];
-	    case DES -> new byte[8];
-	    default  -> null;
+    @Bean
+    @ConditionalOnMissingBean
+    public SocketSignal socketSignal(
+        ClientManager         clientManager,
+        ProtocolManager       protocolManager,
+        SocketProperties      socketProperties,
+        PlatformErrorProtocol platformErrorProtocol
+    ) {
+        this.buildSecret(socketProperties);
+        return new SocketSignal(clientManager, protocolManager, socketProperties, platformErrorProtocol);
+    }
+    
+    @Bean
+    @ConditionalOnBean(SocketSignal.class)
+    public CommandLineRunner socketSignalCommandLineRunner(SocketSignal socketSignal) {
+        return new OrderedCommandLineRunner() {
+            @Override
+            public void run(String ... args) throws Exception {
+                socketSignal.init();
+            }
         };
-	    if(bytes == null) {
-	        final Random random = new Random();
-	        random.nextBytes(bytes);	        socketProperties.setEncryptSecret(Base64.getMimeEncoder().encodeToString(bytes));
-	        log.info("Socket信令加密密码（随机）：{}", socketProperties.getEncryptSecret());
-	    } else {
-	        log.warn("Socket信令加密密码算法不支持的算法：{}", socketProperties.getEncrypt());
-	    }
-	}
-	
+    }
+
+    /**
+     * @param socketProperties 加密配置
+     */
+    private void buildSecret(SocketProperties socketProperties) {
+        log.info("Socket信令加密策略：{}", socketProperties.getEncrypt());
+        if(socketProperties.getEncrypt() == null) {
+            return;
+        }
+        if(StringUtils.isNotEmpty(socketProperties.getEncryptSecret())) {
+            log.info("Socket信令加密密码（固定）：{}", socketProperties.getEncryptSecret());
+            return;
+        }
+        final byte[] bytes = switch (socketProperties.getEncrypt()) {
+        case AES -> new byte[16];
+        case DES -> new byte[8];
+        default  -> null;
+        };
+        if(bytes == null) {
+            final Random random = new Random();
+            random.nextBytes(bytes);            socketProperties.setEncryptSecret(Base64.getMimeEncoder().encodeToString(bytes));
+            log.info("Socket信令加密密码（随机）：{}", socketProperties.getEncryptSecret());
+        } else {
+            log.warn("Socket信令加密密码算法不支持的算法：{}", socketProperties.getEncrypt());
+        }
+    }
+    
 }

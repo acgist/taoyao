@@ -25,7 +25,7 @@ public class WebSocketSignalConfigurator extends ServerEndpointConfig.Configurat
             field.setAccessible(true);
             config.getUserProperties().put(Constant.IP, ((RequestFacade) field.get(request)).getRemoteAddr());
         } catch (SecurityException | NoSuchFieldException | IllegalArgumentException | IllegalAccessException e) {
-            throw MessageCodeException.of(e, "无效终端（IP）：" + request);
+            throw MessageCodeException.of(e, "无效终端IP：" + request);
         }
         super.modifyHandshake(config, request, response);
     }

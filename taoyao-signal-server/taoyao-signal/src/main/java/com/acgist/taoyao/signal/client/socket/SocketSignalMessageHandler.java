@@ -133,7 +133,7 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
                         final String message = this.decrypt(bytes);
                         log.debug("Socket信令消息：{} - {}", this.channel, message);
                         // 处理
-                        this.execute(message.strip());
+                        this.execute(message);
                     }
                 }
             }

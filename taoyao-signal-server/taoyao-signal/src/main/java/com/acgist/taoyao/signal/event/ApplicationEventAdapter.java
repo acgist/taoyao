@@ -20,17 +20,17 @@ public class ApplicationEventAdapter extends ApplicationEvent {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 消息
+     * 信令消息
      */
     private final Message message;
     /**
-     * 主体
+     * 信令主体
      */
     private final Map<String, Object> body;
     
     protected ApplicationEventAdapter(Object source, Message message, Map<String, Object> body) {
         super(source);
-        this.body = body;
+        this.body    = body;
         this.message = message;
     }
     
@@ -53,6 +53,13 @@ public class ApplicationEventAdapter extends ApplicationEvent {
      */
     public Long getLong(String key) {
         return MapUtils.getLong(this.body, key);
+    }
+    
+    /**
+     * @see MapUtils#getDouble(Map, String)
+     */
+    public Double getDouble(String key) {
+        return MapUtils.getDouble(this.body, key);
     }
     
     /**

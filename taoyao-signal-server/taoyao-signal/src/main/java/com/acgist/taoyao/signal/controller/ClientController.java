@@ -30,44 +30,44 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ClientController {
 
-	private final ClientManager clientManager;
-	private final ClientWakeupProtocol clientWakeupProtocol;
-	private final ClientRebootProtocol clientRebootProtocol;
-	private final ClientShutdownProtocol clientShutdownProtocol;
-	
+    private final ClientManager          clientManager;
+    private final ClientWakeupProtocol   clientWakeupProtocol;
+    private final ClientRebootProtocol   clientRebootProtocol;
+    private final ClientShutdownProtocol clientShutdownProtocol;
+    
     @Operation(summary = "终端列表", description = "终端列表")
-	@GetMapping("/list")
-	@ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
-	public Message list() {
-		return Message.success(this.clientManager.status());
-	}
-	
-	@Operation(summary = "终端状态", description = "终端状态")
-	@GetMapping("/status/{clientId}")
-	@ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
-	public Message status(@PathVariable String clientId) {
-		return Message.success(this.clientManager.status(clientId));
-	}
-	
-	@Operation(summary = "唤醒终端", description = "唤醒终端")
-	@GetMapping("/wakeup/{clientId}")
-	public Message wakeup(@PathVariable String clientId) {
-	    this.clientWakeupProtocol.execute(clientId);
-	    return Message.success();
-	}
-	
-	@Operation(summary = "重启终端", description = "重启终端")
-	@GetMapping("/reboot/{clientId}")
-	public Message reboot(@PathVariable String clientId) {
-		this.clientRebootProtocol.execute(clientId);
-		return Message.success();
-	}
+    @GetMapping("/list")
+    @ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
+    public Message list() {
+        return Message.success(this.clientManager.status());
+    }
+    
+    @Operation(summary = "终端状态", description = "终端状态")
+    @GetMapping("/status/{clientId}")
+    @ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
+    public Message status(@PathVariable String clientId) {
+        return Message.success(this.clientManager.status(clientId));
+    }
+    
+    @Operation(summary = "唤醒终端", description = "唤醒终端")
+    @GetMapping("/wakeup/{clientId}")
+    public Message wakeup(@PathVariable String clientId) {
+        this.clientWakeupProtocol.execute(clientId);
+        return Message.success();
+    }
+    
+    @Operation(summary = "重启终端", description = "重启终端")
+    @GetMapping("/reboot/{clientId}")
+    public Message reboot(@PathVariable String clientId) {
+        this.clientRebootProtocol.execute(clientId);
+        return Message.success();
+    }
 
-	@Operation(summary = "关闭终端", description = "关闭终端")
-	@GetMapping("/shutdown/{clientId}")
-	public Message shutdown(@PathVariable String clientId) {
-	    this.clientShutdownProtocol.execute(clientId);
-	    return Message.success();
-	}
-	
+    @Operation(summary = "关闭终端", description = "关闭终端")
+    @GetMapping("/shutdown/{clientId}")
+    public Message shutdown(@PathVariable String clientId) {
+        this.clientShutdownProtocol.execute(clientId);
+        return Message.success();
+    }
+    
 }
