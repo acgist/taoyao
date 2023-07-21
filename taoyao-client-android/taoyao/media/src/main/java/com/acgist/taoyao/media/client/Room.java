@@ -670,19 +670,19 @@ public class Room extends CloseableClient implements RouterCallback {
     /**
      * Mediasou进入房间
      *
-     * @param nativePointer                房间指针
+     * @param nativeRoomPointer            房间指针
      * @param rtpCapabilities              RTP能力
      * @param peerConnectionFactoryPointer PeerConnectionFactory指针
      * @param rtcConfiguration             RTC配置
      */
-    private native void nativeEnterRoom(long nativePointer, String rtpCapabilities, long peerConnectionFactoryPointer, PeerConnection.RTCConfiguration rtcConfiguration);
+    private native void nativeEnterRoom(long nativeRoomPointer, String rtpCapabilities, long peerConnectionFactoryPointer, PeerConnection.RTCConfiguration rtcConfiguration);
 
     /**
      * Mediasoup关闭房间
      *
-     * @param nativePointer 房间指针
+     * @param nativeRoomPointer 房间指针
      */
-    private native void nativeCloseRoom(long nativePointer);
+    private native void nativeCloseRoom(long nativeRoomPointer);
 
     /**
      * Mediasoup创建发送通道

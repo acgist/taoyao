@@ -20,15 +20,15 @@ namespace acgist {
     }
 
     void RouterCallback::enterRoomCallback(JNIEnv* env, const std::string& rtpCapabilities, const std::string& sctpCapabilities) {
-        jclass jCallbackClazz                  = env->GetObjectClass(this->routerCallback);
-        jmethodID recvTransportConnectCallback = env->GetMethodID(jCallbackClazz, "enterRoomCallback", "(Ljava/lang/String;Ljava/lang/String;)V");
+        jclass jCallbackClazz         = env->GetObjectClass(this->routerCallback);
+        jmethodID enterRoomCallback   = env->GetMethodID(jCallbackClazz, "enterRoomCallback", "(Ljava/lang/String;Ljava/lang/String;)V");
         const char* cRtpCapabilities  = rtpCapabilities.data();
         const char* cSctpCapabilities = sctpCapabilities.data();
         jstring jRtpCapabilities      = env->NewStringUTF(cRtpCapabilities);
         jstring jScrpCapabilities     = env->NewStringUTF(cSctpCapabilities);
         env->CallVoidMethod(
             this->routerCallback,
-            recvTransportConnectCallback,
+            enterRoomCallback,
             jRtpCapabilities,
             jScrpCapabilities
         );
