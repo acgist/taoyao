@@ -24,19 +24,19 @@ public class MediaConsumeEvent extends RoomEventAdapter {
      */
     private final Producer producer;
     /**
-     * 消费者
+     * 消费者终端包装器
      */
     private final ClientWrapper clientWrapper;
     
     public MediaConsumeEvent(Room room, Producer producer) {
         super(room);
-        this.producer = producer;
+        this.producer      = producer;
         this.clientWrapper = null;
     }
     
     public MediaConsumeEvent(Room room, ClientWrapper clientWrapper) {
         super(room);
-        this.producer = null;
+        this.producer      = null;
         this.clientWrapper = clientWrapper;
     }
     
