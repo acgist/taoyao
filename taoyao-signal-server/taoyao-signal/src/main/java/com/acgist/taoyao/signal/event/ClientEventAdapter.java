@@ -14,30 +14,30 @@ import lombok.Getter;
  */
 @Getter
 public abstract class ClientEventAdapter extends ApplicationEventAdapter {
-	
-	private static final long serialVersionUID = 1L;
+    
+    private static final long serialVersionUID = 1L;
 
-	/**
-	 * 终端
-	 */
-	private final Client client;
-	/**
-	 * 终端标识
-	 */
-	private final String clientId;
-	
-	public ClientEventAdapter(Client client) {
-	    this(client, null, null);
-	}
-	
-	public ClientEventAdapter(Client client, Message message) {
-		this(client, message, null);
-	}
-	
-	public ClientEventAdapter(Client client, Message message, Map<String, Object> body) {
-		super(client, message, body);
-		this.client = client;
-		this.clientId = client.getClientId();
-	}
-	
+    /**
+     * 终端
+     */
+    private final Client client;
+    /**
+     * 终端标识
+     */
+    private final String clientId;
+    
+    public ClientEventAdapter(Client client) {
+        this(client, null, null);
+    }
+    
+    public ClientEventAdapter(Client client, Message message) {
+        this(client, message, null);
+    }
+    
+    public ClientEventAdapter(Client client, Message message, Map<String, Object> body) {
+        super(client, message, body);
+        this.client   = client;
+        this.clientId = client.getClientId();
+    }
+    
 }

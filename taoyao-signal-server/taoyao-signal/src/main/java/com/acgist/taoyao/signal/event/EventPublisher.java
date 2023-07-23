@@ -4,7 +4,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 
 /**
- * 事件法布者
+ * 事件发布者
  * 
  * @author acgist
  */
