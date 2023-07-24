@@ -23,7 +23,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 媒体录像机
+ * 服务端媒体录像机
  * 
  * OPUS = 100
  * VP8  = 101

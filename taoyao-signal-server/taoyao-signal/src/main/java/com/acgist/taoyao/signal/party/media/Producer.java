@@ -31,7 +31,7 @@ public class Producer extends OperatorAdapter {
      */
     private final String streamId;
     /**
-     * 生产者标识
+     * 生产者ID
      */
     private final String producerId;
     /**
@@ -49,12 +49,12 @@ public class Producer extends OperatorAdapter {
     private final Map<String, Consumer> consumers;
     
     public Producer(String kind, String streamId, String producerId, Room room, ClientWrapper producerClient) {
-        this.kind = Kind.of(kind);
-        this.streamId = streamId;
-        this.producerId = producerId;
-        this.room = room;
+        this.kind           = Kind.of(kind);
+        this.streamId       = streamId;
+        this.producerId     = producerId;
+        this.room           = room;
         this.producerClient = producerClient;
-        this.consumers = new ConcurrentHashMap<>();
+        this.consumers      = new ConcurrentHashMap<>();
     }
 
     @Override
@@ -76,19 +76,19 @@ public class Producer extends OperatorAdapter {
     
     @Override
     public void pause() {
-        log.info("暂停生产者：{} - {}", this.streamId, this.producerId);
+        log.debug("暂停生产者：{} - {}", this.streamId, this.producerId);
         EventPublisher.publishEvent(new MediaProducerPauseEvent(this.producerId, this.room));
     }
     
     @Override
     public void resume() {
-        log.info("恢复生产者：{} - {}", this.streamId, this.producerId);
+        log.debug("恢复生产者：{} - {}", this.streamId, this.producerId);
         EventPublisher.publishEvent(new MediaProducerResumeEvent(this.producerId, this.room));
     }
     
     @Override
     public void log() {
-        log.info("当前生产者：{} - {} - {}", this.producerId, this.kind, this.streamId);
+        log.info("当前生产者：{} - {} - {}", this.streamId, this.producerId, this.kind);
         this.consumers.values().forEach(Consumer::log);
     }
     

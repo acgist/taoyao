@@ -2,7 +2,6 @@ package com.acgist.taoyao.signal.party.media;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 import com.acgist.taoyao.signal.client.Client;
 
@@ -11,8 +10,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 终端包装器：Peer
- * 视频房间使用
+ * 终端包装器
  * 
  * @author acgist
  */
@@ -25,101 +23,94 @@ public class ClientWrapper implements AutoCloseable {
      * 房间
      */
     private final Room room;
-	/**
-	 * 终端
-	 */
-	private final Client client;
-	/**
-	 * 房间标识
-	 */
-	private final String roomId;
-	/**
-	 * 终端标识
-	 */
-	private final String clientId;
-	/**
-	 * 媒体订阅类型
-	 * 指定订阅类型终端注册或者生成媒体后会自动进行媒体推流拉流
-	 * 没有订阅任何媒体时需要用户自己对媒体进行消费控制
-	 */
-	private SubscribeType subscribeType;
-	/**
-	 * RTP协商
-	 */
-	private Object rtpCapabilities;
-	/**
-	 * SCTP协商
-	 */
-	private Object sctpCapabilities;
-	/**
-	 * 媒体录像
-	 */
-	private Recorder recorder;
-	/**
-	 * 发送通道
-	 */
-	private Transport sendTransport;
-	/**
-	 * 接收通道
-	 */
-	private Transport recvTransport;
-	/**
-	 * 生产者
-	 * 其他终端消费当前终端的消费者
-	 */
-	private final Map<String, Producer> producers;
+    /**
+     * 终端
+     */
+    private final Client client;
+    /**
+     * 房间ID
+     */
+    private final String roomId;
+    /**
+     * 终端ID
+     */
+    private final String clientId;
+    /**
+     * 媒体订阅类型
+     * 指定订阅类型终端注册或者生成媒体后会自动进行媒体推流拉流
+     * 没有订阅任何媒体时需要用户自己对媒体进行消费控制
+     */
+    private SubscribeType subscribeType;
+    /**
+     * RTP协商
+     */
+    private Object rtpCapabilities;
+    /**
+     * SCTP协商
+     */
+    private Object sctpCapabilities;
+    /**
+     * 服务端媒体录像机
+     */
+    private Recorder recorder;
+    /**
+     * 发送通道
+     */
+    private Transport sendTransport;
+    /**
+     * 接收通道
+     */
+    private Transport recvTransport;
+    /**
+     * 生产者
+     * 其他终端消费当前终端的生产者
+     */
+    private final Map<String, Producer> producers;
     /**
      * 消费者
      * 当前终端消费其他终端的消费者
      */
     private final Map<String, Consumer> consumers;
-	/**
-	 * 数据生产者
-	 * 其他终端消费当前终端的消费者
-	 */
-	private final Map<String, DataProducer> dataProducers;
-	/**
-	 * 数据消费者
-	 * 当前终端消费其他终端的消费者
-	 */
-	private final Map<String, DataConsumer> dataConsumers;
-	
+    /**
+     * 数据生产者
+     * 其他终端消费当前终端的生产者
+     */
+    private final Map<String, DataProducer> dataProducers;
+    /**
+     * 数据消费者
+     * 当前终端消费其他终端的消费者
+     */
+    private final Map<String, DataConsumer> dataConsumers;
+    
     public ClientWrapper(Room room, Client client) {
-        this.room = room;
-        this.client = client;
-        this.roomId = room.getRoomId();
-        this.clientId = client.getClientId();
-        this.producers = new ConcurrentHashMap<>();
-        this.consumers = new ConcurrentHashMap<>();
+        this.room          = room;
+        this.client        = client;
+        this.roomId        = room.getRoomId();
+        this.clientId      = client.getClientId();
+        this.producers     = new ConcurrentHashMap<>();
+        this.consumers     = new ConcurrentHashMap<>();
         this.dataProducers = new ConcurrentHashMap<>();
         this.dataConsumers = new ConcurrentHashMap<>();
-    }
-	
-    /**
-     * @return 生产者数量
-     */
-    public Integer producerSize() {
-        return this.producers.size();
-    }
-    
-    /**
-     * @return 消费者数量
-     */
-    public Integer consumerSize() {
-        return this.producers.values().stream()
-            .map(producer -> producer.getConsumers().size())
-            .collect(Collectors.counting())
-            .intValue();
     }
     
     /**
      * @param producer 生产者
      * 
-     * @return 是否已经消费
+     * @return 是否已经消费生产者
      */
     public boolean consumed(Producer producer) {
         return this.consumers.values().stream()
             .anyMatch(v -> v.getProducer() == producer);
+    }
+    
+    /**
+     * @param dataProducer 数据生产者
+     * 
+     * @return 是否已经消费数据生产者
+     */
+    public boolean consumedData(DataProducer dataProducer) {
+        return this.dataConsumers.values().stream()
+            .anyMatch(v -> v.getDataProducer() == dataProducer);
     }
     
     @Override

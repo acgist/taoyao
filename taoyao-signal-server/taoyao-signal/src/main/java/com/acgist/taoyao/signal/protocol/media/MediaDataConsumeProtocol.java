@@ -22,6 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 消费数据信令
  * 
+ * TODO：防止重复消费
+ * 
  * @author acgist
  */
 @Slf4j

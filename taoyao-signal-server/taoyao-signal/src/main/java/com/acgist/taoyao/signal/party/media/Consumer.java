@@ -28,7 +28,7 @@ public class Consumer extends OperatorAdapter {
      */
     private final String streamId;
     /**
-     * 消费者标识
+     * 消费者ID
      */
     private final String consumerId;
     /**
@@ -45,11 +45,11 @@ public class Consumer extends OperatorAdapter {
     private final ClientWrapper consumerClient;
     
     public Consumer(String kind, String streamId, String consumerId, Room room, Producer producer, ClientWrapper consumerClient) {
-        this.kind = Kind.of(kind);
-        this.streamId = streamId;
-        this.consumerId = consumerId;
-        this.room = room;
-        this.producer = producer;
+        this.kind           = Kind.of(kind);
+        this.streamId       = streamId;
+        this.consumerId     = consumerId;
+        this.room           = room;
+        this.producer       = producer;
         this.consumerClient = consumerClient;
     }
 
@@ -72,19 +72,19 @@ public class Consumer extends OperatorAdapter {
     
     @Override
     public void pause() {
-        log.info("暂停消费者：{} - {}", this.streamId, this.consumerId);
+        log.debug("暂停消费者：{} - {}", this.streamId, this.consumerId);
         EventPublisher.publishEvent(new MediaConsumerPauseEvent(this.consumerId, this.room));
     }
     
     @Override
     public void resume() {
-        log.info("恢复消费者：{} - {}", this.streamId, this.consumerId);
+        log.debug("恢复消费者：{} - {}", this.streamId, this.consumerId);
         EventPublisher.publishEvent(new MediaConsumerResumeEvent(this.consumerId, this.room));
     }
     
     @Override
     public void log() {
-        log.debug("当前消费者：{} - {} - {}", this.consumerId, this.kind, this.streamId);
+        log.info("当前消费者：{} - {} - {}", this.streamId, this.consumerId, this.kind);
     }
     
 }

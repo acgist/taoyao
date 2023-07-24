@@ -22,7 +22,7 @@ public class DataConsumer extends OperatorAdapter {
      */
     private final String streamId;
     /**
-     * 消费者标识
+     * 消费者ID
      */
     private final String consumerId;
     /**
@@ -39,10 +39,10 @@ public class DataConsumer extends OperatorAdapter {
     private final ClientWrapper consumerClient;
     
     public DataConsumer(String streamId, String consumerId, Room room, DataProducer dataProducer, ClientWrapper consumerClient) {
-        this.streamId = streamId;
-        this.consumerId = consumerId;
-        this.room = room;
-        this.dataProducer = dataProducer;
+        this.streamId       = streamId;
+        this.consumerId     = consumerId;
+        this.room           = room;
+        this.dataProducer   = dataProducer;
         this.consumerClient = consumerClient;
     }
     
@@ -65,7 +65,7 @@ public class DataConsumer extends OperatorAdapter {
     
     @Override
     public void log() {
-        log.debug("当前数据消费者：{} - {}", this.consumerId, this.streamId);
+        log.info("当前数据消费者：{} - {}", this.streamId, this.consumerId);
     }
     
 }

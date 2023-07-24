@@ -25,7 +25,7 @@ public class DataProducer extends OperatorAdapter {
      */
     private final String streamId;
     /**
-     * 生产者标识
+     * 生产者ID
      */
     private final String producerId;
     /**
@@ -43,11 +43,11 @@ public class DataProducer extends OperatorAdapter {
     private final Map<String, DataConsumer> dataConsumers;
     
     public DataProducer(String streamId, String producerId, Room room, ClientWrapper producerClient) {
-        this.streamId = streamId;
-        this.producerId = producerId;
-        this.room = room;
+        this.streamId       = streamId;
+        this.producerId     = producerId;
+        this.room           = room;
         this.producerClient = producerClient;
-        this.dataConsumers = new ConcurrentHashMap<>();
+        this.dataConsumers  = new ConcurrentHashMap<>();
     }
     
     @Override
@@ -69,7 +69,7 @@ public class DataProducer extends OperatorAdapter {
     
     @Override
     public void log() {
-        log.debug("当前数据生产者：{} - {}", this.producerId, this.streamId);
+        log.info("当前数据生产者：{} - {}", this.streamId, this.producerId);
         this.dataConsumers.values().forEach(DataConsumer::log);
     }
     

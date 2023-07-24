@@ -1,7 +1,7 @@
 package com.acgist.taoyao.signal.party.media;
 
 /**
- * 关闭移除接口适配器
+ * 操作接口适配器
  * 
  * @author acgist
  */

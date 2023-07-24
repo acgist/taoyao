@@ -24,7 +24,8 @@ public enum Kind {
      * @return 类型
      */
     public static final Kind of(String value) {
-        for (Kind kind : Kind.values()) {
+        final Kind[] values = Kind.values();
+        for (Kind kind : values) {
             if(kind.name().equalsIgnoreCase(value)) {
                 return kind;
             }
