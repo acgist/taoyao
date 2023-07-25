@@ -1,6 +1,7 @@
 package com.acgist.taoyao.signal.party.session;
 
 import java.io.Closeable;
+import java.util.Objects;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
@@ -31,7 +32,7 @@ public class Session implements Closeable {
     private final Client target;
     
     public Session(String id, Client source, Client target) {
-        this.id = id;
+        this.id     = id;
         this.source = source;
         this.target = target;
     }
@@ -52,11 +53,13 @@ public class Session implements Closeable {
      * @param clientId 当前终端ID
      * @param message  消息
      */
-    public void pushOther(String clientId, Message message) {
-        if(this.source.getClientId().equals(clientId)) {
+    public void pushRemote(String clientId, Message message) {
+        if(Objects.equals(clientId, this.source.getClientId())) {
             this.target.push(message);
-        } else {
+        } else if(Objects.equals(clientId, this.target.getClientId())) {
             this.source.push(message);
+        } else {
+            // 不会出现
         }
     }
     
@@ -67,6 +70,20 @@ public class Session implements Closeable {
      */
     public boolean hasClient(Client client) {
         return this.source == client || this.target == client;
+    }
+    
+    /**
+     * @return 来源终端ID
+     */
+    public String getSourceClientId() {
+        return this.source == null ? null : this.source.getClientId();
+    }
+    
+    /**
+     * @return 目标终端ID
+     */
+    public String getTargetClientId() {
+        return this.target == null ? null : this.target.getClientId();
     }
     
     @Override

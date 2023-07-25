@@ -19,11 +19,15 @@ import lombok.extern.slf4j.Slf4j;
 public class SessionManager {
 
     private final IdService idService;
+    
+    /**
+     * 会话列表
+     */
     private final Map<String, Session> sessions;
     
     public SessionManager(IdService idService) {
         this.idService = idService;
-        this.sessions = new ConcurrentHashMap<>();
+        this.sessions  = new ConcurrentHashMap<>();
     }
     
     /**
@@ -35,7 +39,7 @@ public class SessionManager {
     public Session call(Client source, Client target) {
         final Session session = new Session(this.idService.buildUuid(), source, target);
         this.sessions.put(session.getId(), session);
-        log.info("创建视频会话：{} - {} - {}", session.getId(), session.getSource().getClientId(), session.getTarget().getClientId());
+        log.info("创建视频会话：{} - {} - {}", session.getId(), session.getSourceClientId(), session.getTargetClientId());
         return session;
     }
     
@@ -56,7 +60,7 @@ public class SessionManager {
     public Session remove(String sessionId) {
         final Session session = this.sessions.remove(sessionId);
         if(session != null) {
-            log.info("视频会话关闭：{} - {} - {}", sessionId, session.getSource().getClientId(), session.getTarget().getClientId());
+            log.info("移除视频会话：{} - {} - {}", sessionId, session.getSourceClientId(), session.getTargetClientId());
         }
         return session;
     }

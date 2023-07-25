@@ -7,6 +7,8 @@ import com.acgist.taoyao.signal.event.EventPublisher;
 import com.acgist.taoyao.signal.event.media.MediaProducerCloseEvent;
 import com.acgist.taoyao.signal.event.media.MediaProducerPauseEvent;
 import com.acgist.taoyao.signal.event.media.MediaProducerResumeEvent;
+import com.acgist.taoyao.signal.party.room.ClientWrapper;
+import com.acgist.taoyao.signal.party.room.Room;
 
 import lombok.Getter;
 import lombok.Setter;

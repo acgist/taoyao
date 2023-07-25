@@ -15,11 +15,11 @@ import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.event.media.MediaConsumeEvent;
-import com.acgist.taoyao.signal.party.media.ClientWrapper;
 import com.acgist.taoyao.signal.party.media.Consumer;
 import com.acgist.taoyao.signal.party.media.Producer;
-import com.acgist.taoyao.signal.party.media.Room;
 import com.acgist.taoyao.signal.party.media.Transport;
+import com.acgist.taoyao.signal.party.room.ClientWrapper;
+import com.acgist.taoyao.signal.party.room.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 import lombok.extern.slf4j.Slf4j;

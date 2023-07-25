@@ -13,7 +13,7 @@ import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.event.media.MediaProducerPauseEvent;
 import com.acgist.taoyao.signal.party.media.Producer;
-import com.acgist.taoyao.signal.party.media.Room;
+import com.acgist.taoyao.signal.party.room.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**

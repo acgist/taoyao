@@ -9,12 +9,12 @@ import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.party.media.ClientWrapper;
 import com.acgist.taoyao.signal.party.media.Consumer;
 import com.acgist.taoyao.signal.party.media.Kind;
 import com.acgist.taoyao.signal.party.media.Producer;
-import com.acgist.taoyao.signal.party.media.Room;
-import com.acgist.taoyao.signal.party.media.RoomClientId;
+import com.acgist.taoyao.signal.party.room.ClientWrapper;
+import com.acgist.taoyao.signal.party.room.Room;
+import com.acgist.taoyao.signal.party.room.RoomClientId;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**

@@ -14,7 +14,7 @@ import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.event.media.MediaDataProducerCloseEvent;
 import com.acgist.taoyao.signal.party.media.DataProducer;
-import com.acgist.taoyao.signal.party.media.Room;
+import com.acgist.taoyao.signal.party.room.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 import lombok.extern.slf4j.Slf4j;

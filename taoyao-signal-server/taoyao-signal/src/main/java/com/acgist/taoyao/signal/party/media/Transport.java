@@ -7,6 +7,7 @@ import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.EventPublisher;
 import com.acgist.taoyao.signal.event.media.TransportCloseEvent;
+import com.acgist.taoyao.signal.party.room.Room;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.party.media;
+package com.acgist.taoyao.signal.party.room;
 
 import java.util.List;
 import java.util.Map;

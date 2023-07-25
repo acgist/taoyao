@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.party.media;
+package com.acgist.taoyao.signal.party.room;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;

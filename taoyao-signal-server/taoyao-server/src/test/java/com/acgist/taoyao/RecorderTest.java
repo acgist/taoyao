@@ -3,7 +3,7 @@ package com.acgist.taoyao;
 import org.junit.jupiter.api.Test;
 
 import com.acgist.taoyao.boot.config.FfmpegProperties;
-import com.acgist.taoyao.signal.party.media.Recorder;
+import com.acgist.taoyao.signal.party.room.Recorder;
 
 public class RecorderTest {
 

@@ -2,6 +2,8 @@ package com.acgist.taoyao.signal.party.media;
 
 import com.acgist.taoyao.signal.event.EventPublisher;
 import com.acgist.taoyao.signal.event.media.MediaDataConsumerCloseEvent;
+import com.acgist.taoyao.signal.party.room.ClientWrapper;
+import com.acgist.taoyao.signal.party.room.Room;
 
 import lombok.Getter;
 import lombok.Setter;

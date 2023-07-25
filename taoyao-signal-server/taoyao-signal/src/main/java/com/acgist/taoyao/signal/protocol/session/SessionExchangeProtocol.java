@@ -56,7 +56,7 @@ public class SessionExchangeProtocol extends ProtocolSessionAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Session session, Client client, Message message, Map<String, Object> body) {
-        session.pushOther(clientId, message);
+        session.pushRemote(clientId, message);
     }
 
 }

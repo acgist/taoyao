@@ -1,4 +1,7 @@
-package com.acgist.taoyao.signal.party.media;
+package com.acgist.taoyao.signal.party.room;
+
+import com.acgist.taoyao.signal.party.media.Kind;
+import com.acgist.taoyao.signal.party.media.Producer;
 
 /**
  * 媒体订阅类型

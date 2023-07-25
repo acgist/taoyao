@@ -1603,13 +1603,19 @@ class Taoyao {
       sctpParameters: transport.sctpParameters,
     };
     me.push(message);
-    const { maxIncomingBitrate } = config.mediasoup.webRtcTransportOptions;
-    if (maxIncomingBitrate) {
-      try {
-        await transport.setMaxIncomingBitrate(maxIncomingBitrate);
-      } catch (error) {
-        console.error("设置最大传入比特率", maxIncomingBitrate);
-      }
+    const {
+      minOutgoingBitrate,
+      maxOutgoingBitrate,
+      maxIncomingBitrate,
+    } = config.mediasoup.webRtcTransportOptions;
+    if(minOutgoingBitrate) {
+      await transport.setMinOutgoingBitrate(minOutgoingBitrate);
+    }
+    if(maxOutgoingBitrate) {
+      await transport.setMaxOutgoingBitrate(maxOutgoingBitrate);
+    }
+    if(maxIncomingBitrate) {
+      await transport.setMaxIncomingBitrate(maxIncomingBitrate);
     }
   }
 

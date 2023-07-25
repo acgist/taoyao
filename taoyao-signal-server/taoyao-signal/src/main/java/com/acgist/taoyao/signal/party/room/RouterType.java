@@ -1,4 +1,4 @@
-package com.acgist.taoyao.signal.party.media;
+package com.acgist.taoyao.signal.party.room;
 
 /**
  * 媒体路由类型

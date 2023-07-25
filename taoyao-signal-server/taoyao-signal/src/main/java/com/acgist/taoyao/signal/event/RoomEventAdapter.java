@@ -4,7 +4,7 @@ import java.util.Map;
 
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
-import com.acgist.taoyao.signal.party.media.Room;
+import com.acgist.taoyao.signal.party.room.Room;
 
 import lombok.Getter;
 

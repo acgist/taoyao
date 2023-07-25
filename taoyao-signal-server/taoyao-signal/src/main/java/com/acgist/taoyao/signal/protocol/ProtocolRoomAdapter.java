@@ -8,7 +8,7 @@ import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.utils.MapUtils;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
-import com.acgist.taoyao.signal.party.media.Room;
+import com.acgist.taoyao.signal.party.room.Room;
 
 /**
  * 房间信令适配器

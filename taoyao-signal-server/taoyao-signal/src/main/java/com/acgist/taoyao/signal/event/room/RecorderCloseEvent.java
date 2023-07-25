@@ -1,7 +1,7 @@
 package com.acgist.taoyao.signal.event.room;
 
 import com.acgist.taoyao.signal.event.RoomEventAdapter;
-import com.acgist.taoyao.signal.party.media.Recorder;
+import com.acgist.taoyao.signal.party.room.Recorder;
 
 import lombok.Getter;
 import lombok.Setter;
