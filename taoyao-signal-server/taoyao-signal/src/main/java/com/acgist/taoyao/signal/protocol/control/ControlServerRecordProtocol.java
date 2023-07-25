@@ -72,7 +72,7 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         String filepath;
         final String roomId   = MapUtils.get(body, Constant.ROOM_ID);
         final Boolean enabled = MapUtils.get(body, Constant.ENABLED, Boolean.TRUE);
-        final Room room = this.roomManager.room(roomId);
+        final Room room = this.roomManager.getRoom(roomId);
         if(enabled) {
             filepath = this.start(room, room.clientWrapper(targetClient));
         } else {
@@ -86,8 +86,8 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
     @Override
     public Message execute(String roomId, String clientId, Boolean enabled) {
         String filepath;
-        final Room room     = this.roomManager.room(roomId);
-        final Client client = this.clientManager.clients(clientId);
+        final Room room     = this.roomManager.getRoom(roomId);
+        final Client client = this.clientManager.getClients(clientId);
         if(enabled) {
             filepath = this.start(room, room.clientWrapper(client));
         } else {

@@ -39,7 +39,7 @@ public class MediaTransportWebRtcConnectProtocol extends ProtocolRoomAdapter {
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         if(clientType.mediaClient()) {
-            final Message response = room.request(message);
+            final Message response = room.requestMedia(message);
             final Map<String, Object> responseBody = response.body();
             client.push(response);
             final String transportId = MapUtils.get(responseBody, Constant.TRANSPORT_ID);

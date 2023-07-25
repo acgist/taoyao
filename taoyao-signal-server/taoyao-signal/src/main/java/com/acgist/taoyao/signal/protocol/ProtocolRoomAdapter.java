@@ -24,7 +24,7 @@ public abstract class ProtocolRoomAdapter extends ProtocolClientAdapter {
 	@Override
 	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
         final String roomId = MapUtils.get(body, Constant.ROOM_ID);
-        final Room room = this.roomManager.room(roomId);
+        final Room room = this.roomManager.getRoom(roomId);
         if(room == null) {
             throw MessageCodeException.of("无效房间：" + roomId);
         }
@@ -38,7 +38,7 @@ public abstract class ProtocolRoomAdapter extends ProtocolClientAdapter {
 	 * @param room 房间
 	 * @param client 终端
 	 * 
-	 * @return 是否授权
+	 * @return 是否认证
 	 */
 	protected boolean authenticate(Room room, Client client) {
 	    return room.authenticate(client);

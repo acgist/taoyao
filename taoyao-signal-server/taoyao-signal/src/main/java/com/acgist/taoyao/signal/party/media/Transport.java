@@ -29,10 +29,14 @@ public class Transport extends OperatorAdapter {
      * @author acgist
      */
     public enum Direction {
-        
-        // 接收
+
+        /**
+         * 接收
+         */
         RECV,
-        // 发送
+        /**
+         * 发送
+         */
         SEND;
         
     }
@@ -46,15 +50,15 @@ public class Transport extends OperatorAdapter {
      */
     private final Client client;
     /**
-     * 房间标识
+     * 房间ID
      */
     private final String roomId;
     /**
-     * 终端标识
+     * 终端ID
      */
     private final String clientId;
     /**
-     * 通道标识
+     * 通道ID
      */
     private final String transportId;
     /**
@@ -79,12 +83,12 @@ public class Transport extends OperatorAdapter {
     private Object sctpParameters;
     
     public Transport(String transportId, Direction direction, Room room, Client client) {
+        this.room        = room;
+        this.roomId      = room.getRoomId();
+        this.client      = client;
+        this.clientId    = client.getClientId();
         this.transportId = transportId;
-        this.direction = direction;
-        this.room = room;
-        this.client = client;
-        this.roomId = room.getRoomId();
-        this.clientId = client.getClientId();
+        this.direction   = direction;
     }
     
     /**
@@ -93,8 +97,8 @@ public class Transport extends OperatorAdapter {
      * @param body 消息主体
      */
     public void copy(Map<String, Object> body) {
-        this.iceCandidates = MapUtils.get(body, Constant.ICE_CANDIDATES);
-        this.iceParameters = MapUtils.get(body, Constant.ICE_PARAMETERS);
+        this.iceCandidates  = MapUtils.get(body, Constant.ICE_CANDIDATES);
+        this.iceParameters  = MapUtils.get(body, Constant.ICE_PARAMETERS);
         this.dtlsParameters = MapUtils.get(body, Constant.DTLS_PARAMETERS);
         this.sctpParameters = MapUtils.get(body, Constant.SCTP_PARAMETERS);
     }

@@ -69,7 +69,7 @@ public class RoomClientListProtocol extends ProtocolRoomAdapter implements Appli
         final Client client = event.getClient();
         client.push(this.build(Map.of(
             Constant.ROOM_ID, room.getRoomId(),
-            Constant.CLIENTS, room.clientStatus()
+            Constant.CLIENTS, room.getClientStatus()
         )));
     }
     
@@ -77,7 +77,7 @@ public class RoomClientListProtocol extends ProtocolRoomAdapter implements Appli
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         message.setBody(Map.of(
             Constant.ROOM_ID, room.getRoomId(),
-            Constant.CLIENTS, room.clientStatus()
+            Constant.CLIENTS, room.getClientStatus()
         ));
         client.push(message);
     }

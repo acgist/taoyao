@@ -39,14 +39,14 @@ public class ClientController {
     @GetMapping("/list")
     @ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
     public Message list() {
-        return Message.success(this.clientManager.status());
+        return Message.success(this.clientManager.getStatus());
     }
     
     @Operation(summary = "终端状态", description = "终端状态")
     @GetMapping("/status/{clientId}")
     @ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
     public Message status(@PathVariable String clientId) {
-        return Message.success(this.clientManager.status(clientId));
+        return Message.success(this.clientManager.getStatus(clientId));
     }
     
     @Operation(summary = "唤醒终端", description = "唤醒终端")

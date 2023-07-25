@@ -38,7 +38,7 @@ public class RoomListProtocol extends ProtocolClientAdapter {
 
 	@Override
 	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-		message.setBody(this.roomManager.status());
+		message.setBody(this.roomManager.getStatus());
 		client.push(message);
 	}
 

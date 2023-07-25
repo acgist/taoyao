@@ -23,7 +23,7 @@ public abstract class ProtocolControlAdapter extends ProtocolClientAdapter {
     @Override
     public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
         final String to = MapUtils.remove(body, Constant.TO);
-        final Client targetClient = this.clientManager.clients(to);
+        final Client targetClient = this.clientManager.getClients(to);
         if(targetClient == null) {
             throw MessageCodeException.of("目标终端无效：" + to);
         }
@@ -53,7 +53,7 @@ public abstract class ProtocolControlAdapter extends ProtocolClientAdapter {
      * @return 响应
      */
     protected Message request(String clientId, Message request) {
-        final Client client = this.clientManager.clients(clientId);
+        final Client client = this.clientManager.getClients(clientId);
         if(client == null) {
             return Message.fail("无效终端：" + clientId);
         } else {

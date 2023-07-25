@@ -65,9 +65,9 @@ public class ClientListProtocol extends ProtocolClientAdapter {
 	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
 	    final String queryClientType = MapUtils.get(body, Constant.CLIENT_TYPE);
 	    if(StringUtils.isEmpty(queryClientType)) {
-	        message.setBody(this.clientManager.status());
+	        message.setBody(this.clientManager.getStatus());
 	    } else {
-	        message.setBody(this.clientManager.status(ClientType.of(queryClientType)));
+	        message.setBody(this.clientManager.getStatus(ClientType.of(queryClientType)));
 	    }
 		client.push(message);
 	}

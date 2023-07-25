@@ -73,7 +73,7 @@ public class ClientRegisterProtocol extends ProtocolClientAdapter {
 		final String username = MapUtils.get(body, Constant.USERNAME);
 		final String password = MapUtils.get(body, Constant.PASSWORD);
 		if(this.securityService.authenticate(username, password)) {
-		    final Client oldClient = this.clientManager.clients(clientId);
+		    final Client oldClient = this.clientManager.getClients(clientId);
 		    if(oldClient != null) {
 		        log.debug("终端已经存在（注销旧的终端）：{}", clientId);
 		        CloseableUtils.close(oldClient);

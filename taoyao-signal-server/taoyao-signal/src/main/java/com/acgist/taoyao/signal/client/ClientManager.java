@@ -56,7 +56,7 @@ public class ClientManager {
      * @param message 消息
      */
     public void unicast(String to, Message message) {
-        this.clients().stream()
+        this.getClients().stream()
         .filter(v -> Objects.equals(to, v.getClientId()))
         .forEach(v -> v.push(message));
     }
@@ -68,7 +68,7 @@ public class ClientManager {
      * @param message 消息
      */
     public void unicast(Client to, Message message) {
-        this.clients().stream()
+        this.getClients().stream()
         .filter(v -> v == to)
         .forEach(v -> v.push(message));
     }
@@ -80,7 +80,7 @@ public class ClientManager {
      * @param clientTypes 终端类型
      */
     public void broadcast(Message message, ClientType ... clientTypes) {
-        this.clients(clientTypes).forEach(v -> v.push(message));
+        this.getClients(clientTypes).forEach(v -> v.push(message));
     }
     
     /**
@@ -91,7 +91,7 @@ public class ClientManager {
      * @param clientTypes 终端类型
      */
     public void broadcast(String from, Message message, ClientType ... clientTypes) {
-        this.clients(clientTypes).stream()
+        this.getClients(clientTypes).stream()
         .filter(v -> !Objects.equals(from, v.getClientId()))
         .forEach(v -> v.push(message));
     }
@@ -104,7 +104,7 @@ public class ClientManager {
      * @param clientTypes 终端类型
      */
     public void broadcast(Client from, Message message, ClientType ... clientTypes) {
-        this.clients(clientTypes).stream()
+        this.getClients(clientTypes).stream()
         .filter(v -> v != from)
         .forEach(v -> v.push(message));
     }
@@ -114,7 +114,7 @@ public class ClientManager {
      * 
      * @return 终端（包含授权和未授权）
      */
-    public Client clients(AutoCloseable instance) {
+    public Client getClients(AutoCloseable instance) {
         return this.clients.stream()
             .filter(v -> v.getInstance() == instance)
             .findFirst()
@@ -126,8 +126,8 @@ public class ClientManager {
      * 
      * @return 授权终端
      */
-    public Client clients(String clientId) {
-        return this.clients().stream()
+    public Client getClients(String clientId) {
+        return this.getClients().stream()
             .filter(v -> Objects.equals(clientId, v.getClientId()))
             .findFirst()
             .orElse(null);
@@ -138,7 +138,7 @@ public class ClientManager {
      * 
      * @return 授权终端列表
      */
-    public List<Client> clients(ClientType ... clientTypes) {
+    public List<Client> getClients(ClientType ... clientTypes) {
         return this.clients.stream()
             .filter(Client::authorized)
             .filter(client -> ArrayUtils.isEmpty(clientTypes) || ArrayUtils.contains(clientTypes, client.getClientType()))
@@ -150,8 +150,8 @@ public class ClientManager {
      * 
      * @return 终端状态
      */
-    public ClientStatus status(AutoCloseable instance) {
-        final Client client = this.clients(instance);
+    public ClientStatus getStatus(AutoCloseable instance) {
+        final Client client = this.getClients(instance);
         return client == null ? null : client.getStatus();
     }
     
@@ -160,8 +160,8 @@ public class ClientManager {
      * 
      * @return 授权终端状态
      */
-    public ClientStatus status(String clientId) {
-        final Client client = this.clients(clientId);
+    public ClientStatus getStatus(String clientId) {
+        final Client client = this.getClients(clientId);
         return client == null ? null : client.getStatus();
     }
 
@@ -170,8 +170,8 @@ public class ClientManager {
      * 
      * @return 授权终端状态列表
      */
-    public List<ClientStatus> status(ClientType ... clientTypes) {
-        return this.clients(clientTypes).stream()
+    public List<ClientStatus> getStatus(ClientType ... clientTypes) {
+        return this.getClients(clientTypes).stream()
             .map(Client::getStatus)
             .toList();
     }
@@ -183,7 +183,7 @@ public class ClientManager {
      * @param message  消息
      */
     public void push(AutoCloseable instance, Message message) {
-        final Client client = this.clients(instance);
+        final Client client = this.getClients(instance);
         if(client == null) {
             log.warn("推送消息终端无效：{} - {}", instance, message);
             return;
@@ -197,7 +197,7 @@ public class ClientManager {
      * @param instance 终端实例
      */
     public void close(AutoCloseable instance) {
-        final Client client = this.clients(instance);
+        final Client client = this.getClients(instance);
         try {
             if(client != null) {
                 client.close();

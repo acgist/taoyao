@@ -48,7 +48,7 @@ public class MediaDataProduceProtocol extends ProtocolRoomAdapter {
             final String streamId = Constant.STREAM_ID_PRODUCER.apply(Constant.DATA, clientId);
             body.put(Constant.CLIENT_ID, clientId);
             body.put(Constant.STREAM_ID, streamId);
-            final Message response = room.request(message);
+            final Message response = room.requestMedia(message);
             final Map<String, Object> responseBody = response.body();
             final String producerId = MapUtils.get(responseBody, Constant.PRODUCER_ID);
             final ClientWrapper producerClientWrapper = room.clientWrapper(client);

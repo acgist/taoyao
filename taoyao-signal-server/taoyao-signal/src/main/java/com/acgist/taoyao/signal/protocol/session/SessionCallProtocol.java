@@ -45,7 +45,7 @@ public class SessionCallProtocol extends ProtocolSessionAdapter {
     @Override
     public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
         final String targetId = MapUtils.get(body, Constant.CLIENT_ID);
-        final Client target   = this.clientManager.clients(targetId);
+        final Client target   = this.clientManager.getClients(targetId);
         if(target == null) {
             log.warn("邀请对象无效：{}", clientId);
             return;

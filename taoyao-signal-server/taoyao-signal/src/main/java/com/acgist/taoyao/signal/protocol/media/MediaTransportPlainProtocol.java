@@ -58,7 +58,7 @@ public class MediaTransportPlainProtocol extends ProtocolRoomAdapter {
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         body.put(Constant.CLIENT_ID, clientId);
-        final Message response = room.request(message);
+        final Message response = room.requestMedia(message);
         final Map<String, Object> responseBody = response.body();
         final Map<String, Transport> transports = room.getTransports();
         final String transportId = MapUtils.get(responseBody, Constant.TRANSPORT_ID);

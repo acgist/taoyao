@@ -41,7 +41,7 @@ public class WebSocketSignal {
         try {
             WebSocketSignal.protocolManager.execute(message, session);
         } catch (Exception e) {
-            log.error("处理WebSocket信令消息异常：{} - {}", WebSocketSignal.clientManager.clients(session), message, e);
+            log.error("处理WebSocket信令消息异常：{} - {}", WebSocketSignal.clientManager.getClients(session), message, e);
             WebSocketSignal.clientManager.push(session, WebSocketSignal.platformErrorProtocol.build(e));
         }
     }

@@ -18,7 +18,7 @@ import com.acgist.taoyao.signal.party.media.RoomClientId;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**
- * 房间终端ID信令
+ * 房间终端ID集合信令
  * 
  * @author acgist
  */

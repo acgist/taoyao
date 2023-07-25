@@ -59,7 +59,7 @@ public class ClientStatusProtocol extends ProtocolClientAdapter {
 	@Override
 	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
 	    final String queryClientId = MapUtils.get(body, Constant.CLIENT_ID, clientId);
-		message.setBody(this.clientManager.status(queryClientId));
+		message.setBody(this.clientManager.getStatus(queryClientId));
 		client.push(message);
 	}
 	

@@ -84,7 +84,7 @@ public class ProtocolManager {
 	 * @param instance 终端实例
 	 */
 	public void execute(String content, AutoCloseable instance) {
-		final Client client = this.clientManager.clients(instance);
+		final Client client = this.clientManager.getClients(instance);
 		if(client == null) {
 			log.warn("信令终端无效：{}-{}", instance, content);
 			return;

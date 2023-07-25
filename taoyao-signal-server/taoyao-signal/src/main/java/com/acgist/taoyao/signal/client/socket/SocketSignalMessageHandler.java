@@ -170,7 +170,7 @@ public final class SocketSignalMessageHandler implements CompletionHandler<Integ
         try {
             this.protocolManager.execute(message, this.channel);
         } catch (Exception e) {
-            log.error("处理Socket信令消息异常：{} - {}", this.clientManager.clients(this.channel), message, e);
+            log.error("处理Socket信令消息异常：{} - {}", this.clientManager.getClients(this.channel), message, e);
             this.clientManager.push(this.channel, this.platformErrorProtocol.build(e));
         }
     }

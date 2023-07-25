@@ -53,7 +53,7 @@ public class ControlClientRecordProtocol extends ProtocolControlAdapter implemen
     
     @Override
     public Message execute(String clientId, Boolean enabled) {
-        this.updateRecordStatus(this.clientManager.clients(clientId), enabled);
+        this.updateRecordStatus(this.clientManager.getClients(clientId), enabled);
         return this.request(clientId, this.build(Map.of(Constant.ENABLED, enabled)));
     }
     

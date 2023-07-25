@@ -55,7 +55,7 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
 	    final Map<String, Object> body = message.body();
 	    final String roomId = MapUtils.get(body, Constant.ROOM_ID);
         final String password = MapUtils.get(body, Constant.PASSWORD);
-        final Room room = this.roomManager.room(roomId);
+        final Room room = this.roomManager.getRoom(roomId);
         if(room == null) {
             throw MessageCodeException.of("无效房间：" + roomId);
         }
