@@ -17,7 +17,7 @@ const taoyao = new Taoyao(mediasoupWorkers);
  */
 async function buildMediasoupWorkers() {
   mediasoup.observer.on("newworker", (worker) => {
-    console.info("mediasoup newworker", worker);
+    console.info("mediasoup newworker", worker.pid);
   });
   const { workerSize } = config.mediasoup;
   console.info("工作线程数量", workerSize);
@@ -46,7 +46,7 @@ async function buildMediasoupWorkers() {
     // 创建WebRTC服务
     const webRtcServerOptions = JSON.parse(JSON.stringify(config.mediasoup.webRtcServerOptions));
     for (const listenInfos of webRtcServerOptions.listenInfos) {
-      listenInfos.port = listenInfos.port + mediasoupWorkers.length;
+      listenInfos.port = Number(listenInfos.port) + mediasoupWorkers.length;
     }
     const webRtcServer = await worker.createWebRtcServer(webRtcServerOptions);
     // 监听事件

@@ -1,38 +1,38 @@
 const os = require("os");
+const dotenv = require("dotenv");
 
-/**
- * 桃夭媒体服务地址
- * 注意：这里即使是本机也不能配置127.0.0.1
- */
-const defaultTaoyaoHost = "192.168.1.110";
+if(process.env.NODE_ENV) {
+  dotenv.config({ path: `.env.${process.env.NODE_ENV}` });
+} else {
+  dotenv.config({ path: `.env` });
+}
 
 /**
  * 配置
  */
 module.exports = {
   // 服务名称
-  name: "taoyao-client-media",
+  name: process.env.NAME || "taoyao-client-media",
   // 信令配置
   signal: {
     // 信令版本
-    version   : "1.0.0",
-    // 终端标识
-    clientId  : "taoyao-client-media",
+    version   : process.env.SIGNAL_VERSION || "1.0.0",
+    // 终端ID
+    clientId  : process.env.CLIENT_ID      || "taoyao-client-media",
     // 终端类型
     clientType: "MEDIA",
     // 终端名称
-    name      : "桃夭媒体服务",
+    name      : process.env.CLIENT_NAME || "桃夭媒体服务",
     // 信令地址
-    host      : "127.0.0.1",
-    // host   : "192.168.1.100",
+    host      : process.env.SIGNAL_HOST || "127.0.0.1",
     // 信令端口
-    port      : 8888,
+    port      : process.env.SIGNAL_PORT || 8888,
     // 信令协议
     scheme    : "wss",
     // 信令帐号
-    username  : "taoyao",
+    username  : process.env.SIGNAL_USERNAME || "taoyao",
     // 信令密码
-    password  : "taoyao",
+    password  : process.env.SIGNAL_PASSWORD || "taoyao",
   },
   // 录像配置
   record: {
@@ -44,7 +44,7 @@ module.exports = {
   // Mediasoup
   mediasoup: {
     // Worker数量
-    workerSize: Object.keys(os.cpus()).length,
+    workerSize: process.env.MEDIASOUP_WORKER_SIZE || Object.keys(os.cpus()).length,
     // Worker配置：https://mediasoup.org/documentation/v3/mediasoup/api/#WorkerSettings
     workerSettings: {
       // 日志标记
@@ -64,7 +64,7 @@ module.exports = {
         "simulcast",
       ],
       // 日志级别：debug | warn | error | none
-      logLevel: "warn",
+      logLevel  : "warn",
       // RTP端口范围
       rtcMinPort: process.env.MEDIASOUP_MIN_PORT || 40000,
       rtcMaxPort: process.env.MEDIASOUP_MAX_PORT || 49999,
@@ -133,15 +133,15 @@ module.exports = {
       listenInfos: [
         {
           protocol   : "udp",
-          ip         : process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-          port       : 44444,
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
+          ip         : process.env.MEDIASOUP_LISTEN_IP    || "0.0.0.0",
+          port       : process.env.MEDIASOUP_LISTEN_PORT  || 44444,
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "127.0.0.1",
         },
         {
           protocol   : "tcp",
-          ip         : process.env.MEDIASOUP_LISTEN_IP || "0.0.0.0",
-          port       : 44444,
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
+          ip         : process.env.MEDIASOUP_LISTEN_IP    || "0.0.0.0",
+          port       : process.env.MEDIASOUP_LISTEN_PORT  || 44444,
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "127.0.0.1",
         },
       ],
     },
@@ -150,7 +150,7 @@ module.exports = {
       listenIps: [
         {
           ip         : process.env.MEDIASOUP_LISTEN_IP    || "0.0.0.0",
-          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
+          announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "127.0.0.1",
         },
       ],
       initialAvailableOutgoingBitrate: 1000000,
@@ -162,16 +162,9 @@ module.exports = {
     plainTransportOptions: {
       listenIp: {
         ip         : process.env.MEDIASOUP_LISTEN_IP    || "0.0.0.0",
-        announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || defaultTaoyaoHost || "127.0.0.1",
+        announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "127.0.0.1",
       },
       maxSctpMessageSize: 262144,
     },
   },
 };
-
-/**
- * PipeTransport  : RTP(router)
- * PlainTransport : RTP
- * DirectTransport: NodeJS
- * WebRtcTransport: WebRTC
- */
