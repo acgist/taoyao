@@ -788,6 +788,9 @@ class Taoyao extends RemoteClient {
     const { header, body } = message;
     const { signal }       = header;
     switch (signal) {
+      case "client::broadcast":
+        me.defaultClientBroadcast(message);
+        break;
       case "client::reboot":
         me.defaultClientReboot(message);
         break;
@@ -1000,6 +1003,52 @@ class Taoyao extends RemoteClient {
       track.getCapabilities()
     );
     return track;
+  }
+
+  /**
+   * 终端告警信令
+   * 
+   * @param {*} message 
+   */
+  clientAlarm(message) {
+    const me       = this;
+    const date     =  new Date();
+    const datetime = ""                                             +
+      date.getFullYear()                                            +
+      ((date.getMonth()   < 9  ? "0" : "") + (date.getMonth() + 1)) +
+      ((date.getDate()    < 10 ? "0" : "") + date.getDate())        +
+      ((date.getHours()   < 10 ? "0" : "") + date.getHours())       +
+      ((date.getMinutes() < 10 ? "0" : "") + date.getMinutes())     +
+      ((date.getSeconds() < 10 ? "0" : "") + date.getSeconds());
+    me.push(protocol.buildMessage("client::alarm", {
+      message,
+      datetime,
+    }));
+  }
+
+  /**
+   * 终端广播信令
+   * 
+   * @param {*} message    广播信息
+   * @param {*} clientType 终端类型（可选）
+   */
+  clientBroadcast(message, clientType) {
+    const me = this;
+    me.push(protocol.buildMessage("client::broadcast", {
+      ...message,
+      clientType,
+    }));
+  }
+
+  /**
+   * 终端广播信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultClientBroadcast(message) {
+    const me               = this;
+    const { header, body } = message;
+    console.debug("终端广播", header, body);
   }
 
   /**

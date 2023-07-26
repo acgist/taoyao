@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Description(
     body = """
     {
-        "message": "告警描述",
+        "message" : "告警描述",
         "datetime": "告警时间（yyyyMMddHHmmss）"
     }
     """,
@@ -40,9 +40,9 @@ public class ClientAlarmProtocol extends ProtocolClientAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-        final String alarmMessage = MapUtils.get(body, Constant.MESSAGE);
+        final String alarmMessage  = MapUtils.get(body, Constant.MESSAGE);
         final String alarmDatetime = MapUtils.get(body, Constant.DATETIME);
-        log.warn(
+        log.info(
             """
             终端告警：{}
             终端类型：{}

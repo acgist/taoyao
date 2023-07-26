@@ -62,17 +62,18 @@ public class ClientStatus {
      * @param body 消息主体
      */
     public void copy(Map<String, Object> body) {
-        this.setLatitude(MapUtils.getDouble(body, Constant.LATITUDE));
-        this.setLongitude(MapUtils.getDouble(body, Constant.LONGITUDE));
-        this.setHumidity(MapUtils.getDouble(body, Constant.HUMIDITY));
-        this.setTemperature(MapUtils.getDouble(body, Constant.TEMPERATURE));
-        this.setSignal(MapUtils.getInteger(body, Constant.SIGNAL));
-        this.setBattery(MapUtils.getInteger(body, Constant.BATTERY));
-        this.setAlarming(MapUtils.getBoolean(body, Constant.ALARMING));
-        this.setCharging(MapUtils.getBoolean(body, Constant.CHARGING));
-        this.setClientRecording(MapUtils.getBoolean(body, Constant.CLIENT_RECORDING));
-        this.status(MapUtils.get(body, Constant.STATUS));
-        this.config(MapUtils.get(body, Constant.CONFIG));
+        this.setLatitude(MapUtils.get(body, Constant.LATITUDE, this.latitude));
+        this.setLongitude(MapUtils.get(body, Constant.LONGITUDE, this.longitude));
+        this.setHumidity(MapUtils.get(body, Constant.HUMIDITY, this.humidity));
+        this.setTemperature(MapUtils.get(body, Constant.TEMPERATURE, this.temperature));
+        this.setSignal(MapUtils.get(body, Constant.SIGNAL, this.signal));
+        this.setBattery(MapUtils.get(body, Constant.BATTERY, this.battery));
+        this.setAlarming(MapUtils.get(body, Constant.ALARMING, this.alarming));
+        this.setCharging(MapUtils.get(body, Constant.CHARGING, this.charging));
+        this.setClientRecording(MapUtils.get(body, Constant.CLIENT_RECORDING, this.clientRecording));
+//      this.setServerRecording(MapUtils.get(body, Constant.SERVER_RECORDING, this.serverRecording));
+        this.status(MapUtils.get(body, Constant.STATUS, this.status));
+        this.config(MapUtils.get(body, Constant.CONFIG, this.config));
         this.setLastHeartbeat(LocalDateTime.now());
     }
     

@@ -33,20 +33,20 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 )
 public class ClientBroadcastProtocol extends ProtocolClientAdapter {
 
-	public static final String SIGNAL = "client::broadcast";
-	
-	public ClientBroadcastProtocol() {
-		super("终端广播信令", SIGNAL);
-	}
+    public static final String SIGNAL = "client::broadcast";
+    
+    public ClientBroadcastProtocol() {
+        super("终端广播信令", SIGNAL);
+    }
 
-	@Override
-	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-	    final String queryClientType = MapUtils.get(body, Constant.CLIENT_TYPE);
-	    if(StringUtils.isEmpty(queryClientType)) {
-	        this.clientManager.broadcast(client, message);
-	    } else {
-	        this.clientManager.broadcast(client, message, ClientType.of(queryClientType));
-	    }
-	}
+    @Override
+    public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+        final String queryClientType = MapUtils.get(body, Constant.CLIENT_TYPE);
+        if(StringUtils.isEmpty(queryClientType)) {
+            this.clientManager.broadcast(client, message);
+        } else {
+            this.clientManager.broadcast(client, message, ClientType.of(queryClientType));
+        }
+    }
 
 }
