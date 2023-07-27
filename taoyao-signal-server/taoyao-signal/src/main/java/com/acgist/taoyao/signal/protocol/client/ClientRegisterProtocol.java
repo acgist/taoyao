@@ -29,6 +29,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Protocol
 @Description(
+    memo = "收到注册响应之后应该设置终端的终端索引",
     body = """
     {
         "username": "信令用户",

@@ -41,6 +41,10 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
      */
     protected final T instance;
     /**
+     * 是否关闭
+     */
+    protected boolean close;
+    /**
      * 是否授权
      */
     protected boolean authorized;
@@ -62,6 +66,7 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
         this.time           = System.currentTimeMillis();
         this.timeout        = timeout;
         this.instance       = instance;
+        this.close          = false;
         this.authorized     = false;
         this.status         = new ClientStatus();
         this.requestMessage = new ConcurrentHashMap<>();
@@ -152,6 +157,10 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
     
     @Override
     public void close() throws Exception {
+        if(this.close) {
+            return;
+        }
+        this.close = true;
         log.info("关闭终端实例：{} - {}", this.ip, this.clientId);
         this.instance.close();
     }

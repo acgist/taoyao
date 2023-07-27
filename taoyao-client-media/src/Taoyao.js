@@ -94,13 +94,11 @@ const signalChannel = {
     }
     me.heartbeatTimer = setTimeout(async () => {
       if (me.connected()) {
-        me.push(
-          protocol.buildMessage("client::heartbeat", {
-            // TODO：电池信息
-            battery : 100,
-            charging: true,
-          })
-        );
+        me.taoyao.push(protocol.buildMessage("client::heartbeat", {
+          // TODO：电池信息
+          battery : 100,
+          charging: true,
+        }));
         me.heartbeat();
       } else {
         console.warn("心跳失败", me.address);
@@ -136,18 +134,18 @@ const signalChannel = {
       me.channel = new WebSocket(me.address, { rejectUnauthorized: false, handshakeTimeout: 5000 });
       me.channel.on("open", async () => {
         console.info("打开信令通道", me.address);
-        me.push(
-          protocol.buildMessage("client::register", {
-            name      : config.signal.name,
-            clientId  : config.signal.clientId,
-            clientType: config.signal.clientType,
-            username  : config.signal.username,
-            password  : config.signal.password,
-            // TODO：电池信息
-            battery   : 100,
-            charging  : true,
-          })
-        );
+        const { body } = await me.taoyao.request(protocol.buildMessage("client::register", {
+          name      : config.signal.name,
+          clientId  : config.signal.clientId,
+          clientType: config.signal.clientType,
+          username  : config.signal.username,
+          password  : config.signal.password,
+          // TODO：电池信息
+          battery   : 100,
+          charging  : true,
+        }));
+        protocol.clientIndex = body.index;
+        console.info("终端注册成功", protocol.clientIndex);
         me.reconnectionTimeout = me.minReconnectionDelay;
         me.taoyao.connect      = true;
         me.heartbeat();
@@ -205,19 +203,6 @@ const signalChannel = {
       me.reconnectionTimeout + me.minReconnectionDelay,
       me.maxReconnectionDelay
     );
-  },
-  /**
-   * 异步请求
-   *
-   * @param {*} message 消息
-   */
-  push(message) {
-    const me = this;
-    try {
-      me.channel.send(JSON.stringify(message));
-    } catch (error) {
-      console.error("异步请求异常", message, error);
-    }
   },
   /**
    * 关闭通道
@@ -409,9 +394,6 @@ class Taoyao {
       case "client::reboot":
         me.clientReboot(message, body);
         break;
-      case "client::register":
-        me.clientRegister(message, body);
-        break;
       case "client::shutdown":
         me.clientShutdown(message, body);
         break;
@@ -585,17 +567,6 @@ class Taoyao {
         console.info("重启媒体服务", clientId, error, stdout, stderr);
       }
     );
-  }
-
-  /**
-   * 终端注册信令
-   * 
-   * @param {*} message 消息
-   * @param {*} body    消息主体
-   */
-  clientRegister(message, body) {
-    protocol.clientIndex = body.index;
-    console.info("终端注册成功", protocol.clientIndex);
   }
 
   /**

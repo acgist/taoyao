@@ -24,43 +24,47 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Protocol
 @Description(
-    memo = "同时释放所有资源，所以如果终端意外掉线重连，需要终端实现音视频重连逻辑。",
+    memo = """
+        信令连接断开以后执行，同时释放所有资源。
+        如果终端意外掉线，需要自己实现重连逻辑。
+        """,
     flow = {
         "终端->信令服务->终端",
-        "终端->信令服务-[终端下线])终端"
+        "终端-[关闭终端]>信令服务-[终端下线])终端",
+        "终端-[连接断开]>信令服务-[终端下线])终端"
     }
 )
 public class ClientCloseProtocol extends ProtocolClientAdapter implements ApplicationListener<ClientCloseEvent> {
 
-	public static final String SIGNAL = "client::close";
-	
-	public ClientCloseProtocol() {
-		super("关闭终端信令", SIGNAL);
-	}
-	
-	@Async
-	@Override
-	public void onApplicationEvent(ClientCloseEvent event) {
-	    this.close(event.getClient());
-	}
+    public static final String SIGNAL = "client::close";
+    
+    public ClientCloseProtocol() {
+        super("关闭终端信令", SIGNAL);
+    }
+    
+    @Async
+    @Override
+    public void onApplicationEvent(ClientCloseEvent event) {
+        this.close(event.getClient());
+    }
 
-	@Override
-	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-		client.push(message.cloneWithoutBody());
-		try {
-		    // 关闭连接后会发布事件
-			client.close();
-		} catch (Exception e) {
-			log.error("关闭终端异常：{}", clientId, e);
-		}
-	}
-	
-	/**
-	 * 关闭终端
-	 * 
-	 * @param client 终端
-	 */
-	private void close(Client client) {
+    @Override
+    public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+        client.push(message.cloneWithoutBody());
+        try {
+            // 关闭连接后会发布事件
+            client.close();
+        } catch (Exception e) {
+            log.error("关闭终端异常：{}", clientId, e);
+        }
+    }
+    
+    /**
+     * 关闭终端
+     * 
+     * @param client 终端
+     */
+    private void close(Client client) {
         if(client == null || client.unauthorized()) {
             // 没有授权终端
             return;
@@ -73,6 +77,6 @@ public class ClientCloseProtocol extends ProtocolClientAdapter implements Applic
         this.sessionManager.close(client);
         // 终端下线事件
         this.publishEvent(new ClientOfflineEvent(client));
-	}
+    }
 
 }

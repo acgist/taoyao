@@ -101,7 +101,7 @@ const signalChannel = {
     me.heartbeatTimer = setTimeout(async () => {
       if (me.connected()) {
         const battery = await navigator.getBattery();
-        me.push(protocol.buildMessage("client::heartbeat", {
+        me.taoyao.push(protocol.buildMessage("client::heartbeat", {
           battery : battery.level * 100,
           charging: battery.charging,
         }));
@@ -141,7 +141,7 @@ const signalChannel = {
       me.channel.onopen = async () => {
         console.info("打开信令通道", me.address);
         const battery = await navigator.getBattery();
-        me.push(protocol.buildMessage("client::register", {
+        const { body } = await me.taoyao.request(protocol.buildMessage("client::register", {
           name      : me.taoyao.name,
           clientId  : me.taoyao.clientId,
           clientType: config.signal.clientType,
@@ -150,6 +150,8 @@ const signalChannel = {
           battery   : battery.level * 100,
           charging  : battery.charging,
         }));
+        protocol.clientIndex = body.index;
+        console.info("终端注册成功", protocol.clientIndex);
         me.reconnectionTimeout = me.minReconnectionDelay;
         me.taoyao.connect      = true;
         me.heartbeat();
@@ -208,19 +210,6 @@ const signalChannel = {
       me.reconnectionTimeout + me.minReconnectionDelay,
       me.maxReconnectionDelay
     );
-  },
-  /**
-   * 异步请求
-   *
-   * @param {*} message 消息
-   */
-  push(message) {
-    const me = this;
-    try {
-      me.channel.send(JSON.stringify(message));
-    } catch (error) {
-      console.error("异步请求异常", message, error);
-    }
   },
   /**
    * 关闭通道
@@ -763,9 +752,6 @@ class Taoyao extends RemoteClient {
       case "client::config":
         me.defaultClientConfig(message);
         break;
-      case "client::register":
-        me.defaultClientRegister(message);
-        break;
       case "media::consume":
         await me.defaultMediaConsume(message);
         break;
@@ -1046,9 +1032,20 @@ class Taoyao extends RemoteClient {
    * @param {*} message 信令消息
    */
   defaultClientBroadcast(message) {
-    const me               = this;
-    const { header, body } = message;
+    const me = this;
+    const {
+      header,
+      body,
+    } = message;
     console.debug("终端广播", header, body);
+  }
+
+  /**
+   * 关闭终端信令
+   */
+  clientClose() {
+    const me = this;
+    me.push(protocol.buildMessage("client::close", {}));
   }
 
   /**
@@ -1106,17 +1103,6 @@ class Taoyao extends RemoteClient {
   defaultClientReboot(message) {
     console.info("重启终端");
     location.reload();
-  }
-
-  /**
-   * 终端注册信令
-   *
-   * @param {*} message 信令消息
-   */
-  defaultClientRegister(message) {
-    const { body } = message;
-    protocol.clientIndex = body.index;
-    console.info("终端注册成功", protocol.clientIndex);
   }
 
   /**
@@ -2150,7 +2136,9 @@ class Taoyao extends RemoteClient {
    */
   async mediaProduce(audioTrack, videoTrack) {
     const me = this;
-    me.checkDevice();
+    if(!audioTrack || !videoTrack) {
+      me.checkDevice();
+    }
     await me.createSendTransport();
     await me.createRecvTransport();
     await me.produceAudio(audioTrack);

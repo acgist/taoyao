@@ -27,60 +27,61 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
  */
 @Protocol
 @Description(
+    memo = "终端应该在收到配置之后进行媒体操作",
     body = """
     {
-        "media": "媒体配置（可选）",
-        "webrtc": "WebRTC配置（可选）",
+        "media"   : "媒体配置（可选）",
+        "webrtc"  : "WebRTC配置（可选）",
         "datetime": "日期时间（yyyyMMddHHmmss）"
     }
     """,
-    flow = "终端=[终端注册]>信令服务->终端"
+    flow = "终端=[终端注册]>信令服务-[终端配置]>终端"
 )
 public class ClientConfigProtocol extends ProtocolClientAdapter implements ApplicationListener<ClientConfigEvent> {
 
-	public static final String SIGNAL = "client::config";
-	
-	private final MediaProperties mediaProperties;
-	private final WebrtcProperties webrtcProperties;
-	
-	public ClientConfigProtocol(MediaProperties mediaProperties, WebrtcProperties webrtcProperties) {
-		super("终端配置信令", SIGNAL);
-		this.mediaProperties = mediaProperties;
-		this.webrtcProperties = webrtcProperties;
-	}
-
-	@Async
-	@Override
-    public void onApplicationEvent(ClientConfigEvent event) {
-	    final Client client = event.getClient();
-	    final ClientType clientType = client.getClientType();
-	    client.push(this.build(clientType));
+    public static final String SIGNAL = "client::config";
+    
+    private final MediaProperties  mediaProperties;
+    private final WebrtcProperties webrtcProperties;
+    
+    public ClientConfigProtocol(MediaProperties mediaProperties, WebrtcProperties webrtcProperties) {
+        super("终端配置信令", SIGNAL);
+        this.mediaProperties  = mediaProperties;
+        this.webrtcProperties = webrtcProperties;
     }
-	
-	@Override
-	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-	    client.push(this.build(clientType));
-	}
-	
-	/**
-	 * @param clientType 终端类型
-	 * 
-	 * @return 消息
-	 */
-	public Message build(ClientType clientType) {
-		final Message message = super.build();
-		final Map<String, Object> config = new HashMap<>();
-		// 日期时间
-		config.put(Constant.DATETIME, DateUtils.format(LocalDateTime.now(), DateTimeStyle.YYYYMMDDHH24MMSS));
-		// Web、摄像头：媒体配置
-		if(clientType.mediaClient()) {
-		    config.put(Constant.MEDIA, this.mediaProperties);
-		    config.put(Constant.WEBRTC, this.webrtcProperties);
-		} else {
-		    this.logNoAdapter(clientType);
-		}
-		message.setBody(config);
-		return message;
-	}
-	
+
+    @Async
+    @Override
+    public void onApplicationEvent(ClientConfigEvent event) {
+        final Client client         = event.getClient();
+        final ClientType clientType = client.getClientType();
+        client.push(this.build(clientType));
+    }
+    
+    @Override
+    public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+        client.push(this.build(clientType));
+    }
+    
+    /**
+     * @param clientType 终端类型
+     * 
+     * @return 消息
+     */
+    public Message build(ClientType clientType) {
+        final Message message            = super.build();
+        final Map<String, Object> config = new HashMap<>();
+        // 日期时间
+        config.put(Constant.DATETIME, DateUtils.format(LocalDateTime.now(), DateTimeStyle.YYYYMMDDHH24MMSS));
+        // 媒体终端：媒体配置
+        if(clientType.mediaClient()) {
+            config.put(Constant.MEDIA,  this.mediaProperties);
+            config.put(Constant.WEBRTC, this.webrtcProperties);
+        } else {
+            this.logNoAdapter(clientType);
+        }
+        message.setBody(config);
+        return message;
+    }
+    
 }
