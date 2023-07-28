@@ -54,7 +54,7 @@ public class ClientStatus {
     @Schema(title = "终端配置", description = "其他扩展终端配置")
     private Map<String, Object> config = new HashMap<>();
     @Schema(title = "最后心跳时间", description = "最后心跳时间")
-    private LocalDateTime lastHeartbeat;
+    private LocalDateTime lastHeartbeat = LocalDateTime.now();
     
     /**
      * 拷贝属性
@@ -62,18 +62,18 @@ public class ClientStatus {
      * @param body 消息主体
      */
     public void copy(Map<String, Object> body) {
-        this.setLatitude(MapUtils.get(body, Constant.LATITUDE, this.latitude));
-        this.setLongitude(MapUtils.get(body, Constant.LONGITUDE, this.longitude));
-        this.setHumidity(MapUtils.get(body, Constant.HUMIDITY, this.humidity));
-        this.setTemperature(MapUtils.get(body, Constant.TEMPERATURE, this.temperature));
-        this.setSignal(MapUtils.get(body, Constant.SIGNAL, this.signal));
-        this.setBattery(MapUtils.get(body, Constant.BATTERY, this.battery));
-        this.setAlarming(MapUtils.get(body, Constant.ALARMING, this.alarming));
-        this.setCharging(MapUtils.get(body, Constant.CHARGING, this.charging));
+        this.setLatitude(MapUtils.get(body, Constant.LATITUDE,                this.latitude));
+        this.setLongitude(MapUtils.get(body, Constant.LONGITUDE,              this.longitude));
+        this.setHumidity(MapUtils.get(body, Constant.HUMIDITY,                this.humidity));
+        this.setTemperature(MapUtils.get(body, Constant.TEMPERATURE,          this.temperature));
+        this.setSignal(MapUtils.get(body, Constant.SIGNAL,                    this.signal));
+        this.setBattery(MapUtils.get(body, Constant.BATTERY,                  this.battery));
+        this.setAlarming(MapUtils.get(body, Constant.ALARMING,                this.alarming));
+        this.setCharging(MapUtils.get(body, Constant.CHARGING,                this.charging));
         this.setClientRecording(MapUtils.get(body, Constant.CLIENT_RECORDING, this.clientRecording));
 //      this.setServerRecording(MapUtils.get(body, Constant.SERVER_RECORDING, this.serverRecording));
-        this.status(MapUtils.get(body, Constant.STATUS, this.status));
-        this.config(MapUtils.get(body, Constant.CONFIG, this.config));
+        this.status(MapUtils.get(body, Constant.STATUS,                       this.status));
+        this.config(MapUtils.get(body, Constant.CONFIG,                       this.config));
         this.setLastHeartbeat(LocalDateTime.now());
     }
     

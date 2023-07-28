@@ -1049,6 +1049,38 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * @returns 媒体服务列表
+   */
+  async mediaList() {
+    const response = await this.request(protocol.buildMessage("client::list", {
+      clientType: "MEDIA" 
+    }));
+    return response.body;
+  }
+
+  /**
+   * @returns 媒体终端列表
+   */
+  async mediaClientList() {
+    const response = await this.request(protocol.buildMessage("client::list", {}));
+    return response.body.filter(v => {
+      return v.clientType === "WEB" || v.clientType === "CAMERA" || v.clientType === "MOBILE";
+    });
+  }
+
+  /**
+   * @param {*} clientType 终端类型（默认所有）
+   * 
+   * @returns 终端列表
+   */
+  async clientList(clientType) {
+    const response = await this.request(protocol.buildMessage("client::list", {
+      clientType
+    }));
+    return response.body;
+  }
+
+  /**
    * 终端配置信令
    *
    * @param {*} message 信令消息
@@ -2087,28 +2119,6 @@ class Taoyao extends RemoteClient {
    */
   async roomList() {
     const response = await this.request(protocol.buildMessage("room::list"));
-    return response.body;
-  }
-
-  /**
-   * @returns 媒体服务列表
-   */
-  async mediaList() {
-    const response = await this.request(protocol.buildMessage("client::list", {
-      clientType: "MEDIA" 
-    }));
-    return response.body;
-  }
-
-  /**
-   * @param {*} clientType 终端类型（默认所有）
-   * 
-   * @returns 终端列表
-   */
-  async clientList(clientType) {
-    const response = await this.request(protocol.buildMessage("client::list", {
-      clientType
-    }));
     return response.body;
   }
 

@@ -1,5 +1,7 @@
 package com.acgist.taoyao.signal.client;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -140,8 +142,14 @@ public abstract class ClientAdapter<T extends AutoCloseable> implements Client {
     }
     
     @Override
-    public boolean timeout() {
+    public boolean authorizeTimeout() {
         return System.currentTimeMillis() - this.time > this.timeout;
+    }
+    
+    @Override
+    public boolean heartbeatTimeout() {
+        final LocalDateTime last = this.status.getLastHeartbeat();
+        return Duration.between(last, LocalDateTime.now()).getSeconds() >= this.timeout * 60;
     }
     
     @Override

@@ -68,7 +68,12 @@ public interface Client extends AutoCloseable {
     /**
      * @return 授权是否超时
      */
-    boolean timeout();
+    boolean authorizeTimeout();
+    
+    /**
+     * @return 心跳是否超时
+     */
+    boolean heartbeatTimeout();
     
     /**
      * 设置授权

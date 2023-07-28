@@ -220,8 +220,13 @@ public class ClientManager {
     private void closeTimeout() {
         final int oldSize = this.clients.size();
         this.clients.stream()
-        .filter(v -> v.unauthorized())
-        .filter(v -> v.timeout())
+        .filter(v -> {
+            if(v.unauthorized()) {
+                return v.authorizeTimeout();
+            } else {
+                return v.heartbeatTimeout();
+            }
+        })
         .forEach(v -> {
             log.debug("关闭超时终端：{}", v);
             this.close(v);
