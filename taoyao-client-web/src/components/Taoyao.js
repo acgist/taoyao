@@ -777,6 +777,12 @@ class Taoyao extends RemoteClient {
       case "client::broadcast":
         me.defaultClientBroadcast(message);
         break;
+      case "client::offline":
+        me.defaultClientOffline(message);
+        break;
+        case "client::online":
+        me.defaultClientOnline(message);
+        break;
       case "client::reboot":
         me.defaultClientReboot(message);
         break;
@@ -998,7 +1004,7 @@ class Taoyao extends RemoteClient {
    */
   clientAlarm(message) {
     const me       = this;
-    const date     =  new Date();
+    const date     = new Date();
     const datetime = ""                                             +
       date.getFullYear()                                            +
       ((date.getMonth()   < 9  ? "0" : "") + (date.getMonth() + 1)) +
@@ -1043,41 +1049,10 @@ class Taoyao extends RemoteClient {
   /**
    * 关闭终端信令
    */
-  clientClose() {
+  async clientClose() {
     const me = this;
-    me.push(protocol.buildMessage("client::close", {}));
-  }
-
-  /**
-   * @returns 媒体服务列表
-   */
-  async mediaList() {
-    const response = await this.request(protocol.buildMessage("client::list", {
-      clientType: "MEDIA" 
-    }));
-    return response.body;
-  }
-
-  /**
-   * @returns 媒体终端列表
-   */
-  async mediaClientList() {
-    const response = await this.request(protocol.buildMessage("client::list", {}));
-    return response.body.filter(v => {
-      return v.clientType === "WEB" || v.clientType === "CAMERA" || v.clientType === "MOBILE";
-    });
-  }
-
-  /**
-   * @param {*} clientType 终端类型（默认所有）
-   * 
-   * @returns 终端列表
-   */
-  async clientList(clientType) {
-    const response = await this.request(protocol.buildMessage("client::list", {
-      clientType
-    }));
-    return response.body;
+    await me.request(protocol.buildMessage("client::close", {}));
+    me.closeAll();
   }
 
   /**
@@ -1114,7 +1089,10 @@ class Taoyao extends RemoteClient {
       ideal: video.frameRate,
       max  : media.maxFrameRate,
     };
-    me.options      = Object.keys(media.videos).map(key => ({value: key, label: media.videos[key].resolution}));
+    me.options      = Object.keys(media.videos).map(key => ({
+      value: key,
+      label: media.videos[key].resolution
+    }));
     me.mediaConfig  = media;
     me.webrtcConfig = webrtc;
     console.debug(
@@ -1128,12 +1106,62 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * @returns 媒体服务列表
+   */
+  async mediaList() {
+    const response = await this.request(protocol.buildMessage("client::list", {
+      clientType: "MEDIA" 
+    }));
+    return response.body;
+  }
+
+  /**
+   * @returns 媒体终端列表
+   */
+  async mediaClientList() {
+    const response = await this.request(protocol.buildMessage("client::list", {}));
+    return response.body.filter(v => {
+      return v.clientType === "WEB" || v.clientType === "CAMERA" || v.clientType === "MOBILE";
+    });
+  }
+
+  /**
+   * @param {*} clientType 终端类型（可选）
+   * 
+   * @returns 终端列表
+   */
+  async clientList(clientType) {
+    const response = await this.request(protocol.buildMessage("client::list", {
+      clientType
+    }));
+    return response.body;
+  }
+
+  /**
+   * 终端下线信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultClientOffline(message) {
+    console.debug("终端下线", message);
+  }
+
+  /**
+   * 终端上线信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultClientOnline(message) {
+    console.debug("终端上线", message);
+  }
+
+  /**
    * 重启终端信令
    *
    * @param {*} message 信令消息
    */
   defaultClientReboot(message) {
-    console.info("重启终端");
+    console.info("重启终端", message);
     location.reload();
   }
 
@@ -1143,7 +1171,7 @@ class Taoyao extends RemoteClient {
    * @param {*} message 消息
    */
   defaultClientShutdown(message) {
-    console.info("关闭终端");
+    console.info("关闭终端", message);
     window.close();
   }
 
@@ -1837,10 +1865,11 @@ class Taoyao extends RemoteClient {
    * @param {*} message 消息
    */
   defaultPlatformError(message) {
+    const me = this;
     const { code } = message;
     if (code === "3401") {
       // 没有授权直接关闭
-      signalChannel.close();
+      me.closeAll();
     } else {
       console.warn("平台异常", message);
     }

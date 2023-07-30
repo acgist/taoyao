@@ -23,17 +23,20 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
         "clientId": "下线终端ID"
     }
     """,
-    flow = "终端-[终端关闭]>信令服务-)终端"
+    flow = {
+        "终端=[关闭终端]>信令服务-[终端下线])终端",
+        "终端-[连接断开]>信令服务-[终端下线])终端"
+    }
 )
 public class ClientOfflineProtocol extends ProtocolClientAdapter implements ApplicationListener<ClientOfflineEvent> {
-	
-	public static final String SIGNAL = "client::offline";
+    
+    public static final String SIGNAL = "client::offline";
 
-	public ClientOfflineProtocol() {
-		super("终端下线信令", SIGNAL);
-	}
+    public ClientOfflineProtocol() {
+        super("终端下线信令", SIGNAL);
+    }
 
-	@Async
+    @Async
     @Override
     public void onApplicationEvent(ClientOfflineEvent event) {
         final String clientId = event.getClientId();

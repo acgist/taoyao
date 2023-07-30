@@ -15,17 +15,17 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 )
 public class ClientRebootProtocol extends ProtocolClientAdapter {
 
-	public static final String SIGNAL = "client::reboot";
-	
-	public ClientRebootProtocol() {
-		super("重启终端信令", SIGNAL);
-	}
-	
-	/**
-	 * @param clientId 终端ID
-	 */
-	public void execute(String clientId) {
-	    this.clientManager.unicast(clientId, this.build());
-	}
+    public static final String SIGNAL = "client::reboot";
+    
+    public ClientRebootProtocol() {
+        super("重启终端信令", SIGNAL);
+    }
+    
+    /**
+     * @param clientId 终端ID
+     */
+    public void execute(String clientId) {
+        this.clientManager.unicast(clientId, this.build());
+    }
 
 }

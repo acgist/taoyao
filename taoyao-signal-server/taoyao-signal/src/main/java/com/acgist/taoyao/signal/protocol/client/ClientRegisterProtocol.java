@@ -15,7 +15,7 @@ import com.acgist.taoyao.signal.client.ClientStatus;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.event.client.ClientConfigEvent;
 import com.acgist.taoyao.signal.event.client.ClientOnlineEvent;
-import com.acgist.taoyao.signal.event.room.RoomCreateEvent;
+import com.acgist.taoyao.signal.event.room.MediaServerRegisterEvent;
 import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 import com.acgist.taoyao.signal.service.SecurityService;
 
@@ -32,24 +32,24 @@ import lombok.extern.slf4j.Slf4j;
     memo = "收到注册响应之后应该设置终端的终端索引",
     body = """
     {
-        "username": "信令用户",
-        "password": "信令密码",
-        "name": "终端名称",
-        "clientId": "终端ID",
-        "clientType": "终端类型",
-        "latitude": 纬度,
-        "longitude": 经度,
-        "humidity": 湿度,
-        "temperature": 温度,
-        "signal": 信号强度（0~100）,
-        "battery": 电池电量（0~100）,
-        "alarming": 是否发生告警（true|false）,
-        "charging": 是否正在充电（true|false）,
+        "username"       : "信令用户",
+        "password"       : "信令密码",
+        "name"           : "终端名称",
+        "clientId"       : "终端ID",
+        "clientType"     : "终端类型",
+        "latitude"       : 纬度,
+        "longitude"      : 经度,
+        "humidity"       : 湿度,
+        "temperature"    : 温度,
+        "signal"         : 信号强度（0~100）,
+        "battery"        : 电池电量（0~100）,
+        "alarming"       : 是否发生告警（true|false）,
+        "charging"       : 是否正在充电（true|false）,
         "clientRecording": 是否正在录像（true|false）,
         "serverRecording": 是否正在录像（true|false）,
-        "lastHeartbeat": "最后心跳时间",
-        "status": {更多状态},
-        "config": {更多配置}
+        "lastHeartbeat"  : "最后心跳时间",
+        "status"         : {更多状态},
+        "config"         : {更多配置}
     }
     """,
     flow = {
@@ -60,58 +60,58 @@ import lombok.extern.slf4j.Slf4j;
 )
 public class ClientRegisterProtocol extends ProtocolClientAdapter {
 
-	public static final String SIGNAL = "client::register";
-	
-	private final SecurityService securityService;
-	
-	public ClientRegisterProtocol(SecurityService securityService) {
-		super("终端注册信令", SIGNAL);
-		this.securityService = securityService;
-	}
+    public static final String SIGNAL = "client::register";
+    
+    private final SecurityService securityService;
+    
+    public ClientRegisterProtocol(SecurityService securityService) {
+        super("终端注册信令", SIGNAL);
+        this.securityService = securityService;
+    }
 
     @Override
-	public void execute(String nullClientId, ClientType nullClientType, Client client, Message message, Map<String, Object> body) {
-		final String clientId = MapUtils.get(body, Constant.CLIENT_ID);
-		final String username = MapUtils.get(body, Constant.USERNAME);
-		final String password = MapUtils.get(body, Constant.PASSWORD);
-		if(this.securityService.authenticate(username, password)) {
-		    final Client oldClient = this.clientManager.getClients(clientId);
-		    if(oldClient != null) {
-		        log.debug("终端已经存在（注销旧的终端）：{}", clientId);
-		        CloseableUtils.close(oldClient);
-		    }
-			log.info("终端注册：{}", clientId);
-			client.authorize(clientId);
-			message.setCode(MessageCode.CODE_0000);
-		} else {
-		    throw MessageCodeException.of(MessageCode.CODE_3401, "注册失败");
-		}
-		final ClientType clientType = ClientType.of(MapUtils.get(body, Constant.CLIENT_TYPE));
-		// 注册响应消息
-		final Message response = message.cloneWithoutBody();
-		response.setBody(Map.of(Constant.INDEX, this.idService.buildClientIndex()));
-		client.push(response);
-		// 设置终端状态
-		this.buildStatus(clientId, clientType, client, body);
+    public void execute(String nullClientId, ClientType nullClientType, Client client, Message message, Map<String, Object> body) {
+        final String clientId = MapUtils.get(body, Constant.CLIENT_ID);
+        final String username = MapUtils.get(body, Constant.USERNAME);
+        final String password = MapUtils.get(body, Constant.PASSWORD);
+        if(this.securityService.authenticate(username, password)) {
+            final Client oldClient = this.clientManager.getClients(clientId);
+            if(oldClient != null) {
+                log.debug("终端已经存在（注销旧的终端）：{}", clientId);
+                CloseableUtils.close(oldClient);
+            }
+            log.info("终端注册：{}", clientId);
+            client.authorize(clientId);
+            message.setCode(MessageCode.CODE_0000);
+        } else {
+            throw MessageCodeException.of(MessageCode.CODE_3401, "注册失败");
+        }
+        final ClientType clientType = ClientType.of(MapUtils.get(body, Constant.CLIENT_TYPE));
+        // 注册响应消息
+        final Message response = message.cloneWithoutBody();
+        response.setBody(Map.of(Constant.INDEX, this.idService.buildClientIndex()));
+        client.push(response);
+        // 设置终端状态
+        this.buildStatus(clientId, clientType, client, body);
         // 终端配置事件
-		this.publishEvent(new ClientConfigEvent(client));
+        this.publishEvent(new ClientConfigEvent(client));
         // 终端上线事件
         this.publishEvent(new ClientOnlineEvent(client));
         // 媒体服务注册：创建房间事件
         if(clientType.mediaServer()) {
-            this.publishEvent(new RoomCreateEvent(client));
+            this.publishEvent(new MediaServerRegisterEvent(client));
         }
-	}
-	
-	/**
-	 * @param clientId 终端ID
-	 * @param clientType 终端类型
-	 * @param client 终端
-	 * @param body 消息主体
-	 * 
-	 * @return 终端状态
-	 */
-	private ClientStatus buildStatus(String clientId, ClientType clientType, Client client, Map<String, Object> body) {
+    }
+    
+    /**
+     * @param clientId   终端ID
+     * @param clientType 终端类型
+     * @param client     终端
+     * @param body       消息主体
+     * 
+     * @return 终端状态
+     */
+    private ClientStatus buildStatus(String clientId, ClientType clientType, Client client, Map<String, Object> body) {
         final ClientStatus status = client.getStatus();
         status.setIp(client.getIP());
         status.setName(MapUtils.get(body, Constant.NAME));
@@ -119,6 +119,6 @@ public class ClientRegisterProtocol extends ProtocolClientAdapter {
         status.setClientType(clientType);
         status.copy(body);
         return status;
-	}
-	
+    }
+    
 }

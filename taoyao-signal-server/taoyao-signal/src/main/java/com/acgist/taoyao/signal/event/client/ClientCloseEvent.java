@@ -4,7 +4,7 @@ import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.event.ClientEventAdapter;
 
 /**
- * 终端关闭事件
+ * 关闭终端事件
  * 
  * @author acgist
  */

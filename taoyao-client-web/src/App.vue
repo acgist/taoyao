@@ -165,7 +165,7 @@ export default {
     async loadList() {
       this.rooms   = await this.taoyao.roomList();
       this.medias  = await this.taoyao.mediaList();
-      this.clients = await this.taoyao.clientList();
+      this.clients = await this.taoyao.mediaClientList();
     },
     async sessionCall() {
       this.taoyao.sessionCall(this.room.callClientId);
