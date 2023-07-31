@@ -33,8 +33,8 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
         """
     },
     flow = {
-        "信令服务->目标终端->信令服务",
-        "终端=>信令服务->目标终端->信令服务->终端"
+        "信令服务=>终端",
+        "终端=>信令服务->终端"
     }
 )
 public class ControlClientRecordProtocol extends ProtocolControlAdapter implements IControlClientRecordProtocol {

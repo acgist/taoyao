@@ -52,7 +52,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
         ]
         """
     },
-    flow = "终端=>信令服务->终端"
+    flow = "终端=>信令服务"
 )
 public class ClientListProtocol extends ProtocolClientAdapter {
 
