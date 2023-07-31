@@ -4,14 +4,13 @@ import java.util.Map;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
-import com.acgist.taoyao.boot.config.Constant;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
 
 /**
- * 响铃信令
+ * 终端唤醒信令
  * 
  * @author acgist
  */
@@ -19,8 +18,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
 @Description(
     body = """
     {
-        "to"     : "目标终端ID",
-        "enabled": 是否响铃（true|false）
+        "to": "目标终端ID"
     }
     """,
     flow = {
@@ -28,12 +26,12 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
         "终端=>信令服务->终端"
     }
 )
-public class ControlBellProtocol extends ProtocolControlAdapter implements IControlBellProtocol {
+public class ControlWakeupProtocol extends ProtocolControlAdapter implements IControlWakeupProtocol {
 
-    private static final String SIGNAL = "control::bell";
+    private static final String SIGNAL = "control::wakeup";
     
-    public ControlBellProtocol() {
-        super("响铃信令", SIGNAL);
+    public ControlWakeupProtocol() {
+        super("终端唤醒信令", SIGNAL);
     }
     
     @Override
@@ -42,8 +40,8 @@ public class ControlBellProtocol extends ProtocolControlAdapter implements ICont
     }
 
     @Override
-    public Message execute(String clientId, Boolean enabled) {
-        return this.request(clientId, this.build(Map.of(Constant.ENABLED, enabled)));
+    public Message execute(String clientId) {
+        return this.request(clientId, this.build(Map.of()));
     }
     
 }

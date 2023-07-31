@@ -15,6 +15,7 @@ import com.acgist.taoyao.signal.protocol.control.IControlConfigAudioProtocol;
 import com.acgist.taoyao.signal.protocol.control.IControlConfigVideoProtocol;
 import com.acgist.taoyao.signal.protocol.control.IControlPhotographProtocol;
 import com.acgist.taoyao.signal.protocol.control.IControlServerRecordProtocol;
+import com.acgist.taoyao.signal.protocol.control.IControlWakeupProtocol;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.parameters.RequestBody;
@@ -36,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 public class ControlController {
     
     private final IControlBellProtocol         controlBellProtocol;
+    private final IControlWakeupProtocol       controlWakeupProtocol;
     private final IControlPhotographProtocol   controlPhotographProtocol;
     private final IControlConfigAudioProtocol  controlConfigAudioProtocol;
     private final IControlConfigVideoProtocol  controlConfigVideoProtocol;
@@ -92,6 +94,12 @@ public class ControlController {
         @NotNull(message = "没有指定操作状态") Boolean enabled
     ) {
         return this.controlServerRecordProtocol.execute(roomId, clientId, enabled);
+    }
+    
+    @Operation(summary = "唤醒终端", description = "唤醒终端")
+    @GetMapping("/wakeup/{clientId}")
+    public Message wakeup(@PathVariable String clientId) {
+        return this.controlWakeupProtocol.execute(clientId);
     }
     
 }

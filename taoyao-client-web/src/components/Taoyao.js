@@ -789,6 +789,15 @@ class Taoyao extends RemoteClient {
       case "client::shutdown":
         me.defaultClientShutdown(message);
         break;
+      case "client::unicast":
+        me.defaultClientUnicast(message);
+        break;
+      case "control::bell":
+        me.defaultControlBell(message);
+        break;
+      case "control::wakeup":
+        me.defaultControlWakeup(message);
+        break;
       case "media::audio::volume":
         me.defaultMediaAudioVolume(message);
         break;
@@ -1173,6 +1182,86 @@ class Taoyao extends RemoteClient {
   defaultClientShutdown(message) {
     console.info("关闭终端", message);
     window.close();
+  }
+
+  /**
+   * 终端状态信令
+   * 
+   * @param {*} clientId 终端ID
+   * 
+   * @returns 终端状态
+   */
+  async clientStatus(clientId) {
+    const response = await this.request(protocol.buildMessage("client::status", {
+      clientId
+    }));
+    return response.body;
+  }
+
+  /**
+   * 终端单播信令
+   * 
+   * @param {*} clientId 接收终端ID
+   * @param {*} message  消息内容
+   */
+  clientUnicast(clientId, message) {
+    this.push(protocol.buildMessage("client::unicast", {
+      ...message,
+      to: clientId
+    }));
+  }
+
+  /**
+   * 终端单播信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultClientUnicast(message) {
+    console.debug("终端单播消息", message);
+  }
+
+  /**
+   * 响铃信令
+   * 
+   * @param {*} clientId 目标终端ID
+   * @param {*} enabled  是否响铃
+   */
+  ControlBell(clientId, enabled) {
+    this.request(protocol.buildMessage("control::bell", {
+      enabled,
+      to: clientId,
+    }));
+  }
+
+  /**
+   * 响铃信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultControlBell(message) {
+    console.debug("响铃", message);
+    this.push(message);
+  }
+
+  /**
+   * 终端唤醒信令
+   * 
+   * @param {*} clientId 目标终端ID
+   */
+  controlWakeup(clientId) {
+    this.request(protocol.buildMessage("control::wakeup", {
+      to: clientId
+    }));
+  }
+
+  /**
+   * 终端唤醒信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultControlWakeup(message) {
+    console.debug("终端唤醒", message);
+    this.push(message);
   }
 
   /**
@@ -2148,18 +2237,6 @@ class Taoyao extends RemoteClient {
    */
   async roomList() {
     const response = await this.request(protocol.buildMessage("room::list"));
-    return response.body;
-  }
-
-  /**
-   * @param {*} clientId 终端ID
-   * 
-   * @returns 终端状态
-   */
-  async clientStatus(clientId) {
-    const response = await this.request(
-      protocol.buildMessage("client::status", { clientId })
-    );
     return response.body;
   }
 

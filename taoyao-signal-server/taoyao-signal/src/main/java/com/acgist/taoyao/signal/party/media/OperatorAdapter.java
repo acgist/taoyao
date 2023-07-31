@@ -38,9 +38,11 @@ public abstract class OperatorAdapter implements Operator {
      * @return 是否已经关闭
      */
     protected boolean markClose() {
-        final boolean old = this.close;
-        this.close = true;
-        return old;
+        synchronized (this) {
+            final boolean old = this.close;
+            this.close = true;
+            return old;
+        }
     }
     
 }

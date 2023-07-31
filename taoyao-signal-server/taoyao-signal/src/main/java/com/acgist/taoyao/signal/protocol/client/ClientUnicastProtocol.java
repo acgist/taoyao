@@ -35,16 +35,16 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 )
 public class ClientUnicastProtocol extends ProtocolClientAdapter {
 
-	public static final String SIGNAL = "client::unicast";
-	
-	public ClientUnicastProtocol() {
-		super("终端单播信令", SIGNAL);
-	}
+    public static final String SIGNAL = "client::unicast";
+    
+    public ClientUnicastProtocol() {
+        super("终端单播信令", SIGNAL);
+    }
 
-	@Override
-	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-	    final String to = MapUtils.remove(body, Constant.TO);
-		this.clientManager.unicast(to, message);
-	}
-	
+    @Override
+    public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+        final String to = MapUtils.remove(body, Constant.TO);
+        this.clientManager.unicast(to, message);
+    }
+    
 }
