@@ -274,7 +274,7 @@ class Room {
     const me = this;
     // 静音监控
     me.audioLevelObserver.on("silence", () => {
-      signalChannel.push(protocol.buildMessage("media::audio::volume", {
+      me.taoyao.push(protocol.buildMessage("media::audio::volume", {
         roomId: me.roomId,
       }));
     });
@@ -289,7 +289,7 @@ class Room {
           clientId: producer.clientId
         });
       }
-      signalChannel.push(protocol.buildMessage("media::audio::volume", {
+      me.taoyao.push(protocol.buildMessage("media::audio::volume", {
         roomId : me.roomId,
         volumes: notifyVolumes
       }));
@@ -1709,9 +1709,10 @@ class Taoyao {
     const mediasoupRouter = await mediasoupWorker.createRouter({ mediaCodecs });
     // 音量监控
     const audioLevelObserver = await mediasoupRouter.createAudioLevelObserver({
+      // 监控周期
       interval  : 500,
-      // 范围：-127~0
-      threshold : -80,
+      // 监控范围：-127~0
+      threshold : -127,
       // 监控数量
       maxEntries: 2,
     });
@@ -1721,6 +1722,7 @@ class Taoyao {
     });
     room = new Room({
       roomId,
+      taoyao: me,
       webRtcServer: mediasoupWorker.appData.webRtcServer,
       mediasoupRouter,
       audioLevelObserver,
