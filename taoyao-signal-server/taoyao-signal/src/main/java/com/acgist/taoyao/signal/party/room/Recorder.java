@@ -26,6 +26,7 @@ import lombok.extern.slf4j.Slf4j;
  * 服务端媒体录像机
  * 
  * OPUS = 100
+ * PCMU = 
  * VP8  = 101
  * H264 = 107
  * 

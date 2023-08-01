@@ -21,13 +21,13 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
     body = {
         """
         {
-            "to": "目标终端ID",
+            "to"     : "目标终端ID",
             "enabled": 是否录像（true|false）
         }
         """,
         """
         {
-            "enabled": 是否录像（true|false）,
+            "enabled" : 是否录像（true|false）,
             "filepath": "视频文件路径"
         }
         """

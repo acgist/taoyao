@@ -11,7 +11,7 @@ import com.acgist.taoyao.boot.model.Message;
 public interface IControlConfigAudioProtocol {
 
     /**
-     * @param clientId 终端ID
+     * @param clientId             终端ID
      * @param mediaAudioProperties 音频配置
      * 
      * @return 执行结果

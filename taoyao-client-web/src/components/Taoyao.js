@@ -795,6 +795,18 @@ class Taoyao extends RemoteClient {
       case "control::bell":
         me.defaultControlBell(message);
         break;
+      case "control::client::record":
+        me.defaultControlClientReccord(message);
+        break;
+      case "control::config::audio":
+        me.defaultControlConfigAudio(message);
+        break;
+      case "control::config::video":
+        me.defaultControlConfigVideo(message);
+        break;
+      case "control::photograph":
+        me.defaultControlPhotograph(message);
+        break;
       case "control::wakeup":
         me.defaultControlWakeup(message);
         break;
@@ -1226,7 +1238,7 @@ class Taoyao extends RemoteClient {
    * @param {*} clientId 目标终端ID
    * @param {*} enabled  是否响铃
    */
-  ControlBell(clientId, enabled) {
+  controlBell(clientId, enabled) {
     this.request(protocol.buildMessage("control::bell", {
       enabled,
       to: clientId,
@@ -1241,6 +1253,115 @@ class Taoyao extends RemoteClient {
   defaultControlBell(message) {
     console.debug("响铃", message);
     this.push(message);
+  }
+
+  /**
+   * 终端录像信令
+   * 
+   * @param {*} clientId 终端ID
+   * @param {*} enabled  录制状态
+   */
+  controlClientRecord(clientId, enabled) {
+    const me = this;
+    me.request(protocol.buildMessage("control::client::record", {
+      to     : clientId,
+      enabled: enabled
+    }));
+  }
+
+  /**
+   * 终端录像信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultControlClientReccord(message) {
+    console.debug("终端录像", message);
+    this.push(message);
+  }
+
+  /**
+   * 配置音频信令
+   * 
+   * @param {*} clientId 终端ID
+   * @param {*} config   音频配置
+   */
+  controlConfigAudio(clientId, config) {
+    this.request(protocol.buildMessage("control::config::audio", {
+      ...config,
+      to: clientId
+    }));
+  }
+
+  /**
+   * 配置音频信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultControlConfigAudio(message) {
+    console.debug("配置音频", message);
+    this.push(message);
+    // TODO：配置本地音频
+  }
+
+  /**
+   * 配置视频信令
+   * 
+   * @param {*} clientId 终端ID
+   * @param {*} config   视频配置
+   */
+  controlConfigVideo(clientId, config) {
+    this.request(protocol.buildMessage("control::config::video", {
+      ...config,
+      to: clientId
+    }));
+  }
+
+  /**
+   * 配置视频信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultControlConfigVideo(message) {
+    console.debug("配置视频", message);
+    this.push(message);
+    // TODO：配置本地视频
+  }
+
+  /**
+   * 拍照信令
+   * 
+   * @param {*} clientId 终端ID
+   */
+  controlPhotograph(clientId) {
+    const me = this;
+    me.request(protocol.buildMessage("control::photograph", {
+      to: clientId
+    }));
+  }
+  
+  /**
+   * 拍照信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultControlPhotograph(message) {
+    console.debug("拍照", message);
+    this.push(message);
+  }
+
+  /**
+   * 服务端录像信令
+   * 
+   * @param {*} clientId 终端ID
+   * @param {*} enabled  录制状态
+   */
+   controlServerRecord(clientId, enabled) {
+    const me = this;
+    me.request(protocol.buildMessage("control::server::record", {
+      to     : clientId,
+      roomId : me.roomId,
+      enabled: enabled
+    }));
   }
 
   /**
@@ -1262,47 +1383,6 @@ class Taoyao extends RemoteClient {
   defaultControlWakeup(message) {
     console.debug("终端唤醒", message);
     this.push(message);
-  }
-
-  /**
-   * 拍照
-   * 
-   * @param {*} clientId 终端ID
-   */
-  controlPhotograph(clientId) {
-    const me = this;
-    me.push(protocol.buildMessage("control::photograph", {
-      to: clientId
-    }));
-  }
-
-  /**
-   * 终端录像信令
-   * 
-   * @param {*} clientId 终端ID
-   * @param {*} enabled  录制状态
-   */
-  controlClientRecord(clientId, enabled) {
-    const me = this;
-    me.push(protocol.buildMessage("control::client::record", {
-      to     : clientId,
-      enabled: enabled
-    }));
-  }
-
-  /**
-   * 服务端录像信令
-   * 
-   * @param {*} clientId 终端ID
-   * @param {*} enabled  录制状态
-   */
-   controlServerRecord(clientId, enabled) {
-    const me = this;
-    me.push(protocol.buildMessage("control::server::record", {
-      to     : clientId,
-      roomId : me.roomId,
-      enabled: enabled
-    }));
   }
 
   /**
@@ -3267,3 +3347,4 @@ class Taoyao extends RemoteClient {
 }
 
 export { Taoyao };
+

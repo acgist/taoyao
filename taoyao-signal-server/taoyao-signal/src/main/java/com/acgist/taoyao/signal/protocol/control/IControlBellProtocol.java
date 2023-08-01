@@ -11,7 +11,7 @@ public interface IControlBellProtocol {
 
     /**
      * @param clientId 终端ID
-     * @param enabled 状态
+     * @param enabled  状态
      * 
      * @return 执行结果
      */

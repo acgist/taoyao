@@ -11,7 +11,7 @@ import com.acgist.taoyao.boot.model.Message;
 public interface IControlConfigVideoProtocol {
 
     /**
-     * @param clientId 终端ID
+     * @param clientId             终端ID
      * @param mediaVideoProperties 视频配置
      * 
      * @return 执行结果

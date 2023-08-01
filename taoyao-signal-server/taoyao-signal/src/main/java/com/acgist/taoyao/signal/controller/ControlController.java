@@ -1,4 +1,4 @@
-package com.acgist.taoyao.controller;
+package com.acgist.taoyao.signal.controller;
 
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
