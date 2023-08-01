@@ -817,10 +817,10 @@ class Taoyao extends RemoteClient {
         me.defaultMediaConsumerClose(message);
         break;
       case "media::consumer::pause":
-        this.defaultMediaConsumerPause(message);
+        me.defaultMediaConsumerPause(message);
         break;
       case "media::consumer::resume":
-        this.defaultMediaConsumerResume(message);
+        me.defaultMediaConsumerResume(message);
         break;
       case "media::data::consumer::close":
         me.defaultMediaDataConsumerClose(message);
@@ -1392,25 +1392,31 @@ class Taoyao extends RemoteClient {
    */
   defaultMediaAudioVolume(message) {
     const me = this;
-    const { roomId, volumes } = message.body;
-    // 静音
-    if (!volumes || volumes.length <= 0) {
+    const {
+      roomId,
+      volumes
+    } = message.body;
+    if (volumes && volumes.length > 0) {
+      // 声音
+      volumes.forEach(v => {
+        const {
+          volume,
+          clientId
+        } = v;
+        if (me.clientId === clientId) {
+          me.setVolume(volume);
+        } else {
+          const remoteClient = me.remoteClients.get(clientId);
+          remoteClient?.setVolume(volume);
+        }
+      });
+    } else {
+      // 静音
       me.volume = 0;
       me.remoteClients.forEach(v => {
         v.volume = 0;
       });
-      return;
     }
-    // 声音
-    volumes.forEach(v => {
-      const { volume, clientId } = v;
-      if (me.clientId === clientId) {
-        me.setVolume(volume);
-      } else {
-        const remoteClient = me.remoteClients.get(clientId);
-        remoteClient?.setVolume(volume);
-      }
-    });
   }
 
   /**
@@ -1900,7 +1906,10 @@ class Taoyao extends RemoteClient {
           console.debug("消费者关闭（无效）", consumer.id, streamId);
         }
       });
-      const { spatialLayers, temporalLayers } = mediasoupClient.parseScalabilityMode(
+      const {
+        spatialLayers,
+        temporalLayers
+      } = mediasoupClient.parseScalabilityMode(
         consumer.rtpParameters.encodings[0].scalabilityMode
       );
       console.debug("时间层空间层", spatialLayers, temporalLayers);

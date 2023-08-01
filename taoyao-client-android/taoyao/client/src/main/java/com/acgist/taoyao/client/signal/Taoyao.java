@@ -783,6 +783,7 @@ public final class Taoyao implements ITaoyao {
     private void controlConfigAudio(Message message, Map<String, Object> body) {
         final MediaAudioProperties mediaAudioProperties = JSONUtils.toJava(JSONUtils.toJSON(body), MediaAudioProperties.class);
         this.mediaManager.updateAudioConfig(mediaAudioProperties);
+        this.push(message);
     }
 
     /**
@@ -794,6 +795,7 @@ public final class Taoyao implements ITaoyao {
     private void controlConfigVideo(Message message, Map<String, Object> body) {
         final MediaVideoProperties mediaVideoProperties = JSONUtils.toJava(JSONUtils.toJSON(body), MediaVideoProperties.class);
         this.mediaManager.updateVideoConfig(mediaVideoProperties);
+        this.push(message);
     }
 
     /**

@@ -19,33 +19,33 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 @Description(
     body = """
     {
-        "roomId": "房间ID",
+        "roomId"  : "房间ID",
         "volumes" : [
             {
-                "volume": 音量,
+                "volume"  : 音量,
                 "clientId": "终端ID"
             },
             ...
         ]
     }
     """,
-    flow = "媒体服务->信令服务->终端"
+    flow = "媒体服务->信令服务-)终端"
 )
 public class MediaAudioVolumeProtocol extends ProtocolRoomAdapter {
 
-	public static final String SIGNAL = "media::audio::volume";
-	
-	public MediaAudioVolumeProtocol() {
-		super("终端音量信令", SIGNAL);
-	}
+    public static final String SIGNAL = "media::audio::volume";
+    
+    public MediaAudioVolumeProtocol() {
+        super("终端音量信令", SIGNAL);
+    }
 
-	@Override
-	public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-	    if(clientType.mediaServer()) {
-	        room.broadcast(message);
-	    } else {
-	        this.logNoAdapter(clientType);
-	    }
-	}
+    @Override
+    public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
+        if(clientType.mediaServer()) {
+            room.broadcast(message);
+        } else {
+            this.logNoAdapter(clientType);
+        }
+    }
 
 }

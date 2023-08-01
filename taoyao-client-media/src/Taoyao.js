@@ -274,11 +274,9 @@ class Room {
     const me = this;
     // 静音监控
     me.audioLevelObserver.on("silence", () => {
-      signalChannel.push(
-        protocol.buildMessage("media::audio::volume", {
-          roomId: me.roomId,
-        })
-      );
+      signalChannel.push(protocol.buildMessage("media::audio::volume", {
+        roomId: me.roomId,
+      }));
     });
     // me.audioLevelObserver.observer.on("silence", () => {});
     // 音量监控
@@ -291,12 +289,10 @@ class Room {
           clientId: producer.clientId
         });
       }
-      signalChannel.push(
-        protocol.buildMessage("media::audio::volume", {
-          roomId : me.roomId,
-          volumes: notifyVolumes
-        })
-      );
+      signalChannel.push(protocol.buildMessage("media::audio::volume", {
+        roomId : me.roomId,
+        volumes: notifyVolumes
+      }));
     });
     // me.audioLevelObserver.observer.on("volumes", (volumes) => {});
   }
@@ -702,8 +698,9 @@ class Taoyao {
     }
     if(videoConsumer) {
       await videoConsumer.resume();
+      // 请求录像关键帧
+      me.requestKeyFrameForRecord(0, filepath, videoConsumer);
     }
-    this.requestKeyFrameForRecord(0, filepath, videoConsumer);
     message.body = {
       roomId            : roomId,
       audioConsumerId   : audioConsumerId,
@@ -725,9 +722,6 @@ class Taoyao {
    * @param {*} videoConsumer 视频消费者
    */
   requestKeyFrameForRecord(index, filepath, videoConsumer) {
-    if(!filepath || !videoConsumer) {
-      return;
-    }
     const {
       requestKeyFrameMaxIndex,
       requestKeyFrameFileSize
@@ -1715,7 +1709,7 @@ class Taoyao {
     const mediasoupRouter = await mediasoupWorker.createRouter({ mediaCodecs });
     // 音量监控
     const audioLevelObserver = await mediasoupRouter.createAudioLevelObserver({
-      interval  : 2000,
+      interval  : 500,
       // 范围：-127~0
       threshold : -80,
       // 监控数量

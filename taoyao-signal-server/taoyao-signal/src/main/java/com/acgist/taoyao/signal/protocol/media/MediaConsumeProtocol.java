@@ -39,14 +39,14 @@ import lombok.extern.slf4j.Slf4j;
     """,
     body = """
     {
-        "roomId": "房间ID"
+        "roomId"    : "房间ID"
         "producerId": "生产者ID"
     }
     """,
     flow = {
-        "终端-[生产媒体]>信令服务-[其他终端消费])信令服务",
-        "终端-[创建WebRTC消费通道]>信令服务-[消费其他终端])信令服务",
-        "终端->信令服务->媒体服务=>信令服务->终端->信令服务->媒体服务"
+        "终端-[生产媒体]>信令服务-[消费媒体])信令服务=>信令服务->终端",
+        "终端-[创建WebRTC通道]>信令服务-[消费媒体])信令服务=>信令服务->终端",
+        "终端->信令服务->媒体服务=>信令服务->终端"
     }
 )
 public class MediaConsumeProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaConsumeEvent> {
@@ -63,12 +63,12 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
         final Room room = event.getRoom();
         if(event.getProducer() != null) {
             // 生产媒体：其他终端消费
-            final Producer producer = event.getProducer();
+            final Producer producer                  = event.getProducer();
             final ClientWrapper produceClientWrapper = producer.getProducerClient();
             room.getClients().values().stream()
-            .filter(v -> v != produceClientWrapper)
-            .filter(v -> v.getRecvTransport() != null)
-            .filter(v -> v.getSubscribeType().canConsume(producer))
+            .filter(v  -> v != produceClientWrapper)
+            .filter(v  -> v.getRecvTransport() != null)
+            .filter(v  -> v.getSubscribeType().canConsume(producer))
             .forEach(v -> this.consume(room, v, producer, this.build()));
         } else if(event.getClientWrapper() != null) {
             // 创建WebRTC消费通道：消费其他终端
@@ -78,9 +78,9 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
                 return;
             }
             room.getClients().values().stream()
-            .filter(v -> v != consumeClientWrapper)
+            .filter(v  -> v != consumeClientWrapper)
             .flatMap(v -> v.getProducers().values().stream())
-            .filter(v -> consumeClientWrapper.getSubscribeType().canConsume(v))
+            .filter(v  -> consumeClientWrapper.getSubscribeType().canConsume(v))
             .forEach(producer -> this.consume(room, consumeClientWrapper, producer, this.build()));
         } else {
             throw MessageCodeException.of("消费媒体失败");
@@ -121,10 +121,10 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
     /**
      * 消费媒体
      * 
-     * @param room 房间
+     * @param room                  房间
      * @param consumerClientWrapper 消费者终端包装器
-     * @param producer 生产者
-     * @param message 消息
+     * @param producer              生产者
+     * @param message               消息
      */
     private void consume(Room room, ClientWrapper consumerClientWrapper, Producer producer, Message message) {
         final Client mediaClient = room.getMediaClient();
