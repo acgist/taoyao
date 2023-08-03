@@ -17,20 +17,23 @@ import com.acgist.taoyao.signal.party.media.Consumer;
 import com.acgist.taoyao.signal.party.room.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 暂停消费者信令
  * 
  * @author acgist
  */
+@Slf4j
 @Protocol
 @Description(
     body = """
     {
-        "roomId": "房间ID"
+        "roomId"    : "房间ID"
         "consumerId": "消费者ID"
     }
     """,
-    flow = "终端->信令服务->媒体服务->信令服务->终端"
+    flow = "终端=>信令服务->媒体服务"
 )
 public class MediaConsumerPauseProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaConsumerPauseEvent> {
 
@@ -54,13 +57,16 @@ public class MediaConsumerPauseProtocol extends ProtocolRoomAdapter implements A
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
+        final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);
+        final Consumer consumer = room.consumer(consumerId);
+        if(consumer == null) {
+            log.debug("消费者无效：{} - {}", consumerId, clientType);
+            return;
+        }
         if(clientType.mediaClient()) {
-            final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);
-            final Consumer consumer = room.consumer(consumerId);
             consumer.pause();
         } else if(clientType.mediaServer()) {
-            // TODO：路由到真实消费者
-            room.broadcast(message);
+            consumer.getConsumerClient().push(message);
         } else {
             this.logNoAdapter(clientType);
         }

@@ -905,6 +905,7 @@ class Taoyao {
     //   })
     // );
     if (producer.kind === "audio") {
+      // TODO：关闭生产者时移除监听
       room.audioLevelObserver
         .addProducer({ producerId: producer.id })
         .catch((error) => {

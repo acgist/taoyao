@@ -21,11 +21,11 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 @Description(
     body = """
     {
-        "roomId": "房间ID",
+        "roomId"    : "房间ID",
         "consumerId": "消费者ID"
     }
     """,
-    flow = "终端->信令服务->媒体服务->信令服务->终端"
+    flow = "终端->信令服务->媒体服务"
 )
 public class MediaConsumerRequestKeyFrameProtocol extends ProtocolRoomAdapter {
 

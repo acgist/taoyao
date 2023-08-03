@@ -1439,7 +1439,10 @@ class Taoyao extends RemoteClient {
    */
   defaultMediaConsumerClose(message) {
     const me = this;
-    const { roomId, consumerId } = message.body;
+    const {
+      roomId,
+      consumerId
+    } = message.body;
     const consumer = me.consumers.get(consumerId);
     if (consumer) {
       console.debug("关闭消费者", consumerId);
@@ -1455,7 +1458,7 @@ class Taoyao extends RemoteClient {
    * 
    * @param {*} consumerId 消费者ID
    */
-  mediaConsumerPause(consumerId) {
+  async mediaConsumerPause(consumerId) {
     const me = this;
     const consumer = me.consumers.get(consumerId);
     if(consumer) {
@@ -1463,7 +1466,7 @@ class Taoyao extends RemoteClient {
         return;
       }
       console.debug("暂停消费者", consumerId);
-      me.push(protocol.buildMessage("media::consumer::pause", {
+      await me.request(protocol.buildMessage("media::consumer::pause", {
         roomId    : me.roomId,
         consumerId: consumerId,
       }));
@@ -1479,7 +1482,10 @@ class Taoyao extends RemoteClient {
    */
   defaultMediaConsumerPause(message) {
     const me = this;
-    const { roomId, consumerId } = message.body;
+    const {
+      roomId,
+      consumerId
+    } = message.body;
     const consumer = me.consumers.get(consumerId);
     if (consumer) {
       console.debug("暂停消费者", consumerId);
@@ -1516,7 +1522,7 @@ class Taoyao extends RemoteClient {
    * 
    * @param {*} consumerId 消费者ID
    */
-   mediaConsumerResume(consumerId) {
+  async mediaConsumerResume(consumerId) {
     const me = this;
     const consumer = me.consumers.get(consumerId);
     if(consumer) {
@@ -1524,7 +1530,7 @@ class Taoyao extends RemoteClient {
         return;
       }
       console.debug("恢复消费者", consumerId);
-      me.push(protocol.buildMessage("media::consumer::resume", {
+      await me.request(protocol.buildMessage("media::consumer::resume", {
         roomId    : me.roomId,
         consumerId: consumerId,
       }));
@@ -1540,7 +1546,10 @@ class Taoyao extends RemoteClient {
   */
   defaultMediaConsumerResume(message) {
     const me = this;
-    const { roomId, consumerId } = message.body;
+    const {
+      roomId,
+      consumerId
+    } = message.body;
     const consumer = me.consumers.get(consumerId);
     if (consumer) {
       console.debug("恢复消费者", consumerId);

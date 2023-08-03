@@ -3,6 +3,7 @@ package com.acgist.taoyao.signal.party.room;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.party.media.Consumer;
 import com.acgist.taoyao.signal.party.media.DataConsumer;
@@ -116,6 +117,26 @@ public class ClientWrapper implements AutoCloseable {
     public boolean consumedData(DataProducer dataProducer) {
         return this.dataConsumers.values().stream()
             .anyMatch(v -> v.getDataProducer() == dataProducer);
+    }
+    
+    /**
+     * 推送消息
+     * 
+     * @param message 消息
+     */
+    public void push(Message message) {
+        this.client.push(message);
+    }
+    
+    /**
+     * 请求消息
+     * 
+     * @param message 请求
+     * 
+     * @return 响应
+     */
+    public Message request(Message message) {
+        return this.client.request(message);
     }
     
     @Override
