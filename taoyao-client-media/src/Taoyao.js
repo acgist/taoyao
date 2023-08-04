@@ -414,6 +414,12 @@ class Taoyao {
       case "media::consumer::set::preferred::layers":
         me.mediaConsumerSetPreferredLayers(message, body);
         break;
+      case "media::consumer::set::priority":
+        me.mediaConsumerSetPriority(message, body);
+        break;
+      case "media::consumer::status":
+        me.mediaConsumerStatus(message, body);
+        break;
       case "media::data::consume":
         me.mediaDataConsume(message, body);
         break;
@@ -1060,9 +1066,9 @@ class Taoyao {
             console.debug("消费者评分", consumer.id, streamId, score);
             me.push(
               protocol.buildMessage("media::consumer::score", {
-                score     : score,
                 roomId    : roomId,
                 consumerId: consumer.id,
+                score     : score,
               })
             );
           });
@@ -1240,15 +1246,71 @@ class Taoyao {
       roomId,
       consumerId,
       spatialLayer,
-      temporalLayer
+      temporalLayer,
     } = body;
     const room     = me.rooms.get(roomId);
     const consumer = room?.consumers.get(consumerId);
     if(consumer) {
       console.debug("修改最佳空间层和时间层", consumerId);
-      await consumer.setPreferredLayers({ spatialLayer, temporalLayer });
+      await consumer.setPreferredLayers({
+        spatialLayer,
+        temporalLayer
+      });
     } else {
       console.debug("修改最佳空间层和时间层（无效）", consumerId);
+    }
+  }
+
+  /**
+   * 设置消费者优先级信令
+   * 
+   * @param {*} message 信令消息
+   * @param {*} body    消息主体
+   */
+  async mediaConsumerSetPriority(message, body) {
+    const me = this;
+    const {
+      roomId,
+      consumerId,
+      priority,
+    } = body;
+    const room     = me.rooms.get(roomId);
+    const consumer = room?.consumers.get(consumerId);
+    if(consumer) {
+      console.debug("设置消费者优先级", consumerId, priority);
+      if(priority <= 0 || priority >= 256) {
+        await consumer.unsetPriority();
+      } else {
+        await consumer.setPriority(priority);
+      }
+    } else {
+      console.debug("设置消费者优先级（无效）", consumerId);
+    }
+  }
+
+  /**
+   * 查询消费者状态信令
+   * 
+   * @param {*} message 信令消息
+   * @param {*} body    消息主体
+   */
+  async mediaConsumerStatus(message, body) {
+    const me = this;
+    const {
+      roomId,
+      consumerId,
+    } = body;
+    const room     = me.rooms.get(roomId);
+    const consumer = room?.consumers.get(consumerId);
+    if(consumer) {
+      console.debug("查询消费者状态", consumerId);
+      message.body = {
+        ...body,
+        status: await consumer.getStats()
+      };
+      me.push(message);
+    } else {
+      console.debug("查询消费者状态（无效）", consumerId);
     }
   }
 

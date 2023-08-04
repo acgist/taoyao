@@ -19,9 +19,13 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 @Description(
     body = """
     {
-        "score": "消费者RTP流得分表示传输质量：0~10",
-        "producerScore": "生产者RTP流得分表示传输质量：0~10",
-        "producerScores": [所有生产者RTP流得分]
+        "roomId"    : "房间ID"
+        "consumerId": "消费者ID"
+        "score"     : {
+            "score"         : 消费者RTP流得分表示传输质量：0~10,
+            "producerScore" : 生产者RTP流得分表示传输质量：0~10,
+            "producerScores": [Simulcast生产者RTP流得分]
+        }
     }
     """,
     flow = "媒体服务->信令服务->终端"

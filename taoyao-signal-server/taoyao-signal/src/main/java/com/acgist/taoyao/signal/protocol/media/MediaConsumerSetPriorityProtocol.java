@@ -13,17 +13,15 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 /**
  * 设置消费者优先级信令
  * 
- * TODO：unsetPriority
- * 
  * @author acgist
  */
 @Protocol
 @Description(
     body = """
     {
-        "roomId": "房间ID",
+        "roomId"    : "房间ID",
         "consumerId": "消费者ID",
-        "priority": 优先级（1~255）
+        "priority"  : 优先级（1~255）
     }
     """
 )
@@ -38,7 +36,7 @@ public class MediaConsumerSetPriorityProtocol extends ProtocolRoomAdapter {
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         if(clientType.mediaClient()) {
-            client.push(mediaClient.request(message));
+            mediaClient.push(message);
         } else {
             this.logNoAdapter(clientType);
         }

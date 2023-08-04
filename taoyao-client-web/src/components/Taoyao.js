@@ -822,6 +822,9 @@ class Taoyao extends RemoteClient {
       case "media::consumer::resume":
         me.defaultMediaConsumerResume(message);
         break;
+      case "media::consumer::score":
+        me.defaultMediaConsumerScore(message);
+        break;
       case "media::data::consumer::close":
         me.defaultMediaDataConsumerClose(message);
         break;
@@ -1558,6 +1561,16 @@ class Taoyao extends RemoteClient {
       console.debug("恢复消费者无效", consumerId);
     }
   }
+
+  /**
+   * 媒体消费者评分信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultMediaConsumerScore(message) {
+    console.debug("消费者评分", message);
+  }
+
   /**
    * 修改最佳空间层和时间层信令
    * 
@@ -1581,6 +1594,26 @@ class Taoyao extends RemoteClient {
       consumerId,
       spatialLayer,
       temporalLayer,
+    }));
+  }
+
+  /**
+   * 设置消费者优先级信令
+   * 
+   * @param {*} consumerId 消费者ID
+   * @param {*} priority   优先级：1~255
+   */
+  mediaConsumerSetPriority(consumerId, priority) {
+    const me = this;
+    const consumer = me.consumers.get(consumerId);
+    if(!consumer) {
+      me.callbackError("设置消费者优先级消费者无效");
+      return;
+    }
+    me.push(protocol.buildMessage("media::consumer::set::priority", {
+      roomId: me.roomId,
+      consumerId,
+      priority,
     }));
   }
 
@@ -3261,6 +3294,32 @@ class Taoyao extends RemoteClient {
    */
   async setTrack(track, setting) {
    await track.applyConstraints(Object.assign(track.getSettings(), setting));
+  }
+
+  /**
+   * 统计设备信息
+   * 
+   * @param {*} clientId 终端ID
+   *
+   * @returns 设备信息统计
+   */
+  async getClientStats(clientId) {
+    const me    = this;
+    const stats = {};
+    if(clientId === me.clientId) {
+      stats.sendTransport = await me.sendTransport.getStats();
+      stats.recvTransport = await me.recvTransport.getStats();
+      stats.audioProducer = await me.audioProducer.getStats();
+      stats.videoProducer = await me.videoProducer.getStats();
+    } else {
+      const consumers = Array.from(me.consumers.values());
+      for(const consumer of consumers) {
+        if(clientId === consumer.sourceId) {
+          stats[consumer.kind] = await consumer.getStats();
+        }
+      }
+    }
+    return stats;
   }
 
   /**
