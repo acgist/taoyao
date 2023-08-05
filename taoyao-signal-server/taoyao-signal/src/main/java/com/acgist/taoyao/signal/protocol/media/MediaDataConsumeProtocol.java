@@ -34,12 +34,12 @@ import lombok.extern.slf4j.Slf4j;
     """,
     body = """
     {
-        "roomId": "房间ID"
+        "roomId"    : "房间ID"
         "producerId": "生产者ID",
     }
     """,
     flow = {
-        "终端=>信令服务->媒体服务->信令服务->媒体服务"
+        "终端->信令服务->媒体服务->信令服务->终端"
     }
 )
 public class MediaDataConsumeProtocol extends ProtocolRoomAdapter {
@@ -59,31 +59,31 @@ public class MediaDataConsumeProtocol extends ProtocolRoomAdapter {
         }
         if(clientType.mediaClient()) {
             final ClientWrapper dataConsumerClientWrapper = room.clientWrapper(client);
-            final String dataConsumerClientId = dataConsumerClientWrapper.getClientId();
+            final String dataConsumerClientId             = dataConsumerClientWrapper.getClientId();
             final ClientWrapper dataProducerClientWrapper = dataProducer.getProducerClient();
-            final String dataProducerClientId = dataProducerClientWrapper.getClientId();
-            final Transport recvTransport = dataConsumerClientWrapper.getRecvTransport();
-            final String streamId = Constant.STREAM_ID_CONSUMER.apply(dataProducer.getStreamId(), dataConsumerClientId);
-            body.put(Constant.ROOM_ID, room.getRoomId());
-            body.put(Constant.CLIENT_ID, dataConsumerClientId);
-            body.put(Constant.SOURCE_ID, dataProducerClientId);
-            body.put(Constant.STREAM_ID, streamId);
-            body.put(Constant.PRODUCER_ID, dataProducer.getProducerId());
-            body.put(Constant.TRANSPORT_ID, recvTransport.getTransportId());
-            body.put(Constant.RTP_CAPABILITIES, dataConsumerClientWrapper.getRtpCapabilities());
+            final String dataProducerClientId             = dataProducerClientWrapper.getClientId();
+            final Transport recvTransport                 = dataConsumerClientWrapper.getRecvTransport();
+            final String streamId                         = Constant.STREAM_ID_CONSUMER.apply(dataProducer.getStreamId(), dataConsumerClientId);
+            body.put(Constant.ROOM_ID,           room.getRoomId());
+            body.put(Constant.CLIENT_ID,         dataConsumerClientId);
+            body.put(Constant.SOURCE_ID,         dataProducerClientId);
+            body.put(Constant.STREAM_ID,         streamId);
+            body.put(Constant.PRODUCER_ID,       dataProducer.getProducerId());
+            body.put(Constant.TRANSPORT_ID,      recvTransport.getTransportId());
+            body.put(Constant.RTP_CAPABILITIES,  dataConsumerClientWrapper.getRtpCapabilities());
             body.put(Constant.SCTP_CAPABILITIES, dataConsumerClientWrapper.getSctpCapabilities());
             mediaClient.push(message);
         } else if(clientType.mediaServer()) {
-            final String streamId = MapUtils.get(body, Constant.STREAM_ID);
+            final String streamId   = MapUtils.get(body, Constant.STREAM_ID);
             final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);
-            final String dataConsumerClientId = MapUtils.get(body, Constant.CLIENT_ID);
+            final String dataConsumerClientId             = MapUtils.get(body, Constant.CLIENT_ID);
             final ClientWrapper dataConsumerClientWrapper = room.clientWrapper(dataConsumerClientId);
-            final Map<String, DataConsumer> roomDataConsumers = room.getDataConsumers();
-            final Map<String, DataConsumer> clientDataConsumers = dataConsumerClientWrapper.getDataConsumers();   
+            final Map<String, DataConsumer> roomDataConsumers     = room.getDataConsumers();
+            final Map<String, DataConsumer> clientDataConsumers   = dataConsumerClientWrapper.getDataConsumers();   
             final Map<String, DataConsumer> producerDataConsumers = dataProducer.getDataConsumers();
-            final DataConsumer dataConsumer = new DataConsumer(streamId, consumerId, room, dataProducer, dataConsumerClientWrapper);
-            final DataConsumer oldDataRoomConsumer = roomDataConsumers.put(consumerId, dataConsumer);
-            final DataConsumer oldDataClientConsumer = clientDataConsumers.put(consumerId, dataConsumer);
+            final DataConsumer dataConsumer            = new DataConsumer(streamId, consumerId, room, dataProducer, dataConsumerClientWrapper);
+            final DataConsumer oldDataRoomConsumer     = roomDataConsumers.put(consumerId, dataConsumer);
+            final DataConsumer oldDataClientConsumer   = clientDataConsumers.put(consumerId, dataConsumer);
             final DataConsumer oldDataProducerConsumer = producerDataConsumers.put(consumerId, dataConsumer);
             if(oldDataRoomConsumer != null || oldDataClientConsumer != null || oldDataProducerConsumer != null) {
                 log.warn("消费者已经存在：{}", consumerId);

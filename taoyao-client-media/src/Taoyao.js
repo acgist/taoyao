@@ -426,6 +426,9 @@ class Taoyao {
       case "media::data::consumer::close":
         me.mediaDataConsumerClose(message, body);
         break;
+      case "media::data::consumer::status":
+        me.mediaDataConsumerStatus(message, body);
+        break;
       case "media::data::produce":
         me.mediaDataProduce(message, body);
         break;
@@ -1410,6 +1413,32 @@ class Taoyao {
       await dataConsumer.close();
     } else {
       console.info("关闭数据消费者（无效）", consumerId);
+    }
+  }
+
+  /**
+   * 查询数据消费者状态信令
+   * 
+   * @param {*} message 信令消息
+   * @param {*} body    消息主体
+   */
+  async mediaDataConsumerStatus(message, body) {
+    const me = this;
+    const {
+      roomId,
+      consumerId,
+    } = body;
+    const room         = me.rooms.get(roomId);
+    const dataConsumer = room?.dataConsumers.get(consumerId);
+    if(dataConsumer) {
+      console.debug("查询消费者状态", consumerId);
+      message.body = {
+        ...body,
+        status: await dataConsumer.getStats()
+      };
+      me.push(message);
+    } else {
+      console.debug("查询消费者状态（无效）", consumerId);
     }
   }
 

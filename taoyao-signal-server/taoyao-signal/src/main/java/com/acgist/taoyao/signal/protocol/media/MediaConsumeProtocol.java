@@ -96,17 +96,17 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
             this.consume(room, room.clientWrapper(client), producer, message);
         } else if(clientType.mediaServer()) {
             // 媒体通道准备就绪
-            final String kind = MapUtils.get(body, Constant.KIND);
-            final String streamId = MapUtils.get(body, Constant.STREAM_ID);
-            final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);
+            final String kind             = MapUtils.get(body, Constant.KIND);
+            final String streamId         = MapUtils.get(body, Constant.STREAM_ID);
+            final String consumerId       = MapUtils.get(body, Constant.CONSUMER_ID);
             final String consumerClientId = MapUtils.get(body, Constant.CLIENT_ID);
-            final ClientWrapper consumerClientWrapper = room.clientWrapper(consumerClientId);
-            final Map<String, Consumer> roomConsumers = room.getConsumers();
-            final Map<String, Consumer> clientConsumers = consumerClientWrapper.getConsumers();   
+            final ClientWrapper consumerClientWrapper     = room.clientWrapper(consumerClientId);
+            final Map<String, Consumer> roomConsumers     = room.getConsumers();
+            final Map<String, Consumer> clientConsumers   = consumerClientWrapper.getConsumers();   
             final Map<String, Consumer> producerConsumers = producer.getConsumers();
-            final Consumer consumer = new Consumer(kind, streamId, consumerId, room, producer, consumerClientWrapper);
-            final Consumer oldRoomConsumer = roomConsumers.put(consumerId, consumer);
-            final Consumer oldClientConsumer = clientConsumers.put(consumerId, consumer);
+            final Consumer consumer            = new Consumer(kind, streamId, consumerId, room, producer, consumerClientWrapper);
+            final Consumer oldRoomConsumer     = roomConsumers.put(consumerId, consumer);
+            final Consumer oldClientConsumer   = clientConsumers.put(consumerId, consumer);
             final Consumer oldProducerConsumer = producerConsumers.put(consumerId, consumer);
             if(oldRoomConsumer != null || oldClientConsumer != null || oldProducerConsumer != null) {
                 log.warn("消费者已经存在：{}", consumerId);
@@ -127,26 +127,26 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
      * @param message               消息
      */
     private void consume(Room room, ClientWrapper consumerClientWrapper, Producer producer, Message message) {
-        final Client mediaClient = room.getMediaClient();
+        final Client mediaClient      = room.getMediaClient();
         final String consumerClientId = consumerClientWrapper.getClientId();
-        final String streamId = Constant.STREAM_ID_CONSUMER.apply(producer.getStreamId(), consumerClientId);
+        final String streamId         = Constant.STREAM_ID_CONSUMER.apply(producer.getStreamId(), consumerClientId);
         final ClientWrapper producerClientWrapper = producer.getProducerClient();
-        final String producerClientId = producerClientWrapper.getClientId();
+        final String producerClientId             = producerClientWrapper.getClientId();
         if(consumerClientWrapper.consumed(producer)) {
             // 消费通道就绪
             mediaClient.push(message);
             log.info("{}消费通道就绪：{}", consumerClientId, streamId);
         } else {
             // 主动消费媒体
-            final Transport recvTransport = consumerClientWrapper.getRecvTransport();
+            final Transport recvTransport  = consumerClientWrapper.getRecvTransport();
             final Map<String, Object> body = new HashMap<>();
-            body.put(Constant.ROOM_ID, room.getRoomId());
-            body.put(Constant.CLIENT_ID, consumerClientId);
-            body.put(Constant.SOURCE_ID, producerClientId);
-            body.put(Constant.STREAM_ID, streamId);
-            body.put(Constant.PRODUCER_ID, producer.getProducerId());
-            body.put(Constant.TRANSPORT_ID, recvTransport.getTransportId());
-            body.put(Constant.RTP_CAPABILITIES, consumerClientWrapper.getRtpCapabilities());
+            body.put(Constant.ROOM_ID,           room.getRoomId());
+            body.put(Constant.CLIENT_ID,         consumerClientId);
+            body.put(Constant.SOURCE_ID,         producerClientId);
+            body.put(Constant.STREAM_ID,         streamId);
+            body.put(Constant.PRODUCER_ID,       producer.getProducerId());
+            body.put(Constant.TRANSPORT_ID,      recvTransport.getTransportId());
+            body.put(Constant.RTP_CAPABILITIES,  consumerClientWrapper.getRtpCapabilities());
             body.put(Constant.SCTP_CAPABILITIES, consumerClientWrapper.getSctpCapabilities());
             message.setBody(body);
             mediaClient.push(message);

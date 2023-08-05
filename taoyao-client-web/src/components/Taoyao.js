@@ -1668,7 +1668,7 @@ class Taoyao extends RemoteClient {
    */
   async mediaDataConsumerStatus(consumerId) {
     const me = this;
-    return await me.request(protocol.buildMessage('media::data::consumer::status', {
+    return await me.request(protocol.buildMessage("media::data::consumer::status", {
       roomId: me.roomId,
       consumerId
     }));
@@ -2384,7 +2384,7 @@ class Taoyao extends RemoteClient {
   async mediaProduce(audioTrack, videoTrack) {
     const me = this;
     if(!audioTrack || !videoTrack) {
-      me.checkDevice();
+      await me.checkDevice();
     }
     await me.createSendTransport();
     await me.createRecvTransport();
