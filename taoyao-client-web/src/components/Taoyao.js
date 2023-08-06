@@ -1713,7 +1713,7 @@ class Taoyao extends RemoteClient {
    */
   async mediaDataProducerStatus(producerId) {
     const me = this;
-    return await me.request(protocol.buildMessage('media::data::producer::status', {
+    return await me.request(protocol.buildMessage("media::data::producer::status", {
       roomId: me.roomId,
       producerId
     }));

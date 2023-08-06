@@ -70,7 +70,7 @@ public class MediaProduceProtocol extends ProtocolRoomAdapter {
                 Constant.STREAM_ID, streamId,
                 Constant.PRODUCER_ID, producerId
             ));
-            room.broadcast(responseMessage);
+            client.push(responseMessage);
             log.info("{}生产媒体：{} - {}", clientId, streamId, producerId);
             this.publishEvent(new MediaConsumeEvent(room, producer));
         } else {

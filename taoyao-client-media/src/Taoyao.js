@@ -435,6 +435,9 @@ class Taoyao {
       case "media::data::producer::close":
         me.mediaDataProducerClose(message, body);
         break;
+      case "media::data::producer::status":
+        me.mediaDataProducerStatus(message, body);
+        break;
       case "media::ice::restart":
         me.mediaIceRestart(message, body);
         break;
@@ -1431,14 +1434,14 @@ class Taoyao {
     const room         = me.rooms.get(roomId);
     const dataConsumer = room?.dataConsumers.get(consumerId);
     if(dataConsumer) {
-      console.debug("查询消费者状态", consumerId);
+      console.debug("查询数据消费者状态", consumerId);
       message.body = {
         ...body,
         status: await dataConsumer.getStats()
       };
       me.push(message);
     } else {
-      console.debug("查询消费者状态（无效）", consumerId);
+      console.debug("查询数据消费者状态（无效）", consumerId);
     }
   }
 
@@ -1483,12 +1486,10 @@ class Taoyao {
     dataProducer.observer.on("close", () => {
       if(room.dataProducers.delete(dataProducer.id)) {
         console.info("数据生产者关闭", dataProducer.id, streamId);
-        me.push(
-          taoyaoProtocol.buildMessage("media::data::producer::close", {
-            roomId    : roomId,
-            producerId: dataProducer.id,
-          })
-        );
+        me.push(taoyaoProtocol.buildMessage("media::data::producer::close", {
+          roomId    : roomId,
+          producerId: dataProducer.id,
+        }));
       } else {
         console.debug("数据生产者关闭（无效）", dataProducer.id, streamId);
       }
@@ -1516,6 +1517,32 @@ class Taoyao {
       await dataProducer.close();
     } else {
       console.info("关闭数据生产者（无效）", producerId);
+    }
+  }
+
+  /**
+   * 查询数据生产者状态信令
+   * 
+   * @param {*} message 信令消息
+   * @param {*} body    消息主体
+   */
+  async mediaDataProducerStatus(message, body) {
+    const me = this;
+    const {
+      roomId,
+      producerId,
+    } = body;
+    const room     = me.rooms.get(roomId);
+    const dataProducer = room?.dataProducers.get(producerId);
+    if(dataProducer) {
+      console.debug("查询数据生产者状态", producerId);
+      message.body = {
+        ...body,
+        status: await dataProducer.getStats()
+      };
+      me.push(message);
+    } else {
+      console.debug("查询数据生产者状态（无效）", producerId);
     }
   }
 

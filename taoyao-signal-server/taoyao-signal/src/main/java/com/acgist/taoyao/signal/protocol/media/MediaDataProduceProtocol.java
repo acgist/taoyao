@@ -27,12 +27,12 @@ import lombok.extern.slf4j.Slf4j;
     body = {
         """
         {
-            "roomId": "房间标识",
+            "roomId"     : "房间标识",
             "transportId": "通道标识"
         }
         """
     },
-    flow = "终端->信令服务->媒体服务->信令服务->终端"
+    flow = "终端=>信令服务->媒体服务"
 )
 public class MediaDataProduceProtocol extends ProtocolRoomAdapter {
 
@@ -65,7 +65,7 @@ public class MediaDataProduceProtocol extends ProtocolRoomAdapter {
                 Constant.STREAM_ID, streamId,
                 Constant.PRODUCER_ID, producerId
             ));
-            room.broadcast(responseMessage);
+            client.push(responseMessage);
             log.info("{}生产数据：{} - {}", clientId, streamId, producerId);
         } else {
             this.logNoAdapter(clientType);
