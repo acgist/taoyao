@@ -27,13 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Protocol
 @Description(
+    memo = "关闭通过回调实现所以不能同步响应",
     body = """
     {
-        "roomId": "房间ID"
+        "roomId"    : "房间ID"
         "consumerId": "生产者ID"
     }
     """,
-    flow = "终端->信令服务->媒体服务->信令服务+)终端"
+    flow = "终端->信令服务->媒体服务->信令服务->终端"
 )
 public class MediaProducerCloseProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaProducerCloseEvent> {
 
@@ -49,7 +50,7 @@ public class MediaProducerCloseProtocol extends ProtocolRoomAdapter implements A
         final Room room = event.getRoom();
         final Client mediaClient = event.getMediaClient();
         final Map<String, Object> body = Map.of(
-            Constant.ROOM_ID, room.getRoomId(),
+            Constant.ROOM_ID,     room.getRoomId(),
             Constant.PRODUCER_ID, event.getProducerId()
         );
         mediaClient.push(this.build(body));
@@ -66,9 +67,8 @@ public class MediaProducerCloseProtocol extends ProtocolRoomAdapter implements A
         if(clientType.mediaClient()) {
             producer.close();
         } else if(clientType.mediaServer()) {
-            // TODO：路由到真实消费者
             producer.remove();
-            room.broadcast(message);
+            producer.getProducerClient().push(message);
         } else {
             this.logNoAdapter(clientType);
         }

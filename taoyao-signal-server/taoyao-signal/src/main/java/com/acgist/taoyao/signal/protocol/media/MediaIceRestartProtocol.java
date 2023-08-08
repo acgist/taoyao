@@ -20,19 +20,19 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
     body = {
         """
         {
-            "roomId": "房间标识",
+            "roomId"     : "房间标识",
             "transportId": "通道标识"
         }
         """,
         """
         {
-            "roomId": "房间标识",
-            "transportId": "通道标识",
+            "roomId"       : "房间标识",
+            "transportId"  : "通道标识",
             "iceParameters": "iceParameters"
         }
         """
     },
-    flow = "终端=>信令服务->媒体服务->信令服务->终端"
+    flow = "终端=>信令服务->媒体服务"
 )
 public class MediaIceRestartProtocol extends ProtocolRoomAdapter {
 

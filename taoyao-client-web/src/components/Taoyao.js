@@ -840,6 +840,9 @@ class Taoyao extends RemoteClient {
       case "media::producer::resume":
         me.defaultMediaProducerResume(message);
         break;
+      case "media::producer::score":
+        me.defaultMediaProducerScore(message);
+        break;
       case "media::video::orientation::change":
         me.defaultMediaVideoOrientationChange(message);
         break;
@@ -1461,7 +1464,7 @@ class Taoyao extends RemoteClient {
    * 
    * @param {*} consumerId 消费者ID
    */
-  async mediaConsumerPause(consumerId) {
+  mediaConsumerPause(consumerId) {
     const me = this;
     const consumer = me.consumers.get(consumerId);
     if(consumer) {
@@ -1469,7 +1472,7 @@ class Taoyao extends RemoteClient {
         return;
       }
       console.debug("暂停消费者", consumerId);
-      await me.request(protocol.buildMessage("media::consumer::pause", {
+      me.push(protocol.buildMessage("media::consumer::pause", {
         roomId    : me.roomId,
         consumerId: consumerId,
       }));
@@ -1525,7 +1528,7 @@ class Taoyao extends RemoteClient {
    * 
    * @param {*} consumerId 消费者ID
    */
-  async mediaConsumerResume(consumerId) {
+  mediaConsumerResume(consumerId) {
     const me = this;
     const consumer = me.consumers.get(consumerId);
     if(consumer) {
@@ -1533,7 +1536,7 @@ class Taoyao extends RemoteClient {
         return;
       }
       console.debug("恢复消费者", consumerId);
-      await me.request(protocol.buildMessage("media::consumer::resume", {
+      me.push(protocol.buildMessage("media::consumer::resume", {
         roomId    : me.roomId,
         consumerId: consumerId,
       }));
@@ -1720,6 +1723,29 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 重启ICE信令
+   */
+  async mediaIceRestart() {
+    const me = this;
+    if (me.sendTransport) {
+      const response = await me.request(protocol.buildMessage("media::ice::restart", {
+        roomId     : me.roomId,
+        transportId: me.sendTransport.id
+      }));
+      const { iceParameters } = response.body;
+      await me.sendTransport.restartIce({ iceParameters });
+    }
+    if (me.recvTransport) {
+      const response = await me.request(protocol.buildMessage("media::ice::restart", {
+        roomId     : me.roomId,
+        transportId: me.recvTransport.id
+      }));
+      const { iceParameters } = response.body;
+      await me.recvTransport.restartIce({ iceParameters });
+    }
+  }
+
+  /**
    * 关闭生产者信令
    * 
    * @param {*} producerId 生产者ID
@@ -1740,7 +1766,10 @@ class Taoyao extends RemoteClient {
    */
   async defaultMediaProducerClose(message) {
     const me = this;
-    const { roomId, producerId } = message.body;
+    const {
+      roomId,
+      producerId
+    } = message.body;
     const producer = me.getProducer(producerId);
     if (producer) {
       console.debug("关闭生产者", producerId);
@@ -1785,7 +1814,10 @@ class Taoyao extends RemoteClient {
    */
   async defaultMediaProducerPause(message) {
     const me = this;
-    const { roomId, producerId } = message.body;
+    const {
+      roomId,
+      producerId
+    } = message.body;
     const producer = me.getProducer(producerId);
     if (producer) {
       console.debug("暂停生产者", producerId);
@@ -1824,7 +1856,10 @@ class Taoyao extends RemoteClient {
    */
   async defaultMediaProducerResume(message) {
     const me = this;
-    const { roomId, producerId } = message.body;
+    const {
+      roomId,
+      producerId
+    } = message.body;
     const producer = me.getProducer(producerId);
     if (producer) {
       console.debug("恢复生产者", producerId);
@@ -1832,6 +1867,15 @@ class Taoyao extends RemoteClient {
     } else {
       console.debug("恢复生产者无效", producerId);
     }
+  }
+
+  /**
+   * 媒体生产者评分信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultMediaProducerScore(message) {
+    console.debug("生产者评分", message);
   }
 
   /**
@@ -1845,27 +1889,6 @@ class Taoyao extends RemoteClient {
       roomId: me.roomId,
       producerId
     }));
-  }
-
-  /**
-   * 重启ICE信令
-   */
-  async mediaIceRestart() {
-    const me = this;
-    if (me.sendTransport) {
-      const response = await me.request(protocol.buildMessage('media::ice::restart', {
-        transportId: me.sendTransport.id
-      }));
-      const { iceParameters } = response.body;
-      await me.sendTransport.restartIce({ iceParameters });
-    }
-    if (me.recvTransport) {
-      const response = await me.request(protocol.buildMessage('media::ice::restart', {
-        transportId: me.recvTransport.id
-      }));
-      const { iceParameters } = response;
-      await me.recvTransport.restartIce({ iceParameters });
-    }
   }
 
   /**
@@ -2870,29 +2893,6 @@ class Taoyao extends RemoteClient {
       }
     } else {
       me.callbackError("没有媒体权限");
-    }
-  }
-
-  /**
-   * 重启ICE信令
-   */
-  async restartIce() {
-    const me = this;
-    if (me.sendTransport) {
-      const response = await me.request("media::ice::restart", {
-        roomId     : me.roomId,
-        transportId: me.sendTransport.id,
-      });
-      const iceParameters = response.data.iceParameters;
-      await me.sendTransport.restartIce({ iceParameters });
-    }
-    if (me.recvTransport) {
-      const response = await me.request("media::ice::restart", {
-        roomId     : me.roomId,
-        transportId: me.recvTransport.id,
-      });
-      const iceParameters = response.data.iceParameters;
-      await me.recvTransport.restartIce({ iceParameters });
     }
   }
 

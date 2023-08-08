@@ -16,17 +16,20 @@ import com.acgist.taoyao.signal.party.media.Producer;
 import com.acgist.taoyao.signal.party.room.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 恢复生产者信令
  * 
  * @author acgist
  */
+@Slf4j
 @Protocol
 @Description(
     body = """
     {
-        "roomId": "房间ID"
-        "producerId": "消费者ID"
+        "roomId"    : "房间ID"
+        "producerId": "生产者ID"
     }
     """,
     flow = "终端->信令服务->媒体服务->信令服务->终端"
@@ -44,7 +47,7 @@ public class MediaProducerResumeProtocol extends ProtocolRoomAdapter implements 
         final Room room = event.getRoom();
         final Client mediaClient = event.getMediaClient();
         final Map<String, Object> body = Map.of(
-            Constant.ROOM_ID, room.getRoomId(),
+            Constant.ROOM_ID,     room.getRoomId(),
             Constant.PRODUCER_ID, event.getProducerId()
         );
         mediaClient.push(this.build(body));
@@ -52,13 +55,16 @@ public class MediaProducerResumeProtocol extends ProtocolRoomAdapter implements 
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
+        final String producerId = MapUtils.get(body, Constant.PRODUCER_ID);
+        final Producer producer = room.producer(producerId);
+        if(producer == null) {
+            log.debug("生产者无效：{} - {}", producerId, clientType);
+            return;
+        }
         if(clientType.mediaClient()) {
-            final String producerId = MapUtils.get(body, Constant.PRODUCER_ID);
-            final Producer producer = room.producer(producerId);
             producer.resume();
         } else if(clientType.mediaServer()) {
-            // TODO：路由到真实消费者
-            room.broadcast(message);
+            producer.getProducerClient().push(message);
         } else {
             this.logNoAdapter(clientType);
         }

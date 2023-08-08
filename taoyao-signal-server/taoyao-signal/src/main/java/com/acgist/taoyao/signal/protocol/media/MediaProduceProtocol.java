@@ -28,14 +28,14 @@ import lombok.extern.slf4j.Slf4j;
     body = {
         """
         {
-            "kind": "媒体类型",
-            "roomId": "房间标识",
-            "transportId": "通道标识",
+            "kind"         : "媒体类型",
+            "roomId"       : "房间标识",
+            "transportId"  : "通道标识",
             "rtpParameters": "rtpParameters"
         }
         """
     },
-    flow = "终端->信令服务->媒体服务->信令服务->终端"
+    flow = "终端=>信令服务->媒体服务"
 )
 public class MediaProduceProtocol extends ProtocolRoomAdapter {
 

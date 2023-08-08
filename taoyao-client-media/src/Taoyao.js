@@ -453,6 +453,9 @@ class Taoyao {
       case "media::producer::resume":
         me.mediaProducerResume(message, body);
         break;
+      case "media::producer::status":
+        me.mediaProducerStatus(message, body);
+        break;
       case "media::router::rtp::capabilities":
         me.mediaRouterRtpCapabilities(message, body);
         break;
@@ -800,12 +803,20 @@ class Taoyao {
    */
   async mediaIceRestart(message, body) {
     const me = this;
-    const { roomId, transportId } = body;
-    const room          = me.rooms.get(roomId);
-    const transport     = room?.transports.get(transportId);
-    const iceParameters = await transport.restartIce();
-    message.body.iceParameters = iceParameters;
-    me.push(message);
+    const {
+      roomId,
+      transportId
+    } = body;
+    const room      = me.rooms.get(roomId);
+    const transport = room?.transports.get(transportId);
+    if(transport) {
+      console.debug("重启ICE", transportId);
+      const iceParameters        = await transport.restartIce();
+      message.body.iceParameters = iceParameters;
+      me.push(message);
+    } else {
+      console.warn("重启ICE（无效）", transportId);
+    }
   }
 
   /**
@@ -985,6 +996,32 @@ class Taoyao {
       await producer.resume();
     } else {
       console.debug("恢复生产者（无效）", producerId);
+    }
+  }
+
+  /**
+   * 查询生产者状态信令
+   * 
+   * @param {*} message 信令消息
+   * @param {*} body    消息主体
+   */
+  async mediaProducerStatus(message, body) {
+    const me = this;
+    const {
+      roomId,
+      producerId,
+    } = body;
+    const room     = me.rooms.get(roomId);
+    const producer = room?.producers.get(producerId);
+    if(producer) {
+      console.debug("查询生产者状态", producerId);
+      message.body = {
+        ...body,
+        status: await producer.getStats()
+      };
+      me.push(message);
+    } else {
+      console.debug("查询生产者状态（无效）", producerId);
     }
   }
 

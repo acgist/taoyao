@@ -28,7 +28,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
         }
     }
     """,
-    flow = "媒体服务->信令服务->终端"
+    flow = "媒体服务->信令服务+)终端"
 )
 public class MediaConsumerScoreProtocol extends ProtocolRoomAdapter {
 

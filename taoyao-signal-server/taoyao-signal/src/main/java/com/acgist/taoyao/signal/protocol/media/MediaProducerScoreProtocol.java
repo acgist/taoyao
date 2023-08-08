@@ -17,7 +17,16 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
  */
 @Protocol
 @Description(
-    flow = "媒体服务->信令服务->终端"
+    body = """
+    {
+        "roomId"    : "房间ID"
+        "consumerId": "消费者ID"
+        "score"     : {
+            ...生产者评分
+        }
+    }
+    """,
+    flow = "媒体服务->信令服务+)终端"
 )
 public class MediaProducerScoreProtocol extends ProtocolRoomAdapter {
 

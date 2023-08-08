@@ -33,7 +33,7 @@ import lombok.extern.slf4j.Slf4j;
         "consumerId": "消费者ID"
     }
     """,
-    flow = "终端=>信令服务->媒体服务"
+    flow = "终端->信令服务->媒体服务->信令服务->终端"
 )
 public class MediaConsumerPauseProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaConsumerPauseEvent> {
 
