@@ -18,6 +18,12 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 @Protocol
 @Description(
     body = """
+    {
+        "roomId"  : "房间ID",
+        "camera"  : "是否摄像头",
+        "flip"    : "是否翻转",
+        "rotation": "旋转角度"
+    }
     """,
     flow = "媒体服务->信令服务->终端"
 )

@@ -1693,7 +1693,11 @@ class Taoyao {
    * @param {*} body    消息主体
    */
   async mediaTransportWebrtcConnect(message, body) {
-    const { roomId, transportId, dtlsParameters } = body;
+    const {
+      roomId,
+      transportId,
+      dtlsParameters
+    } = body;
     const room = this.rooms.get(roomId);
     const transport = room?.transports.get(transportId);
     if(transport) {

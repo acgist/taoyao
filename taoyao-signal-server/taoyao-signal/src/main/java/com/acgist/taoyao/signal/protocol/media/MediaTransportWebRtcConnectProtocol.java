@@ -24,9 +24,14 @@ import lombok.extern.slf4j.Slf4j;
 @Description(
     body = {
         """
+        {
+            "roomId"        : "房间ID",
+            "transportId"   : "通道ID"
+            "dtlsParameters": "DTLS参数"
+        }
         """
     },
-    flow = "终端->信令服务->媒体服务->信令服务->终端"
+    flow = "终端=>信令服务->媒体服务"
 )
 public class MediaTransportWebRtcConnectProtocol extends ProtocolRoomAdapter {
 
@@ -45,7 +50,7 @@ public class MediaTransportWebRtcConnectProtocol extends ProtocolRoomAdapter {
             final String transportId = MapUtils.get(responseBody, Constant.TRANSPORT_ID);
             log.info("{}连接WebRTC通道信令：{}", clientId, transportId);
         } else {
-            // 忽略其他情况
+            this.logNoAdapter(clientType);
         }
     }
     
