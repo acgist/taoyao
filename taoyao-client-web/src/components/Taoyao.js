@@ -843,6 +843,9 @@ class Taoyao extends RemoteClient {
       case "media::producer::score":
         me.defaultMediaProducerScore(message);
         break;
+      case "media::transport::close":
+        me.defaultMediaTransportClose(message);
+        break;
       case "media::video::orientation::change":
         me.defaultMediaVideoOrientationChange(message);
         break;
@@ -1876,6 +1879,57 @@ class Taoyao extends RemoteClient {
    */
   defaultMediaProducerScore(message) {
     console.debug("生产者评分", message);
+  }
+
+  /**
+   * 关闭通道信令
+   * 
+   * @param {*} transportId 通道ID
+   */
+  mediaTransportClose(transportId) {
+    const me = this;
+    console.debug("关闭通道", transportId);
+    me.push(protocol.buildMessage("media::transport::close", {
+      roomId    : me.roomId,
+      transportId: transportId,
+    }));
+  }
+
+  /**
+   * 关闭通道信令
+   * 
+   * @param {*} message 
+   */
+  defaultMediaTransportClose(message) {
+    const me = this;
+    const {
+      roomId,
+      transportId
+    } = message.body;
+    if(me.recvTransport && me.recvTransport.id === transportId) {
+      console.debug("关闭接收通道", transportId);
+      me.recvTransport.close();
+      me.recvTransport = null;
+    } else if(me.sendTransport && me.sendTransport.id === transportId) {
+      console.debug("关闭发送通道", transportId);
+      me.sendTransport.close();
+      me.sendTransport = null;
+    } else {
+      console.debug("关闭通道无效", transportId);
+    }
+  }
+
+  /**
+   * 查询通道状态信令
+   * 
+   * @param {*} transportId 通道ID
+   */
+  async mediaTransportStatus(transportId) {
+    const me = this;
+    return await me.request(protocol.buildMessage('media::transport::status', {
+      roomId: me.roomId,
+      transportId
+    }));
   }
 
   /**

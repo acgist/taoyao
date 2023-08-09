@@ -24,13 +24,14 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
         }
         """,
         """
-        {
-            "codec": "编码解码",
+        "roomId"         : "房间标识",
+        "rtpCapabilities": {
+            "codec"           : "编码解码",
             "headerExtensions": "扩展"
         }
         """
     },
-    flow = { "终端=>信令服务->媒体服务->信令服务->终端"}
+    flow = { "终端=>信令服务->媒体服务"}
 )
 public class MediaRouterRtpCapabilitiesProtocol extends ProtocolRoomAdapter {
 

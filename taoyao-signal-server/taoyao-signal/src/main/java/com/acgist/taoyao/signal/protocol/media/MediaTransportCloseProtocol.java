@@ -27,13 +27,14 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Protocol
 @Description(
+    memo = "关闭通过回调实现所以不能同步响应",
     body = """
     {
-        "roomId": "房间ID"
+        "roomId"     : "房间ID"
         "transportId": "通道ID"
     }
     """,
-    flow = "终端->信令服务->媒体服务->信令服务+)终端"
+    flow = "终端->信令服务->媒体服务->信令服务->终端"
 )
 public class MediaTransportCloseProtocol extends ProtocolRoomAdapter implements ApplicationListener<TransportCloseEvent> {
 
@@ -46,10 +47,10 @@ public class MediaTransportCloseProtocol extends ProtocolRoomAdapter implements 
     @Async
     @Override
     public void onApplicationEvent(TransportCloseEvent event) {
-        final Room room = event.getRoom();
+        final Room room          = event.getRoom();
         final Client mediaClient = event.getMediaClient();
         final Map<String, Object> body = Map.of(
-            Constant.ROOM_ID, room.getRoomId(),
+            Constant.ROOM_ID,      room.getRoomId(),
             Constant.TRANSPORT_ID, event.getTransportId()
         );
         mediaClient.push(this.build(body));
@@ -57,7 +58,7 @@ public class MediaTransportCloseProtocol extends ProtocolRoomAdapter implements 
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        final String transportId = MapUtils.get(body, Constant.TRANSPORT_ID);
+        final String transportId  = MapUtils.get(body, Constant.TRANSPORT_ID);
         final Transport transport = room.transport(transportId);
         if(transport == null) {
             log.debug("通道无效：{} - {}", transportId, clientType);
@@ -67,7 +68,7 @@ public class MediaTransportCloseProtocol extends ProtocolRoomAdapter implements 
             transport.close();
         } else if(clientType.mediaServer()) {
             transport.remove();
-            room.broadcast(message);
+            transport.getClient().push(message);
         } else {
             this.logNoAdapter(clientType);
         }

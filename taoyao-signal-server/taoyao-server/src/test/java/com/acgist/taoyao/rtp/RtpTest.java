@@ -28,7 +28,7 @@ public class RtpTest {
         final InputStream inputStream = socket.getInputStream();
         final OutputStream outputStream = socket.getOutputStream();
         // 随机密码：https://localhost:8888/config/socket
-        final String secret = "TSFXzB7hcfE=".strip();
+        final String secret = "2SPWy+TF1zM=".strip();
         final Cipher encrypt = CipherUtils.buildCipher(Cipher.ENCRYPT_MODE, Encrypt.DES, secret);
         final Cipher decrypt = CipherUtils.buildCipher(Cipher.DECRYPT_MODE, Encrypt.DES, secret);
         // 接收
@@ -63,7 +63,12 @@ public class RtpTest {
                                 buffer.flip();
                                 buffer.get(message);
                                 buffer.compact();
-                                log.debug("收到消息：{}", new String(decrypt.doFinal(message)));
+                                final String value = new String(decrypt.doFinal(message));
+                                if(value.contains("media::audio::volume")) {
+                                    log.debug("收到消息：{}", value);
+                                } else {
+                                    log.info("收到消息：{}", value);
+                                }
                             }
                         }
                     }

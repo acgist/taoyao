@@ -465,6 +465,9 @@ class Taoyao {
       case "media::transport::plain":
         me.mediaTransportPlain(message, body);
         break;
+      case "media::transport::status":
+        me.mediaTransportStatus(message, body);
+        break;
       case "media::transport::webrtc::connect":
         me.mediaTransportWebrtcConnect(message, body);
         break;
@@ -1655,6 +1658,32 @@ class Taoyao {
       rtcpPort   : transport.rtcpTuple?.localPort,
     };
     me.push(message);
+  }
+
+  /**
+   * 查询通道状态信令
+   * 
+   * @param {*} message 消息
+   * @param {*} body    消息主体
+   */
+  async mediaTransportStatus(message, body) {
+    const me = this;
+    const {
+      roomId,
+      transportId,
+    } = body;
+    const room     = me.rooms.get(roomId);
+    const transport = room?.transports.get(transportId);
+    if(transport) {
+      console.debug("查询通道状态", transportId);
+      message.body = {
+        ...body,
+        status: await transport.getStats()
+      };
+      me.push(message);
+    } else {
+      console.debug("查询通道状态（无效）", transportId);
+    }
   }
 
   /**

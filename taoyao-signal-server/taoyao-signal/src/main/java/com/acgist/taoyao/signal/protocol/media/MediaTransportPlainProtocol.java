@@ -22,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 创建RTP输入通道信令
+ * 
  * 注意：
  * 1. ffmpeg不支持rtcpMux
  * 2. comedia必须开启srtp功能
@@ -32,17 +33,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Protocol
 @Description(
+    memo = "用来接入RTP终端",
     body = """
     {
-        "roomId": "房间ID",
-        "rtcpMux": RTP和RTCP端口复用（true|false）,
-        "comedia": 自动终端端口（true|false）,
-        "enableSctp": 是否开启sctp（true|false）,
-        "numSctpStreams": sctp数量,
-        "enableSrtp": 是否开启srtp（true|false）,
+        "roomId"        : "房间ID",
+        "rtcpMux"       : RTP和RTCP端口复用（true|false）,
+        "comedia"       : 自动识别终端端口（true|false）,
+        "enableSctp"    : 是否开启SCTP（true|false）,
+        "numSctpStreams": SCTP数量,
+        "enableSrtp"    : 是否开启SRTP（true|false）,
         "srtpCryptoSuite": {
             "cryptoSuite": "算法（AEAD_AES_256_GCM|AEAD_AES_128_GCM|AES_CM_128_HMAC_SHA1_80|AES_CM_128_HMAC_SHA1_32）",
-            "keyBase64": "密钥"
+            "keyBase64"  : "密钥"
         }
     }
     """
@@ -86,7 +88,7 @@ public class MediaTransportPlainProtocol extends ProtocolRoomAdapter {
      * 重写IP地址
      * 
      * @param clientIp 终端IP
-     * @param body 消息主体
+     * @param body     消息主体
      */
     private void rewriteIp(String clientIp, Map<String, Object> body) {
         // 媒体服务返回IP

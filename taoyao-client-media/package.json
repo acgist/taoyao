@@ -9,6 +9,7 @@
   "scripts": {
     "dev"   : "node src/Server.js",
     "prd"   : "cross-env NODE_ENV=prd    node src/Server.js",
+    "work"  : "cross-env NODE_ENV=work   node src/Server.js",
     "node-a": "cross-env NODE_ENV=node-a node src/Server.js",
     "node-b": "cross-env NODE_ENV=node-b node src/Server.js"
   },
