@@ -28,36 +28,36 @@ import lombok.extern.slf4j.Slf4j;
 )
 public class PlatformShutdownProtocol extends ProtocolClientAdapter {
 
-	public static final String SIGNAL = "platform::shutdown";
-	
-	private final ScriptProperties scriptProperties;
-	
-	public PlatformShutdownProtocol(ScriptProperties scriptProperties) {
-		super("关闭平台信令", SIGNAL);
-		this.scriptProperties = scriptProperties;
-	}
+    public static final String SIGNAL = "platform::shutdown";
+    
+    private final ScriptProperties scriptProperties;
+    
+    public PlatformShutdownProtocol(ScriptProperties scriptProperties) {
+        super("关闭平台信令", SIGNAL);
+        this.scriptProperties = scriptProperties;
+    }
 
-	@Override
-	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-		log.info("关闭平台：{}", clientId);
-		this.shutdown(message);
-	}
-	
-	/**
-	 * 关闭平台
-	 */
-	public void execute() {
-	    log.info("关闭平台");
-	    this.shutdown(this.build());
-	}
-	
-	/**
-	 * 关闭平台
-	 * 
-	 * @param message 消息
-	 */
-	private void shutdown(Message message) {
-	    this.clientManager.broadcast(message);
+    @Override
+    public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+        log.info("关闭平台：{}", clientId);
+        this.shutdown(message);
+    }
+    
+    /**
+     * 关闭平台
+     */
+    public void execute() {
+        log.info("关闭平台");
+        this.shutdown(this.build());
+    }
+    
+    /**
+     * 关闭平台
+     * 
+     * @param message 消息
+     */
+    private void shutdown(Message message) {
+        this.clientManager.broadcast(message);
         if(this.applicationContext instanceof ConfigurableApplicationContext context) {
             // API关闭
             if(context.isActive()) {
@@ -70,6 +70,6 @@ public class PlatformShutdownProtocol extends ProtocolClientAdapter {
             // 命令关闭
             ScriptUtils.execute(this.scriptProperties.getPlatformShutdown());
         }
-	}
+    }
 
 }

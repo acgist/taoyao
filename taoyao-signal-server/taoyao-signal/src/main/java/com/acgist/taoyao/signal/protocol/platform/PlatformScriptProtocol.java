@@ -33,28 +33,28 @@ import lombok.extern.slf4j.Slf4j;
         }
         """
     },
-    flow = "终端->信令服务->终端"
+    flow = "终端=>信令服务"
 )
 public class PlatformScriptProtocol extends ProtocolClientAdapter {
 
-	public static final String SIGNAL = "platform::script";
-	
-	public PlatformScriptProtocol() {
-		super("执行命令信令", SIGNAL);
-	}
+    public static final String SIGNAL = "platform::script";
+    
+    public PlatformScriptProtocol() {
+        super("执行命令信令", SIGNAL);
+    }
 
-	@Override
-	public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-	    final String script = MapUtils.get(body, Constant.SCRIPT);
-	    final ScriptExecutor executor = ScriptUtils.execute(script);
-	    final String result = executor.getResult();
-	    log.info("""
-	        执行终端：{}
-	        执行命令：{}
-	        执行结果：{}
-	        """, clientId, script, result);
-	    message.setBody(Map.of(Constant.RESULT, result));
+    @Override
+    public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+        final String script = MapUtils.get(body, Constant.SCRIPT);
+        final ScriptExecutor executor = ScriptUtils.execute(script);
+        final String result = executor.getResult();
+        log.info("""
+            执行终端：{}
+            执行命令：{}
+            执行结果：{}
+            """, clientId, script, result);
+        message.setBody(Map.of(Constant.RESULT, result));
         client.push(message);
-	}
-	
+    }
+    
 }

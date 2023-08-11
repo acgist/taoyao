@@ -885,6 +885,12 @@ class Taoyao extends RemoteClient {
       case "platform::error":
         me.callbackError(message);
         break;
+      case "platform::reboot":
+        me.defaultPlatformReboot(message);
+        break;
+        case "platform::shutdown":
+        me.defaultPlatformShutdown(message);
+        break;
     }
   }
 
@@ -1952,6 +1958,55 @@ class Taoyao extends RemoteClient {
    */
   defaultMediaVideoOrientationChange(message) {
     console.debug("视频方向变化信令", message);
+  }
+
+  /**
+   * 重启平台信令
+   * 
+   * @returns 响应
+   */
+  async platformReboot() {
+    return await this.request(protocol.buildMessage("platform::reboot", {}));
+  }
+
+  /**
+   * 重启平台信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultPlatformReboot(message) {
+    console.debug("平台重启", message);
+  }
+
+  /**
+   * 执行命令信令
+   * 
+   * @param {*} script 命令
+   * 
+   * @returns 响应
+   */
+  async platformScript(script) {
+    return await this.request(protocol.buildMessage("platform::script", {
+      script
+    }));
+  }
+
+  /**
+   * 关闭平台信令
+   * 
+   * @returns 响应
+   */
+  async platformShutdown() {
+    return await this.request(protocol.buildMessage("platform::shutdown", {}));
+  }
+
+  /**
+   * 关闭平台信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultPlatformShutdown(message) {
+    console.debug("平台关闭", message);
   }
 
   /**

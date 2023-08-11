@@ -37,5 +37,6 @@
 * 存在TURN服务优先使用
 * 安卓关闭视频没有删除预览
 * 浏览器WebRTC监控页面关闭：`chrome://webrtc-internals/`
+* me -> this
 
 ## 完成任务
