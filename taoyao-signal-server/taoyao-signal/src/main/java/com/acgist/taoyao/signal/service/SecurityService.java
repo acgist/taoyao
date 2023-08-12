@@ -11,28 +11,28 @@ import com.acgist.taoyao.signal.protocol.Protocol;
  */
 public interface SecurityService {
 
-	/**
-	 * 认证
-	 * 优先使用`UsernamePasswordService`其次使用配置帐号密码
-	 * 
-	 * @param username 用户名称
-	 * @param password 用户密码
-	 * 
-	 * @return 是否成功
-	 * 
-	 * @see UsernamePasswordService
-	 */
-	boolean authenticate(String username, String password);
-	
-	/**
-	 * 鉴权
-	 * 
-	 * @param client 终端
-	 * @param message 信令
-	 * @param protocol 协议
-	 * 
-	 * @return 是否成功
-	 */
-	boolean authenticate(Client client, Message message, Protocol protocol);
-	
+    /**
+     * 认证
+     * 优先使用`UsernamePasswordService`其次使用配置帐号密码
+     * 
+     * @param username 用户名称
+     * @param password 用户密码
+     * 
+     * @return 是否成功
+     * 
+     * @see UsernamePasswordService
+     */
+    boolean authenticate(String username, String password);
+    
+    /**
+     * 鉴权
+     * 
+     * @param client   终端
+     * @param message  信令消息
+     * @param protocol 协议
+     * 
+     * @return 是否成功
+     */
+    boolean authenticate(Client client, Message message, Protocol protocol);
+    
 }

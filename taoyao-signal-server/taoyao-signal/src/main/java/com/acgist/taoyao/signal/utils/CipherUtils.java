@@ -26,9 +26,9 @@ public class CipherUtils {
     }
     
     /**
-     * @param mode 模式
+     * @param mode    模式
      * @param encrypt 算法
-     * @param secret 密钥
+     * @param secret  密钥
      * 
      * @return 加密工具
      */
@@ -37,8 +37,8 @@ public class CipherUtils {
             return null;
         }
         try {
-            final String algo = encrypt.getAlgo();
-            final String name = encrypt.name();
+            final String algo   = encrypt.getAlgo();
+            final String name   = encrypt.name();
             final Cipher cipher = Cipher.getInstance(algo);
             cipher.init(mode, new SecretKeySpec(Base64.getMimeDecoder().decode(secret), name));
             return cipher;
