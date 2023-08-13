@@ -204,8 +204,12 @@ export default {
      * @return 是否执行完成
      */
     async callback(response, error) {
-      const me = this;
-      const { code, message, header, body } = response;
+      const {
+        code,
+        message,
+        header,
+        body
+      } = response;
       const { signal } = header;
       switch (signal) {
         case "media::track"   :
@@ -213,7 +217,7 @@ export default {
           console.info("新增媒体轨道", clientId, track);
           break;
         case "client::config" :
-          me.roomVisible = true;
+          this.roomVisible = true;
           break;
         case "platform::error":
           if (error) {

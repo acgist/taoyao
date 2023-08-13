@@ -864,6 +864,9 @@ class Taoyao extends RemoteClient {
       case "session::resume":
         me.defaultSessionResume(message);
         break;
+      case "room::broadcast":
+        me.defaultRoomBroadcast(message);
+        break;
       case "room::client::list":
         me.defaultRoomClientList(message);
         break;
@@ -2241,6 +2244,40 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 房间广播信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultRoomBroadcast(message) {
+    console.debug("房间广播", message);
+  }
+
+  /**
+   * 房间广播信令
+   * 
+   * @param {*} message 信令消息
+   */
+  roomBroadcast(message) {
+    this.push(protocol.buildMessage("room::broadcast", {
+      roomId : this.roomId,
+      ...message
+    }));
+  }
+
+  /**
+   * @param {*} clientId 终端ID
+   * 
+   * @returns 终端所有ID
+   */
+  async roomClientListId(clientId) {
+    const response = await this.request(protocol.buildMessage("room::client::list::id", {
+      roomId  : this.roomId,
+      clientId: clientId
+    }));
+    return response.body;
+  }
+
+  /**
    * 房间终端列表信令
    *
    * @param {*} message 信令消息
@@ -2255,22 +2292,6 @@ class Taoyao extends RemoteClient {
         me.remoteClients.set(v.clientId, new RemoteClient(v));
       }
     });
-  }
-
-  /**
-   * @param {*} clientId 终端ID
-   * 
-   * @returns 终端所有ID
-   */
-  async roomClientListId(clientId) {
-    const me       = this;
-    const response = await me.request(
-      protocol.buildMessage("room::client::list::id", {
-        roomId  : me.roomId,
-        clientId: clientId
-      })
-    );
-    return response.body;
   }
 
   /**

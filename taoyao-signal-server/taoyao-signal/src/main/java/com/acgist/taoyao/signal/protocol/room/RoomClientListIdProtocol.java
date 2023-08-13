@@ -24,17 +24,17 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
  */
 @Protocol
 @Description(
+    memo = "终端所有ID集合：消费者、生产者等等",
     body = """
     {
-        "roomId": "房间ID",
+        "roomId"  : "房间ID",
         "clientId": "终端ID（可选）"
     }
     {
         ...
     }
     """,
-    flow = "终端=>信令服务->终端",
-    memo = "终端所有ID集合：消费者、生产者等等"
+    flow = "终端=>信令服务->终端"
 )
 public class RoomClientListIdProtocol extends ProtocolRoomAdapter {
 
