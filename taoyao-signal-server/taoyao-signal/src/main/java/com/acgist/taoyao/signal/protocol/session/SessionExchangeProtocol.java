@@ -25,22 +25,22 @@ import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
     """,
     body = """
     {
-        "sdp": "sdp"
-        "type": "offer",
+        "sdp"      : "sdp"
+        "type"     : "offer",
         "sessionId": "会话ID"
     }
     {
-        "sdp": "sdp"
-        "type": "answer",
+        "sdp"      : "sdp"
+        "type"     : "answer",
         "sessionId": "会话ID"
     }
     {
-        "type": "candidate",
+        "type"     : "candidate",
         "sessionId": "会话ID",
         "candidate": {
-            "sdpMid": "sdpMid",
-            "candidate": "candidate信息",
-            "sdpMLineIndex":sdpMLineIndex 
+            "sdpMid"       : "sdpMid",
+            "candidate"    : "candidate信息",
+            "sdpMLineIndex": sdpMLineIndex 
         }
     }
     """,

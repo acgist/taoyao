@@ -35,24 +35,24 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 )
 public class MediaRouterRtpCapabilitiesProtocol extends ProtocolRoomAdapter {
 
-	public static final String SIGNAL = "media::router::rtp::capabilities";
-	
-	public MediaRouterRtpCapabilitiesProtocol() {
-		super("路由RTP协商信令", SIGNAL);
-	}
-	
-	@Override
+    public static final String SIGNAL = "media::router::rtp::capabilities";
+    
+    public MediaRouterRtpCapabilitiesProtocol() {
+        super("路由RTP协商信令", SIGNAL);
+    }
+    
+    @Override
     protected boolean authenticate(Room room, Client client) {
-	    return true;
+        return true;
     }
 
-	@Override
-	public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-	    if(clientType.mediaClient()) {
-	        client.push(room.requestMedia(message));
-	    } else {
-	        this.logNoAdapter(clientType);
-	    }
-	}
+    @Override
+    public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
+        if(clientType.mediaClient()) {
+            client.push(room.requestMedia(message));
+        } else {
+            this.logNoAdapter(clientType);
+        }
+    }
 
 }

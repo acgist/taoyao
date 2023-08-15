@@ -28,11 +28,13 @@ import lombok.extern.slf4j.Slf4j;
         "audio"   : 是否需要声音（true|false），
         "video"   : 是否需要视频（true|false）
     }
-    """,
-    flow = {
-        "终端->信令服务->终端",
-        "终端=>信令服务->终端"
+    {
+        "name"     : "终端名称",
+        "clientId" : "终端ID",
+        "sessionId": "会话ID"
     }
+    """,
+    flow = "终端=>信令服务->终端"
 )
 public class SessionCallProtocol extends ProtocolSessionAdapter {
 

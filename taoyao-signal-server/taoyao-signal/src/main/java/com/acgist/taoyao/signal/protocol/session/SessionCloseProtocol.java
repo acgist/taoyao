@@ -23,9 +23,10 @@ import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
 @Description(
     body = """
     {
+        "sessionId": "会话ID"
     }
     """,
-    flow = "终端->信令服务+)终端"
+    flow = "终端->信令服务->终端"
 )
 public class SessionCloseProtocol extends ProtocolSessionAdapter implements ApplicationListener<SessionCloseEvent> {
     

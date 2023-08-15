@@ -29,23 +29,24 @@ import lombok.Setter;
     {
         "diskspace": [
             {
-                "path": "存储路径",
-                "free": 存储空闲,
+                "path" : "存储路径",
+                "free" : 存储空闲,
                 "total": 存储总量
             },
             ...
         ],
-        "maxMemory": 最大能用内存,
-        "freeMemory": 空闲内存,
-        "totalMemory": 已用内存,
-        "osArch": "系统架构",
-        "osName": "系统名称",
-        "osVersion": "系统版本",
-        "javaVmName": "虚拟机名称",
-        "javaVersion": "虚拟机版本",
+        "maxMemory"    : 最大能用内存,
+        "freeMemory"   : 空闲内存,
+        "totalMemory"  : 已用内存,
+        "osArch"       : "系统架构",
+        "osName"       : "系统名称",
+        "osVersion"    : "系统版本",
+        "javaVmName"   : "虚拟机名称",
+        "javaVersion"  : "虚拟机版本",
         "cpuProcessors": CPU核心数量
     }
-    """
+    """,
+    flow = "终端=>信令服务"
 )
 public class SystemInfoProtocol extends ProtocolClientAdapter {
 
@@ -82,7 +83,8 @@ public class SystemInfoProtocol extends ProtocolClientAdapter {
         info.put("javaVersion", System.getProperty("java.version"));
         info.put("cpuProcessors", runtime.availableProcessors());
         // 响应
-        client.push(this.build(info));
+        message.setBody(info);
+        client.push(message);
     };
 
     @Getter
@@ -111,10 +113,10 @@ public class SystemInfoProtocol extends ProtocolClientAdapter {
         private final String totalGracefully;
         
         public Diskspace(String path, Long free, Long total) {
-            this.path = path;
-            this.free = free;
+            this.path  = path;
+            this.free  = free;
             this.total = total;
-            this.freeGracefully = FileUtils.formatSize(free);
+            this.freeGracefully  = FileUtils.formatSize(free);
             this.totalGracefully = FileUtils.formatSize(total);
         }
         

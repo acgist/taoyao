@@ -2525,6 +2525,20 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 房间状态信令
+   * 
+   * @param {*} roomId 房间ID
+   * 
+   * @returns 房间状态
+   */
+  async roomStatus(roomId) {
+    const response = await this.request(protocol.buildMessage("room::status", {
+      roomId: roomId || this.roomId
+    }));
+    return response.body;
+  }
+
+  /**
    * 生产媒体
    * 
    * 如果需要加密：producer.rtpSender
@@ -3072,13 +3086,11 @@ class Taoyao extends RemoteClient {
     await me.buildPeerConnection(session, sessionId);
     session.peerConnection.createOffer().then(async (description) => {
       await session.peerConnection.setLocalDescription(description);
-      me.push(
-        protocol.buildMessage("session::exchange", {
-          sdp      : description.sdp,
-          type     : description.type,
-          sessionId: sessionId
-        })
-      );
+      me.push(protocol.buildMessage("session::exchange", {
+        sdp      : description.sdp,
+        type     : description.type,
+        sessionId: sessionId
+      }));
     });
   }
 
@@ -3126,13 +3138,11 @@ class Taoyao extends RemoteClient {
       await session.peerConnection.setRemoteDescription(new RTCSessionDescription(message.body));
       session.peerConnection.createAnswer().then(async description => {
         await session.peerConnection.setLocalDescription(description);
-        me.push(
-          protocol.buildMessage("session::exchange", {
-            sdp      : description.sdp,
-            type     : description.type,
-            sessionId: sessionId
-          })
-        );
+        me.push(protocol.buildMessage("session::exchange", {
+          sdp      : description.sdp,
+          type     : description.type,
+          sessionId: sessionId
+        }));
       });
     } else if (type === "answer") {
       await session.peerConnection.setRemoteDescription(new RTCSessionDescription(message.body));
@@ -3214,6 +3224,33 @@ class Taoyao extends RemoteClient {
       console.debug("恢复会话（无效）", type, sessionId);
     }
   }
+
+  /**
+   * 系统信息信令
+   * 
+   * @returns 系统信息
+   */
+  async systemInfo() {
+    return await this.request(protocol.buildMessage("system::info", {}));
+  }
+
+  /**
+   * 重启系统信令
+   * 
+   * @returns 重启系统
+   */
+  async systemReboot() {
+    return await this.request(protocol.buildMessage("system::reboot", {}));
+  }
+
+  /**
+   * 关闭系统信令
+   * 
+   * @returns 关闭系统
+   */
+  async systemShutdown() {
+    return await this.request(protocol.buildMessage("system::shutdown", {}));
+  }
   
   /**
    * @param {*} session   会话
@@ -3250,13 +3287,11 @@ class Taoyao extends RemoteClient {
     };
     peerConnection.onicecandidate = event => {
       console.debug("会话媒体协商", event);
-      me.push(
-        protocol.buildMessage("session::exchange", {
-          type      : "candidate",
-          sessionId : sessionId,
-          candidate : event.candidate
-        })
-      );
+      me.push(protocol.buildMessage("session::exchange", {
+        type      : "candidate",
+        sessionId : sessionId,
+        candidate : event.candidate
+      }));
     };
     peerConnection.onnegotiationneeded = event => {
       console.debug("会话媒体重新协商", event);
