@@ -29,31 +29,34 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
     body = {
         """
         {
-            "roomId": "房间ID",
+            "roomId"  : "房间ID",
             "password": "房间密码（选填）"
         }
         """,
         """
         {
-            "roomId": "房间标识",
+            "roomId"  : "房间标识",
             "clientId": "终端标识"
         }
         """
     },
-    flow = "终端->信令服务-)终端"
+    flow = {
+        "终端=>信令服务",
+        "终端->信令服务-)终端"
+    }
 )
 public class RoomEnterProtocol extends ProtocolRoomAdapter {
 
-	public static final String SIGNAL = "room::enter";
-	
-	public RoomEnterProtocol() {
-		super("进入房间信令", SIGNAL);
-	}
+    public static final String SIGNAL = "room::enter";
+    
+    public RoomEnterProtocol() {
+        super("进入房间信令", SIGNAL);
+    }
 
-	@Override
+    @Override
     public boolean authenticate(Message message) {
-	    final Map<String, Object> body = message.body();
-	    final String roomId = MapUtils.get(body, Constant.ROOM_ID);
+        final Map<String, Object> body = message.body();
+        final String roomId = MapUtils.get(body, Constant.ROOM_ID);
         final String password = MapUtils.get(body, Constant.PASSWORD);
         final Room room = this.roomManager.getRoom(roomId);
         if(room == null) {
@@ -65,30 +68,30 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
         }
         throw MessageCodeException.of(MessageCode.CODE_3401, "密码错误");
     }
-	
-	@Override
+    
+    @Override
     public boolean authenticate(Room room, Client client) {
-	    return true;
+        return true;
     }
-	
-	@Override
-	public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-	    if(clientType.mediaClient()) {
-	        this.enter(clientId, room, client, message, body);
-	    } else {
-	        this.logNoAdapter(clientType);
-	    }
-	}
+    
+    @Override
+    public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
+        if(clientType.mediaClient()) {
+            this.enter(clientId, room, client, message, body);
+        } else {
+            this.logNoAdapter(clientType);
+        }
+    }
 
-	/**
-	 * 终端进入
-	 * 
-	 * @param clientId 终端ID
-	 * @param room 房间
-	 * @param client 终端
-	 * @param message 消息
-	 * @param body 消息主体
-	 */
+    /**
+     * 终端进入
+     * 
+     * @param clientId 终端ID
+     * @param room     房间
+     * @param client   终端
+     * @param message  消息
+     * @param body     消息主体
+     */
     private void enter(String clientId, Room room, Client client, Message message, Map<String, Object> body) {
         final String subscribeType = MapUtils.get(body, Constant.SUBSCRIBE_TYPE);
         final Object rtpCapabilities = MapUtils.get(body, Constant.RTP_CAPABILITIES);

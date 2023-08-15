@@ -19,13 +19,16 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 @Description(
     body = """
     {
+        "roomId": "房间ID"
+    }
+    {
         "name"         : "房间名称",
         "passowrd"     : "房间密码",
         "clientSize"   : "终端数量",
         "mediaClientId": "媒体服务标识"
     }
     """,
-    flow = "终端=>信令服务->终端"
+    flow = "终端=>信令服务"
 )
 public class RoomStatusProtocol extends ProtocolRoomAdapter {
 

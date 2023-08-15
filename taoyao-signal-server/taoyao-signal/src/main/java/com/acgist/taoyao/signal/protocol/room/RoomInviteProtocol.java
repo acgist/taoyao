@@ -21,7 +21,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 @Description(
     body = """
     {
-        "roomId": "房间ID",
+        "roomId"  : "房间ID",
         "clientId": "终端ID",
         "password": "密码（选填）"
     }
