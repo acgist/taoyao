@@ -65,8 +65,9 @@ module.exports = {
       ],
       // 日志级别：debug | warn | error | none
       logLevel  : "warn",
-      // RTP端口范围
+      // RTP端口范围（最小）
       rtcMinPort: process.env.MEDIASOUP_MIN_PORT || 40000,
+      // RTP端口范围（最大）
       rtcMaxPort: process.env.MEDIASOUP_MAX_PORT || 49999,
     },
     // Router配置：https://mediasoup.org/documentation/v3/mediasoup/api/#RouterOptions

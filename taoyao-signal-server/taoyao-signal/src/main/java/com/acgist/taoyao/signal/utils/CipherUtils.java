@@ -20,12 +20,14 @@ import lombok.extern.slf4j.Slf4j;
  * @author acgist
  */
 @Slf4j
-public class CipherUtils {
+public final class CipherUtils {
 
     private CipherUtils() {
     }
     
     /**
+     * 创建加密工具
+     * 
      * @param mode    模式
      * @param encrypt 算法
      * @param secret  密钥
