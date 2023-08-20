@@ -13,7 +13,6 @@ public interface SecurityService {
 
     /**
      * 认证
-     * 优先使用`UsernamePasswordService`其次使用配置帐号密码
      * 
      * @param username 用户名称
      * @param password 用户密码

@@ -9,16 +9,14 @@ import com.acgist.taoyao.signal.protocol.Protocol;
 import com.acgist.taoyao.signal.service.SecurityService;
 import com.acgist.taoyao.signal.service.UsernamePasswordService;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 public class SecurityServiceImpl implements SecurityService {
 
     private final SecurityProperties      securityProperties;
     private final UsernamePasswordService usernamePasswordService;
     
-    public SecurityServiceImpl(SecurityProperties securityProperties, UsernamePasswordService usernamePasswordService) {
-        this.securityProperties      = securityProperties;
-        this.usernamePasswordService = usernamePasswordService;
-    }
-
     @Override
     public boolean authenticate(String username, String password) {
         if(Boolean.FALSE.equals(this.securityProperties.getEnabled())) {
