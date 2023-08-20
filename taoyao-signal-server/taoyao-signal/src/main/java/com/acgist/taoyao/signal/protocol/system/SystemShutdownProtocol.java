@@ -19,9 +19,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Description(
+    memo = "关闭系统",
     flow = {
         "信令服务+)终端",
-        "终端->信令服务+)终端",
         "终端=>信令服务+)终端"
     }
 )
@@ -43,7 +43,7 @@ public class SystemShutdownProtocol extends ProtocolClientAdapter {
     }
     
     /**
-     * 执行命令信令
+     * 关闭系统
      */
     public void execute() {
         log.info("关闭系统");
