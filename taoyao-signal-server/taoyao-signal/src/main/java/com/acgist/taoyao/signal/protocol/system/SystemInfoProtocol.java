@@ -61,7 +61,6 @@ public class SystemInfoProtocol extends ProtocolClientAdapter {
         final Map<String, Object> info = new HashMap<>();
         // 硬盘
         final List<Diskspace> diskspace = new ArrayList<>();
-//      File.listRoots();
 //      FileSystems.getDefault().getFileStores();
         Stream.of(File.listRoots()).forEach(v -> {
             diskspace.add(new Diskspace(v.getPath(), v.getFreeSpace(), v.getTotalSpace()));
@@ -69,18 +68,18 @@ public class SystemInfoProtocol extends ProtocolClientAdapter {
         info.put("diskspace", diskspace);
         // 内存
         final Runtime runtime = Runtime.getRuntime();
-        info.put("maxMemory", runtime.maxMemory());
-        info.put("freeMemory", runtime.freeMemory());
+        info.put("maxMemory",   runtime.maxMemory());
+        info.put("freeMemory",  runtime.freeMemory());
         info.put("totalMemory", runtime.totalMemory());
-        info.put("maxMemoryGracefully", FileUtils.formatSize(runtime.maxMemory()));
-        info.put("freeMemoryGracefully", FileUtils.formatSize(runtime.freeMemory()));
+        info.put("maxMemoryGracefully",   FileUtils.formatSize(runtime.maxMemory()));
+        info.put("freeMemoryGracefully",  FileUtils.formatSize(runtime.freeMemory()));
         info.put("totalMemoryGracefully", FileUtils.formatSize(runtime.totalMemory()));
         // 其他
         info.put("osArch", System.getProperty("os.arch"));
         info.put("osName", System.getProperty("os.name"));
-        info.put("osVersion", System.getProperty("os.version"));
-        info.put("javaVmName", System.getProperty("java.vm.name"));
-        info.put("javaVersion", System.getProperty("java.version"));
+        info.put("osVersion",     System.getProperty("os.version"));
+        info.put("javaVmName",    System.getProperty("java.vm.name"));
+        info.put("javaVersion",   System.getProperty("java.version"));
         info.put("cpuProcessors", runtime.availableProcessors());
         // 响应
         message.setBody(info);

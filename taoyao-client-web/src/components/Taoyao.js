@@ -3237,7 +3237,7 @@ class Taoyao extends RemoteClient {
   /**
    * 重启系统信令
    * 
-   * @returns 重启系统
+   * @returns 重启系统结果
    */
   async systemReboot() {
     return await this.request(protocol.buildMessage("system::reboot", {}));
@@ -3246,7 +3246,7 @@ class Taoyao extends RemoteClient {
   /**
    * 关闭系统信令
    * 
-   * @returns 关闭系统
+   * @returns 关闭系统结果
    */
   async systemShutdown() {
     return await this.request(protocol.buildMessage("system::shutdown", {}));

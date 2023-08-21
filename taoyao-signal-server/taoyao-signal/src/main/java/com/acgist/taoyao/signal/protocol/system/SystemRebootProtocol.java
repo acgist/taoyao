@@ -19,9 +19,9 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Description(
+    memo = "重启系统",
     flow = {
         "信令服务+)终端",
-        "终端->信令服务+)终端",
         "终端=>信令服务+)终端"
     }
 )
