@@ -3154,74 +3154,80 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 暂停会话
+   * 暂停媒体信令
    * 
    * @param {*} sessionId 会话ID
    * @param {*} type      媒体类型
    */
   async sessionPause(sessionId, type) {
-    const me = this;
-    const session = me.sessionClients.get(sessionId);
-    if(!session) {
-      return;
+    const session = this.sessionClients.get(sessionId);
+    if(session) {
+      console.debug("暂停媒体", type, sessionId);
+      this.push(protocol.buildMessage("session::pause", {
+        type,
+        sessionId
+      }));
+      session.pauseRemote(type);
+    } else {
+      console.debug("暂停媒体（无效会话）", type, sessionId);
     }
-    me.push(protocol.buildMessage("session::pause", {
-      type,
-      sessionId
-    }));
-    session.pauseRemote(type);
   }
 
   /**
-   * 暂停会话信令
+   * 暂停媒体信令
    * 
    * @param {*} message 信令消息
    */
   async defaultSessionPause(message) {
-    const me = this;
-    const { type, sessionId } = message.body;
-    const session = me.sessionClients.get(sessionId);
+    const {
+      type,
+      sessionId
+    } = message.body;
+    const session = this.sessionClients.get(sessionId);
     if(session) {
-      console.debug("暂停会话", type, sessionId);
+      console.debug("暂停媒体", type, sessionId);
       session.pause(type);
     } else {
-      console.debug("暂停会话（无效）", type, sessionId);
+      console.debug("暂停媒体（无效会话）", type, sessionId);
     }
   }
 
   /**
-   * 恢复会话
+   * 恢复媒体信令
    * 
    * @param {*} sessionId 会话ID
    * @param {*} type      媒体类型
    */
   async sessionResume(sessionId, type) {
-    const me = this;
-    const session = me.sessionClients.get(sessionId);
-    if(!session) {
-      return;
+    const session = this.sessionClients.get(sessionId);
+    if(session) {
+      console.debug("恢复媒体", type, sessionId);
+      this.push(protocol.buildMessage("session::resume", {
+        type,
+        sessionId
+      }));
+      session.resumeRemote(type);
+    } else {
+      console.debug("恢复媒体（无效会话）", type, sessionId);
     }
-    me.push(protocol.buildMessage("session::resume", {
-      type,
-      sessionId
-    }));
-    session.resumeRemote(type);
   }
 
   /**
-   * 恢复会话信令
+   * 恢复媒体信令
    * 
    * @param {*} message 信令消息
    */
   async defaultSessionResume(message) {
-    const me = this;
-    const { type, sessionId } = message.body;
-    const session = me.sessionClients.get(sessionId);
+    const {
+      type,
+      sessionId
+    } = message.body;
+    const session = this.sessionClients.get(sessionId);
     if(session) {
-      console.debug("恢复会话", type, sessionId);
+      console.debug("恢复媒体", type, sessionId);
       session.resume(type);
     } else {
-      console.debug("恢复会话（无效）", type, sessionId);
+      console.debug("恢复媒体（无效会话）", type, sessionId);
     }
   }
 

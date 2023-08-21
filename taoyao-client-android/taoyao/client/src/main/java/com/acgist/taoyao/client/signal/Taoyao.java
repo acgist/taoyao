@@ -1205,7 +1205,7 @@ public final class Taoyao implements ITaoyao {
         final String sessionId            = MapUtils.get(body, "sessionId");
         final SessionClient sessionClient = this.sessions.get(sessionId);
         if(sessionClient == null) {
-            Log.w(Taoyao.class.getSimpleName(), "无效会话：" + sessionId);
+            Log.w(Taoyao.class.getSimpleName(), "暂停媒体（无效会话）：" + sessionId);
             return;
         }
         final String type = MapUtils.get(body, "type");
@@ -1222,7 +1222,7 @@ public final class Taoyao implements ITaoyao {
         final String sessionId            = MapUtils.get(body, "sessionId");
         final SessionClient sessionClient = this.sessions.get(sessionId);
         if(sessionClient == null) {
-            Log.w(Taoyao.class.getSimpleName(), "无效会话：" + sessionId);
+            Log.w(Taoyao.class.getSimpleName(), "恢复媒体（无效会话）：" + sessionId);
             return;
         }
         final String type = MapUtils.get(body, "type");
