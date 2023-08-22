@@ -26,12 +26,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
     body = """
     {
         "sdp"      : "sdp"
-        "type"     : "offer",
-        "sessionId": "会话ID"
-    }
-    {
-        "sdp"      : "sdp"
-        "type"     : "answer",
+        "type"     : "offer|answer",
         "sessionId": "会话ID"
     }
     {
@@ -39,7 +34,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
         "sessionId": "会话ID",
         "candidate": {
             "sdpMid"       : "sdpMid",
-            "candidate"    : "candidate信息",
+            "candidate"    : "candidate",
             "sdpMLineIndex": sdpMLineIndex 
         }
     }

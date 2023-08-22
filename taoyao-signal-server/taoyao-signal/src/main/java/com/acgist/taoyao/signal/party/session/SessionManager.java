@@ -39,7 +39,7 @@ public class SessionManager {
     public Session call(Client source, Client target) {
         final Session session = new Session(this.idService.buildUuid(), source, target);
         this.sessions.put(session.getId(), session);
-        log.info("创建视频会话：{} - {} - {}", session.getId(), session.getSourceClientId(), session.getTargetClientId());
+        log.info("创建会话：{} - {} - {}", session.getId(), session.getSourceClientId(), session.getTargetClientId());
         return session;
     }
     
@@ -60,7 +60,7 @@ public class SessionManager {
     public Session remove(String sessionId) {
         final Session session = this.sessions.remove(sessionId);
         if(session != null) {
-            log.info("移除视频会话：{} - {} - {}", sessionId, session.getSourceClientId(), session.getTargetClientId());
+            log.info("移除会话：{} - {} - {}", sessionId, session.getSourceClientId(), session.getTargetClientId());
         }
         return session;
     }

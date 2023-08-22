@@ -3072,21 +3072,20 @@ class Taoyao extends RemoteClient {
    * @param {*} message 信令消息
    */
   async defaultSessionCall(message) {
-    const me = this;
-    await me.checkDevice();
+    await this.checkDevice();
     const { name, clientId, sessionId } = message.body;
     const session = new Session({
       name,
       clientId,
       sessionId,
-      audioEnabled: me.audioProduce,
-      videoEnabled: me.videoProduce
+      audioEnabled: this.audioProduce,
+      videoEnabled: this.videoProduce
     });
     this.sessionClients.set(sessionId, session);
-    await me.buildPeerConnection(session, sessionId);
+    await this.buildPeerConnection(session, sessionId);
     session.peerConnection.createOffer().then(async (description) => {
       await session.peerConnection.setLocalDescription(description);
-      me.push(protocol.buildMessage("session::exchange", {
+      this.push(protocol.buildMessage("session::exchange", {
         sdp      : description.sdp,
         type     : description.type,
         sessionId: sessionId
@@ -3095,61 +3094,63 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 关闭会话
+   * 关闭媒体信令
    * 
    * @param {*} sessionId 会话ID
    */
   async sessionClose(sessionId) {
-    const me = this;
-    me.push(protocol.buildMessage("session::close", {
+    this.push(protocol.buildMessage("session::close", {
       sessionId
     }));
   }
 
   /**
-   * 关闭会话信令
+   * 关闭媒体信令
    * 
    * @param {*} message 信令消息
    */
   async defaultSessionClose(message) {
-    const me = this;
     const { sessionId } = message.body;
-    const session = me.sessionClients.get(sessionId);
+    const session = this.sessionClients.get(sessionId);
     if(session) {
-      console.debug("关闭会话", sessionId);
-      session.close();
-      me.sessionClients.delete(sessionId);
+      console.debug("关闭媒体", sessionId);
+      await session.close();
+      this.sessionClients.delete(sessionId);
     } else {
-      console.debug("关闭会话（无效）", sessionId);
+      console.debug("关闭媒体（无效会话）", sessionId);
     }
   }
 
   /**
-   * 会话媒体交换信令
+   * 媒体交换信令
    * 
    * @param {*} message 信令消息
    */
   async defaultSessionExchange(message) {
-    const me = this;
-    const { type, candidate, sessionId } = message.body;
+    const body = message.body;
+    const {
+      type,
+      candidate,
+      sessionId,
+    } = body;
     const session = this.sessionClients.get(sessionId);
     if (type === "offer") {
-      await me.buildPeerConnection(session, sessionId);
-      await session.peerConnection.setRemoteDescription(new RTCSessionDescription(message.body));
+      await this.buildPeerConnection(session, sessionId);
+      await session.peerConnection.setRemoteDescription(new RTCSessionDescription(body));
       session.peerConnection.createAnswer().then(async description => {
         await session.peerConnection.setLocalDescription(description);
-        me.push(protocol.buildMessage("session::exchange", {
+        this.push(protocol.buildMessage("session::exchange", {
           sdp      : description.sdp,
           type     : description.type,
           sessionId: sessionId
         }));
       });
     } else if (type === "answer") {
-      await session.peerConnection.setRemoteDescription(new RTCSessionDescription(message.body));
+      await session.peerConnection.setRemoteDescription(new RTCSessionDescription(body));
     } else if (type === "candidate") {
       await session.addIceCandidate(candidate);
     } else {
-      // 未知类型
+      console.warn("媒体交换无效类型", body);
     }
   }
 
@@ -3268,9 +3269,8 @@ class Taoyao extends RemoteClient {
     if(session.peerConnection)  {
       return session.peerConnection;
     }
-    const me = this;
     const peerConnection = new RTCPeerConnection({
-      "iceServers": me.webrtcConfig.iceServers || defaultRTCPeerConnectionConfig.iceServers
+      "iceServers": this.webrtcConfig.iceServers || defaultRTCPeerConnectionConfig.iceServers
     });
     peerConnection.ontrack = event => {
       console.debug("会话添加远程媒体轨道", event);
@@ -3284,7 +3284,7 @@ class Taoyao extends RemoteClient {
       } else {
         // 未知媒体类型
       }
-      me.callbackTrack(session.clientId, track);
+      this.callbackTrack(session.clientId, track);
       if(session.proxy && session.proxy.media) {
         session.proxy.media(track);
       } else {
@@ -3293,7 +3293,7 @@ class Taoyao extends RemoteClient {
     };
     peerConnection.onicecandidate = event => {
       console.debug("会话媒体协商", event);
-      me.push(protocol.buildMessage("session::exchange", {
+      this.push(protocol.buildMessage("session::exchange", {
         type      : "candidate",
         sessionId : sessionId,
         candidate : event.candidate
@@ -3306,7 +3306,7 @@ class Taoyao extends RemoteClient {
         peerConnection.restartIce();
       }
     }
-    const localStream      = await me.getStream();
+    const localStream      = await this.getStream();
     session.localStream    = localStream;
     session.peerConnection = peerConnection;
     if(session.audioEnabled && localStream.getAudioTracks().length >= 0) {
@@ -3595,4 +3595,3 @@ class Taoyao extends RemoteClient {
 }
 
 export { Taoyao };
-

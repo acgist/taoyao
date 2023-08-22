@@ -14,11 +14,14 @@ import com.acgist.taoyao.signal.event.session.SessionCloseEvent;
 import com.acgist.taoyao.signal.party.session.Session;
 import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * 关闭媒体信令
  * 
  * @author acgist
  */
+@Slf4j
 @Protocol
 @Description(
     body = """
@@ -39,13 +42,16 @@ public class SessionCloseProtocol extends ProtocolSessionAdapter implements Appl
     @Override
     public void onApplicationEvent(SessionCloseEvent event) {
         final Session session = event.getSession();
-        final Map<String, String> body = Map.of(Constant.SESSION_ID, event.getSessionId());
-        session.push(this.build(body));
+        session.push(this.build(Map.of(
+            Constant.SESSION_ID,
+            event.getSessionId()
+        )));
         this.sessionManager.remove(session.getId());
     }
     
     @Override
     public void execute(String clientId, ClientType clientType, Session session, Client client, Message message, Map<String, Object> body) {
+        log.info("关闭会话：{}", session.getId());
         session.close();
     }
     
