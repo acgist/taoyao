@@ -1141,12 +1141,19 @@ public final class Taoyao implements ITaoyao {
      * @param body    信令主体
      */
     private void sessionCall(Message message, Map<String, Object> body) {
-        final String name      = MapUtils.get(body, "name");
-        final String clientId  = MapUtils.get(body, "clientId");
-        final String sessionId = MapUtils.get(body, "sessionId");
+        final String name         = MapUtils.get(body, "name");
+        final String clientId     = MapUtils.get(body, "clientId");
+        final String sessionId    = MapUtils.get(body, "sessionId");
+        final Boolean audio       = MapUtils.get(body, "audio");
+        final Boolean video       = MapUtils.get(body, "video");
         final Resources resources = this.context.getResources();
+        if(this.sessions.containsKey(sessionId)) {
+            Log.w(Taoyao.class.getSimpleName(), "会话已经存在：" + sessionId);
+            return;
+        }
         final SessionClient sessionClient = new SessionClient(
-            sessionId, name, clientId, this, this.mainHandler,
+            sessionId, name, clientId,
+            this, this.mainHandler,
             resources.getBoolean(R.bool.preview),
             resources.getBoolean(R.bool.playAudio),
             resources.getBoolean(R.bool.playVideo),
@@ -1154,8 +1161,8 @@ public final class Taoyao implements ITaoyao {
             resources.getBoolean(R.bool.audioConsume),
             resources.getBoolean(R.bool.videoConsume),
             resources.getBoolean(R.bool.dataProduce),
-            resources.getBoolean(R.bool.audioProduce),
-            resources.getBoolean(R.bool.videoProduce),
+            resources.getBoolean(R.bool.audioProduce) && audio,
+            resources.getBoolean(R.bool.videoProduce) && video,
             this.mediaManager.getMediaProperties(),
             this.mediaManager.getWebrtcProperties()
         );

@@ -3041,27 +3041,32 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 发起会话
+   * 发起会话信令
    * 
-   * @param {*} clientId 接收者ID
+   * @param {*} clientId 目标ID
+   * @param {*} audio    打开音频
+   * @param {*} video    打开视频
    */
-  async sessionCall(clientId) {
-    const me = this;
-    if (clientId == me.clientId) {
+  async sessionCall(clientId, audio = true, video = true) {
+    if (clientId == this.clientId) {
       this.callbackError("不能监控自己");
       return;
     }
-    await me.checkDevice();
-    const response = await me.request(protocol.buildMessage("session::call", {
+    await this.checkDevice();
+    const response = await this.request(protocol.buildMessage("session::call", {
       clientId
     }));
-    const { name, sessionId } = response.body;
+    const {
+      name,
+      sessionId
+    } = response.body;
+    console.debug("发起会话", clientId, sessionId);
     const session = new Session({
       name,
       clientId,
       sessionId,
-      audioEnabled: me.audioProduce,
-      videoEnabled: me.videoProduce
+      audioEnabled: this.audioProduce && audio,
+      videoEnabled: this.videoProduce && video
     });
     this.sessionClients.set(sessionId, session);
   }
@@ -3073,13 +3078,20 @@ class Taoyao extends RemoteClient {
    */
   async defaultSessionCall(message) {
     await this.checkDevice();
-    const { name, clientId, sessionId } = message.body;
+    const {
+      name,
+      audio = true,
+      video = true,
+      clientId,
+      sessionId
+    } = message.body;
+    console.debug("接收会话", clientId, sessionId, audio, video);
     const session = new Session({
       name,
       clientId,
       sessionId,
-      audioEnabled: this.audioProduce,
-      videoEnabled: this.videoProduce
+      audioEnabled: this.audioProduce && audio,
+      videoEnabled: this.videoProduce && video
     });
     this.sessionClients.set(sessionId, session);
     await this.buildPeerConnection(session, sessionId);
@@ -3276,13 +3288,13 @@ class Taoyao extends RemoteClient {
       console.debug("会话添加远程媒体轨道", event);
       const track = event.track;
       if(track.kind === 'audio') {
-        session.remoteAudioTrack = track;
+        session.remoteAudioTrack   = track;
         session.remoteAudioEnabled = true;
       } else if(track.kind === 'video') {
-        session.remoteVideoTrack = track;
+        session.remoteVideoTrack   = track;
         session.remoteVideoEnabled = true;
       } else {
-        // 未知媒体类型
+        console.warn("未知媒体类型", track);
       }
       this.callbackTrack(session.clientId, track);
       if(session.proxy && session.proxy.media) {
@@ -3301,8 +3313,8 @@ class Taoyao extends RemoteClient {
     };
     peerConnection.onnegotiationneeded = event => {
       console.debug("会话媒体重新协商", event);
+      // TODO：重连
       if(peerConnection.connectionState === "connected") {
-        // TODO：重连
         peerConnection.restartIce();
       }
     }
