@@ -2502,7 +2502,7 @@ class Taoyao extends RemoteClient {
     const me = this;
     if (me.callback) {
       const callbackMessage = protocol.buildMessage("platform::error", {
-        message 
+        message
       });
       callbackMessage.code    = "9999";
       callbackMessage.message = message;
@@ -2514,28 +2514,6 @@ class Taoyao extends RemoteClient {
         console.warn("发生错误", message);
       }
     }
-  }
-
-  /**
-   * @returns 房间列表
-   */
-  async roomList() {
-    const response = await this.request(protocol.buildMessage("room::list"));
-    return response.body;
-  }
-
-  /**
-   * 房间状态信令
-   * 
-   * @param {*} roomId 房间ID
-   * 
-   * @returns 房间状态
-   */
-  async roomStatus(roomId) {
-    const response = await this.request(protocol.buildMessage("room::status", {
-      roomId: roomId || this.roomId
-    }));
-    return response.body;
   }
 
   /**
@@ -3041,6 +3019,30 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 房间列表信令
+   * 
+   * @returns 房间列表
+   */
+  async roomList() {
+    const response = await this.request(protocol.buildMessage("room::list"));
+    return response.body;
+  }
+
+  /**
+   * 房间状态信令
+   * 
+   * @param {*} roomId 房间ID
+   * 
+   * @returns 房间状态
+   */
+  async roomStatus(roomId) {
+    const response = await this.request(protocol.buildMessage("room::status", {
+      roomId: roomId || this.roomId
+    }));
+    return response.body;
+  }
+
+  /**
    * 发起会话信令
    * 
    * @param {*} clientId 目标ID
@@ -3057,9 +3059,18 @@ class Taoyao extends RemoteClient {
       clientId
     }));
     const {
+      code,
+      body,
+      message
+    } = response;
+    if(code !== "0000") {
+      this.callbackError(message);
+      return;
+    }
+    const {
       name,
       sessionId
-    } = response.body;
+    } = body;
     console.debug("发起会话", clientId, sessionId);
     const session = new Session({
       name,
