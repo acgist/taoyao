@@ -306,6 +306,10 @@ namespace acgist {
         webrtc::PeerConnectionFactoryInterface* factory,
         webrtc::PeerConnectionInterface::RTCConfiguration& rtcConfiguration
     ) {
+        if(this->device->IsLoaded()) {
+            LOG_W("配置已经加载");
+            return;
+        }
         this->factory          = factory;
         this->rtcConfiguration = new webrtc::PeerConnectionInterface::RTCConfiguration(rtcConfiguration);
         mediasoupclient::PeerConnection::Options options;
@@ -360,9 +364,14 @@ namespace acgist {
                 { "opusStereo", true },
                 { "opusDtx",    true }
             };
+        rtc::scoped_refptr<webrtc::AudioTrackInterface> track = mediaStream->GetAudioTracks()[0];
+        if(track->state() == webrtc::MediaStreamTrackInterface::TrackState::kEnded) {
+            LOG_W("音频媒体状态错误");
+            return;
+        }
         this->audioProducer = this->sendTransport->Produce(
             this->producerListener,
-            mediaStream->GetAudioTracks()[0],
+            track,
             nullptr,
             &codecOptions,
             nullptr
@@ -399,9 +408,14 @@ namespace acgist {
 //      encodings.emplace_back(max);
 //      强制设置编码器
 //      nlohmann::json codec = this->device->GetRtpCapabilities()["codec"];
+        rtc::scoped_refptr<webrtc::VideoTrackInterface> track = mediaStream->GetVideoTracks()[0];
+        if(track->state() == webrtc::MediaStreamTrackInterface::TrackState::kEnded) {
+            LOG_W("视频媒体状态错误");
+            return;
+        }
         this->videoProducer = this->sendTransport->Produce(
             this->producerListener,
-            mediaStream->GetVideoTracks()[0],
+            track,
             nullptr,
             &codecOptions,
             nullptr
