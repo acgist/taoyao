@@ -61,9 +61,9 @@ public class MediaProducerResumeProtocol extends ProtocolRoomAdapter implements 
             log.debug("生产者无效：{} - {}", producerId, clientType);
             return;
         }
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             producer.resume();
-        } else if(clientType.mediaServer()) {
+        } else if(clientType.isMedia()) {
             producer.getProducerClient().push(message);
         } else {
             this.logNoAdapter(clientType);

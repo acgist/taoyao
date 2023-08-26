@@ -46,9 +46,9 @@ public class RoomCloseProtocol extends ProtocolRoomAdapter implements Applicatio
 
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             room.close();
-        } else if(clientType.mediaServer()) {
+        } else if(clientType.isMedia()) {
             room.remove();
             room.broadcast(message);
         } else {

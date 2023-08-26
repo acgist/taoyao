@@ -44,7 +44,7 @@ public class MediaConsumerSetPreferredLayersProtocol extends ProtocolRoomAdapter
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             mediaClient.push(message);
         } else {
             this.logNoAdapter(clientType);

@@ -17,6 +17,9 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
 @Protocol
 @Description(
     body = """
+    {
+        "roomId": "房间ID"
+    }
     [
         {
             "name"         : "房间名称",

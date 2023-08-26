@@ -98,7 +98,7 @@ public class ClientRegisterProtocol extends ProtocolClientAdapter {
         // 终端上线事件
         this.publishEvent(new ClientOnlineEvent(client));
         // 媒体服务注册：创建房间事件
-        if(clientType.mediaServer()) {
+        if(clientType.isMedia()) {
             this.publishEvent(new MediaServerRegisterEvent(client));
         }
     }

@@ -64,9 +64,9 @@ public class MediaDataProducerCloseProtocol extends ProtocolRoomAdapter implemen
             log.debug("数据生产者无效：{} - {}", producerId, clientType);
             return;
         }
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             dataProducer.close();
-        } else if(clientType.mediaServer()) {
+        } else if(clientType.isMedia()) {
             dataProducer.remove();
             dataProducer.getProducerClient().push(message);
         } else {

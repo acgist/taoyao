@@ -61,7 +61,7 @@ public class RoomCreateProtocol extends ProtocolClientAdapter implements Applica
 
     @Override
     public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             // WEB同步创建房间
             final Room room = this.roomManager.create(
                 MapUtils.get(body, Constant.NAME),

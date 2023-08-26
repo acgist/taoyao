@@ -63,9 +63,9 @@ public class MediaConsumerPauseProtocol extends ProtocolRoomAdapter implements A
             log.debug("消费者无效：{} - {}", consumerId, clientType);
             return;
         }
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             consumer.pause();
-        } else if(clientType.mediaServer()) {
+        } else if(clientType.isMedia()) {
             consumer.getConsumerClient().push(message);
         } else {
             this.logNoAdapter(clientType);

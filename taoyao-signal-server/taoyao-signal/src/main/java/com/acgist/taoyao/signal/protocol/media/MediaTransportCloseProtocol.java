@@ -64,9 +64,9 @@ public class MediaTransportCloseProtocol extends ProtocolRoomAdapter implements 
             log.debug("通道无效：{} - {}", transportId, clientType);
             return;
         }
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             transport.close();
-        } else if(clientType.mediaServer()) {
+        } else if(clientType.isMedia()) {
             transport.remove();
             transport.getClient().push(message);
         } else {

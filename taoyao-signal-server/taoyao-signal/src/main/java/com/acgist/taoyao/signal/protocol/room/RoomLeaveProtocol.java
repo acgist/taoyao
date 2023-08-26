@@ -24,6 +24,10 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 @Description(
     body = """
     {
+        "roomId": "房间ID"
+    }
+    {
+        "roomId"  : "房间ID"
         "clientId": "离开终端ID"
     }
     """,
@@ -43,7 +47,7 @@ public class RoomLeaveProtocol extends ProtocolRoomAdapter implements Applicatio
     @Async
     @Override
     public void onApplicationEvent(RoomLeaveEvent event) {
-        final Room room = event.getRoom();
+        final Room room     = event.getRoom();
         final Client client = event.getClient();
         final Map<String, String> body = Map.of(
             Constant.ROOM_ID,   room.getRoomId(),
@@ -54,7 +58,7 @@ public class RoomLeaveProtocol extends ProtocolRoomAdapter implements Applicatio
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             room.leave(client);
         } else {
             this.logNoAdapter(clientType);

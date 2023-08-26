@@ -68,9 +68,9 @@ public class MediaConsumerCloseProtocol extends ProtocolRoomAdapter implements A
             log.debug("消费者无效：{} - {}", consumerId, clientType);
             return;
         }
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             consumer.close();
-        } else if(clientType.mediaServer()) {
+        } else if(clientType.isMedia()) {
             consumer.remove();
             consumer.getConsumerClient().push(message);
         } else {

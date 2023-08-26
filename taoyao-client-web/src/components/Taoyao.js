@@ -2445,37 +2445,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 离开房间
-   */
-  roomLeave() {
-    const me = this;
-    me.push(protocol.buildMessage("room::leave", {
-      roomId: me.roomId
-    }));
-    me.closeRoomMedia();
-  }
-
-  /**
-   * 离开房间信令
-   *
-   * @param {*} message
-   */
-  defaultRoomLeave(message) {
-    const me = this;
-    const { clientId } = message.body;
-    if(clientId === me.clientId) {
-      me.closeRoomMedia();
-    } else if(me.remoteClients.has(clientId)) {
-      const remoteClient = me.remoteClients.get(clientId);
-      remoteClient.close();
-      me.remoteClients.delete(clientId);
-      console.debug("终端离开房间", clientId);
-    } else {
-      console.debug("离开终端无效", clientId);
-    }
-  }
-
-  /**
    * 媒体回调
    * 
    * @param {*} clientId 终端ID
@@ -3015,6 +2984,36 @@ class Taoyao extends RemoteClient {
       }
     } else {
       me.callbackError("没有媒体权限");
+    }
+  }
+
+  /**
+   * 离开房间信令
+   */
+  roomLeave() {
+    this.push(protocol.buildMessage("room::leave", {
+      roomId: this.roomId
+    }));
+    this.closeRoomMedia();
+  }
+
+  /**
+   * 离开房间信令
+   *
+   * @param {*} message 信令消息
+   */
+  defaultRoomLeave(message) {
+    const { clientId } = message.body;
+    if(clientId === this.clientId) {
+      this.closeRoomMedia();
+      console.debug("终端离开房间", clientId);
+    } else if(this.remoteClients.has(clientId)) {
+      const remoteClient = this.remoteClients.get(clientId);
+      remoteClient.close();
+      this.remoteClients.delete(clientId);
+      console.debug("终端离开房间", clientId);
+    } else {
+      console.debug("终端已经离开", clientId);
     }
   }
 

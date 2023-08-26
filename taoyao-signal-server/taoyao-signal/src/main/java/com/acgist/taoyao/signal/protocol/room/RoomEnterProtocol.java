@@ -76,7 +76,7 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             this.enter(clientId, room, client, message, body);
         } else {
             this.logNoAdapter(clientType);

@@ -37,7 +37,7 @@ public class MediaVideoOrientationChangeProtocol extends ProtocolRoomAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        if(clientType.mediaServer()) {
+        if(clientType.isMedia()) {
             room.broadcast(message);
         } else {
             this.logNoAdapter(clientType);

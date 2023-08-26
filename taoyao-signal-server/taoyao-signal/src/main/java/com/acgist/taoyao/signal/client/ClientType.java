@@ -31,6 +31,10 @@ public enum ClientType {
      */
     MOBILE("移动端"),
     /**
+     * 应用服务
+     */
+    SERVER("应用服务"),
+    /**
      * 其他智能终端
      */
     OTHER("其他终端");
@@ -47,7 +51,7 @@ public enum ClientType {
     /**
      * @return 是否是媒体终端
      */
-    public boolean mediaClient() {
+    public boolean isClient() {
         return
             this == WEB    ||
             this == CAMERA ||
@@ -57,8 +61,15 @@ public enum ClientType {
     /**
      * @return 是否是媒体服务
      */
-    public boolean mediaServer() {
+    public boolean isMedia() {
         return this == MEDIA;
+    }
+    
+    /**
+     * @return 是否是应用服务
+     */
+    public boolean isServer() {
+        return this == SERVER;
     }
 
     /**
@@ -81,13 +92,13 @@ public enum ClientType {
      */
     public static final ClientType[] MEDIA_CLIENT_TYPE
     =
-    Stream.of(ClientType.values()).filter(ClientType::mediaClient).toArray(ClientType[]::new);
+    Stream.of(ClientType.values()).filter(ClientType::isClient).toArray(ClientType[]::new);
     
     /**
      * 媒体服务类型列表
      */
     public static final ClientType[] MEDIA_SERVER_TYPE
     =
-    Stream.of(ClientType.values()).filter(ClientType::mediaServer).toArray(ClientType[]::new);
+    Stream.of(ClientType.values()).filter(ClientType::isMedia).toArray(ClientType[]::new);
     
 }

@@ -35,7 +35,7 @@ public class MediaDataConsumerStatusProtocol extends ProtocolRoomAdapter {
 
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             client.push(mediaClient.request(message));
         } else {
             this.logNoAdapter(clientType);

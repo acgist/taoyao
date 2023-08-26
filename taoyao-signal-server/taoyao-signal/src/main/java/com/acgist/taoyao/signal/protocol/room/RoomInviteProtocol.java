@@ -38,7 +38,7 @@ public class RoomInviteProtocol extends ProtocolRoomAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             final String inviteClientId = MapUtils.get(body, Constant.CLIENT_ID);
             body.put(Constant.PASSWORD, room.getPassword());
             this.clientManager.unicast(inviteClientId, message);

@@ -1093,7 +1093,7 @@ public final class Taoyao implements ITaoyao {
         final String clientId = MapUtils.get(body, "clientId");
         final Room room       = this.rooms.get(roomId);
         if(room == null) {
-            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
+            Log.w(Taoyao.class.getSimpleName(), "离开房间（无效房间）：" + roomId);
             return;
         }
         room.closeRemoteClient(clientId);

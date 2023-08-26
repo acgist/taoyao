@@ -57,7 +57,7 @@ public class MediaDataConsumeProtocol extends ProtocolRoomAdapter {
         if(dataProducer == null) {
             throw MessageCodeException.of("没有提供数据生产：" + producerId);
         }
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             final ClientWrapper dataConsumerClientWrapper = room.clientWrapper(client);
             final String dataConsumerClientId             = dataConsumerClientWrapper.getClientId();
             final ClientWrapper dataProducerClientWrapper = dataProducer.getProducerClient();
@@ -73,7 +73,7 @@ public class MediaDataConsumeProtocol extends ProtocolRoomAdapter {
             body.put(Constant.RTP_CAPABILITIES,  dataConsumerClientWrapper.getRtpCapabilities());
             body.put(Constant.SCTP_CAPABILITIES, dataConsumerClientWrapper.getSctpCapabilities());
             mediaClient.push(message);
-        } else if(clientType.mediaServer()) {
+        } else if(clientType.isMedia()) {
             final String streamId   = MapUtils.get(body, Constant.STREAM_ID);
             final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);
             final String dataConsumerClientId             = MapUtils.get(body, Constant.CLIENT_ID);

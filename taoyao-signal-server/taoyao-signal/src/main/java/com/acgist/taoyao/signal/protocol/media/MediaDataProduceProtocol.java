@@ -44,7 +44,7 @@ public class MediaDataProduceProtocol extends ProtocolRoomAdapter {
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        if(clientType.mediaClient()) {
+        if(clientType.isClient()) {
             final String streamId = Constant.STREAM_ID_PRODUCER.apply(Constant.DATA, clientId);
             body.put(Constant.CLIENT_ID, clientId);
             body.put(Constant.STREAM_ID, streamId);
