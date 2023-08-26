@@ -41,7 +41,7 @@ public class MediaVideoProperties {
     
     @Schema(title = "格式", description = "格式", example = "VP8|VP9|H264|H265")
     private Format format;
-    @Schema(title = "码率", description = "码率影响画质", example = "600|1200|1500|1800")
+    @Schema(title = "码率", description = "码率影响画质", example = "400|800|1200|1600")
     private Integer bitrate;
     @Schema(title = "帧率", description = "帧率影响流畅", example = "15|18|20|24|30|45")
     private Integer frameRate;

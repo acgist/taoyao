@@ -2793,9 +2793,9 @@ class Taoyao extends RemoteClient {
     }
     const track = videoTrack || await me.getVideoTrack();
     const codecOptions = {
+      videoGoogleStartBitrate: 400,
       videoGoogleMinBitrate  : 800,
-      videoGoogleMaxBitrate  : 1800,
-      videoGoogleStartBitrate: 1000,
+      videoGoogleMaxBitrate  : 1600,
     };
     let codec;
     if(me.forceVP8) {

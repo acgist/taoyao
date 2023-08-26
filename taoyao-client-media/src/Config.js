@@ -73,7 +73,6 @@ module.exports = {
     // Router配置：https://mediasoup.org/documentation/v3/mediasoup/api/#RouterOptions
     routerOptions: {
       mediaCodecs: [
-        // OPUS PCMA PCMU G722
         {
           kind     : "audio",
           mimeType : "audio/opus",
@@ -81,13 +80,25 @@ module.exports = {
           channels : 2,
         },
         {
+          kind     : "audio",
+          mimeType : "audio/pcmu",
+          clockRate: 8000,
+          channels : 1,
+        },
+        {
+          kind     : "audio",
+          mimeType : "audio/pcma",
+          clockRate: 8000,
+          channels : 1,
+        },
+        {
           kind      : "video",
           mimeType  : "video/VP8",
           clockRate : 90000,
           parameters: {
-            "x-google-start-bitrate": 1000,
+            "x-google-start-bitrate": 400,
             // "x-google-min-bitrate": 800,
-            // "x-google-max-bitrate": 1800,
+            // "x-google-max-bitrate": 1600,
           },
         },
         {
@@ -96,9 +107,9 @@ module.exports = {
           clockRate : 90000,
           parameters: {
             "profile-id"            : 2,
-            "x-google-start-bitrate": 1000,
+            "x-google-start-bitrate": 400,
             // "x-google-min-bitrate": 800,
-            // "x-google-max-bitrate": 1800,
+            // "x-google-max-bitrate": 1600,
           },
         },
         {
@@ -109,9 +120,9 @@ module.exports = {
             "packetization-mode"     : 1,
             "profile-level-id"       : "4d0032",
             "level-asymmetry-allowed": 1,
-            "x-google-start-bitrate" : 1000,
+            "x-google-start-bitrate" : 400,
             // "x-google-min-bitrate": 800,
-            // "x-google-max-bitrate": 1800,
+            // "x-google-max-bitrate": 1600,
           },
         },
         {
@@ -122,9 +133,9 @@ module.exports = {
             "packetization-mode"     : 1,
             "profile-level-id"       : "42e01f",
             "level-asymmetry-allowed": 1,
-            "x-google-start-bitrate" : 1000,
+            "x-google-start-bitrate" : 400,
             // "x-google-min-bitrate": 800,
-            // "x-google-max-bitrate": 1800,
+            // "x-google-max-bitrate": 1600,
           },
         },
       ],
@@ -154,10 +165,10 @@ module.exports = {
           announcedIp: process.env.MEDIASOUP_ANNOUNCED_IP || "127.0.0.1",
         },
       ],
-      initialAvailableOutgoingBitrate: 1000000,
+      initialAvailableOutgoingBitrate: 400000,
       minimumAvailableOutgoingBitrate: 800000,
       maxSctpMessageSize             : 262144,
-      maxIncomingBitrate             : 1800000,
+      maxIncomingBitrate             : 1600000,
     },
     // PlainTransport配置：https://mediasoup.org/documentation/v3/mediasoup/api/#PlainTransportOptions
     plainTransportOptions: {

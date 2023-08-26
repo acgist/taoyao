@@ -1758,13 +1758,9 @@ class Taoyao {
     };
     me.push(message);
     const {
-      minOutgoingBitrate,
       maxOutgoingBitrate,
       maxIncomingBitrate,
     } = config.mediasoup.webRtcTransportOptions;
-    if(minOutgoingBitrate) {
-      await transport.setMinOutgoingBitrate(minOutgoingBitrate);
-    }
     if(maxOutgoingBitrate) {
       await transport.setMaxOutgoingBitrate(maxOutgoingBitrate);
     }

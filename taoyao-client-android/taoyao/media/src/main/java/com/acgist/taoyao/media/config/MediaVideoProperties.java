@@ -28,7 +28,7 @@ public class MediaVideoProperties {
      */
     private Format format;
     /**
-     * 码率：600|1200|1500|1800
+     * 码率：400|800|1200|1600
      * 码率影响画质
      */
     private Integer bitrate;
