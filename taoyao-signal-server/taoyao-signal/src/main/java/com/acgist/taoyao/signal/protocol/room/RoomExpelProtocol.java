@@ -19,6 +19,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
  */
 @Protocol
 @Description(
+    memo = "终端收到信令以后调用离开房间信令离开房间，没有实现强制在服务端提出。",
     body = """
     {
         "roomId"  : "房间ID",
@@ -40,8 +41,6 @@ public class RoomExpelProtocol extends ProtocolRoomAdapter {
         if(clientType.isClient()) {
             final String expelClientId = MapUtils.get(body, Constant.CLIENT_ID);
             room.unicast(expelClientId, message);
-            // 如果需要强制提出
-//          room.leave(this.clientManager.clients(expelClientId));
         } else {
             this.logNoAdapter(clientType);
         }

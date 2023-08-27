@@ -19,6 +19,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
  */
 @Protocol
 @Description(
+    memo = "终端收到信令以后调用进入房间信令进入房间",
     body = """
     {
         "roomId"  : "房间ID",

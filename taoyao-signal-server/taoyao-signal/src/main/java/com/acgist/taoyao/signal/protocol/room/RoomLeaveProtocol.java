@@ -47,7 +47,7 @@ public class RoomLeaveProtocol extends ProtocolRoomAdapter implements Applicatio
     @Async
     @Override
     public void onApplicationEvent(RoomLeaveEvent event) {
-        final Room room     = event.getRoom();
+        final Room   room   = event.getRoom();
         final Client client = event.getClient();
         final Map<String, String> body = Map.of(
             Constant.ROOM_ID,   room.getRoomId(),

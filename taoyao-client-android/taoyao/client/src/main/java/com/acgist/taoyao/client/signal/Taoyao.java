@@ -1061,6 +1061,7 @@ public final class Taoyao implements ITaoyao {
     private void roomInivte(Message message, Map<String, Object> body) {
         final String roomId   = MapUtils.get(body, "roomId");
         final String password = MapUtils.get(body, "password");
+        // 安卓可以同时进入多个房间
         this.roomEnter(roomId, password);
     }
 

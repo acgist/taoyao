@@ -2392,59 +2392,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 踢出终端信令
-   * 
-   * @param {*} clientId 终端ID
-   */
-   roomExpel(clientId) {
-    const me = this;
-    me.push(protocol.buildMessage("room::expel", {
-      roomId: me.roomId,
-      clientId,
-    }));
-  }
-
-  /**
-   * 踢出终端信令
-   * 
-   * @param {*} message 消息
-   */
-  async defaultRoomExpel(message) {
-    const me = this;
-    me.roomLeave();
-  }
-
-  /**
-   * 邀请终端
-   * 
-   * @param {*} clientId 终端ID
-   */
-  roomInvite(clientId) {
-    const me = this;
-    me.push(protocol.buildMessage("room::invite", {
-      roomId: me.roomId,
-      clientId,
-    }));
-  }
-
-  /**
-   * 邀请终端信令
-   * 
-   * @param {*} message 消息
-   */
-  async defaultRoomInvite(message) {
-    const me = this;
-    // 默认自动进入：如果需要确认使用回调函数重写
-    const { roomId, password } = message.body;
-    if(me.roomId) {
-      this.callbackError("已经进入房间拒绝邀请");
-      return;
-    }
-    await me.roomEnter(roomId, password);
-    await me.mediaProduce();
-  }
-
-  /**
    * 媒体回调
    * 
    * @param {*} clientId 终端ID
@@ -2985,6 +2932,61 @@ class Taoyao extends RemoteClient {
     } else {
       me.callbackError("没有媒体权限");
     }
+  }
+
+  /**
+   * 踢出房间信令
+   * 
+   * @param {*} clientId 终端ID
+   */
+  roomExpel(clientId) {
+    this.push(protocol.buildMessage("room::expel", {
+      roomId: this.roomId,
+      clientId,
+    }));
+  }
+
+  /**
+   * 踢出房间信令
+   * 
+   * @param {*} message 信令消息
+   */
+  async defaultRoomExpel(message) {
+    console.debug("收到提出房间信令", message);
+    this.roomLeave();
+  }
+
+  /**
+   * 邀请终端信令
+   * 
+   * @param {*} clientId 终端ID
+   */
+  roomInvite(clientId) {
+    this.push(protocol.buildMessage("room::invite", {
+      roomId: this.roomId,
+      clientId,
+    }));
+  }
+
+  /**
+   * 邀请终端信令
+   * 
+   * @param {*} message 信令消息
+   */
+  async defaultRoomInvite(message) {
+    // 默认自动进入：如果需要确认使用回调函数重写
+    const {
+      roomId,
+      password
+    } = message.body;
+    // H5只能同时进入一个房间
+    if(this.roomId) {
+      this.callbackError("终端拒绝房间邀请", roomId);
+      return;
+    }
+    console.debug("房间邀请终端", roomId);
+    await this.roomEnter(roomId, password);
+    await this.mediaProduce();
   }
 
   /**
