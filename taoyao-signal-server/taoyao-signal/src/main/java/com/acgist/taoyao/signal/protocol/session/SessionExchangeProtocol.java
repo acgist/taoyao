@@ -23,22 +23,26 @@ import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
             1. 交换类型大小写
             2. candidate内容默认名称sdp
     """,
-    body = """
-    {
-        "sdp"      : "sdp"
-        "type"     : "offer|answer",
-        "sessionId": "会话ID"
-    }
-    {
-        "type"     : "candidate",
-        "sessionId": "会话ID",
-        "candidate": {
-            "sdpMid"       : "sdpMid",
-            "candidate"    : "candidate",
-            "sdpMLineIndex": sdpMLineIndex 
+    body = {
+        """
+        {
+            "sdp"      : "sdp"
+            "type"     : "offer|answer",
+            "sessionId": "会话ID"
         }
-    }
-    """,
+        """,
+        """
+        {
+            "type"     : "candidate",
+            "sessionId": "会话ID",
+            "candidate": {
+                "sdpMid"       : "sdpMid",
+                "candidate"    : "candidate",
+                "sdpMLineIndex": sdpMLineIndex 
+            }
+        }
+        """
+    },
     flow = "终端->信令服务->终端"
 )
 public class SessionExchangeProtocol extends ProtocolSessionAdapter {

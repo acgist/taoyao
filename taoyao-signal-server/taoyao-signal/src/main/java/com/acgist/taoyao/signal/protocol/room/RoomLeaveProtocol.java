@@ -22,15 +22,19 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
  */
 @Protocol
 @Description(
-    body = """
-    {
-        "roomId": "房间ID"
-    }
-    {
-        "roomId"  : "房间ID"
-        "clientId": "离开终端ID"
-    }
-    """,
+    body = {
+        """
+        {
+            "roomId": "房间ID"
+        }
+        """,
+        """
+        {
+            "roomId"  : "房间ID"
+            "clientId": "离开终端ID"
+        }
+        """
+    },
     flow = {
         "终端->信令服务-)终端",
         "终端-[关闭终端]>信令服务-)终端",

@@ -10,6 +10,15 @@ import {
 } from "./Config.js";
 
 /**
+ * 成功编码
+ */
+const SUCCESS_CODE    = "0000";
+/**
+ * 成功描述
+ */
+const SUCCESS_MESSAGE = "成功";
+
+/**
  * 信令协议
  */
 const protocol = {
@@ -2334,64 +2343,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 进入房间信令
-   *
-   * @param {*} roomId   房间ID
-   * @param {*} password 房间密码
-   */
-  async roomEnter(roomId, password) {
-    const me = this;
-    if(me.roomId) {
-      return {
-        code   : 9999,
-        message: "已经进入房间",
-      };
-    }
-    me.roomId    = roomId;
-    let response = await me.request(protocol.buildMessage("media::router::rtp::capabilities", {
-      roomId: me.roomId,
-    }));
-    if(response.code !== '0000') {
-      me.roomId = null;
-      this.callbackError(response.message);
-      return response;
-    }
-    const routerRtpCapabilities = response.body.rtpCapabilities;
-    me.mediasoupDevice          = new mediasoupClient.Device();
-    await me.mediasoupDevice.load({ routerRtpCapabilities });
-    response = await me.request(protocol.buildMessage("room::enter", {
-      roomId          : roomId,
-      password        : password,
-      rtpCapabilities : me.audioConsume || me.videoConsume || me.audioProduce || me.videoProduce ? me.mediasoupDevice.rtpCapabilities  : undefined,
-      sctpCapabilities: me.dataConsume  || me.dataProduce                                        ? me.mediasoupDevice.sctpCapabilities : undefined,
-    }));
-    if(response.code !== '0000') {
-      me.roomId = null;
-      this.callbackError(response.message);
-      return response;
-    }
-    return response;
-  }
-
-  /**
-   * 进入房间信令
-   *
-   * @param {*} message 信令消息
-   */
-  defaultRoomEnter(message) {
-    const me = this;
-    const { roomId, clientId, status } = message.body;
-    if (clientId === me.clientId) {
-      // 忽略自己
-    } else if(me.remoteClients.has(clientId)) {
-      console.debug("房间已经存在远程终端", clientId);
-    } else {
-      console.debug("远程终端进入房间", clientId);
-      me.remoteClients.set(clientId, new RemoteClient(status));
-    }
-  }
-
-  /**
    * 媒体回调
    * 
    * @param {*} clientId 终端ID
@@ -2403,8 +2354,8 @@ class Taoyao extends RemoteClient {
       clientId,
       track,
     });
-    callbackMessage.code    = "0000";
-    callbackMessage.message = "媒体回调";
+    callbackMessage.code    = SUCCESS_CODE;
+    callbackMessage.message = SUCCESS_MESSAGE;
     me.callback(callbackMessage);
   }
 
@@ -2935,6 +2886,67 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 进入房间信令
+   *
+   * @param {*} roomId   房间ID
+   * @param {*} password 房间密码
+   */
+  async roomEnter(roomId, password) {
+    if(this.roomId) {
+      this.callbackError("终端已经进入房间");
+      return {
+        code   : 9999,
+        message: "终端已经进入房间",
+      };
+    }
+    this.roomId  = roomId;
+    let response = await this.request(protocol.buildMessage("media::router::rtp::capabilities", {
+      roomId: this.roomId,
+    }));
+    if(response.code !== SUCCESS_CODE) {
+      this.roomId = null;
+      this.callbackError(response.message);
+      return response;
+    }
+    const routerRtpCapabilities = response.body.rtpCapabilities;
+    this.mediasoupDevice        = new mediasoupClient.Device();
+    await this.mediasoupDevice.load({ routerRtpCapabilities });
+    response = await this.request(protocol.buildMessage("room::enter", {
+      roomId          : roomId,
+      password        : password,
+      rtpCapabilities : this.audioConsume || this.videoConsume || this.audioProduce || this.videoProduce ? this.mediasoupDevice.rtpCapabilities  : undefined,
+      sctpCapabilities: this.dataConsume  || this.dataProduce                                            ? this.mediasoupDevice.sctpCapabilities : undefined,
+    }));
+    if(response.code !== SUCCESS_CODE) {
+      this.roomId = null;
+      this.callbackError(response.message);
+      return response;
+    }
+    return response;
+  }
+
+  /**
+   * 进入房间信令
+   *
+   * @param {*} message 信令消息
+   */
+  defaultRoomEnter(message) {
+    const {
+      roomId,
+      clientId,
+      status
+    } = message.body;
+    if (clientId === this.clientId) {
+      // 忽略自己
+    } else if(this.remoteClients.has(clientId)) {
+      console.debug("终端已经进入房间", clientId);
+    } else {
+      console.debug("远程终端进入房间", clientId);
+      this.remoteClients.set(clientId, new RemoteClient(status));
+    }
+  }
+
+  /**
    * 踢出房间信令
    * 
    * @param {*} clientId 终端ID
@@ -3064,7 +3076,7 @@ class Taoyao extends RemoteClient {
       body,
       message
     } = response;
-    if(code !== "0000") {
+    if(code !== SUCCESS_CODE) {
       this.callbackError(message);
       return;
     }

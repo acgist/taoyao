@@ -56,7 +56,7 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
     @Override
     public boolean authenticate(Message message) {
         final Map<String, Object> body = message.body();
-        final String roomId = MapUtils.get(body, Constant.ROOM_ID);
+        final String roomId   = MapUtils.get(body, Constant.ROOM_ID);
         final String password = MapUtils.get(body, Constant.PASSWORD);
         final Room room = this.roomManager.getRoom(roomId);
         if(room == null) {
@@ -84,17 +84,17 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
     }
 
     /**
-     * 终端进入
+     * 终端进入房间
      * 
      * @param clientId 终端ID
      * @param room     房间
      * @param client   终端
-     * @param message  消息
+     * @param message  信令消息
      * @param body     消息主体
      */
     private void enter(String clientId, Room room, Client client, Message message, Map<String, Object> body) {
-        final String subscribeType = MapUtils.get(body, Constant.SUBSCRIBE_TYPE);
-        final Object rtpCapabilities = MapUtils.get(body, Constant.RTP_CAPABILITIES);
+        final String subscribeType    = MapUtils.get(body, Constant.SUBSCRIBE_TYPE);
+        final Object rtpCapabilities  = MapUtils.get(body, Constant.RTP_CAPABILITIES);
         final Object sctpCapabilities = MapUtils.get(body, Constant.SCTP_CAPABILITIES);
         // 进入房间
         final ClientWrapper clientWrapper = room.enter(client);
@@ -104,9 +104,9 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
         clientWrapper.setSctpCapabilities(sctpCapabilities);
         // 发送通知
         message.setBody(Map.of(
-            Constant.ROOM_ID, room.getRoomId(),
+            Constant.ROOM_ID,   room.getRoomId(),
             Constant.CLIENT_ID, clientId,
-            Constant.STATUS, client.getStatus()
+            Constant.STATUS,    client.getStatus()
         ));
         room.broadcast(message);
         // 进入房间事件

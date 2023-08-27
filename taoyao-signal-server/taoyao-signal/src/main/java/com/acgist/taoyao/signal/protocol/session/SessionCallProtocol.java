@@ -21,18 +21,22 @@ import com.acgist.taoyao.signal.protocol.ProtocolSessionAdapter;
  */
 @Protocol
 @Description(
-    body = """
-    {
-        "clientId": "目标ID",
-        "audio"   : 是否需要声音（true|false），
-        "video"   : 是否需要视频（true|false）
-    }
-    {
-        "name"     : "终端名称",
-        "clientId" : "终端ID",
-        "sessionId": "会话ID"
-    }
-    """,
+    body = {
+        """
+        {
+            "clientId": "目标ID",
+            "audio"   : 是否需要声音（true|false），
+            "video"   : 是否需要视频（true|false）
+        }
+        """,
+        """
+        {
+            "name"     : "终端名称",
+            "clientId" : "终端ID",
+            "sessionId": "会话ID"
+        }
+        """
+    },
     flow = "终端=>信令服务->终端"
 )
 public class SessionCallProtocol extends ProtocolSessionAdapter {

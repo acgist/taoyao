@@ -994,7 +994,7 @@ public final class Taoyao implements ITaoyao {
         final String roomId = MapUtils.get(body, "roomId");
         final Room room     = this.rooms.get(roomId);
         if(room == null) {
-            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
+            Log.w(Taoyao.class.getSimpleName(), "进入房间（无效房间）：" + roomId);
             return;
         }
         room.newRemoteClientFromRoomEnter(body);
@@ -1009,13 +1009,17 @@ public final class Taoyao implements ITaoyao {
      * @return 房间
      */
     public Room roomEnter(String roomId, String password) {
+        if(this.rooms.containsKey(roomId)) {
+            Log.w(Taoyao.class.getSimpleName(), "终端已经进入房间：" + roomId);
+            return null;
+        }
         final Resources resources = this.context.getResources();
         final Room room = this.rooms.computeIfAbsent(
             roomId,
             key -> new Room(
-                roomId, this.name,
+                roomId,   this.name,
                 password, this.clientId,
-                this, this.mainHandler,
+                this,     this.mainHandler,
                 resources.getBoolean(R.bool.preview),
                 resources.getBoolean(R.bool.playAudio),
                 resources.getBoolean(R.bool.playVideo),
@@ -1035,7 +1039,7 @@ public final class Taoyao implements ITaoyao {
             room.mediaProduce();
             return room;
         } else {
-            Log.i(Taoyao.class.getSimpleName(), "进入房间失败：" + roomId);
+            Log.i(Taoyao.class.getSimpleName(), "终端进入房间失败：" + roomId);
             this.rooms.remove(roomId);
             return null;
         }
@@ -1073,7 +1077,7 @@ public final class Taoyao implements ITaoyao {
     public void roomLeave(String roomId) {
         final Room room = this.rooms.remove(roomId);
         if(room == null) {
-            Log.w(Taoyao.class.getSimpleName(), "无效房间：" + roomId);
+            Log.w(Taoyao.class.getSimpleName(), "离开房间（无效房间）：" + roomId);
             return;
         }
         this.push(this.buildMessage(
