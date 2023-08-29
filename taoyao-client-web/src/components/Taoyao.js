@@ -480,7 +480,7 @@ class RemoteClient {
   /**
    * 关闭媒体
    */
-  close() {
+  async close() {
     const me = this;
     if(me.closed) {
       return;
@@ -488,23 +488,23 @@ class RemoteClient {
     console.debug("关闭终端", me.clientId);
     me.closed = true;
     if(me.audioTrack) {
-      me.audioTrack.stop();
+      await me.audioTrack.stop();
       me.audioTrack = null;
     }
     if(me.videoTrack) {
-      me.videoTrack.stop();
+      await me.videoTrack.stop();
       me.videoTrack = null;
     }
     if(me.dataConsumer) {
-      me.dataConsumer.close();
+      await me.dataConsumer.close();
       me.dataConsumer = null;
     }
     if(me.audioConsumer) {
-      me.audioConsumer.close();
+      await me.audioConsumer.close();
       me.audioConsumer = null;
     }
     if(me.videoConsumer) {
-      me.videoConsumer.close();
+      await me.videoConsumer.close();
       me.videoConsumer = null;
     }
   }
@@ -881,6 +881,9 @@ class Taoyao extends RemoteClient {
         break;
       case "room::close":
         me.defaultRoomClose(message);
+        break;
+      case "room::create":
+        this.defaultRoomCreate(message);
         break;
       case "room::enter":
         me.defaultRoomEnter(message);
@@ -2329,20 +2332,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 创建房间信令
-   *
-   * @param {*} room 房间
-   *
-   * @returns 房间
-   */
-  async roomCreate(room) {
-    const me       = this;
-    console.debug("创建房间", room);
-    const response = await me.request(protocol.buildMessage("room::create", room));
-    return response.body;
-  }
-
-  /**
    * 媒体回调
    * 
    * @param {*} clientId 终端ID
@@ -2886,6 +2875,47 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 创建房间信令
+   *
+   * @param {*} room 房间信息
+   *
+   * @returns 响应消息
+   */
+  async roomCreate(room) {
+    if(this.roomId) {
+      this.callbackError("终端已经进入房间");
+      return {
+        code   : 9999,
+        message: "终端已经进入房间"
+      };
+    }
+    console.debug("创建房间", room);
+    const response = await this.request(protocol.buildMessage("room::create", {
+      ...room
+    }));
+    return response.body;
+  }
+
+  /**
+   * 创建房间信令
+   * 用于房间重建
+   * 
+   * @param {*} message 信令消息
+   */
+  async defaultRoomCreate(message) {
+    console.debug("创建房间", message);
+    const {
+      roomId,
+      password
+    } = message.body;
+    if(this.roomId && roomId === this.roomId) {
+      await this.roomLeave();
+      await this.roomEnter(roomId, password);
+      await this.mediaProduce();
+    }
+  }
+
+  /**
    * 进入房间信令
    *
    * @param {*} roomId   房间ID
@@ -2927,6 +2957,7 @@ class Taoyao extends RemoteClient {
 
   /**
    * 进入房间信令
+   * 其他终端进入房间
    *
    * @param {*} message 信令消息
    */
@@ -2965,7 +2996,7 @@ class Taoyao extends RemoteClient {
    */
   async defaultRoomExpel(message) {
     console.debug("收到提出房间信令", message);
-    this.roomLeave();
+    await this.roomLeave();
   }
 
   /**
@@ -3004,11 +3035,11 @@ class Taoyao extends RemoteClient {
   /**
    * 离开房间信令
    */
-  roomLeave() {
+  async roomLeave() {
     this.push(protocol.buildMessage("room::leave", {
       roomId: this.roomId
     }));
-    this.closeRoomMedia();
+    await this.closeRoomMedia();
   }
 
   /**
@@ -3563,41 +3594,41 @@ class Taoyao extends RemoteClient {
   /**
    * 关闭视频房间媒体
    */
-  closeRoomMedia() {
+  async closeRoomMedia() {
     console.debug("关闭视频房间媒体");
     const me = this;
     me.roomId = null;
-    me.close();
+    await me.close();
     if (me.sendTransport) {
-      me.sendTransport.close();
+      await me.sendTransport.close();
       me.sendTransport = null;
     }
     if (me.recvTransport) {
-      me.recvTransport.close();
+      await me.recvTransport.close();
       me.recvTransport = null;
     }
     if(me.dataProducer) {
-      me.dataProducer.close();
+      await me.dataProducer.close();
       me.dataProducer = null;
     }
     if(me.audioProducer) {
-      me.audioProducer.close();
+      await me.audioProducer.close();
       me.audioProducer = null;
     }
     if(me.videoProducer) {
-      me.videoProducer.close();
+      await me.videoProducer.close();
       me.videoProducer = null;
     }
-    me.consumers.forEach((consumer, consumerId) => {
-      consumer.close();
+    me.consumers.forEach(async (consumer, consumerId) => {
+      await consumer.close();
     });
     me.consumers.clear();
-    me.dataConsumers.forEach((dataConsumer, consumerId) => {
-      dataConsumer.close();
+    me.dataConsumers.forEach(async (dataConsumer, consumerId) => {
+      await dataConsumer.close();
     });
     me.dataConsumers.clear();
-    me.remoteClients.forEach((client, clientId) => {
-      client.close();
+    me.remoteClients.forEach(async (client, clientId) => {
+      await client.close();
     });
     me.remoteClients.clear();
   }

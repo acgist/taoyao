@@ -33,6 +33,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
         """,
         """
         {
+            "roomId"       : "房间ID",
             "name"         : "房间名称",
             "clientSize"   : "终端数量",
             "mediaClientId": "媒体服务ID"
@@ -56,13 +57,12 @@ public class RoomCreateProtocol extends ProtocolClientAdapter implements Applica
     @Override
     public void onApplicationEvent(MediaServerRegisterEvent event) {
         this.roomManager.recreate(event.getClient(), this.build());
-        // TODO：通知
+        
     }
 
     @Override
     public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
         if(clientType.isClient()) {
-            // WEB同步创建房间
             final Room room = this.roomManager.create(
                 MapUtils.get(body, Constant.NAME),
                 MapUtils.get(body, Constant.PASSWORD),
@@ -70,8 +70,7 @@ public class RoomCreateProtocol extends ProtocolClientAdapter implements Applica
                 message.cloneWithoutBody()
             );
             message.setBody(room.getRoomStatus());
-            // 通知媒体终端
-            this.clientManager.broadcast(message, ClientType.MEDIA_CLIENT_TYPE);
+            client.push(message);
         } else {
             this.logNoAdapter(clientType);
         }

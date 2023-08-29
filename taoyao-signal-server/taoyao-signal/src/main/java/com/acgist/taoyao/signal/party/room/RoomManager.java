@@ -96,7 +96,15 @@ public class RoomManager {
 //          mediaClient.request(clone);
             // 更新媒体服务
             room.setMediaClient(mediaClient);
-            // TODO：通知重建房间
+            if(room.getPassword() != null) {
+                clone.setBody(Map.of(
+                    Constant.ROOM_ID,  room.getRoomId(),
+                    Constant.PASSWORD, room.getPassword()
+                ));
+            }
+            room.getClients().forEach((client, wrapper) -> {
+                client.push(clone);
+            });
         });
     }
 
