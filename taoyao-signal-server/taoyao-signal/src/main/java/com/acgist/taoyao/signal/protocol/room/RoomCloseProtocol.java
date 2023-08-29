@@ -26,7 +26,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
         "roomId": "房间ID"
     }
     """,
-    flow = "终端->信令服务+)终端"
+    flow = "终端->信令服务->媒体服务->信令服务+)终端"
 )
 public class RoomCloseProtocol extends ProtocolRoomAdapter implements ApplicationListener<RoomCloseEvent> {
 
@@ -40,8 +40,9 @@ public class RoomCloseProtocol extends ProtocolRoomAdapter implements Applicatio
     public void onApplicationEvent(RoomCloseEvent event) {
         final Room room = event.getRoom();
         final Client mediaClient = room.getMediaClient();
-        final Map<String, String> body = Map.of(Constant.ROOM_ID, room.getRoomId());
-        mediaClient.push(this.build(body));
+        mediaClient.push(this.build(Map.of(
+            Constant.ROOM_ID, room.getRoomId()
+        )));
     }
 
     @Override

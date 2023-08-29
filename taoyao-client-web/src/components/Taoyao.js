@@ -2307,31 +2307,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 关闭房间信令
-   */
-  async roomClose() {
-    const me = this;
-    me.push(protocol.buildMessage("room::close", {
-      roomId: me.roomId,
-    }));
-  }
-
-  /**
-   * 关闭房间信令
-   *
-   * @param {*} message 消息
-   */
-  defaultRoomClose(message) {
-    const me         = this;
-    const { roomId } = message.body;
-    if (me.roomId !== roomId) {
-      return;
-    }
-    console.info("关闭房间", roomId);
-    me.closeRoomMedia();
-  }
-
-  /**
    * 媒体回调
    * 
    * @param {*} clientId 终端ID
@@ -2872,6 +2847,31 @@ class Taoyao extends RemoteClient {
     } else {
       me.callbackError("没有媒体权限");
     }
+  }
+
+  /**
+   * 关闭房间信令
+   */
+  async roomClose() {
+    this.push(protocol.buildMessage("room::close", {
+      roomId: this.roomId,
+    }));
+  }
+
+  /**
+   * 关闭房间信令
+   *
+   * @param {*} message 信令消息
+   */
+  defaultRoomClose(message) {
+    const {
+      roomId
+    } = message.body;
+    if (roomId !== this.roomId) {
+      return;
+    }
+    console.info("关闭房间", roomId);
+    this.closeRoomMedia();
   }
 
   /**
