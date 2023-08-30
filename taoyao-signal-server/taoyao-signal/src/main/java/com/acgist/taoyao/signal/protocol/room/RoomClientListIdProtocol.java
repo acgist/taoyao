@@ -34,7 +34,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
         ...
     }
     """,
-    flow = "终端=>信令服务->终端"
+    flow = "终端=>信令服务"
 )
 public class RoomClientListIdProtocol extends ProtocolRoomAdapter {
 
@@ -48,11 +48,13 @@ public class RoomClientListIdProtocol extends ProtocolRoomAdapter {
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         final String queryClientId = MapUtils.get(body, Constant.CLIENT_ID, clientId);
         final ClientWrapper clientWrapper = room.clientWrapper(queryClientId);
-        final RoomClientId roomClientId = new RoomClientId();
+        final RoomClientId  roomClientId  = new RoomClientId();
         roomClientId.setRoomId(room.getRoomId());
         roomClientId.setClientId(queryClientId);
+        // 数据生产者和消费者
         clientWrapper.getDataProducers().keySet().forEach(roomClientId.getDataProducers()::add);
         clientWrapper.getDataConsumers().keySet().forEach(roomClientId.getDataConsumers()::add);
+        // 媒体生产者
         clientWrapper.getProducers().values().stream()
             .filter(v -> v.getKind() == Kind.AUDIO)
             .map(Producer::getProducerId)
@@ -61,6 +63,7 @@ public class RoomClientListIdProtocol extends ProtocolRoomAdapter {
             .filter(v -> v.getKind() == Kind.VIDEO)
             .map(Producer::getProducerId)
             .forEach(roomClientId.getVideoProducers()::add);
+        // 媒体生产者
         clientWrapper.getConsumers().values().stream()
             .filter(v -> v.getKind() == Kind.AUDIO)
             .map(Consumer::getConsumerId)

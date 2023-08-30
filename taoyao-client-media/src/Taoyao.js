@@ -374,8 +374,11 @@ class Taoyao {
   on(message) {
     const me = this;
     // 解构
-    const { header, body } = message;
-    const { id, signal }   = header;
+    const { code, header, body } = message;
+    const { id, signal }         = header;
+    if(code !== "0000") {
+      console.warn("信令错误", message);
+    }
     // 请求回调
     if (me.callbackMapping.has(id)) {
       try {

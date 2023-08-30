@@ -721,8 +721,11 @@ class Taoyao extends RemoteClient {
    */
   async on(message) {
     const me = this;
-    const { header, body } = message;
-    const { id }           = header;
+    const { code, header, body } = message;
+    const { id, signal }         = header;
+    if(code !== "0000") {
+      console.warn("信令错误", message);
+    }
     // 请求回调
     if (me.callbackMapping.has(id)) {
       try {
@@ -2263,19 +2266,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * @param {*} clientId 终端ID
-   * 
-   * @returns 终端所有ID
-   */
-  async roomClientListId(clientId) {
-    const response = await this.request(protocol.buildMessage("room::client::list::id", {
-      roomId  : this.roomId,
-      clientId: clientId
-    }));
-    return response.body;
-  }
-
-  /**
    * 媒体回调
    * 
    * @param {*} clientId 终端ID
@@ -2816,6 +2806,21 @@ class Taoyao extends RemoteClient {
     } else {
       me.callbackError("没有媒体权限");
     }
+  }
+
+  /**
+   * 房间终端ID集合信令
+   * 
+   * @param {*} clientId 终端ID
+   * 
+   * @returns 房间终端ID集合
+   */
+  async roomClientListId(clientId) {
+    const response = await this.request(protocol.buildMessage("room::client::list::id", {
+      roomId  : this.roomId,
+      clientId: clientId
+    }));
+    return response.body;
   }
 
   /**
