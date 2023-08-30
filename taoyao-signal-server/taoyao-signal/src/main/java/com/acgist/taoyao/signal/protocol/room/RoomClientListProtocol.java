@@ -53,7 +53,10 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
         ]
         """
     },
-    flow = "终端=>信令服务->终端"
+    flow = {
+        "终端=>信令服务->终端",
+        "终端=[进入房间]>信令服务->终端",
+    }
 )
 public class RoomClientListProtocol extends ProtocolRoomAdapter implements ApplicationListener<RoomEnterEvent> {
 

@@ -2220,7 +2220,6 @@ class Taoyao extends RemoteClient {
       }
     } else {
       me.dataConsumers.forEach(dataConsumer => {
-        console.info(dataConsumer);
         dataConsumer.send(data);
       })
     }
@@ -2240,19 +2239,6 @@ class Taoyao extends RemoteClient {
     } else {
       console.warn("平台异常", message);
     }
-  }
-
-  /**
-   * @param {*} roomId 房间ID
-   * 
-   * @returns 设备列表
-   */
-  async roomClientList(roomId) {
-    const me       = this;
-    const response = await me.request(protocol.buildMessage("room::client::list", {
-      roomId: roomId || me.roomId
-    }));
-    return response.body;
   }
 
   /**
@@ -2287,23 +2273,6 @@ class Taoyao extends RemoteClient {
       clientId: clientId
     }));
     return response.body;
-  }
-
-  /**
-   * 房间终端列表信令
-   *
-   * @param {*} message 信令消息
-   */
-  defaultRoomClientList(message) {
-    const me          = this;
-    const { clients } = message.body;
-    clients.forEach((v) => {
-      if (v.clientId === me.clientId) {
-        // 忽略自己
-      } else {
-        me.remoteClients.set(v.clientId, new RemoteClient(v));
-      }
-    });
   }
 
   /**
@@ -2850,6 +2819,38 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 房间终端列表信令
+   * 
+   * @param {*} roomId 房间ID
+   * 
+   * @returns 设备列表
+   */
+  async roomClientList(roomId) {
+    const response = await this.request(protocol.buildMessage("room::client::list", {
+      roomId: roomId || this.roomId
+    }));
+    return response.body;
+  }
+
+  /**
+   * 房间终端列表信令
+   *
+   * @param {*} message 信令消息
+   */
+  defaultRoomClientList(message) {
+    const {
+      clients
+    } = message.body;
+    clients.forEach(v => {
+      if (v.clientId === this.clientId) {
+        // 忽略自己
+      } else {
+        this.remoteClients.set(v.clientId, new RemoteClient(v));
+      }
+    });
+  }
+
+  /**
    * 关闭房间信令
    */
   async roomClose() {
@@ -2870,7 +2871,7 @@ class Taoyao extends RemoteClient {
     if (roomId !== this.roomId) {
       return;
     }
-    console.info("关闭房间", roomId);
+    console.debug("关闭房间", roomId);
     this.closeRoomMedia();
   }
 
