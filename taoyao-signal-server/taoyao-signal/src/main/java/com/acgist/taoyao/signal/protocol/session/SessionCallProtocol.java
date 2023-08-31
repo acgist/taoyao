@@ -48,6 +48,11 @@ public class SessionCallProtocol extends ProtocolSessionAdapter {
     }
     
     @Override
+    public boolean authenticate(Client client, Message message) {
+        return true;
+    }
+    
+    @Override
     public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
         final String targetId = MapUtils.get(body, Constant.CLIENT_ID);
         final Client target   = this.clientManager.getClients(targetId);

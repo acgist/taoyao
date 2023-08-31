@@ -33,11 +33,12 @@ public interface Protocol {
     /**
      * 鉴权
      * 
+     * @param client  终端
      * @param message 信令消息
      * 
      * @return 是否成功
      */
-    default boolean authenticate(Message message) {
+    default boolean authenticate(Client client, Message message) {
         return true;
     }
     

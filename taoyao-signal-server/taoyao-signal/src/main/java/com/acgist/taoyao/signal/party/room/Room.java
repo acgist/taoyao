@@ -102,7 +102,7 @@ public class Room extends OperatorAdapter {
     }
     
     /**
-     * 已经进入房间才能使用房间信令
+     * 验证权限：只有房间终端才能使用信令
      * 
      * @param client 终端
      * 

@@ -54,11 +54,11 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
     }
 
     @Override
-    public boolean authenticate(Message message) {
+    public boolean authenticate(Client client, Message message) {
         final Map<String, Object> body = message.body();
         final String roomId   = MapUtils.get(body, Constant.ROOM_ID);
         final String password = MapUtils.get(body, Constant.PASSWORD);
-        final Room room = this.roomManager.getRoom(roomId);
+        final Room   room     = this.roomManager.getRoom(roomId);
         if(room == null) {
             throw MessageCodeException.of("无效房间：" + roomId);
         }
@@ -67,11 +67,6 @@ public class RoomEnterProtocol extends ProtocolRoomAdapter {
             return true;
         }
         throw MessageCodeException.of(MessageCode.CODE_3401, "密码错误");
-    }
-    
-    @Override
-    public boolean authenticate(Room room, Client client) {
-        return true;
     }
     
     @Override

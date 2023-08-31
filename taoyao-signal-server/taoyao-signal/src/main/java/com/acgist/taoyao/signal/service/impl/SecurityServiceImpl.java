@@ -33,7 +33,7 @@ public class SecurityServiceImpl implements SecurityService {
     
     @Override
     public boolean authenticate(Client client, Message message, Protocol protocol) {
-        return client.authorized() && protocol.authenticate(message);
+        return client.authorized() && protocol.authenticate(client, message);
     }
 
 }

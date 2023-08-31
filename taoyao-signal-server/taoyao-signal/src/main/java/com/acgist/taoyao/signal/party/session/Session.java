@@ -38,6 +38,19 @@ public class Session implements Closeable {
     }
     
     /**
+     * 验证权限：只有会话终端才能使用信令
+     * 
+     * @param client 终端
+     * 
+     * @return 是否通过
+     */
+    public boolean authenticate(Client client) {
+        return
+            this.source == client ||
+            this.target == client;
+    }
+    
+    /**
      * 推送消息
      * 
      * @param message 消息

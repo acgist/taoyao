@@ -2245,27 +2245,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 房间广播信令
-   * 
-   * @param {*} message 信令消息
-   */
-  defaultRoomBroadcast(message) {
-    console.debug("房间广播", message);
-  }
-
-  /**
-   * 房间广播信令
-   * 
-   * @param {*} message 信令消息
-   */
-  roomBroadcast(message) {
-    this.push(protocol.buildMessage("room::broadcast", {
-      roomId : this.roomId,
-      ...message
-    }));
-  }
-
-  /**
    * 媒体回调
    * 
    * @param {*} clientId 终端ID
@@ -2806,6 +2785,27 @@ class Taoyao extends RemoteClient {
     } else {
       me.callbackError("没有媒体权限");
     }
+  }
+
+  /**
+   * 房间广播信令
+   * 
+   * @param {*} message 信令消息
+   */
+  roomBroadcast(message) {
+    this.push(protocol.buildMessage("room::broadcast", {
+      roomId : this.roomId,
+      ...message
+    }));
+  }
+
+  /**
+   * 房间广播信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultRoomBroadcast(message) {
+    console.debug("房间广播", message);
   }
 
   /**

@@ -31,7 +31,14 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
         "clientId": "终端ID（可选）"
     }
     {
-        ...
+        "roomId"        : "房间ID",
+        "clientId"      : "终端ID",
+        "dataProducers" : "数据生产者ID集合",
+        "dataConsumers" : "数据消费者ID集合",
+        "audioProducers": "音频生产者ID集合",
+        "videoProducers": "视频生产者ID集合",
+        "audioConsumers": "音频消费者ID集合",
+        "videoConsumers": "视频消费者ID集合"
     }
     """,
     flow = "终端=>信令服务"

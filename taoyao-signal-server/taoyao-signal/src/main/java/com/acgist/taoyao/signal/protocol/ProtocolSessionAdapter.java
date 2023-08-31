@@ -22,9 +22,23 @@ public abstract class ProtocolSessionAdapter extends ProtocolClientAdapter {
     }
     
     @Override
+    public boolean authenticate(Client client, Message message) {
+        Map<String, Object> body = message.body();
+        final String  sessionId = MapUtils.get(body, Constant.SESSION_ID);
+        final Session session   = this.sessionManager.get(sessionId);
+        if(session == null) {
+            throw MessageCodeException.of("无效会话：" + sessionId);
+        }
+        if(!session.authenticate(client)) {
+            throw MessageCodeException.of("终端没有会话权限：" + client.getClientId());
+        }
+        return true;
+    }
+    
+    @Override
     public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
-        final String sessionId = MapUtils.get(body, Constant.SESSION_ID);
-        final Session session = this.sessionManager.get(sessionId);
+        final String  sessionId = MapUtils.get(body, Constant.SESSION_ID);
+        final Session session   = this.sessionManager.get(sessionId);
         if(session == null) {
             throw MessageCodeException.of("无效会话：" + sessionId);
         }
@@ -34,7 +48,7 @@ public abstract class ProtocolSessionAdapter extends ProtocolClientAdapter {
     /**
      * 处理终端会话信令
      * 
-     * @param clientId   终端标识
+     * @param clientId   终端ID
      * @param clientType 终端类型
      * @param session    会话
      * @param client     终端

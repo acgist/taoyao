@@ -40,9 +40,9 @@ public class MediaRouterRtpCapabilitiesProtocol extends ProtocolRoomAdapter {
     public MediaRouterRtpCapabilitiesProtocol() {
         super("路由RTP协商信令", SIGNAL);
     }
-    
+
     @Override
-    protected boolean authenticate(Room room, Client client) {
+    public boolean authenticate(Client client, Message message) {
         return true;
     }
 

@@ -22,32 +22,33 @@ public abstract class ProtocolRoomAdapter extends ProtocolClientAdapter {
     }
     
     @Override
-    public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+    public boolean authenticate(Client client, Message message) {
+        final Map<String, Object> body = message.body();
         final String roomId = MapUtils.get(body, Constant.ROOM_ID);
-        final Room room     = this.roomManager.getRoom(roomId);
+        final Room   room   = this.roomManager.getRoom(roomId);
         if(room == null) {
             throw MessageCodeException.of("无效房间：" + roomId);
         }
-        if(!this.authenticate(room, client)) {
-            throw MessageCodeException.of("终端没有房间权限：" + clientId);
+        if(!room.authenticate(client)) {
+            throw MessageCodeException.of("终端没有房间权限：" + client.getClientId());
+        }
+        return true;
+    }
+    
+    @Override
+    public void execute(String clientId, ClientType clientType, Client client, Message message, Map<String, Object> body) {
+        final String roomId = MapUtils.get(body, Constant.ROOM_ID);
+        final Room   room   = this.roomManager.getRoom(roomId);
+        if(room == null) {
+            throw MessageCodeException.of("无效房间：" + roomId);
         }
         this.execute(clientId, clientType, room, client, room.getMediaClient(), message, body);
     }
-    
-    /**
-     * @param room   房间
-     * @param client 终端
-     * 
-     * @return 是否认证
-     */
-    protected boolean authenticate(Room room, Client client) {
-        return room.authenticate(client);
-    }
-    
+
     /**
      * 处理终端房间信令
      * 
-     * @param clientId    终端标识
+     * @param clientId    终端ID
      * @param clientType  终端类型
      * @param room        房间
      * @param client      终端
