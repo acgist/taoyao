@@ -1,6 +1,7 @@
 package com.acgist.taoyao.boot.model;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -174,6 +175,7 @@ public class Message implements Cloneable, Serializable {
      * @return this
      */
     public Message setCode(MessageCode messageCode, String message) {
+        Objects.requireNonNull(messageCode, "响应编码不能为空");
         this.code    = messageCode.getCode();
         this.message = StringUtils.isEmpty(message) ? messageCode.getMessage() : message;
         return this;

@@ -33,12 +33,11 @@ public abstract class ProtocolControlAdapter extends ProtocolClientAdapter {
     /**
      * 处理终端控制信令
      * 
-     * @param clientId     终端标识
+     * @param clientId     终端ID
      * @param clientType   终端类型
-     * @param room         房间
      * @param client       终端
-     * @param targetClient 目标
-     * @param message      消息
+     * @param targetClient 目标终端
+     * @param message      信令消息
      * @param body         消息主体
      */
     public void execute(String clientId, ClientType clientType, Client client, Client targetClient, Message message, Map<String, Object> body) {
