@@ -58,10 +58,10 @@ public class ProtocolManager {
         this.applicationContext.getBeansOfType(Protocol.class).entrySet().stream()
         .sorted((a, z) -> a.getValue().signal().compareTo(z.getValue().signal()))
         .forEach(e -> {
-            final String key     = e.getKey();
-            final Protocol value = e.getValue();
-            final String name    = value.name();
-            final String signal  = value.signal();
+            final String   key    = e.getKey();
+            final Protocol value  = e.getValue();
+            final String   name   = value.name();
+            final String   signal = value.signal();
             if(this.protocolMapping.containsKey(signal)) {
                 throw MessageCodeException.of("存在重复信令协议：" + signal);
             }
@@ -91,7 +91,7 @@ public class ProtocolManager {
     public void execute(String content, AutoCloseable instance) {
         final Client client = this.clientManager.getClients(instance);
         if(client == null) {
-            log.warn("信令终端无效：{}-{}", instance, content);
+            log.warn("信令终端无效：{} - {}", instance, content);
             return;
         }
         // 验证请求
@@ -107,8 +107,8 @@ public class ProtocolManager {
             client.push(this.platformErrorProtocol.build(MessageCode.CODE_1002, "信令消息格式错误（没有头部）"));
             return;
         }
-        final String v = header.getV();
-        final Long id = header.getId();
+        final String v  = header.getV();
+        final Long   id = header.getId();
         final String signal = header.getSignal();
         // 设置缓存ID
         this.platformErrorProtocol.set(id);

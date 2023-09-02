@@ -14,6 +14,7 @@ import com.acgist.taoyao.signal.event.ApplicationEventAdapter;
  * client::   终端信令
  * system::   系统信令
  * control::  控制信令
+ * session::  会话信令
  * platform:: 平台信令
  * 
  * @author acgist
