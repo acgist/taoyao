@@ -861,20 +861,14 @@ class Taoyao extends RemoteClient {
       case "media::video::orientation::change":
         me.defaultMediaVideoOrientationChange(message);
         break;
-      case "session::call":
-        me.defaultSessionCall(message);
+      case "platform::error":
+        me.platformError(message);
         break;
-      case "session::close":
-        me.defaultSessionClose(message);
+      case "platform::reboot":
+        me.defaultPlatformReboot(message);
         break;
-      case "session::exchange":
-        me.defaultSessionExchange(message);
-        break;
-      case "session::pause":
-        me.defaultSessionPause(message);
-        break;
-      case "session::resume":
-        me.defaultSessionResume(message);
+      case "platform::shutdown":
+        me.defaultPlatformShutdown(message);
         break;
       case "room::broadcast":
         me.defaultRoomBroadcast(message);
@@ -900,14 +894,20 @@ class Taoyao extends RemoteClient {
       case "room::leave":
         me.defaultRoomLeave(message);
         break;
-      case "platform::error":
-        me.callbackError(message);
+      case "session::call":
+        me.defaultSessionCall(message);
         break;
-      case "platform::reboot":
-        me.defaultPlatformReboot(message);
+      case "session::close":
+        me.defaultSessionClose(message);
         break;
-        case "platform::shutdown":
-        me.defaultPlatformShutdown(message);
+      case "session::exchange":
+        me.defaultSessionExchange(message);
+        break;
+      case "session::pause":
+        me.defaultSessionPause(message);
+        break;
+      case "session::resume":
+        me.defaultSessionResume(message);
         break;
     }
   }
@@ -1537,11 +1537,11 @@ class Taoyao extends RemoteClient {
     const me = this;
     const consumer = me.consumers.get(consumerId);
     if(!consumer) {
-      me.callbackError("请求关键帧消费者无效");
+      me.platformError("请求关键帧消费者无效");
       return;
     }
     if(consumer.kind !== "video") {
-      me.callbackError("只能请求视频消费者关键帧");
+      me.platformError("只能请求视频消费者关键帧");
       return;
     }
     me.push(protocol.buildMessage("media::consumer::request::key::frame", {
@@ -1612,11 +1612,11 @@ class Taoyao extends RemoteClient {
     const me = this;
     const consumer = me.consumers.get(consumerId);
     if(!consumer) {
-      me.callbackError("修改最佳空间层和时间层消费者无效");
+      me.platformError("修改最佳空间层和时间层消费者无效");
       return;
     }
     if(consumer.kind !== "video") {
-      me.callbackError("只能修改视频消费者最佳空间层和时间层");
+      me.platformError("只能修改视频消费者最佳空间层和时间层");
       return;
     }
     me.push(protocol.buildMessage("media::consumer::set::preferred::layers", {
@@ -1637,7 +1637,7 @@ class Taoyao extends RemoteClient {
     const me = this;
     const consumer = me.consumers.get(consumerId);
     if(!consumer) {
-      me.callbackError("设置消费者优先级消费者无效");
+      me.platformError("设置消费者优先级消费者无效");
       return;
     }
     me.push(protocol.buildMessage("media::consumer::set::priority", {
@@ -1997,37 +1997,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 执行命令信令
-   * 
-   * @param {*} script 命令
-   * 
-   * @returns 响应
-   */
-  async platformScript(script) {
-    return await this.request(protocol.buildMessage("platform::script", {
-      script
-    }));
-  }
-
-  /**
-   * 关闭平台信令
-   * 
-   * @returns 响应
-   */
-  async platformShutdown() {
-    return await this.request(protocol.buildMessage("platform::shutdown", {}));
-  }
-
-  /**
-   * 关闭平台信令
-   * 
-   * @param {*} message 信令消息
-   */
-  defaultPlatformShutdown(message) {
-    console.debug("平台关闭", message);
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -2035,7 +2004,7 @@ class Taoyao extends RemoteClient {
   mediaConsume(producerId) {
     const me = this;
     if(!me.recvTransport) {
-      me.callbackError("没有连接接收通道");
+      me.platformError("没有连接接收通道");
       return;
     }
     me.push(protocol.buildMessage("media::consume", {
@@ -2129,7 +2098,7 @@ class Taoyao extends RemoteClient {
         console.warn("远程终端没有实现代理", remoteClient);
       }
     } catch (error) {
-      me.callbackError("消费媒体异常", error);
+      me.platformError("消费媒体异常", error);
     }
   }
 
@@ -2141,7 +2110,7 @@ class Taoyao extends RemoteClient {
   mediaDataConsume(producerId) {
     const me = this;
     if(!me.recvTransport) {
-      me.callbackError("没有连接接收通道");
+      me.platformError("没有连接接收通道");
       return;
     }
     me.push(protocol.buildMessage("media::data::consume", {
@@ -2234,11 +2203,12 @@ class Taoyao extends RemoteClient {
    * @param {*} message 消息
    */
   defaultPlatformError(message) {
-    const me = this;
-    const { code } = message;
+    const {
+      code
+    } = message;
     if (code === "3401") {
       // 没有授权直接关闭
-      me.closeAll();
+      this.closeAll();
     } else {
       console.warn("平台异常", message);
     }
@@ -2267,15 +2237,17 @@ class Taoyao extends RemoteClient {
    * @param {*} message 错误消息
    * @param {*} error   异常信息
    */
-  callbackError(message, error) {
-    const me = this;
-    if (me.callback) {
-      const callbackMessage = protocol.buildMessage("platform::error", {
-        message
-      });
-      callbackMessage.code    = "9999";
-      callbackMessage.message = message;
-      me.callback(callbackMessage, error);
+  platformError(message, error) {
+    if (this.callback) {
+      let callbackMessage;
+      if(message instanceof Object) {
+        callbackMessage = message;
+      } else {
+        callbackMessage         = protocol.buildMessage("platform::error", {});
+        callbackMessage.code    = "9999";
+        callbackMessage.message = message;
+      }
+      this.callback(callbackMessage, error);
     } else {
       if (error) {
         console.error("发生异常", message, error);
@@ -2773,18 +2745,49 @@ class Taoyao extends RemoteClient {
         }
       });
       if (!audioEnabled && me.audioProduce) {
-        me.callbackError("没有音频媒体设备");
+        me.platformError("没有音频媒体设备");
         // 强制修改
         me.audioProduce = false;
       }
       if (!videoEnabled && me.videoProduce) {
-        me.callbackError("没有视频媒体设备");
+        me.platformError("没有视频媒体设备");
         // 强制修改
         me.videoProduce = false;
       }
     } else {
-      me.callbackError("没有媒体权限");
+      me.platformError("没有媒体权限");
     }
+  }
+
+  /**
+   * 执行命令信令
+   * 
+   * @param {*} script 命令
+   * 
+   * @returns 响应
+   */
+  async platformScript(script) {
+    return await this.request(protocol.buildMessage("platform::script", {
+      script
+    }));
+  }
+
+  /**
+   * 关闭平台信令
+   * 
+   * @returns 响应
+   */
+  async platformShutdown() {
+    return await this.request(protocol.buildMessage("platform::shutdown", {}));
+  }
+
+  /**
+   * 关闭平台信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultPlatformShutdown(message) {
+    console.debug("平台关闭", message);
   }
 
   /**
@@ -2889,7 +2892,7 @@ class Taoyao extends RemoteClient {
    */
   async roomCreate(room) {
     if(this.roomId) {
-      this.callbackError("终端已经进入房间");
+      this.platformError("终端已经进入房间");
       return {
         code   : 9999,
         message: "终端已经进入房间"
@@ -2929,7 +2932,7 @@ class Taoyao extends RemoteClient {
    */
   async roomEnter(roomId, password) {
     if(this.roomId) {
-      this.callbackError("终端已经进入房间");
+      this.platformError("终端已经进入房间");
       return {
         code   : 9999,
         message: "终端已经进入房间",
@@ -2941,7 +2944,7 @@ class Taoyao extends RemoteClient {
     }));
     if(response.code !== SUCCESS_CODE) {
       this.roomId = null;
-      this.callbackError(response.message);
+      this.platformError(response);
       return response;
     }
     const routerRtpCapabilities = response.body.rtpCapabilities;
@@ -2955,7 +2958,7 @@ class Taoyao extends RemoteClient {
     }));
     if(response.code !== SUCCESS_CODE) {
       this.roomId = null;
-      this.callbackError(response.message);
+      this.platformError(response);
       return response;
     }
     return response;
@@ -3030,7 +3033,7 @@ class Taoyao extends RemoteClient {
     } = message.body;
     // H5只能同时进入一个房间
     if(this.roomId) {
-      this.callbackError("终端拒绝房间邀请", roomId);
+      this.platformError("终端拒绝房间邀请");
       return;
     }
     console.debug("房间邀请终端", roomId);
@@ -3101,7 +3104,7 @@ class Taoyao extends RemoteClient {
    */
   async sessionCall(clientId, audio = true, video = true) {
     if (clientId == this.clientId) {
-      this.callbackError("不能监控自己");
+      this.platformError("不能监控自己");
       return;
     }
     await this.checkDevice();
@@ -3114,7 +3117,7 @@ class Taoyao extends RemoteClient {
       message
     } = response;
     if(code !== SUCCESS_CODE) {
-      this.callbackError(message);
+      this.platformError(message);
       return;
     }
     const {
