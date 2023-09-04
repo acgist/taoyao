@@ -16,7 +16,10 @@ import com.acgist.taoyao.signal.protocol.ProtocolClientAdapter;
  */
 @Protocol
 @Description(
-    flow = "终端->信令服务->终端"
+    flow = {
+        "终端=>信令服务",
+        "信令服务->终端"
+    }
 )
 public class PlatformErrorProtocol extends ProtocolClientAdapter {
 

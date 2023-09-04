@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 @Description(
     flow = {
         "信令服务+)终端",
+        "终端=>信令服务",
         "终端->信令服务+)终端"
     }
 )

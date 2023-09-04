@@ -1979,24 +1979,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 重启平台信令
-   * 
-   * @returns 响应
-   */
-  async platformReboot() {
-    return await this.request(protocol.buildMessage("platform::reboot", {}));
-  }
-
-  /**
-   * 重启平台信令
-   * 
-   * @param {*} message 信令消息
-   */
-  defaultPlatformReboot(message) {
-    console.debug("平台重启", message);
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -2198,23 +2180,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 平台异常信令
-   *
-   * @param {*} message 消息
-   */
-  defaultPlatformError(message) {
-    const {
-      code
-    } = message;
-    if (code === "3401") {
-      // 没有授权直接关闭
-      this.closeAll();
-    } else {
-      console.warn("平台异常", message);
-    }
-  }
-
-  /**
    * 媒体回调
    * 
    * @param {*} clientId 终端ID
@@ -2229,32 +2194,6 @@ class Taoyao extends RemoteClient {
     callbackMessage.code    = SUCCESS_CODE;
     callbackMessage.message = SUCCESS_MESSAGE;
     me.callback(callbackMessage);
-  }
-
-  /**
-   * 错误回调
-   * 
-   * @param {*} message 错误消息
-   * @param {*} error   异常信息
-   */
-  platformError(message, error) {
-    if (this.callback) {
-      let callbackMessage;
-      if(message instanceof Object) {
-        callbackMessage = message;
-      } else {
-        callbackMessage         = protocol.buildMessage("platform::error", {});
-        callbackMessage.code    = "9999";
-        callbackMessage.message = message;
-      }
-      this.callback(callbackMessage, error);
-    } else {
-      if (error) {
-        console.error("发生异常", message, error);
-      } else {
-        console.warn("发生错误", message);
-      }
-    }
   }
 
   /**
@@ -2757,6 +2696,67 @@ class Taoyao extends RemoteClient {
     } else {
       me.platformError("没有媒体权限");
     }
+  }
+
+  /**
+   * 错误回调
+   * 
+   * @param {*} message 错误消息
+   * @param {*} error   异常信息
+   */
+  platformError(message, error) {
+    if (this.callback) {
+      let callbackMessage;
+      if(message instanceof Object) {
+        callbackMessage = message;
+      } else {
+        callbackMessage         = protocol.buildMessage("platform::error", {});
+        callbackMessage.code    = "9999";
+        callbackMessage.message = message;
+      }
+      this.callback(callbackMessage, error);
+    } else {
+      if (error) {
+        console.error("发生异常", message, error);
+      } else {
+        console.warn("发生错误", message);
+      }
+    }
+  }
+
+  /**
+   * 平台异常信令
+   *
+   * @param {*} message 消息
+   */
+  defaultPlatformError(message) {
+    const {
+      code
+    } = message;
+    if (code === "3401") {
+      // 没有授权直接关闭
+      this.closeAll();
+    } else {
+      console.warn("平台异常", message);
+    }
+  }
+
+  /**
+   * 重启平台信令
+   * 
+   * @returns 响应
+   */
+  async platformReboot() {
+    return await this.request(protocol.buildMessage("platform::reboot", {}));
+  }
+
+  /**
+   * 重启平台信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultPlatformReboot(message) {
+    console.debug("重启平台", message);
   }
 
   /**
