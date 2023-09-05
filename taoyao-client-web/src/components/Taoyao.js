@@ -1970,15 +1970,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 视频方向变化信令
-   * 
-   * @param {*} message 信令消息
-   */
-  defaultMediaVideoOrientationChange(message) {
-    console.debug("视频方向变化信令", message);
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -2223,163 +2214,6 @@ class Taoyao extends RemoteClient {
     }
   }
 
-  /**
-   * 创建媒体发送通道
-   */
-  async createSendTransport() {
-    const me = this;
-    if (
-      !me.dataProduce  &&
-      !me.audioProduce &&
-      !me.videoProduce
-    ) {
-      console.debug("没有任何数据生产忽略创建媒体发送通道");
-      return;
-    }
-    const response = await me.request(protocol.buildMessage("media::transport::webrtc::create", {
-      roomId          : me.roomId,
-      forceTcp        : me.forceTcp,
-      producing       : true,
-      consuming       : false,
-      sctpCapabilities: me.dataProduce ? me.mediasoupDevice.sctpCapabilities : undefined,
-    }));
-    const {
-      transportId,
-      iceCandidates,
-      iceParameters,
-      dtlsParameters,
-      sctpParameters,
-    } = response.body;
-    me.sendTransport = await me.mediasoupDevice.createSendTransport({
-      id                    : transportId,
-      iceServers            : [],
-      dtlsParameters        : {
-        ...dtlsParameters,
-        role: "auto",
-      },
-      proprietaryConstraints: {
-        optional: [{
-          googDscp               : true,
-          // googIPv6            : true,
-          // DtlsSrtpKeyAgreement: true,
-        }],
-      },
-      iceCandidates,
-      iceParameters,
-      sctpParameters,
-    });
-    me.sendTransport.on("connect", ({
-      dtlsParameters
-    }, callback, errback) => {
-      me.request(protocol.buildMessage("media::transport::webrtc::connect", {
-        roomId     : me.roomId,
-        transportId: me.sendTransport.id,
-        dtlsParameters,
-      }))
-      .then(callback)
-      .catch(errback);
-    });
-    me.sendTransport.on("produce", ({
-      kind,
-      appData,
-      rtpParameters
-    }, callback, errback) => {
-      me.request(protocol.buildMessage("media::produce", {
-        kind,
-        roomId: me.roomId,
-        appData,
-        transportId: me.sendTransport.id,
-        rtpParameters,
-      }))
-      .then((response) => {
-        const { streamId, producerId } = response.body;
-        callback({
-          id: producerId
-        });
-      })
-      .catch(errback);
-    });
-    me.sendTransport.on("producedata", ({
-      label,
-      appData,
-      protocol,
-      sctpStreamParameters
-    }, callback, errback) => {
-      me.request(taoyaoProtocol.buildMessage("media::data::produce", {
-        roomId     : me.roomId,
-        transportId: me.sendTransport.id,
-        label,
-        appData,
-        protocol,
-        sctpStreamParameters,
-      }))
-      .then((response) => {
-        const { treamId, producerId } = response.body;
-        callback({
-          id: producerId
-        });
-      })
-      .catch(errback);
-    });
-  }
-
-  /**
-   * 创建媒体接收通道
-   */
-  async createRecvTransport() {
-    const me = this;
-    if (
-      !me.dataConsume  &&
-      !me.audioConsume &&
-      !me.videoConsume
-    ) {
-      console.debug("没有任何数据消费忽略创建媒体接收通道");
-    }
-    const response = await me.request(protocol.buildMessage("media::transport::webrtc::create", {
-      roomId          : me.roomId,
-      forceTcp        : me.forceTcp,
-      producing       : false,
-      consuming       : true,
-      sctpCapabilities: me.dataProduce ? me.mediasoupDevice.sctpCapabilities : undefined,
-    }));
-    const {
-      transportId,
-      iceCandidates,
-      iceParameters,
-      dtlsParameters,
-      sctpParameters,
-    } = response.body;
-    me.recvTransport = await me.mediasoupDevice.createRecvTransport({
-      id                    : transportId,
-      iceServers            : [],
-      dtlsParameters        : {
-        ...dtlsParameters,
-        role: "auto",
-      },
-      proprietaryConstraints: {
-        optional: [{
-          googDscp               : true,
-          // googIPv6            : true,
-          // DtlsSrtpKeyAgreement: true,
-        }],
-      },
-      iceCandidates,
-      iceParameters,
-      sctpParameters,
-    });
-    me.recvTransport.on("connect", ({
-      dtlsParameters
-    }, callback, errback) => {
-      me.request(protocol.buildMessage("media::transport::webrtc::connect", {
-          roomId: me.roomId,
-          transportId: me.recvTransport.id,
-          dtlsParameters,
-        }))
-      .then(callback)
-      .catch(errback);
-    });
-  }
-  
   /**
    * 生产音频
    * 
@@ -2696,6 +2530,177 @@ class Taoyao extends RemoteClient {
     } else {
       me.platformError("没有媒体权限");
     }
+  }
+
+  /**
+   * 创建媒体发送通道
+   */
+  async createSendTransport() {
+    if (
+      !this.dataProduce  &&
+      !this.audioProduce &&
+      !this.videoProduce
+    ) {
+      console.debug("没有任何数据生产忽略创建媒体发送通道");
+      return;
+    }
+    const response = await this.request(protocol.buildMessage("media::transport::webrtc::create", {
+      roomId          : this.roomId,
+      forceTcp        : this.forceTcp,
+      producing       : true,
+      consuming       : false,
+      sctpCapabilities: this.dataProduce ? this.mediasoupDevice.sctpCapabilities : undefined,
+    }));
+    const {
+      transportId,
+      iceCandidates,
+      iceParameters,
+      dtlsParameters,
+      sctpParameters,
+    } = response.body;
+    this.sendTransport = await this.mediasoupDevice.createSendTransport({
+      iceCandidates,
+      iceParameters,
+      sctpParameters,
+      id            : transportId,
+      iceServers    : [],
+      dtlsParameters: {
+        ...dtlsParameters,
+        role: "auto",
+      },
+      proprietaryConstraints: {
+        optional: [{
+          googDscp               : true,
+          // googIPv6            : true,
+          // DtlsSrtpKeyAgreement: true,
+        }],
+      },
+    });
+    this.sendTransport.on("connect", ({
+      dtlsParameters
+    }, callback, errback) => {
+      this.request(protocol.buildMessage("media::transport::webrtc::connect", {
+        dtlsParameters,
+        roomId     : this.roomId,
+        transportId: this.sendTransport.id,
+      }))
+      .then(callback)
+      .catch(errback);
+    });
+    this.sendTransport.on("produce", ({
+      kind,
+      appData,
+      rtpParameters
+    }, callback, errback) => {
+      this.request(protocol.buildMessage("media::produce", {
+        kind,
+        appData,
+        rtpParameters,
+        roomId     : this.roomId,
+        transportId: this.sendTransport.id,
+      }))
+      .then((response) => {
+        const {
+          streamId,
+          producerId
+        } = response.body;
+        callback({
+          id: producerId
+        });
+      })
+      .catch(errback);
+    });
+    this.sendTransport.on("producedata", ({
+      label,
+      appData,
+      protocol,
+      sctpStreamParameters
+    }, callback, errback) => {
+      this.request(taoyaoProtocol.buildMessage("media::data::produce", {
+        label,
+        appData,
+        protocol,
+        sctpStreamParameters,
+        roomId     : this.roomId,
+        transportId: this.sendTransport.id,
+      }))
+      .then((response) => {
+        const {
+          treamId,
+          producerId
+        } = response.body;
+        callback({
+          id: producerId
+        });
+      })
+      .catch(errback);
+    });
+  }
+
+  /**
+   * 创建媒体接收通道
+   */
+  async createRecvTransport() {
+    if (
+      !this.dataConsume  &&
+      !this.audioConsume &&
+      !this.videoConsume
+    ) {
+      console.debug("没有任何数据消费忽略创建媒体接收通道");
+      return;
+    }
+    const response = await this.request(protocol.buildMessage("media::transport::webrtc::create", {
+      roomId          : this.roomId,
+      forceTcp        : this.forceTcp,
+      producing       : false,
+      consuming       : true,
+      sctpCapabilities: this.dataProduce ? this.mediasoupDevice.sctpCapabilities : undefined,
+    }));
+    const {
+      transportId,
+      iceCandidates,
+      iceParameters,
+      dtlsParameters,
+      sctpParameters,
+    } = response.body;
+    this.recvTransport = await this.mediasoupDevice.createRecvTransport({
+      iceCandidates,
+      iceParameters,
+      sctpParameters,
+      id            : transportId,
+      iceServers    : [],
+      dtlsParameters: {
+        ...dtlsParameters,
+        role: "auto",
+      },
+      proprietaryConstraints: {
+        optional: [{
+          googDscp               : true,
+          // googIPv6            : true,
+          // DtlsSrtpKeyAgreement: true,
+        }],
+      },
+    });
+    this.recvTransport.on("connect", ({
+      dtlsParameters
+    }, callback, errback) => {
+      this.request(protocol.buildMessage("media::transport::webrtc::connect", {
+        dtlsParameters,
+        roomId     : this.roomId,
+        transportId: this.recvTransport.id,
+      }))
+      .then(callback)
+      .catch(errback);
+    });
+  }
+
+  /**
+   * 视频方向变化信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultMediaVideoOrientationChange(message) {
+    console.debug("视频方向变化", message);
   }
 
   /**

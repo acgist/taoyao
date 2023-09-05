@@ -65,11 +65,11 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
         if(clientType.isClient()) {
             body.put(Constant.CLIENT_ID, clientId);
             final Message response = room.requestMedia(message);
-            final Map<String, Object> responseBody = response.body();
+            final Map<String, Object> responseBody  = response.body();
             final Map<String, Transport> transports = room.getTransports();
             final String transportId = MapUtils.get(responseBody, Constant.TRANSPORT_ID);
             // 重写地址
-            this.rewriteIp(client.getIP(), responseBody);
+            this.rewriteIP(client.getIP(), responseBody);
             // 处理逻辑
             final ClientWrapper clientWrapper = room.clientWrapper(client);
             // 消费者
@@ -112,21 +112,21 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
     /**
      * 重写IP地址
      * 
-     * @param clientIp 终端IP
-     * @param body 消息主体
+     * @param clientIP 终端IP
+     * @param body     消息主体
      */
-    private void rewriteIp(String clientIp, Map<String, Object> body) {
+    private void rewriteIP(String clientIP, Map<String, Object> body) {
         final List<Map<Object, Object>> iceCandidates = MapUtils.get(body, Constant.ICE_CANDIDATES);
         if(CollectionUtils.isEmpty(iceCandidates)) {
             return;
         }
         iceCandidates.forEach(map -> {
             // 媒体服务返回IP
-            final String mediaIp = (String) map.get(Constant.IP);
-            if(StringUtils.isNotEmpty(mediaIp)) {
-                final String rewriteIp = NetUtils.rewriteIP(mediaIp, clientIp);
-                log.debug("重写地址：{} + {} -> {}", mediaIp, clientIp, rewriteIp);
-                map.put(Constant.IP, rewriteIp);
+            final String mediaIP = (String) map.get(Constant.IP);
+            if(StringUtils.isNotEmpty(mediaIP)) {
+                final String rewriteIP = NetUtils.rewriteIP(mediaIP, clientIP);
+                log.debug("重写地址：{} + {} -> {}", mediaIP, clientIP, rewriteIP);
+                map.put(Constant.IP, rewriteIP);
             }
         });
     }
