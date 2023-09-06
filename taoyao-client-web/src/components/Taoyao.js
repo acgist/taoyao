@@ -2802,8 +2802,8 @@ class Taoyao extends RemoteClient {
    */
   roomBroadcast(message) {
     this.push(protocol.buildMessage("room::broadcast", {
+      ...message,
       roomId : this.roomId,
-      ...message
     }));
   }
 

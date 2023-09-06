@@ -26,8 +26,12 @@ import lombok.extern.slf4j.Slf4j;
         """
         {
             "roomId"        : "房间ID",
-            "transportId"   : "通道ID"
+            "transportId"   : "通道ID",
             "dtlsParameters": "DTLS参数"
+        }
+        {
+            "roomId"        : "房间标识",
+            "transportId"   : "传输通道标识"
         }
         """
     },
