@@ -1944,19 +1944,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 查询通道状态信令
-   * 
-   * @param {*} transportId 通道ID
-   */
-  async mediaTransportStatus(transportId) {
-    const me = this;
-    return await me.request(protocol.buildMessage('media::transport::status', {
-      roomId: me.roomId,
-      transportId
-    }));
-  }
-
-  /**
    * 查询生产者状态信令
    * 
    * @param {*} producerId 生产者ID
@@ -2530,6 +2517,18 @@ class Taoyao extends RemoteClient {
     } else {
       me.platformError("没有媒体权限");
     }
+  }
+
+  /**
+   * 查询通道状态信令
+   * 
+   * @param {*} transportId 通道ID
+   */
+  async mediaTransportStatus(transportId) {
+    return await this.request(protocol.buildMessage('media::transport::status', {
+      transportId,
+      roomId: this.roomId,
+    }));
   }
 
   /**
