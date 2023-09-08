@@ -465,8 +465,8 @@ class Taoyao {
       case "media::transport::close":
         me.mediaTransportClose(message, body);
         break;
-      case "media::transport::plain":
-        me.mediaTransportPlain(message, body);
+      case "media::transport::plain::create":
+        me.mediaTransportPlainCreate(message, body);
         break;
       case "media::transport::status":
         me.mediaTransportStatus(message, body);
@@ -1628,7 +1628,7 @@ class Taoyao {
    * @param {*} message 消息
    * @param {*} body    消息主体
    */
-  async mediaTransportPlain(message, body) {
+  async mediaTransportPlainCreate(message, body) {
     const me = this;
     const {
       roomId,

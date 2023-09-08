@@ -33,27 +33,34 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Protocol
 @Description(
-    memo = "用来接入RTP终端",
+    memo = "用来接入RTP协议终端",
     body = """
     {
-        "roomId"        : "房间ID",
-        "rtcpMux"       : RTP和RTCP端口复用（true|false）,
-        "comedia"       : 自动识别终端端口（true|false）,
-        "enableSctp"    : 是否开启SCTP（true|false）,
-        "numSctpStreams": SCTP数量,
-        "enableSrtp"    : 是否开启SRTP（true|false）,
+        "roomId"         : "房间ID",
+        "rtcpMux"        : RTP/RTCP端口复用（true|false）,
+        "comedia"        : 自动识别终端端口（true|false）,
+        "enableSctp"     : 是否开启SCTP（true|false）,
+        "numSctpStreams" : SCTP数量,
+        "enableSrtp"     : 是否开启SRTP（true|false）,
         "srtpCryptoSuite": {
             "cryptoSuite": "算法（AEAD_AES_256_GCM|AEAD_AES_128_GCM|AES_CM_128_HMAC_SHA1_80|AES_CM_128_HMAC_SHA1_32）",
             "keyBase64"  : "密钥"
         }
     }
+    {
+        roomId     : "房间ID",
+        transportId: "通道ID",
+        ip         : "RTP监听IP",
+        port       : "RTP媒体端口",
+        rtcpPort   : "RTP媒体RTCP端口"
+    }
     """
 )
-public class MediaTransportPlainProtocol extends ProtocolRoomAdapter {
+public class MediaTransportPlainCreateProtocol extends ProtocolRoomAdapter {
 
-    public static final String SIGNAL = "media::transport::plain";
+    public static final String SIGNAL = "media::transport::plain::create";
     
-    public MediaTransportPlainProtocol() {
+    public MediaTransportPlainCreateProtocol() {
         super("创建RTP输入通道信令", SIGNAL);
     }
     
@@ -77,11 +84,20 @@ public class MediaTransportPlainProtocol extends ProtocolRoomAdapter {
             log.warn("发送通道已经存在：{}", transportId);
         }
         clientWrapper.setSendTransport(sendTransport);
-        // TODO：双向队列
-        // 拷贝属性
-        sendTransport.copy(responseBody);
+        // TODO：需要测试
+        // 消费者
+        Transport recvTransport = clientWrapper.getRecvTransport();
+        if(recvTransport == null) {
+            recvTransport = new Transport(transportId, Direction.RECV, room, client);
+            // transports.put(transportId, recvTransport);
+            // 消费媒体
+            // this.publishEvent(new MediaConsumeEvent(room, clientWrapper));
+        } else {
+            log.warn("接收通道已经存在：{}", transportId);
+        }
+        clientWrapper.setRecvTransport(recvTransport);
         client.push(response);
-        log.info("{}创建RTP信令通道：{}", clientId, transportId);
+        log.info("{}创建RTP输入通道：{}", clientId, transportId);
     }
     
     /**

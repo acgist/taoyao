@@ -34,15 +34,15 @@ import lombok.extern.slf4j.Slf4j;
     body = {
         """
         {
-            "roomId"          : "房间标识",
+            "roomId"          : "房间ID",
             "forceTcp"        : "强制使用TCP",
             "producing"       : "是否生产",
             "consuming"       : "是否消费",
             "sctpCapabilities": "sctpCapabilities"
         }
         {
-            "roomId"        : "房间标识",
-            "transportId"   : "传输通道标识",
+            "roomId"        : "房间ID",
+            "transportId"   : "传输通道ID",
             "iceCandidates" : "iceCandidates",
             "iceParameters" : "iceParameters",
             "dtlsParameters": "dtlsParameters",
@@ -72,6 +72,20 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
             this.rewriteIP(client.getIP(), responseBody);
             // 处理逻辑
             final ClientWrapper clientWrapper = room.clientWrapper(client);
+            // 生产者
+            final Boolean producing = MapUtils.getBoolean(body, Constant.PRODUCING);
+            if(Boolean.TRUE.equals(producing)) {
+                Transport sendTransport = clientWrapper.getSendTransport();
+                if(sendTransport == null) {
+                    sendTransport = new Transport(transportId, Direction.SEND, room, client);
+                    transports.put(transportId, sendTransport);
+                } else {
+                    log.warn("发送通道已经存在：{}", transportId);
+                }
+                clientWrapper.setSendTransport(sendTransport);
+                // 拷贝属性
+                sendTransport.copy(responseBody);
+            }
             // 消费者
             final Boolean consuming = MapUtils.getBoolean(body, Constant.CONSUMING);
             if(Boolean.TRUE.equals(consuming)) {
@@ -88,22 +102,8 @@ public class MediaTransportWebRtcCreateProtocol extends ProtocolRoomAdapter {
                 // 消费媒体：不能在连接时调用
                 this.publishEvent(new MediaConsumeEvent(room, clientWrapper));
             }
-            // 生产者
-            final Boolean producing = MapUtils.getBoolean(body, Constant.PRODUCING);
-            if(Boolean.TRUE.equals(producing)) {
-                Transport sendTransport = clientWrapper.getSendTransport();
-                if(sendTransport == null) {
-                    sendTransport = new Transport(transportId, Direction.SEND, room, client);
-                    transports.put(transportId, sendTransport);
-                } else {
-                    log.warn("发送通道已经存在：{}", transportId);
-                }
-                clientWrapper.setSendTransport(sendTransport);
-                // 拷贝属性
-                sendTransport.copy(responseBody);
-            }
             client.push(response);
-            log.info("{}创建WebRTC通道信令：{}", clientId, transportId);
+            log.info("{}创建WebRTC通道：{}", clientId, transportId);
         } else {
             this.logNoAdapter(clientType);
         }
