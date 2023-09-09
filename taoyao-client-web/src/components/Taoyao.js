@@ -1906,44 +1906,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 关闭通道信令
-   * 
-   * @param {*} transportId 通道ID
-   */
-  mediaTransportClose(transportId) {
-    const me = this;
-    console.debug("关闭通道", transportId);
-    me.push(protocol.buildMessage("media::transport::close", {
-      roomId    : me.roomId,
-      transportId: transportId,
-    }));
-  }
-
-  /**
-   * 关闭通道信令
-   * 
-   * @param {*} message 
-   */
-  defaultMediaTransportClose(message) {
-    const me = this;
-    const {
-      roomId,
-      transportId
-    } = message.body;
-    if(me.recvTransport && me.recvTransport.id === transportId) {
-      console.debug("关闭接收通道", transportId);
-      me.recvTransport.close();
-      me.recvTransport = null;
-    } else if(me.sendTransport && me.sendTransport.id === transportId) {
-      console.debug("关闭发送通道", transportId);
-      me.sendTransport.close();
-      me.sendTransport = null;
-    } else {
-      console.debug("关闭通道无效", transportId);
-    }
-  }
-
-  /**
    * 查询生产者状态信令
    * 
    * @param {*} producerId 生产者ID
@@ -2516,6 +2478,42 @@ class Taoyao extends RemoteClient {
       }
     } else {
       me.platformError("没有媒体权限");
+    }
+  }
+
+  /**
+   * 关闭通道信令
+   * 
+   * @param {*} transportId 通道ID
+   */
+  mediaTransportClose(transportId) {
+    console.debug("关闭通道", transportId);
+    this.push(protocol.buildMessage("media::transport::close", {
+      transportId,
+      roomId: this.roomId,
+    }));
+  }
+
+  /**
+   * 关闭通道信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultMediaTransportClose(message) {
+    const {
+      roomId,
+      transportId
+    } = message.body;
+    if(this.recvTransport && this.recvTransport.id === transportId) {
+      console.debug("关闭接收通道", transportId);
+      this.recvTransport.close();
+      this.recvTransport = null;
+    } else if(this.sendTransport && this.sendTransport.id === transportId) {
+      console.debug("关闭发送通道", transportId);
+      this.sendTransport.close();
+      this.sendTransport = null;
+    } else {
+      console.debug("关闭通道无效", roomId, transportId);
     }
   }
 
