@@ -22,6 +22,13 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
         "roomId"    : "房间ID",
         "producerId": "生产者ID"
     }
+    {
+        "roomId"    : "房间ID",
+        "producerId": "生产者ID",
+        "status"    : [
+            ...状态信息
+        ]
+    }
     """,
     flow = "终端=>信令服务->媒体服务"
 )

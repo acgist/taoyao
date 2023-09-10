@@ -1906,19 +1906,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 查询生产者状态信令
-   * 
-   * @param {*} producerId 生产者ID
-   */
-  async mediaProducerStatus(producerId) {
-    const me = this;
-    return await me.request(protocol.buildMessage('media::producer::status', {
-      roomId: me.roomId,
-      producerId
-    }));
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -2479,6 +2466,18 @@ class Taoyao extends RemoteClient {
     } else {
       me.platformError("没有媒体权限");
     }
+  }
+
+  /**
+   * 查询生产者状态信令
+   * 
+   * @param {*} producerId 生产者ID
+   */
+  async mediaProducerStatus(producerId) {
+    return await this.request(protocol.buildMessage("media::producer::status", {
+      producerId,
+      roomId: this.roomId,
+    }));
   }
 
   /**
