@@ -866,24 +866,20 @@ class Taoyao {
     producer.observer.on("close", () => {
       if(room.producers.delete(producer.id)) {
         console.info("生产者关闭", producer.id, streamId);
-        me.push(
-          protocol.buildMessage("media::producer::close", {
-            roomId    : roomId,
-            producerId: producer.id
-          })
-        );
+        me.push(protocol.buildMessage("media::producer::close", {
+          roomId,
+          producerId: producer.id
+        }));
       } else {
         console.info("生产者关闭（无效）", producer.id, streamId);
       }
     });
     producer.observer.on("pause", () => {
       console.debug("生产者暂停", producer.id, streamId);
-      me.push(
-        protocol.buildMessage("media::producer::pause", {
-          roomId    : roomId,
-          producerId: producer.id
-        })
-      );
+      me.push(protocol.buildMessage("media::producer::pause", {
+        roomId,
+        producerId: producer.id
+      }));
     });
     producer.observer.on("resume", () => {
       console.debug("生产者恢复", producer.id, streamId);
@@ -953,44 +949,6 @@ class Taoyao {
       await producer.close();
     } else {
       console.debug("关闭生产者（无效）", producerId);
-    }
-  }
-
-  /**
-   * 暂停生产者信令
-   * 
-   * @param {*} message 消息
-   * @param {*} body    消息主体
-   */
-   async mediaProducerPause(message, body) {
-    const me = this;
-    const { roomId, producerId } = body;
-    const room     = me.rooms.get(roomId);
-    const producer = room?.producers.get(producerId);
-    if(producer) {
-      console.debug("暂停生产者", producerId);
-      await producer.pause();
-    } else {
-      console.debug("暂停生产者无效（无效）", producerId);
-    }
-  }
-
-  /**
-   * 恢复生产者信令
-   * 
-   * @param {*} message 消息
-   * @param {*} body    消息主体
-   */
-   async mediaProducerResume(message, body) {
-    const me = this;
-    const { roomId, producerId } = body;
-    const room     = me.rooms.get(roomId);
-    const producer = room?.producers.get(producerId);
-    if(producer) {
-      console.debug("恢复生产者", producerId);
-      await producer.resume();
-    } else {
-      console.debug("恢复生产者（无效）", producerId);
     }
   }
 
@@ -1543,6 +1501,48 @@ class Taoyao {
     } else {
       console.debug("查询数据生产者状态（无效）", producerId);
     }
+  }
+
+  /**
+   * 暂停生产者信令
+   * 
+   * @param {*} message 信令消息
+   * @param {*} body    消息主体
+   */
+  async mediaProducerPause(message, body) {
+    const {
+      roomId,
+      producerId
+    } = body;
+    const room     = this.rooms.get(roomId);
+    const producer = room?.producers.get(producerId);
+    if(!producer) {
+      console.debug("暂停生产者（无效生产者）", roomId, producerId);
+      return;
+    }
+    console.debug("暂停生产者", producerId);
+    await producer.pause();
+  }
+
+ /**
+  * 恢复生产者信令
+  * 
+  * @param {*} message 信令消息
+  * @param {*} body    消息主体
+  */
+  async mediaProducerResume(message, body) {
+    const {
+      roomId,
+      producerId
+    } = body;
+    const room     = this.rooms.get(roomId);
+    const producer = room?.producers.get(producerId);
+    if(!producer) {
+      console.debug("恢复生产者（无效生产者）", roomId, producerId);
+      return;
+    }
+    console.debug("恢复生产者", producerId);
+    await producer.resume();
   }
 
   /**

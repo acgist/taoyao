@@ -214,7 +214,7 @@ export default {
       switch (signal) {
         case "media::track"   :
           const { clientId, track } = body;
-          console.info("新增媒体轨道", clientId, track);
+          console.debug("新增媒体轨道", clientId, track);
           break;
         case "client::config" :
           this.roomVisible = true;

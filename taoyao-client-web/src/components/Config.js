@@ -2,13 +2,18 @@
  * 配置
  */
 const config = {
+  // 媒体配置
+  media: {
+    // 是否预览共享文件
+    filePreview: true
+  },
   // 信令配置
   signal: {
     // 信令版本
     version   : "1.0.0",
     // 终端类型
     clientType: "WEB",
-  }
+  },
 }
 /**
  * 音频默认配置

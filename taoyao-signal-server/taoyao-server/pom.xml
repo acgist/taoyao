@@ -47,6 +47,13 @@
                     </archive>
                 </configuration>
             </plugin>
+            <!--
+            同时部署多个分支使用：修改脚本`${project.artifactId}-${project.version}`->`${project.artifactId}-${git.branch}-${project.version}`
+            <plugin>
+                <groupId>pl.project13.maven</groupId>
+                <artifactId>git-commit-id-plugin</artifactId>
+            </plugin>
+            -->
         </plugins>
     </build>
 

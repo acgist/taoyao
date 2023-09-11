@@ -957,8 +957,11 @@ class Taoyao extends RemoteClient {
     this.fileVideo.muted    = true;
     this.fileVideo.controls = true;
     this.fileVideo.src      = URL.createObjectURL(input.files[0]);
-    this.fileVideo.style    = "position:fixed;top:1rem;left:1rem;width:128px;border:2px solid #FFF;";
-    // this.fileVideo.style.display = "none";
+    if(config.media.filePreview) {
+      this.fileVideo.style         = "position:fixed;top:1rem;left:1rem;width:128px;border:2px solid #FFF;";
+    } else {
+      this.fileVideo.style.display = "none";
+    }
     document.body.appendChild(this.fileVideo);
     // 开始播放不然不能采集
     await this.fileVideo.play();
@@ -1861,48 +1864,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 暂停生产者信令
-   * 
-   * @param {*} producerId 生产者ID
-   */
-  mediaProducerPause(producerId) {
-    const me = this;
-    const producer = me.getProducer(producerId);
-    if(producer) {
-      if(producer.paused) {
-        return;
-      }
-      console.debug("暂停生产者", producerId);
-      me.push(protocol.buildMessage("media::producer::pause", {
-        roomId    : me.roomId,
-        producerId: producerId,
-      }));
-    } else {
-      console.debug("暂停生产者无效", producerId);
-    }
-  }
-
-  /**
-   * 暂停生产者信令
-   * 
-   * @param {*} message 消息
-   */
-  async defaultMediaProducerPause(message) {
-    const me = this;
-    const {
-      roomId,
-      producerId
-    } = message.body;
-    const producer = me.getProducer(producerId);
-    if (producer) {
-      console.debug("暂停生产者", producerId);
-      producer.pause();
-    } else {
-      console.debug("暂停生产者无效", producerId);
-    }
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -2467,6 +2428,50 @@ class Taoyao extends RemoteClient {
     } else {
       me.platformError("没有媒体权限");
     }
+  }
+
+  /**
+   * 暂停生产者信令
+   * 
+   * @param {*} producerId 生产者ID
+   */
+  mediaProducerPause(producerId) {
+    const producer = this.getProducer(producerId);
+    if(!producer) {
+      console.debug("暂停生产者（生产者无效）", producerId);
+      return;
+    }
+    if(producer.paused) {
+      console.debug("暂停生产者（生产者已经暂停）", producerId);
+      return;
+    }
+    console.debug("暂停生产者", producerId);
+    this.push(protocol.buildMessage("media::producer::pause", {
+      producerId,
+      roomId: this.roomId,
+    }));
+  }
+
+  /**
+   * 暂停生产者信令
+   * 
+   * @param {*} message 消息
+   */
+  async defaultMediaProducerPause(message) {
+    const {
+      producerId
+    } = message.body;
+    const producer = this.getProducer(producerId);
+    if (!producer) {
+      console.debug("暂停生产者（生产者无效）", producerId);
+      return;
+    }
+    if(producer.paused) {
+      console.debug("暂停生产者（生产者已经暂停）", producerId);
+      return;
+    }
+    console.debug("暂停生产者", producerId);
+    producer.pause();
   }
 
   /**
@@ -3696,6 +3701,7 @@ class Taoyao extends RemoteClient {
       await client.close();
     });
     me.remoteClients.clear();
+    me.closeFileVideo();
   }
 
   /**
@@ -3709,6 +3715,7 @@ class Taoyao extends RemoteClient {
       console.debug("关闭会话", sessionId);
     });
     me.sessionClients.clear();
+    me.closeFileVideo();
   }
 
   /**
