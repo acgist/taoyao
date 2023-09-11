@@ -887,23 +887,19 @@ class Taoyao {
     });
     producer.observer.on("resume", () => {
       console.debug("生产者恢复", producer.id, streamId);
-      me.push(
-        protocol.buildMessage("media::producer::resume", {
-          roomId    : roomId,
-          producerId: producer.id
-        })
-      );
+      me.push(protocol.buildMessage("media::producer::resume", {
+        roomId,
+        producerId: producer.id
+      }));
     });
     // producer.observer.on("score", fn(score));
     producer.on("score", (score) => {
       console.debug("生产者评分", producer.id, streamId, score);
-      me.push(
-        protocol.buildMessage("media::producer::score", {
-          roomId    : roomId,
-          producerId: producer.id,
-          score     : score,
-        })
-      );
+      me.push(protocol.buildMessage("media::producer::score", {
+        score,
+        roomId,
+        producerId: producer.id,
+      }));
     });
     // producer.observer.on("videoorientationchange", fn(videoOrientation));
     producer.on("videoorientationchange", (videoOrientation) => {
@@ -926,13 +922,6 @@ class Taoyao {
       producerId: producer.id
     };
     me.push(message);
-    // me.push(
-    //   protocol.buildMessage("media::producer::score", {
-    //     roomId    : roomId,
-    //     producerId: producer.id,
-    //     score     : producer.score,
-    //   })
-    // );
     if (producer.kind === "audio") {
       // TODO：关闭生产者时移除监听
       room.audioLevelObserver
@@ -1161,13 +1150,6 @@ class Taoyao {
           );
           await consumer.resume();
           consumer.localPaused = false;
-          // me.push(
-          //   protocol.buildMessage("media::consumer::score", {
-          //     roomId    : roomId,
-          //     consumerId: consumer.id,
-          //     score     : consumer.score,
-          //   })
-          // );
         })()
       );
     }

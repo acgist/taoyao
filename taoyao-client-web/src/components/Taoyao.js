@@ -550,6 +550,8 @@ class Taoyao extends RemoteClient {
   mediasoupDevice;
   // 文件共享
   fileVideo;
+  // 文件共享地址
+  fileVideoObjectURL;
   // 视频来源：file|camera|screen
   videoSource;
   // 强制使用TCP
@@ -608,7 +610,6 @@ class Taoyao extends RemoteClient {
     dataProduce  = true,
     audioProduce = true,
     videoProduce = true,
-    fileVideo    = null,
     videoSource  = "camera",
     forceTcp  = false,
     forceVP8  = false,
@@ -631,7 +632,6 @@ class Taoyao extends RemoteClient {
     this.dataProduce  = dataProduce;
     this.audioProduce = audioProduce;
     this.videoProduce = videoProduce;
-    this.fileVideo    = fileVideo;
     this.videoSource  = videoSource;
     this.forceTcp  = forceTcp;
     this.forceVP8  = forceVP8;
@@ -931,12 +931,59 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 选择视频文件
+   */
+  async getFileVideo() {
+    const input  = document.createElement("input");
+    input.type   = "file";
+    const select = new Promise((resolve, reject) => {
+      input.onchange = (e) => {
+        resolve(input.value);
+      }
+      input.oncancel = (e) => {
+        resolve(null);
+      };
+    });
+    input.click();
+    const file = await select;
+    input.remove();
+    if(!file) {
+      console.debug("没有选择共享文件");
+      return;
+    }
+    console.debug("选择文件", file);
+    this.fileVideo = document.createElement("video");
+    this.fileVideo.loop     = true;
+    this.fileVideo.muted    = true;
+    this.fileVideo.controls = true;
+    this.fileVideo.src      = URL.createObjectURL(input.files[0]);
+    this.fileVideo.style    = "position:fixed;top:1rem;left:1rem;width:128px;border:2px solid #FFF;";
+    // this.fileVideo.style.display = "none";
+    document.body.appendChild(this.fileVideo);
+    // 开始播放不然不能采集
+    await this.fileVideo.play();
+  }
+
+  /**
+   * 释放视频文件
+   */
+  async closeFileVideo() {
+    if(this.fileVideo) {
+      this.fileVideo.remove();
+    }
+    if(this.fileVideoObjectURL) {
+      URL.revokeObjectURL(this.fileVideoObjectURL);
+    }
+  }
+
+  /**
    * @returns 媒体
    */
   async getStream() {
     const me = this;
     let stream;
     if (me.videoSource === "file") {
+      await this.getFileVideo();
       stream = me.fileVideo.captureStream();
     } else if (me.videoSource === "camera") {
       console.debug("媒体配置", me.audioConfig, me.videoConfig);
@@ -1016,6 +1063,7 @@ class Taoyao extends RemoteClient {
     let stream;
     const me = this;
     if (me.videoSource === "file") {
+      await this.getFileVideo();
       stream = me.fileVideo.captureStream();
     } else if (me.videoSource === "camera") {
       stream = await navigator.mediaDevices.getUserMedia({
@@ -1855,57 +1903,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 恢复生产者信令
-   * 
-   * @param {*} producerId 生产者ID
-   */
-   mediaProducerResume(producerId) {
-    const me = this;
-    const producer = me.getProducer(producerId);
-    if(producer) {
-      if(!producer.paused) {
-        return;
-      }
-      console.debug("恢复生产者", producerId);
-      me.push(protocol.buildMessage("media::producer::resume", {
-        roomId    : me.roomId,
-        producerId: producerId,
-      }));
-    } else {
-      console.debug("恢复生产者无效", producerId);
-    }
-  }
-
-  /**
-   * 恢复生产者信令
-   * 
-   * @param {*} message 信令消息
-   */
-  async defaultMediaProducerResume(message) {
-    const me = this;
-    const {
-      roomId,
-      producerId
-    } = message.body;
-    const producer = me.getProducer(producerId);
-    if (producer) {
-      console.debug("恢复生产者", producerId);
-      producer.resume();
-    } else {
-      console.debug("恢复生产者无效", producerId);
-    }
-  }
-
-  /**
-   * 媒体生产者评分信令
-   * 
-   * @param {*} message 信令消息
-   */
-  defaultMediaProducerScore(message) {
-    console.debug("生产者评分", message);
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -2396,6 +2393,7 @@ class Taoyao extends RemoteClient {
   async exchangeVideoSource(videoSource) {
     const me = this;
     console.debug("切换视频来源", videoSource, me.videoSource);
+    const old = this.videoSource;
     if(videoSource) {
       me.videoSource = videoSource;
     } else {
@@ -2410,6 +2408,9 @@ class Taoyao extends RemoteClient {
       }
     }
     await me.updateVideoProducer();
+    if(old === "file") {
+      this.closeFileVideo();
+    }
   }
 
   /**
@@ -2466,6 +2467,59 @@ class Taoyao extends RemoteClient {
     } else {
       me.platformError("没有媒体权限");
     }
+  }
+
+  /**
+   * 恢复生产者信令
+   * 
+   * @param {*} producerId 生产者ID
+   */
+  mediaProducerResume(producerId) {
+    const producer = this.getProducer(producerId);
+    if(!producer) {
+      console.debug("恢复生产者（生产者无效）", producerId);
+      return;
+    }
+    if(!producer.paused) {
+      console.debug("恢复生产者（生产者已经恢复）", producerId);
+      return;
+    }
+    console.debug("恢复生产者", producerId);
+    this.push(protocol.buildMessage("media::producer::resume", {
+      producerId,
+      roomId: this.roomId,
+    }));
+  }
+
+  /**
+   * 恢复生产者信令
+   * 
+   * @param {*} message 信令消息
+   */
+  async defaultMediaProducerResume(message) {
+    const {
+      producerId
+    } = message.body;
+    const producer = this.getProducer(producerId);
+    if (!producer) {
+      console.debug("恢复生产者（生产者无效）", producerId);
+      return;
+    }
+    if(!producer.paused) {
+      console.debug("恢复生产者（生产者已经恢复）", producerId);
+      return;
+    }
+    console.debug("恢复生产者", producerId);
+    producer.resume();
+  }
+
+  /**
+   * 媒体生产者评分信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultMediaProducerScore(message) {
+    console.debug("生产者评分", message);
   }
 
   /**
@@ -3417,19 +3471,20 @@ class Taoyao extends RemoteClient {
    * @param {*} video 视频
    */
   localPhotograph(video) {
-    const me = this;
-    const canvas  = document.createElement('canvas');
+    const canvas  = document.createElement("canvas");
     canvas.width  = video.videoWidth;
     canvas.height = video.videoHeight;
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext("2d");
     context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-    const dataURL = canvas.toDataURL('images/png');
-    const download = document.createElement('a');
-    download.href = dataURL;
-    download.download = 'taoyao.png';
-    download.style.display = 'none';
-    document.body.appendChild(download);
+    const dataURL  = canvas.toDataURL("images/png");
+    const download = document.createElement("a");
+    download.href  = dataURL;
+    download.download = "taoyao.png";
+    // download.style.display = "none";
+    // document.body.appendChild(download);
     download.click();
+    // 释放资源
+    canvas.remove();
     download.remove();
   }
 
@@ -3485,11 +3540,11 @@ class Taoyao extends RemoteClient {
       me.mediaRecorder.onstop = (e) => {
         const blob             = new Blob(me.mediaRecorderChunks);
         const objectURL        = URL.createObjectURL(blob);
-        const download         = document.createElement('a');
+        const download         = document.createElement("a");
         download.href          = objectURL;
-        download.download      = 'taoyao.mp4';
-        download.style.display = 'none';
-        document.body.appendChild(download);
+        download.download      = "taoyao.mp4";
+        // download.style.display = "none";
+        // document.body.appendChild(download);
         download.click();
         download.remove();
         URL.revokeObjectURL(objectURL);
