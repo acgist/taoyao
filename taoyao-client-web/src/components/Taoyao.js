@@ -1824,46 +1824,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 关闭生产者信令
-   * 
-   * @param {*} producerId 生产者ID
-   */
-  mediaProducerClose(producerId) {
-    this.push(
-      protocol.buildMessage("media::producer::close", {
-        roomId    : this.roomId,
-        producerId: producerId
-      })
-    );
-  }
-
-  /**
-   * 关闭生产者信令
-   * 
-   * @param {*} message 信令消息
-   */
-  async defaultMediaProducerClose(message) {
-    const me = this;
-    const {
-      roomId,
-      producerId
-    } = message.body;
-    const producer = me.getProducer(producerId);
-    if (producer) {
-      console.debug("关闭生产者", producerId);
-      producer.close();
-      if(producer.kind === "audio") {
-        me.audioProducer = null;
-      } else if(producer.kind === "video") {
-        me.videoProducer = null;
-      } else {
-      }
-    } else {
-      console.debug("关闭生产者无效", producerId);
-    }
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -2427,6 +2387,43 @@ class Taoyao extends RemoteClient {
       }
     } else {
       me.platformError("没有媒体权限");
+    }
+  }
+
+  /**
+   * 关闭生产者信令
+   * 
+   * @param {*} producerId 生产者ID
+   */
+  mediaProducerClose(producerId) {
+    this.push(protocol.buildMessage("media::producer::close", {
+      producerId,
+      roomId: this.roomId,
+    }));
+  }
+
+  /**
+   * 关闭生产者信令
+   * 
+   * @param {*} message 信令消息
+   */
+  async defaultMediaProducerClose(message) {
+    const {
+      producerId
+    } = message.body;
+    const producer = this.getProducer(producerId);
+    if(!producer) {
+      console.debug("关闭生产者（生产者无效）", producerId);
+      return;
+    }
+    console.debug("关闭生产者", producerId);
+    producer.close();
+    if(producer.kind === "audio") {
+      this.audioProducer = null;
+    } else if(producer.kind === "video") {
+      this.videoProducer = null;
+    } else {
+      console.warn("关闭生产者（生产者类型不支持）", producerId, producer.kind);
     }
   }
 
@@ -3253,7 +3250,7 @@ class Taoyao extends RemoteClient {
       await session.close();
       this.sessionClients.delete(sessionId);
     } else {
-      console.debug("关闭媒体（无效会话）", sessionId);
+      console.debug("关闭媒体（会话无效）", sessionId);
     }
   }
 
@@ -3306,7 +3303,7 @@ class Taoyao extends RemoteClient {
       }));
       session.pauseRemote(type);
     } else {
-      console.debug("暂停媒体（无效会话）", type, sessionId);
+      console.debug("暂停媒体（会话无效）", type, sessionId);
     }
   }
 
@@ -3325,7 +3322,7 @@ class Taoyao extends RemoteClient {
       console.debug("暂停媒体", type, sessionId);
       session.pause(type);
     } else {
-      console.debug("暂停媒体（无效会话）", type, sessionId);
+      console.debug("暂停媒体（会话无效）", type, sessionId);
     }
   }
 
@@ -3345,7 +3342,7 @@ class Taoyao extends RemoteClient {
       }));
       session.resumeRemote(type);
     } else {
-      console.debug("恢复媒体（无效会话）", type, sessionId);
+      console.debug("恢复媒体（会话无效）", type, sessionId);
     }
   }
 
@@ -3364,7 +3361,7 @@ class Taoyao extends RemoteClient {
       console.debug("恢复媒体", type, sessionId);
       session.resume(type);
     } else {
-      console.debug("恢复媒体（无效会话）", type, sessionId);
+      console.debug("恢复媒体（会话无效）", type, sessionId);
     }
   }
 
