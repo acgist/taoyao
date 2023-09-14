@@ -29,9 +29,16 @@ import lombok.extern.slf4j.Slf4j;
         """
         {
             "kind"         : "媒体类型",
-            "roomId"       : "房间标识",
-            "transportId"  : "通道标识",
+            "roomId"       : "房间ID",
+            "transportId"  : "通道ID",
             "rtpParameters": "rtpParameters"
+        }
+        """,
+        """
+        {
+            "kind"      : "媒体类型",
+            "roomId"    : "房间ID",
+            "producerId": "生产者ID",
         }
         """
     },
@@ -48,26 +55,26 @@ public class MediaProduceProtocol extends ProtocolRoomAdapter {
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         if(clientType.isClient()) {
-            final String kind = MapUtils.get(body, Constant.KIND);
+            final String kind     = MapUtils.get(body, Constant.KIND);
             final String streamId = Constant.STREAM_ID_PRODUCER.apply(kind, clientId);
             body.put(Constant.CLIENT_ID, clientId);
             body.put(Constant.STREAM_ID, streamId);
             final Message response = room.requestMedia(message);
             final Map<String, Object> responseBody = response.body();
             final String producerId = MapUtils.get(responseBody, Constant.PRODUCER_ID);
-            final ClientWrapper producerClientWrapper = room.clientWrapper(client);
-            final Map<String, Producer> roomProducers = room.getProducers();
+            final ClientWrapper producerClientWrapper   = room.clientWrapper(client);
+            final Map<String, Producer> roomProducers   = room.getProducers();
             final Map<String, Producer> clientProducers = producerClientWrapper.getProducers();
-            final Producer producer = new Producer(kind, streamId, producerId, room, producerClientWrapper);
-            final Producer oldRoomProducer = roomProducers.put(producerId, producer);
+            final Producer producer          = new Producer(kind, streamId, producerId, room, producerClientWrapper);
+            final Producer oldRoomProducer   = roomProducers.put(producerId, producer);
             final Producer oldClientProducer = clientProducers.put(producerId, producer);
             if(oldRoomProducer != null || oldClientProducer != null) {
                 log.warn("生产者已经存在：{}", producerId);
             }
             final Message responseMessage = response.cloneWithoutBody();
             responseMessage.setBody(Map.of(
-                Constant.KIND, kind,
-                Constant.STREAM_ID, streamId,
+                Constant.KIND,        kind,
+                Constant.STREAM_ID,   streamId,
                 Constant.PRODUCER_ID, producerId
             ));
             client.push(responseMessage);

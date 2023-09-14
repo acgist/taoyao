@@ -826,114 +826,6 @@ class Taoyao {
   }
 
   /**
-   * 生产媒体信令
-   * 
-   * @param {*} message 消息
-   * @param {*} body    消息主体
-   */
-  async mediaProduce(message, body) {
-    const {
-      kind,
-      roomId,
-      clientId,
-      streamId,
-      transportId,
-      appData,
-      rtpParameters
-    } = body;
-    const me        = this;
-    const room      = me.rooms.get(roomId);
-    const transport = room?.transports.get(transportId);
-    if(!transport) {
-      console.warn("生产媒体通道无效", roomId, transportId);
-      return;
-    }
-    const producer = await transport.produce({
-      kind,
-      appData,
-      rtpParameters,
-      // 关键帧延迟时间
-      // keyFrameRequestDelay: 5000
-    });
-    producer.clientId = clientId;
-    producer.streamId = streamId;
-    room.producers.set(producer.id, producer);
-    console.debug("创建生产者", producer.id, streamId);
-    producer.on("transportclose", () => {
-      console.info("生产者关闭（通道关闭）", producer.id, streamId);
-      producer.close();
-    });
-    producer.observer.on("close", () => {
-      if(room.producers.delete(producer.id)) {
-        console.debug("生产者关闭", producer.id, streamId);
-        me.push(protocol.buildMessage("media::producer::close", {
-          roomId,
-          producerId: producer.id
-        }));
-      } else {
-        console.debug("生产者关闭（生产者无效）", producer.id, streamId);
-      }
-    });
-    producer.observer.on("pause", () => {
-      console.debug("生产者暂停", producer.id, streamId);
-      me.push(protocol.buildMessage("media::producer::pause", {
-        roomId,
-        producerId: producer.id
-      }));
-    });
-    producer.observer.on("resume", () => {
-      console.debug("生产者恢复", producer.id, streamId);
-      me.push(protocol.buildMessage("media::producer::resume", {
-        roomId,
-        producerId: producer.id
-      }));
-    });
-    // producer.observer.on("score", fn(score));
-    producer.on("score", (score) => {
-      console.debug("生产者评分", producer.id, streamId, score);
-      me.push(protocol.buildMessage("media::producer::score", {
-        score,
-        roomId,
-        producerId: producer.id,
-      }));
-    });
-    // producer.observer.on("videoorientationchange", fn(videoOrientation));
-    producer.on("videoorientationchange", (videoOrientation) => {
-      console.debug("生产者视频方向改变", producer.id, streamId, videoOrientation);
-      me.push(
-        protocol.buildMessage("media::video::orientation::change", {
-          ...videoOrientation,
-          roomId: roomId,
-        })
-      );
-    });
-    // await producer.enableTraceEvent([ 'pli', 'fir', 'rtp', 'nack', 'keyframe' ]);
-    // producer.observer.on("trace", fn(trace));
-    // producer.on("trace", (trace) => {
-    //   console.debug("生产者跟踪事件（trace）", producer.id, streamId, trace);
-    // });
-    message.body = {
-      kind      : kind,
-      roomId    : roomId,
-      producerId: producer.id
-    };
-    me.push(message);
-    if (producer.kind === "audio") {
-      // TODO：关闭生产者时移除监听
-      room.audioLevelObserver
-        .addProducer({ producerId: producer.id })
-        .catch((error) => {
-          console.error("音量监听异常", error);
-        });
-      room.activeSpeakerObserver
-        .addProducer({ producerId: producer.id })
-        .catch((error) => {
-          console.error("声音监听异常", error);
-        });
-    }
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} message 消息
@@ -1485,6 +1377,126 @@ class Taoyao {
   }
 
   /**
+   * 生产媒体信令
+   * 
+   * @param {*} message 信令消息
+   * @param {*} body    消息主体
+   */
+  async mediaProduce(message, body) {
+    const {
+      kind,
+      roomId,
+      clientId,
+      streamId,
+      transportId,
+      appData,
+      rtpParameters
+    } = body;
+    const room      = this.rooms.get(roomId);
+    const transport = room?.transports.get(transportId);
+    if(!transport) {
+      console.warn("生产媒体（通道无效）", roomId, transportId);
+      return;
+    }
+    const producer = await transport.produce({
+      kind,
+      appData,
+      rtpParameters,
+      // 关键帧延迟时间
+      // keyFrameRequestDelay: 5000
+    });
+    producer.clientId = clientId;
+    producer.streamId = streamId;
+    room.producers.set(producer.id, producer);
+    console.debug("创建生产者", producer.id, streamId);
+    producer.on("transportclose", () => {
+      console.debug("生产者关闭（通道关闭）", producer.id, streamId);
+      producer.close();
+    });
+    producer.observer.on("close", () => {
+      if(room.producers.delete(producer.id)) {
+        console.debug("生产者关闭", producer.id, streamId);
+        // 生产者关闭时自动删除
+        // if(producer.kind === "audio") {
+        //   room.audioLevelObserver
+        //     .removeProducer({ producerId: producer.id })
+        //     .then(() => console.debug("删除音量监听", clientId, streamId))
+        //     .catch((error) => {
+        //       console.error("删除音量监听", clientId, streamId, error);
+        //     });
+        //   room.activeSpeakerObserver
+        //     .removeProducer({ producerId: producer.id })
+        //     .then(() => console.debug("删除声音监听", clientId, streamId))
+        //     .catch((error) => {
+        //       console.error("删除声音监听", clientId, streamId, error);
+        //     });
+        // }
+        this.push(protocol.buildMessage("media::producer::close", {
+          roomId,
+          producerId: producer.id
+        }));
+      } else {
+        console.debug("生产者关闭（生产者无效）", producer.id, streamId);
+      }
+    });
+    producer.observer.on("pause", () => {
+      console.debug("生产者暂停", producer.id, streamId);
+      this.push(protocol.buildMessage("media::producer::pause", {
+        roomId,
+        producerId: producer.id
+      }));
+    });
+    producer.observer.on("resume", () => {
+      console.debug("生产者恢复", producer.id, streamId);
+      this.push(protocol.buildMessage("media::producer::resume", {
+        roomId,
+        producerId: producer.id
+      }));
+    });
+    // producer.observer.on("score", fn(score));
+    producer.on("score", (score) => {
+      console.debug("生产者评分", producer.id, streamId, score);
+      this.push(protocol.buildMessage("media::producer::score", {
+        score,
+        roomId,
+        producerId: producer.id,
+      }));
+    });
+    // producer.observer.on("videoorientationchange", fn(videoOrientation));
+    producer.on("videoorientationchange", (videoOrientation) => {
+      console.debug("生产者视频方向改变", producer.id, streamId, videoOrientation);
+      this.push(protocol.buildMessage("media::video::orientation::change", {
+        ...videoOrientation,
+        roomId,
+        producerId: producer.id,
+      }));
+    });
+    // await producer.enableTraceEvent([ 'pli', 'fir', 'rtp', 'nack', 'keyframe' ]);
+    // producer.observer.on("trace", fn(trace));
+    // producer.on("trace", (trace) => {
+    //   console.debug("生产者跟踪事件（trace）", producer.id, streamId, trace);
+    // });
+    message.body = {
+      kind      : kind,
+      roomId    : roomId,
+      producerId: producer.id
+    };
+    this.push(message);
+    if (producer.kind === "audio") {
+      room.audioLevelObserver
+        .addProducer({ producerId: producer.id })
+        .catch((error) => {
+          console.error("音量监听异常", error);
+        });
+      room.activeSpeakerObserver
+        .addProducer({ producerId: producer.id })
+        .catch((error) => {
+          console.error("声音监听异常", error);
+        });
+    }
+  }
+
+  /**
    * 关闭生产者信令
    * 
    * @param {*} message 信令消息
@@ -1807,7 +1819,7 @@ class Taoyao {
     // transport.observer.on("newconsumer",     (consumer) => {});
     // transport.observer.on("newdataproducer", (dataProducer) => {});
     // transport.observer.on("newdataconsumer", (dataConsumer) => {});
-    // 设置追踪信息
+    // 设置跟踪事件
     // await transport.enableTraceEvent([ 'bwe', 'probation' ]);
     // transport.on("trace",                    (trace) => {});
     // transport.observer.on("trace",           fn(trace));

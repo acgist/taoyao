@@ -533,10 +533,10 @@ sudo nginx -s reload
 cd /data/taoyao/taoyao-client-android/taoyao
 
 # Mac | Linux
-sh ./gradlew --no-daemon assembleRelease
+sh ./gradlew --no-daemon assembleRelease | installDebug | assembleDebug
 
 # Windows
-./gradlew.bat --no-daemon assembleRelease
+./gradlew.bat --no-daemon assembleRelease | installDebug | assembleDebug
 ```
 
 ## 防火墙
