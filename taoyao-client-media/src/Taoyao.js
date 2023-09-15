@@ -802,30 +802,6 @@ class Taoyao {
   }
 
   /**
-   * 重启ICE信令
-   *
-   * @param {*} message 消息
-   * @param {*} body    消息主体
-   */
-  async mediaIceRestart(message, body) {
-    const me = this;
-    const {
-      roomId,
-      transportId
-    } = body;
-    const room      = me.rooms.get(roomId);
-    const transport = room?.transports.get(transportId);
-    if(transport) {
-      console.debug("重启ICE", transportId);
-      const iceParameters        = await transport.restartIce();
-      message.body.iceParameters = iceParameters;
-      me.push(message);
-    } else {
-      console.warn("重启ICE（无效）", transportId);
-    }
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} message 消息
@@ -1377,6 +1353,31 @@ class Taoyao {
   }
 
   /**
+   * 重启ICE信令
+   *
+   * @param {*} message 信令消息
+   * @param {*} body    消息主体
+   */
+  async mediaIceRestart(message, body) {
+    const {
+      roomId,
+      transportId
+    } = body;
+    const room      = this.rooms.get(roomId);
+    const transport = room?.transports.get(transportId);
+    if(!transport) {
+      console.warn("重启ICE（无效通道）", transportId);
+      return;
+    }
+    console.debug("重启ICE", transportId);
+    message.body = {
+      ...body,
+      iceParameters: await transport.restartIce()
+    };
+    this.push(message);
+  }
+
+  /**
    * 生产媒体信令
    * 
    * @param {*} message 信令消息
@@ -1594,10 +1595,11 @@ class Taoyao {
     const {
       roomId
     } = body;
-    const room   = this.rooms.get(roomId);
+    const room            = this.rooms.get(roomId);
+    const rtpCapabilities = room?.mediasoupRouter.rtpCapabilities;
     message.body = {
-      ...message.body,
-      rtpCapabilities: room?.mediasoupRouter.rtpCapabilities
+      ...body,
+      rtpCapabilities
     };
     this.push(message);
   }

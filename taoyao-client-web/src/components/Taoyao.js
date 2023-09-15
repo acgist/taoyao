@@ -1801,29 +1801,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 重启ICE信令
-   */
-  async mediaIceRestart() {
-    const me = this;
-    if (me.sendTransport) {
-      const response = await me.request(protocol.buildMessage("media::ice::restart", {
-        roomId     : me.roomId,
-        transportId: me.sendTransport.id
-      }));
-      const { iceParameters } = response.body;
-      await me.sendTransport.restartIce({ iceParameters });
-    }
-    if (me.recvTransport) {
-      const response = await me.request(protocol.buildMessage("media::ice::restart", {
-        roomId     : me.roomId,
-        transportId: me.recvTransport.id
-      }));
-      const { iceParameters } = response.body;
-      await me.recvTransport.restartIce({ iceParameters });
-    }
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -2025,233 +2002,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 媒体回调
-   * 
-   * @param {*} clientId 终端ID
-   * @param {*} track    媒体轨道
-   */
-  callbackTrack(clientId, track) {
-    const me = this;
-    const callbackMessage = protocol.buildMessage("media::track", {
-      clientId,
-      track,
-    });
-    callbackMessage.code    = SUCCESS_CODE;
-    callbackMessage.message = SUCCESS_MESSAGE;
-    me.callback(callbackMessage);
-  }
-
-  /**
-   * 生产媒体
-   * 
-   * 如果需要加密：producer.rtpSender
-   * const senderStreams  = sender.createEncodedStreams();
-   * const readableStream = senderStreams.readable || senderStreams.readableStream;
-   * const writableStream = senderStreams.writable || senderStreams.writableStream;
-   * 
-   * @returns 所有生产者
-   */
-  async mediaProduce(audioTrack, videoTrack) {
-    const me = this;
-    if(!audioTrack || !videoTrack) {
-      await me.checkDevice();
-    }
-    await me.createSendTransport();
-    await me.createRecvTransport();
-    await me.produceAudio(audioTrack);
-    await me.produceVideo(videoTrack);
-    await me.produceData();
-    return {
-      dataProducer : me.dataProducer,
-      audioProducer: me.audioProducer,
-      videoProducer: me.videoProducer,
-    }
-  }
-
-  /**
-   * 生产音频
-   * 
-   * @param {*} audioTrack 音频轨道（可以为空自动）
-   */
-  async produceAudio(audioTrack) {
-    const me = this;
-    if (me.audioProducer) {
-      console.debug("已经存在音频生产者");
-      return;
-    }
-    if (
-      !me.audioProduce ||
-      !me.mediasoupDevice.canProduce("audio")
-    ) {
-      console.debug("不能生产音频数媒");
-      return;
-    }
-    const track        = audioTrack || await me.getAudioTrack();
-    const codecOptions = {
-      opusDtx    : true,
-      opusFec    : true,
-      opusNack   : true,
-      opusStereo : true,
-    };
-    me.audioTrack = track;
-    me.audioProducer = await me.sendTransport.produce({
-      track,
-      codecOptions,
-      appData: {
-        videoSource: me.videoSource
-      },
-    });
-    me.callbackTrack(me.clientId, track);
-    if (me.proxy && me.proxy.media) {
-      me.proxy.media(track, me.audioProducer);
-    } else {
-      console.warn("终端没有实现服务代理");
-    }
-    me.audioProducer.on("transportclose", () => {
-      console.debug("关闭音频生产者（通道关闭）", me.audioProducer.id);
-      me.audioProducer.close();
-    });
-    me.audioProducer.on("trackended", () => {
-      console.debug("关闭音频生产者（媒体结束）", me.audioProducer.id);
-      me.audioProducer.close();
-    });
-    me.audioProducer.observer.on("close", () => {
-      console.debug("关闭音频生产者", me.audioProducer.id);
-      me.audioProducer = null;
-    });
-  }
-
-  /**
-   * 关闭音频生产者
-   */
-  async closeAudioProducer() {
-    this.mediaProducerClose(this.audioProducer?.id);
-  }
-
-  /**
-   * 暂停音频生产者
-   */
-  async pauseAudioProducer() {
-    this.mediaProducerPause(this.audioProducer?.id);
-  }
-
-  /**
-   * 恢复音频生产者
-   */
-  async resumeAudioProducer() {
-    this.mediaProducerResume(this.audioProducer?.id);
-  }
-
-  /**
-   * 生产视频
-   * 
-   * @param {*} videoTrack 音频轨道（可以为空自动）
-   */
-  async produceVideo(videoTrack) {
-    const me = this;
-    if (me.videoProducer) {
-      console.debug("已经存在视频生产者");
-      return;
-    }
-    if (
-      !me.videoProduce ||
-      !me.mediasoupDevice.canProduce("video")
-    ) {
-      console.debug("不能生产视频媒体");
-    }
-    const track = videoTrack || await me.getVideoTrack();
-    const codecOptions = {
-      videoGoogleStartBitrate: 400,
-      videoGoogleMinBitrate  : 800,
-      videoGoogleMaxBitrate  : 1600,
-    };
-    let codec;
-    if(me.forceVP8) {
-      codec = me.mediasoupDevice.rtpCapabilities.codecs.find((c) => c.mimeType.toLowerCase() === "video/vp8");
-      if (codec) {
-        console.debug("强制使用VP8视频编码");
-      } else {
-        console.debug("不支持VP8视频编码");
-      }
-    } else if (me.forceVP9) {
-      codec = me.mediasoupDevice.rtpCapabilities.codecs.find((c) => c.mimeType.toLowerCase() === "video/vp9");
-      if (codec) {
-        console.debug("强制使用VP9视频编码");
-      } else {
-        console.debug("不支持VP9视频编码");
-      }
-    } else if (me.forceH264) {
-      codec = me.mediasoupDevice.rtpCapabilities.codecs.find((c) => c.mimeType.toLowerCase() === "video/h264");
-      if (codec) {
-        console.debug("强制使用H264视频编码");
-      }  else {
-        console.debug("不支持H264视频编码");
-      }
-    }
-    let encodings;
-    if (me.useLayers) {
-      const priorityVideoCodec = me.mediasoupDevice.rtpCapabilities.codecs.find((c) => c.kind === "video");
-      if (
-        (me.forceVP9 && codec) ||
-        priorityVideoCodec.mimeType.toLowerCase() === "video/vp9"
-      ) {
-        encodings = defaultSvcEncodings;
-      } else {
-        encodings = defaultSimulcastEncodings;
-      }
-    }
-    me.videoTrack = track;
-    me.videoProducer = await me.sendTransport.produce({
-      codec,
-      track,
-      encodings,
-      codecOptions,
-      appData: {
-        videoSource: me.videoSource
-      },
-    });
-    me.callbackTrack(me.clientId, track);
-    if (me.proxy && me.proxy.media) {
-      me.proxy.media(track, me.videoProducer);
-    } else {
-      console.warn("终端没有实现服务代理");
-    }
-    me.videoProducer.on("transportclose", () => {
-      console.debug("关闭视频生产者（通道关闭）", me.videoProducer.id);
-      me.videoProducer.close();
-    });
-    me.videoProducer.on("trackended", () => {
-      console.debug("关闭视频生产者（媒体结束）", me.videoProducer.id);
-      me.videoProducer.close();
-    });
-    me.videoProducer.observer.on("close", () => {
-      console.debug("关闭视频生产者", me.videoProducer.id);
-      me.videoProducer = null;
-    });
-  }
-
-  /**
-   * 关闭视频生产者
-   */
-  async closeVideoProducer() {
-    this.mediaProducerClose(this.videoProducer?.id);
-  }
-
-  /**
-   * 暂停视频生产者
-   */
-  async pauseVideoProducer() {
-    this.mediaProducerPause(this.videoProducer?.id);
-  }
-
-  /**
-   * 恢复视频生产者
-   */
-  async resumeVideoProducer() {
-    this.mediaProducerResume(this.videoProducer?.id);
-  }
-
-  /**
    * 生产数据
    */
   async produceData() {
@@ -2291,13 +2041,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 关闭数据生产者
-   */
-  async closeDataProducer() {
-    this.mediaDataProducerClose(this.dataProducer?.id);
-  }
-
-  /**
    * 通过数据生产者发送数据
    * 
    * @param {*} data 数据
@@ -2307,28 +2050,275 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 关闭数据生产者
+   */
+  async closeDataProducer() {
+    this.mediaDataProducerClose(this.dataProducer?.id);
+  }
+
+  /**
+   * 重启ICE信令
+   */
+  async mediaIceRestart() {
+    if (this.sendTransport) {
+      const response = await this.request(protocol.buildMessage("media::ice::restart", {
+        roomId     : this.roomId,
+        transportId: this.sendTransport.id
+      }));
+      const {
+        iceParameters
+      } = response.body;
+      await this.sendTransport.restartIce({
+        iceParameters
+      });
+    }
+    if (this.recvTransport) {
+      const response = await this.request(protocol.buildMessage("media::ice::restart", {
+        roomId     : this.roomId,
+        transportId: this.recvTransport.id
+      }));
+      const {
+        iceParameters
+      } = response.body;
+      await this.recvTransport.restartIce({
+        iceParameters
+      });
+    }
+  }
+
+  /**
+   * 生产媒体
+   * 
+   * 如果需要加密：producer.rtpSender
+   * const senderStreams  = sender.createEncodedStreams();
+   * const readableStream = senderStreams.readable || senderStreams.readableStream;
+   * const writableStream = senderStreams.writable || senderStreams.writableStream;
+   * 
+   * @returns 所有生产者
+   */
+  async mediaProduce(audioTrack, videoTrack) {
+    if(!audioTrack || !videoTrack) {
+      await this.checkDevice();
+    }
+    if(!this.sendTransport) {
+      await this.createSendTransport();
+    }
+    if(!this.recvTransport) {
+      await this.createRecvTransport();
+    }
+    await this.produceAudio(audioTrack);
+    await this.produceVideo(videoTrack);
+    await this.produceData();
+    return {
+      dataProducer : this.dataProducer,
+      audioProducer: this.audioProducer,
+      videoProducer: this.videoProducer,
+    }
+  }
+
+  /**
+   * 生产音频
+   * 
+   * @param {*} audioTrack 音频轨道（可以为空自动）
+   */
+  async produceAudio(audioTrack) {
+    if (this.audioProducer) {
+      console.debug("已经存在音频生产者");
+      return;
+    }
+    if (
+      !this.audioProduce ||
+      !this.mediasoupDevice.canProduce("audio")
+    ) {
+      console.debug("不能生产音频数媒");
+      return;
+    }
+    const codecOptions = {
+      opusDtx    : true,
+      opusFec    : true,
+      opusNack   : true,
+      opusStereo : true,
+    };
+    const track        = audioTrack || await this.getAudioTrack();
+    this.audioTrack    = track;
+    this.audioProducer = await this.sendTransport.produce({
+      track,
+      codecOptions,
+      appData: {
+        videoSource: this.videoSource
+      },
+    });
+    this.callbackTrack(this.clientId, track);
+    if (this.proxy && this.proxy.media) {
+      this.proxy.media(track, this.audioProducer);
+    } else {
+      console.warn("终端没有实现服务代理");
+    }
+    this.audioProducer.on("transportclose", () => {
+      console.debug("关闭音频生产者（通道关闭）", this.audioProducer.id);
+      this.audioProducer.close();
+    });
+    this.audioProducer.on("trackended", () => {
+      console.debug("关闭音频生产者（媒体结束）", this.audioProducer.id);
+      this.audioProducer.close();
+    });
+    this.audioProducer.observer.on("close", () => {
+      console.debug("关闭音频生产者", this.audioProducer.id);
+      this.audioProducer = null;
+    });
+  }
+
+  /**
+   * 关闭音频生产者
+   */
+  async closeAudioProducer() {
+    this.mediaProducerClose(this.audioProducer?.id);
+  }
+
+  /**
+   * 暂停音频生产者
+   */
+  async pauseAudioProducer() {
+    this.mediaProducerPause(this.audioProducer?.id);
+  }
+
+  /**
+   * 恢复音频生产者
+   */
+  async resumeAudioProducer() {
+    this.mediaProducerResume(this.audioProducer?.id);
+  }
+
+  /**
+   * 生产视频
+   * 
+   * @param {*} videoTrack 音频轨道（可以为空自动）
+   */
+  async produceVideo(videoTrack) {
+    if (this.videoProducer) {
+      console.debug("已经存在视频生产者");
+      return;
+    }
+    if (
+      !this.videoProduce ||
+      !this.mediasoupDevice.canProduce("video")
+    ) {
+      console.debug("不能生产视频媒体");
+      return;
+    }
+    const codecOptions = {
+      videoGoogleStartBitrate: 400,
+      videoGoogleMinBitrate  : 800,
+      videoGoogleMaxBitrate  : 1600,
+    };
+    let codec;
+    if(this.forceVP8) {
+      codec = this.mediasoupDevice.rtpCapabilities.codecs.find((c) => c.mimeType.toLowerCase() === "video/vp8");
+      if (codec) {
+        console.debug("强制使用VP8视频编码");
+      } else {
+        console.debug("不支持VP8视频编码");
+      }
+    }
+    if (this.forceVP9) {
+      codec = this.mediasoupDevice.rtpCapabilities.codecs.find((c) => c.mimeType.toLowerCase() === "video/vp9");
+      if (codec) {
+        console.debug("强制使用VP9视频编码");
+      } else {
+        console.debug("不支持VP9视频编码");
+      }
+    }
+    if (this.forceH264) {
+      codec = this.mediasoupDevice.rtpCapabilities.codecs.find((c) => c.mimeType.toLowerCase() === "video/h264");
+      if (codec) {
+        console.debug("强制使用H264视频编码");
+      } else {
+        console.debug("不支持H264视频编码");
+      }
+    }
+    let encodings;
+    if (this.useLayers) {
+      const priorityVideoCodec = this.mediasoupDevice.rtpCapabilities.codecs.find((c) => c.kind === "video");
+      if ((this.forceVP9 && codec) || priorityVideoCodec.mimeType.toLowerCase() === "video/vp9") {
+        encodings = defaultSvcEncodings;
+      } else {
+        encodings = defaultSimulcastEncodings;
+      }
+    }
+    const track        = videoTrack || await this.getVideoTrack();
+    this.videoTrack    = track;
+    this.videoProducer = await this.sendTransport.produce({
+      codec,
+      track,
+      encodings,
+      codecOptions,
+      appData: {
+        videoSource: this.videoSource
+      },
+    });
+    this.callbackTrack(this.clientId, track);
+    if (this.proxy && this.proxy.media) {
+      this.proxy.media(track, this.videoProducer);
+    } else {
+      console.warn("终端没有实现服务代理");
+    }
+    this.videoProducer.on("transportclose", () => {
+      console.debug("关闭视频生产者（通道关闭）", this.videoProducer.id);
+      this.videoProducer.close();
+    });
+    this.videoProducer.on("trackended", () => {
+      console.debug("关闭视频生产者（媒体结束）", this.videoProducer.id);
+      this.videoProducer.close();
+    });
+    this.videoProducer.observer.on("close", () => {
+      console.debug("关闭视频生产者", this.videoProducer.id);
+      this.videoProducer = null;
+    });
+  }
+
+  /**
+   * 关闭视频生产者
+   */
+  async closeVideoProducer() {
+    this.mediaProducerClose(this.videoProducer?.id);
+  }
+
+  /**
+   * 暂停视频生产者
+   */
+  async pauseVideoProducer() {
+    this.mediaProducerPause(this.videoProducer?.id);
+  }
+
+  /**
+   * 恢复视频生产者
+   */
+  async resumeVideoProducer() {
+    this.mediaProducerResume(this.videoProducer?.id);
+  }
+
+  /**
    * 切换视频来源
    * 
    * @param {*} videoSource 视频来源（可以为空）
    */
   async exchangeVideoSource(videoSource) {
-    const me = this;
-    console.debug("切换视频来源", videoSource, me.videoSource);
+    console.debug("切换视频来源", videoSource, this.videoSource);
     const old = this.videoSource;
     if(videoSource) {
-      me.videoSource = videoSource;
+      this.videoSource = videoSource;
     } else {
-      if(me.videoSource === "file") {
-        me.videoSource = "camera";
-      } else if(me.videoSource === "camera") {
-        me.videoSource = "screen";
-      } else if(me.videoSource === "screen") {
-        me.videoSource = "file";
+      if(this.videoSource === "file") {
+        this.videoSource = "camera";
+      } else if(this.videoSource === "camera") {
+        this.videoSource = "screen";
+      } else if(this.videoSource === "screen") {
+        this.videoSource = "file";
       } else {
-        me.videoSource = "camera";
+        this.videoSource = "camera";
       }
     }
-    await me.updateVideoProducer();
+    await this.updateVideoProducer();
     if(old === "file") {
       this.closeFileVideo();
     }
@@ -2340,20 +2330,22 @@ class Taoyao extends RemoteClient {
    * @param {*} 更新视频轨道
    */
   async updateVideoProducer(videoTrack) {
-    const me = this;
-    const track = videoTrack || await me.getVideoTrack();
-    await me.videoProducer.replaceTrack({
+    const track = videoTrack || await this.getVideoTrack();
+    await this.videoProducer.replaceTrack({
       track
     });
-    me.callbackTrack(me.clientId, track);
-    me.proxy.media(track, me.videoProducer);
+    this.callbackTrack(this.clientId, track);
+    if (this.proxy && this.proxy.media) {
+      this.proxy.media(track, this.videoProducer);
+    } else {
+      console.warn("终端没有实现服务代理");
+    }
   }
 
   /**
    * 验证设备
    */
   async checkDevice() {
-    const me = this;
     if (
       navigator.mediaDevices              &&
       navigator.mediaDevices.getUserMedia &&
@@ -2375,18 +2367,18 @@ class Taoyao extends RemoteClient {
             break;
         }
       });
-      if (!audioEnabled && me.audioProduce) {
-        me.platformError("没有音频媒体设备");
+      if (!audioEnabled && this.audioProduce) {
+        this.platformError("没有音频媒体设备");
         // 强制修改
-        me.audioProduce = false;
+        this.audioProduce = false;
       }
-      if (!videoEnabled && me.videoProduce) {
-        me.platformError("没有视频媒体设备");
+      if (!videoEnabled && this.videoProduce) {
+        this.platformError("没有视频媒体设备");
         // 强制修改
-        me.videoProduce = false;
+        this.videoProduce = false;
       }
     } else {
-      me.platformError("没有媒体权限");
+      this.platformError("没有媒体权限");
     }
   }
 
@@ -3602,6 +3594,22 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 媒体回调
+   * 
+   * @param {*} clientId 终端ID
+   * @param {*} track    媒体轨道
+   */
+  callbackTrack(clientId, track) {
+    const callbackMessage = protocol.buildMessage("media::track", {
+      track,
+      clientId,
+    });
+    callbackMessage.code    = SUCCESS_CODE;
+    callbackMessage.message = SUCCESS_MESSAGE;
+    this.callback(callbackMessage);
+  }
+
+  /**
    * 统计设备信息
    * 
    * @param {*} clientId 终端ID
@@ -3609,15 +3617,14 @@ class Taoyao extends RemoteClient {
    * @returns 设备信息统计
    */
   async getClientStats(clientId) {
-    const me    = this;
     const stats = {};
-    if(clientId === me.clientId) {
-      stats.sendTransport = await me.sendTransport.getStats();
-      stats.recvTransport = await me.recvTransport.getStats();
-      stats.audioProducer = await me.audioProducer.getStats();
-      stats.videoProducer = await me.videoProducer.getStats();
+    if(clientId === this.clientId) {
+      stats.sendTransport = await this.sendTransport.getStats();
+      stats.recvTransport = await this.recvTransport.getStats();
+      stats.audioProducer = await this.audioProducer.getStats();
+      stats.videoProducer = await this.videoProducer.getStats();
     } else {
-      const consumers = Array.from(me.consumers.values());
+      const consumers = Array.from(this.consumers.values());
       for(const consumer of consumers) {
         if(clientId === consumer.sourceId) {
           stats[consumer.kind] = await consumer.getStats();
@@ -3663,42 +3670,44 @@ class Taoyao extends RemoteClient {
    */
   async closeRoomMedia() {
     console.debug("关闭视频房间媒体");
-    const me = this;
-    me.roomId = null;
-    await me.close();
-    if (me.sendTransport) {
-      await me.sendTransport.close();
-      me.sendTransport = null;
-    }
-    if (me.recvTransport) {
-      await me.recvTransport.close();
-      me.recvTransport = null;
-    }
-    if(me.dataProducer) {
-      await me.dataProducer.close();
-      me.dataProducer = null;
-    }
-    if(me.audioProducer) {
-      await me.audioProducer.close();
-      me.audioProducer = null;
-    }
-    if(me.videoProducer) {
-      await me.videoProducer.close();
-      me.videoProducer = null;
-    }
-    me.consumers.forEach(async (consumer, consumerId) => {
+    this.roomId = null;
+    await this.close();
+    this.consumers.forEach(async (consumer, consumerId) => {
       await consumer.close();
     });
-    me.consumers.clear();
-    me.dataConsumers.forEach(async (dataConsumer, consumerId) => {
+    this.consumers.clear();
+    this.dataConsumers.forEach(async (dataConsumer, consumerId) => {
       await dataConsumer.close();
     });
-    me.dataConsumers.clear();
-    me.remoteClients.forEach(async (client, clientId) => {
-      await client.close();
+    this.dataConsumers.clear();
+    this.remoteClients.forEach(async (remoteClient, clientId) => {
+      await remoteClient.close();
     });
-    me.remoteClients.clear();
-    me.closeFileVideo();
+    this.remoteClients.clear();
+    if(this.audioProducer) {
+      await this.audioProducer.close();
+      this.audioProducer = null;
+    }
+    if(this.videoProducer) {
+      await this.videoProducer.close();
+      this.videoProducer = null;
+    }
+    if(this.dataProducer) {
+      await this.dataProducer.close();
+      this.dataProducer = null;
+    }
+    if (this.sendTransport) {
+      await this.sendTransport.close();
+      this.sendTransport = null;
+    }
+    if (this.recvTransport) {
+      await this.recvTransport.close();
+      this.recvTransport = null;
+    }
+    if(this.mediasoupDevice) {
+      this.mediasoupDevice = null;
+    }
+    this.closeFileVideo();
   }
 
   /**
@@ -3706,26 +3715,24 @@ class Taoyao extends RemoteClient {
    */
   closeSessionMedia() {
     console.debug("关闭视频会话媒体");
-    const me = this;
-    me.sessionClients.forEach((session, sessionId) => {
+    this.sessionClients.forEach((session, sessionId) => {
       session.close();
       console.debug("关闭会话", sessionId);
     });
-    me.sessionClients.clear();
-    me.closeFileVideo();
+    this.sessionClients.clear();
+    this.closeFileVideo();
   }
 
   /**
    * 关闭资源
    */
   closeAll() {
-    const me = this;
-    if(me.closed) {
+    if(this.closed) {
       return;
     }
-    me.closed = true;
-    me.closeRoomMedia();
-    me.closeSessionMedia();
+    this.closed = true;
+    this.closeRoomMedia();
+    this.closeSessionMedia();
     signalChannel.close();
   }
 }
