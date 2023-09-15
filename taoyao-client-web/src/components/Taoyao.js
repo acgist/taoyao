@@ -2100,12 +2100,7 @@ class Taoyao extends RemoteClient {
     if(!audioTrack || !videoTrack) {
       await this.checkDevice();
     }
-    if(!this.sendTransport) {
-      await this.createSendTransport();
-    }
-    if(!this.recvTransport) {
-      await this.createRecvTransport();
-    }
+    await this.mediaConnect();
     await this.produceAudio(audioTrack);
     await this.produceVideo(videoTrack);
     await this.produceData();
@@ -2113,6 +2108,18 @@ class Taoyao extends RemoteClient {
       dataProducer : this.dataProducer,
       audioProducer: this.audioProducer,
       videoProducer: this.videoProducer,
+    }
+  }
+
+  /**
+   * 连接媒体
+   */
+  async mediaConnect() {
+    if(!this.sendTransport) {
+      await this.createSendTransport();
+    }
+    if(!this.recvTransport) {
+      await this.createRecvTransport();
     }
   }
 
@@ -3672,18 +3679,33 @@ class Taoyao extends RemoteClient {
     console.debug("关闭视频房间媒体");
     this.roomId = null;
     await this.close();
-    this.consumers.forEach(async (consumer, consumerId) => {
-      await consumer.close();
-    });
-    this.consumers.clear();
-    this.dataConsumers.forEach(async (dataConsumer, consumerId) => {
-      await dataConsumer.close();
-    });
-    this.dataConsumers.clear();
-    this.remoteClients.forEach(async (remoteClient, clientId) => {
-      await remoteClient.close();
-    });
-    this.remoteClients.clear();
+    await this.closeRoomMediaConsumer();
+    await this.closeRoomMediaProducer();
+    await this.closeRoomMediaConnect();
+    this.closeFileVideo();
+  }
+
+  /**
+   * 关闭媒体连接
+   */
+  async closeRoomMediaConnect() {
+    if (this.sendTransport) {
+      await this.sendTransport.close();
+      this.sendTransport = null;
+    }
+    if (this.recvTransport) {
+      await this.recvTransport.close();
+      this.recvTransport = null;
+    }
+    if(this.mediasoupDevice) {
+      this.mediasoupDevice = null;
+    }
+  }
+
+  /**
+   * 关闭媒体生产者
+   */
+  async closeRoomMediaProducer() {
     if(this.audioProducer) {
       await this.audioProducer.close();
       this.audioProducer = null;
@@ -3696,18 +3718,24 @@ class Taoyao extends RemoteClient {
       await this.dataProducer.close();
       this.dataProducer = null;
     }
-    if (this.sendTransport) {
-      await this.sendTransport.close();
-      this.sendTransport = null;
-    }
-    if (this.recvTransport) {
-      await this.recvTransport.close();
-      this.recvTransport = null;
-    }
-    if(this.mediasoupDevice) {
-      this.mediasoupDevice = null;
-    }
-    this.closeFileVideo();
+  }
+
+  /**
+   * 关闭媒体消费者
+   */
+  async closeRoomMediaConsumer() {
+    this.consumers.forEach(async (consumer, consumerId) => {
+      await consumer.close();
+    });
+    this.consumers.clear();
+    this.dataConsumers.forEach(async (dataConsumer, consumerId) => {
+      await dataConsumer.close();
+    });
+    this.dataConsumers.clear();
+    this.remoteClients.forEach(async (remoteClient, clientId) => {
+      await remoteClient.close();
+    });
+    this.remoteClients.clear();
   }
 
   /**
