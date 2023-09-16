@@ -1333,23 +1333,22 @@ class Taoyao {
    * @param {*} body    消息主体
    */
   async mediaDataProducerStatus(message, body) {
-    const me = this;
     const {
       roomId,
       producerId,
     } = body;
-    const room     = me.rooms.get(roomId);
+    const room         = this.rooms.get(roomId);
     const dataProducer = room?.dataProducers.get(producerId);
-    if(dataProducer) {
-      console.debug("查询数据生产者状态", producerId);
-      message.body = {
-        ...body,
-        status: await dataProducer.getStats()
-      };
-      me.push(message);
-    } else {
-      console.debug("查询数据生产者状态（无效）", producerId);
+    if(!dataProducer) {
+      console.warn("查询数据生产者状态（数据生产者无效）", roomId, producerId);
+      return;
     }
+    console.debug("查询数据生产者状态", producerId);
+    message.body = {
+      ...body,
+      status: await dataProducer.getStats()
+    };
+    this.push(message);
   }
 
   /**
@@ -1366,7 +1365,7 @@ class Taoyao {
     const room      = this.rooms.get(roomId);
     const transport = room?.transports.get(transportId);
     if(!transport) {
-      console.warn("重启ICE（无效通道）", transportId);
+      console.warn("重启ICE（通道无效）", roomId, transportId);
       return;
     }
     console.debug("重启ICE", transportId);

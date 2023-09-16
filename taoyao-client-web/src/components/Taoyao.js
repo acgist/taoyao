@@ -1788,19 +1788,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 查询数据生产者状态信令
-   * 
-   * @param {*} producerId 生产者ID
-   */
-  async mediaDataProducerStatus(producerId) {
-    const me = this;
-    return await me.request(protocol.buildMessage("media::data::producer::status", {
-      roomId: me.roomId,
-      producerId
-    }));
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -2054,6 +2041,18 @@ class Taoyao extends RemoteClient {
    */
   async closeDataProducer() {
     this.mediaDataProducerClose(this.dataProducer?.id);
+  }
+
+  /**
+   * 查询数据生产者状态信令
+   * 
+   * @param {*} producerId 生产者ID
+   */
+  async mediaDataProducerStatus(producerId) {
+    return await this.request(protocol.buildMessage("media::data::producer::status", {
+      producerId,
+      roomId: this.roomId,
+    }));
   }
 
   /**
