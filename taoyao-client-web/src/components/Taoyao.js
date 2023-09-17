@@ -1936,27 +1936,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 通过数据消费者发送数据
-   * 
-   * @param {*} data       数据
-   * @param {*} consumerId 数据消费者ID
-   */
-  async sendDataConsumer(data, consumerId) {
-    const me = this;
-    if(consumerId) {
-      if(me.dataConsumers.has(consumerId)) {
-        me.dataConsumers.get(consumerId)?.send(data);
-      } else {
-        console.warn("数据消费者无效", consumerId);
-      }
-    } else {
-      me.dataConsumers.forEach(dataConsumer => {
-        dataConsumer.send(data);
-      })
-    }
-  }
-
-  /**
    * 生产数据
    */
   async produceData() {

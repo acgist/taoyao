@@ -1254,11 +1254,10 @@ class Taoyao {
   /**
    * 生产数据信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    * @param {*} body    消息主体
    */
   async mediaDataProduce(message, body) {
-    const me = this;
     const {
       label,
       roomId,
@@ -1269,10 +1268,10 @@ class Taoyao {
       transportId,
       sctpStreamParameters,
     } = body;
-    const room      = me.rooms.get(roomId);
+    const room      = this.rooms.get(roomId);
     const transport = room?.transports.get(transportId);
     if(!transport) {
-      console.warn("生产数据通道无效", roomId, transportId);
+      console.warn("生产数据通道（通道无效）", roomId, transportId);
       return;
     }
     const dataProducer = await transport.produceData({
@@ -1284,27 +1283,27 @@ class Taoyao {
     dataProducer.clientId = clientId;
     dataProducer.streamId = streamId;
     room.dataProducers.set(dataProducer.id, dataProducer);
-    console.info("创建数据生产者", dataProducer.id, streamId);
+    console.debug("创建数据生产者", dataProducer.id, streamId);
     dataProducer.on("transportclose", () => {
-      console.info("数据生产者关闭（通道关闭）", dataProducer.id, streamId);
+      console.debug("数据生产者关闭（通道关闭）", dataProducer.id, streamId);
       dataProducer.close();
     });
     dataProducer.observer.on("close", () => {
       if(room.dataProducers.delete(dataProducer.id)) {
-        console.info("数据生产者关闭", dataProducer.id, streamId);
-        me.push(taoyaoProtocol.buildMessage("media::data::producer::close", {
-          roomId    : roomId,
+        console.debug("数据生产者关闭", dataProducer.id, streamId);
+        this.push(taoyaoProtocol.buildMessage("media::data::producer::close", {
+          roomId,
           producerId: dataProducer.id,
         }));
       } else {
-        console.debug("数据生产者关闭（无效）", dataProducer.id, streamId);
+        console.debug("数据生产者关闭（数据生产者无效）", dataProducer.id, streamId);
       }
     })
     message.body = {
-      roomId    : roomId,
+      roomId,
       producerId: dataProducer.id
     };
-    me.push(message);
+    this.push(message);
   }
 
   /**

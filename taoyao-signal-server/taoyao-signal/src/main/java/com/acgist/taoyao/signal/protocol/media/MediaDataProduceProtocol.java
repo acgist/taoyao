@@ -30,6 +30,10 @@ import lombok.extern.slf4j.Slf4j;
             "roomId"     : "房间标识",
             "transportId": "通道标识"
         }
+        {
+            "roomId"    : "房间ID",
+            "producerId": "生产者ID",
+        }
         """
     },
     flow = "终端=>信令服务->媒体服务"
@@ -51,18 +55,18 @@ public class MediaDataProduceProtocol extends ProtocolRoomAdapter {
             final Message response = room.requestMedia(message);
             final Map<String, Object> responseBody = response.body();
             final String producerId = MapUtils.get(responseBody, Constant.PRODUCER_ID);
-            final ClientWrapper producerClientWrapper = room.clientWrapper(client);
-            final Map<String, DataProducer> roomDataProducers = room.getDataProducers();
+            final ClientWrapper producerClientWrapper           = room.clientWrapper(client);
+            final Map<String, DataProducer> roomDataProducers   = room.getDataProducers();
             final Map<String, DataProducer> clientDataProducers = producerClientWrapper.getDataProducers();
-            final DataProducer dataProducer = new DataProducer(streamId, producerId, room, producerClientWrapper);
-            final DataProducer oldRoomDataProducer = roomDataProducers.put(producerId, dataProducer);
+            final DataProducer dataProducer          = new DataProducer(streamId, producerId, room, producerClientWrapper);
+            final DataProducer oldRoomDataProducer   = roomDataProducers.put(producerId, dataProducer);
             final DataProducer oldClientDataProducer = clientDataProducers.put(producerId, dataProducer);
             if(oldRoomDataProducer != null || oldClientDataProducer != null) {
                 log.warn("数据生产者已经存在：{}", producerId);
             }
             final Message responseMessage = response.cloneWithoutBody();
             responseMessage.setBody(Map.of(
-                Constant.STREAM_ID, streamId,
+                Constant.STREAM_ID,   streamId,
                 Constant.PRODUCER_ID, producerId
             ));
             client.push(responseMessage);
