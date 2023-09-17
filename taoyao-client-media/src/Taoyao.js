@@ -1310,20 +1310,22 @@ class Taoyao {
   /**
    * 关闭数据生产者信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    * @param {*} body    消息主体
    */
    async mediaDataProducerClose(message, body) {
-    const me = this;
-    const { roomId, producerId } = body;
-    const room         = me.rooms.get(roomId);
+    const {
+      roomId,
+      producerId
+    } = body;
+    const room         = this.rooms.get(roomId);
     const dataProducer = room?.dataProducers.get(producerId);
-    if(dataProducer) {
-      console.info("关闭数据生产者", producerId);
-      await dataProducer.close();
-    } else {
-      console.info("关闭数据生产者（无效）", producerId);
+    if(!dataProducer) {
+      console.debug("关闭数据生产者（数据生产者无效）", roomId, producerId);
+      return;
     }
+    console.debug("关闭数据生产者", producerId);
+    await dataProducer.close();
   }
 
   /**

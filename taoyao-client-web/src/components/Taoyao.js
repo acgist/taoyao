@@ -1756,38 +1756,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 关闭数据生产者信令
-   * 
-   * @param {*} producerId 数据生产者ID
-   */
-  mediaDataProducerClose(producerId) {
-    this.push(
-      protocol.buildMessage("media::data::producer::close", {
-        roomId    : this.roomId,
-        producerId: producerId
-      })
-    );
-  }
-
-  /**
-   * 关闭数据生产者信令
-   * 
-   * @param {*} message 信令消息
-   */
-  defaultMediaDataProducerClose(message) {
-    const me = this;
-    const { roomId, producerId } = message.body;
-    const producer = me.getProducer(producerId);
-    if (producer) {
-      console.debug("关闭数据生产者", producerId);
-      producer.close();
-      me.dataProducer = null;
-    } else {
-      console.debug("关闭数据生产者无效", producerId);
-    }
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -2041,6 +2009,36 @@ class Taoyao extends RemoteClient {
    */
   async closeDataProducer() {
     this.mediaDataProducerClose(this.dataProducer?.id);
+  }
+
+  /**
+   * 关闭数据生产者信令
+   * 
+   * @param {*} producerId 数据生产者ID
+   */
+  mediaDataProducerClose(producerId) {
+    this.push(protocol.buildMessage("media::data::producer::close", {
+      producerId,
+      roomId: this.roomId,
+    }));
+  }
+
+  /**
+   * 关闭数据生产者信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultMediaDataProducerClose(message) {
+    const {
+      producerId
+    } = message.body;
+    const producer = this.getProducer(producerId);
+    if(!producer) {
+      console.debug("关闭数据生产者（数据生产者无效）", producerId);
+      return;
+    }
+    console.debug("关闭数据生产者", producerId);
+    producer.close();
   }
 
   /**
@@ -2416,13 +2414,6 @@ class Taoyao extends RemoteClient {
     }
     console.debug("关闭生产者", producerId);
     producer.close();
-    if(producer.kind === "audio") {
-      this.audioProducer = null;
-    } else if(producer.kind === "video") {
-      this.videoProducer = null;
-    } else {
-      console.warn("关闭生产者（生产者类型不支持）", producerId, producer.kind);
-    }
   }
 
   /**

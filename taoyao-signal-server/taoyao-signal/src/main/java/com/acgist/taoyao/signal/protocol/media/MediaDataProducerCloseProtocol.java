@@ -47,7 +47,7 @@ public class MediaDataProducerCloseProtocol extends ProtocolRoomAdapter implemen
     @Async
     @Override
     public void onApplicationEvent(MediaDataProducerCloseEvent event) {
-        final Room room          = event.getRoom();
+        final Room room = event.getRoom();
         final Client mediaClient = event.getMediaClient();
         final Map<String, Object> body = Map.of(
             Constant.ROOM_ID,     room.getRoomId(),
@@ -58,7 +58,7 @@ public class MediaDataProducerCloseProtocol extends ProtocolRoomAdapter implemen
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        final String producerId         = MapUtils.get(body, Constant.PRODUCER_ID);
+        final String producerId = MapUtils.get(body, Constant.PRODUCER_ID);
         final DataProducer dataProducer = room.dataProducer(producerId);
         if(dataProducer == null) {
             log.debug("数据生产者无效：{} - {}", producerId, clientType);
