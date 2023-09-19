@@ -27,14 +27,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Protocol
 @Description(
-    memo = "关闭通过回调实现所以不能同步响应",
+    memo = "关闭通过回调实现所以不能同步响应，以下场景出现：主动断开、离开房间、信令断开",
     body = """
     {
         "roomId"    : "房间ID"
         "consumerId": "生产者ID"
     }
     """,
-    flow = "终端->信令服务->媒体服务->信令服务->终端"
+    flow = {
+        "媒体服务->信令服务->终端",
+        "信令服务->媒体服务->信令服务->终端",
+        "终端->信令服务->媒体服务->信令服务->终端"
+    }
 )
 public class MediaProducerCloseProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaProducerCloseEvent> {
 

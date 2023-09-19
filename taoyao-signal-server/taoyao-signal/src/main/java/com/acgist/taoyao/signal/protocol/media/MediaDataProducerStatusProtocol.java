@@ -24,7 +24,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
     }
     {
         "roomId"    : "房间ID",
-        "producerId": "生产者ID",
+        "producerId": "数据生产者ID",
         "status"    : [
             ...状态信息
         ]

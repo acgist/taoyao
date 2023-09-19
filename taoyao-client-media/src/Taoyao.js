@@ -1181,15 +1181,13 @@ class Taoyao {
     // dataConsumer.on("sctpsendbufferfull", fn());
     dataConsumer.observer.on("close", () => {
       if(room.dataConsumers.delete(dataConsumer.id)) {
-        console.info("数据消费者关闭", dataConsumer.id, streamId);
-        me.push(
-          protocol.buildMessage("media::data::consumer::close", {
-            roomId    : roomId,
-            consumerId: dataConsumer.id,
-          })
-        );
+        console.debug("数据消费者关闭", dataConsumer.id, streamId);
+        me.push(protocol.buildMessage("media::data::consumer::close", {
+          roomId,
+          consumerId: dataConsumer.id,
+        }));
       } else {
-        console.debug("数据消费者关闭（无效）", dataConsumer.id, streamId);
+        console.debug("数据消费者关闭（数据消费者无效）", dataConsumer.id, streamId);
       }
     });
     me.push(
@@ -1211,20 +1209,22 @@ class Taoyao {
   /**
    * 关闭数据消费者信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    * @param {*} body    消息主体
    */
   async mediaDataConsumerClose(message, body) {
-    const me = this;
-    const { roomId, consumerId } = body;
-    const room         = me.rooms.get(roomId);
+    const {
+      roomId,
+      consumerId
+    } = body;
+    const room         = this.rooms.get(roomId);
     const dataConsumer = room?.dataConsumers.get(consumerId);
-    if(dataConsumer) {
-      console.info("关闭数据消费者", consumerId);
-      await dataConsumer.close();
-    } else {
-      console.info("关闭数据消费者（无效）", consumerId);
+    if(!dataConsumer) {
+      console.debug("关闭数据消费者（数据消费者无效）", roomId, consumerId);
+      return;
     }
+    console.debug("关闭数据消费者", consumerId);
+    await dataConsumer.close();
   }
 
   /**
