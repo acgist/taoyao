@@ -1177,6 +1177,8 @@ class Taoyao {
       console.info("数据消费者关闭（生产者关闭）", dataConsumer.id, streamId);
       dataConsumer.close();
 		});
+    // dataConsumer.on("bufferedamountlow",  fn(bufferedAmount));
+    // dataConsumer.on("sctpsendbufferfull", fn());
     dataConsumer.observer.on("close", () => {
       if(room.dataConsumers.delete(dataConsumer.id)) {
         console.info("数据消费者关闭", dataConsumer.id, streamId);
@@ -1232,23 +1234,22 @@ class Taoyao {
    * @param {*} body    消息主体
    */
   async mediaDataConsumerStatus(message, body) {
-    const me = this;
     const {
       roomId,
       consumerId,
     } = body;
-    const room         = me.rooms.get(roomId);
+    const room         = this.rooms.get(roomId);
     const dataConsumer = room?.dataConsumers.get(consumerId);
-    if(dataConsumer) {
-      console.debug("查询数据消费者状态", consumerId);
-      message.body = {
-        ...body,
-        status: await dataConsumer.getStats()
-      };
-      me.push(message);
-    } else {
-      console.debug("查询数据消费者状态（无效）", consumerId);
+    if(!dataConsumer) {
+      console.warn("查询数据消费者状态（数据消费者无效）", roomId, consumerId);
+      return;
     }
+    console.debug("查询数据消费者状态", consumerId);
+    message.body = {
+      ...body,
+      status: await dataConsumer.getStats()
+    };
+    this.push(message);
   }
 
   /**

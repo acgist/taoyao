@@ -1743,19 +1743,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 查询数据消费者状态信令
-   * 
-   * @param {*} consumerId 消费者ID
-   */
-  async mediaDataConsumerStatus(consumerId) {
-    const me = this;
-    return await me.request(protocol.buildMessage("media::data::consumer::status", {
-      roomId: me.roomId,
-      consumerId
-    }));
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -1928,50 +1915,64 @@ class Taoyao extends RemoteClient {
       dataConsumer.on("message", (message, ppid) => {
         console.debug("数据消费者消息", dataConsumer.id, streamId, message.toString("UTF-8"), ppid);
       });
-      // dataConsumer.on("bufferedamountlow",  fn(bufferedAmount));
-      // dataConsumer.on("sctpsendbufferfull", fn());
     } catch (error) {
       console.error("打开数据消费者异常", error);
     }
   }
 
   /**
+   * 查询数据消费者状态信令
+   * 
+   * @param {*} consumerId 消费者ID
+   */
+  async mediaDataConsumerStatus(consumerId) {
+    return await this.request(protocol.buildMessage("media::data::consumer::status", {
+      consumerId,
+      roomId: this.roomId,
+    }));
+  }
+
+  /**
    * 生产数据
    */
   async produceData() {
-    const me = this;
-    if(me.dataProducer) {
-      console.debug("已经存在视频生产者");
+    if(this.dataProducer) {
+      console.debug("已经存在数据生产者");
       return;
     }
-    if(!me.dataProduce) {
+    if(!this.dataProduce) {
       console.debug("不能生产数据");
       return;
     }
-    const dataProducer = await me.sendTransport.produceData({
+    this.dataProducer = await this.sendTransport.produceData({
       label            : "taoyao",
       ordered          : false,
       priority         : "medium",
-      // maxRetransmits   : 1,
+      // maxRetransmits: 1,
       maxPacketLifeTime: 2000,
     });
-    me.dataProducer = dataProducer;
-    me.dataProducer.on("transportclose", () => {
-      console.debug("数据生产者关闭（通道关闭）", me.dataProducer.id);
-      me.dataProducer.close();
+    this.dataProducer.on("transportclose", () => {
+      console.debug("数据生产者关闭（通道关闭）", this.dataProducer.id);
+      this.dataProducer.close();
     });
-    me.dataProducer.on("open", () => {
-      console.debug("数据生产者打开", me.dataProducer.id);
+    this.dataProducer.on("open", () => {
+      console.debug("数据生产者打开", this.dataProducer.id);
     });
-    me.dataProducer.on("close", () => {
-      console.debug("数据生产者关闭", me.dataProducer.id);
-      me.dataProducer = null;
+    this.dataProducer.on("close", () => {
+      console.debug("数据生产者关闭", this.dataProducer.id);
+      this.dataProducer = null;
     });
-    me.dataProducer.on("error", (error) => {
-      console.debug("数据生产者异常", me.dataProducer.id, error);
+    this.dataProducer.on("error", (error) => {
+      console.debug("数据生产者异常", this.dataProducer.id, error);
     });
-    // me.dataProducer.on("bufferedamountlow",  fn(bufferedAmount));
-    // me.dataProducer.on("sctpsendbufferfull", fn());
+    // this.dataProducer.on("bufferedamountlow",  fn(bufferedAmount));
+  }
+
+  /**
+   * 关闭数据生产者
+   */
+  async closeDataProducer() {
+    this.mediaDataProducerClose(this.dataProducer?.id);
   }
 
   /**
@@ -1981,13 +1982,6 @@ class Taoyao extends RemoteClient {
    */
   async sendDataProducer(data) {
     this.dataProducer?.send(data);
-  }
-
-  /**
-   * 关闭数据生产者
-   */
-  async closeDataProducer() {
-    this.mediaDataProducerClose(this.dataProducer?.id);
   }
 
   /**
