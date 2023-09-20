@@ -91,6 +91,9 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
         final String producerId = MapUtils.get(body, Constant.PRODUCER_ID);
         final Producer producer = room.producer(producerId);
+        if(producer == null) {
+            throw MessageCodeException.of("媒体生产者无效：" + producerId);
+        }
         if(clientType.isClient()) {
             // 主动请求消费 || 消费通道准备就绪
             this.consume(room, room.clientWrapper(client), producer, message);

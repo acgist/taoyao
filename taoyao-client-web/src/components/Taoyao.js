@@ -1822,24 +1822,22 @@ class Taoyao extends RemoteClient {
    * @param {*} producerId 数据生产者ID
    */
   mediaDataConsume(producerId) {
-    const me = this;
-    if(!me.recvTransport) {
-      me.platformError("没有连接接收通道");
+    if(!this.recvTransport) {
+      this.platformError("没有连接接收通道");
       return;
     }
-    me.push(protocol.buildMessage("media::data::consume", {
-      roomId    : me.roomId,
-      producerId: producerId,
+    this.push(protocol.buildMessage("media::data::consume", {
+      producerId,
+      roomId: this.roomId,
     }));
   }
 
   /**
    * 消费数据信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    */
   async defaultMediaDataConsume(message) {
-    const me = this;
     const {
       roomId,
       clientId,
@@ -1853,7 +1851,7 @@ class Taoyao extends RemoteClient {
       sctpStreamParameters,
     } = message.body;
     try {
-      const dataConsumer = await me.recvTransport.consumeData({
+      const dataConsumer = await this.recvTransport.consumeData({
         id            : consumerId,
         dataProducerId: producerId,
         label,
@@ -1861,9 +1859,9 @@ class Taoyao extends RemoteClient {
         protocol,
         sctpStreamParameters,
       });
-      me.dataConsumers.set(dataConsumer.id, dataConsumer);
+      this.dataConsumers.set(dataConsumer.id, dataConsumer);
       dataConsumer.on("open", () => {
-        console.debug("数据消费者打开", dataConsumer.id);
+        console.debug("数据消费者打开", dataConsumer.id, streamId);
       });
       dataConsumer.on("transportclose", () => {
         console.debug("数据消费者关闭（通道关闭）", dataConsumer.id, streamId);
@@ -1871,10 +1869,10 @@ class Taoyao extends RemoteClient {
       });
       // dataConsumer.observer.on("close", fn())
       dataConsumer.on("close", () => {
-        if(me.dataConsumers.delete(dataConsumer.id)) {
+        if(this.dataConsumers.delete(dataConsumer.id)) {
           console.debug("数据消费者关闭", dataConsumer.id, streamId);
         } else {
-          console.debug("数据消费者关闭（无效）", dataConsumer.id, streamId);
+          console.debug("数据消费者关闭（数据消费者无效）", dataConsumer.id, streamId);
         }
       });
       dataConsumer.on("error", (error) => {
@@ -1884,7 +1882,7 @@ class Taoyao extends RemoteClient {
         console.debug("数据消费者消息", dataConsumer.id, streamId, message.toString("UTF-8"), ppid);
       });
     } catch (error) {
-      console.error("打开数据消费者异常", error);
+      me.platformError("消费数据异常", error);
     }
   }
 

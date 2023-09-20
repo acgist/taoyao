@@ -22,8 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 消费数据信令
  * 
- * TODO：防止重复消费
- * 
  * @author acgist
  */
 @Slf4j
@@ -55,7 +53,7 @@ public class MediaDataConsumeProtocol extends ProtocolRoomAdapter {
         final String producerId = MapUtils.get(body, Constant.PRODUCER_ID);
         final DataProducer dataProducer = room.dataProducer(producerId);
         if(dataProducer == null) {
-            throw MessageCodeException.of("没有提供数据生产：" + producerId);
+            throw MessageCodeException.of("数据生产者无效：" + producerId);
         }
         if(clientType.isClient()) {
             final ClientWrapper dataConsumerClientWrapper = room.clientWrapper(client);
@@ -73,6 +71,7 @@ public class MediaDataConsumeProtocol extends ProtocolRoomAdapter {
             body.put(Constant.RTP_CAPABILITIES,  dataConsumerClientWrapper.getRtpCapabilities());
             body.put(Constant.SCTP_CAPABILITIES, dataConsumerClientWrapper.getSctpCapabilities());
             mediaClient.push(message);
+            log.info("{}主动消费数据：{} - {}", dataConsumerClientId, dataProducerClientId, streamId);
         } else if(clientType.isMedia()) {
             final String streamId   = MapUtils.get(body, Constant.STREAM_ID);
             final String consumerId = MapUtils.get(body, Constant.CONSUMER_ID);

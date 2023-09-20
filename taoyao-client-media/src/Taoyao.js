@@ -1129,13 +1129,10 @@ class Taoyao {
   /**
    * 消费数据信令
    * 
-   * TODO：重复
-   * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    * @param {*} body    消息主体
    */
   async mediaDataConsume(message, body) {
-    const me = this;
     const {
       roomId,
       clientId,
@@ -1145,7 +1142,7 @@ class Taoyao {
       transportId,
       rtpCapabilities,
     } = body;
-    const room         = me.rooms.get(roomId);
+    const room         = this.rooms.get(roomId);
     const transport    = room?.transports.get(transportId);
     const dataProducer = room?.dataProducers.get(producerId);
     if (
@@ -1169,12 +1166,12 @@ class Taoyao {
     dataConsumer.streamId = streamId;
 		room.dataConsumers.set(dataConsumer.id, dataConsumer);
     console.debug("创建数据消费者", dataProducer.id, streamId);
-		dataConsumer.on('transportclose', () => {
-      console.info("数据消费者关闭（通道关闭）", dataConsumer.id, streamId);
+		dataConsumer.on("transportclose", () => {
+      console.debug("数据消费者关闭（通道关闭）", dataConsumer.id, streamId);
 			dataConsumer.close();
 		});
-		dataConsumer.on('dataproducerclose', () => {
-      console.info("数据消费者关闭（生产者关闭）", dataConsumer.id, streamId);
+		dataConsumer.on("dataproducerclose", () => {
+      console.debug("数据消费者关闭（生产者关闭）", dataConsumer.id, streamId);
       dataConsumer.close();
 		});
     // dataConsumer.on("bufferedamountlow",  fn(bufferedAmount));
@@ -1182,7 +1179,7 @@ class Taoyao {
     dataConsumer.observer.on("close", () => {
       if(room.dataConsumers.delete(dataConsumer.id)) {
         console.debug("数据消费者关闭", dataConsumer.id, streamId);
-        me.push(protocol.buildMessage("media::data::consumer::close", {
+        this.push(protocol.buildMessage("media::data::consumer::close", {
           roomId,
           consumerId: dataConsumer.id,
         }));
@@ -1190,20 +1187,18 @@ class Taoyao {
         console.debug("数据消费者关闭（数据消费者无效）", dataConsumer.id, streamId);
       }
     });
-    me.push(
-      protocol.buildMessage("media::data::consume", {
-        roomId              : roomId,
-        clientId            : clientId,
-        sourceId            : sourceId,
-        streamId            : streamId,
-        producerId          : producerId,
-        consumerId          : dataConsumer.id,
-        label               : dataConsumer.label,
-        appData             : dataProducer.appData,
-        protocol            : dataConsumer.protocol,
-        sctpStreamParameters: dataConsumer.sctpStreamParameters,
-      })
-    );
+    this.push(protocol.buildMessage("media::data::consume", {
+      roomId              : roomId,
+      clientId            : clientId,
+      sourceId            : sourceId,
+      streamId            : streamId,
+      producerId          : producerId,
+      consumerId          : dataConsumer.id,
+      label               : dataConsumer.label,
+      appData             : dataProducer.appData,
+      protocol            : dataConsumer.protocol,
+      sctpStreamParameters: dataConsumer.sctpStreamParameters,
+    }));
   }
 
   /**
