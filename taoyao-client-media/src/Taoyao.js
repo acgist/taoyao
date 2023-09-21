@@ -1107,23 +1107,22 @@ class Taoyao {
    * @param {*} body    消息主体
    */
   async mediaConsumerStatus(message, body) {
-    const me = this;
     const {
       roomId,
       consumerId,
     } = body;
-    const room     = me.rooms.get(roomId);
+    const room     = this.rooms.get(roomId);
     const consumer = room?.consumers.get(consumerId);
-    if(consumer) {
-      console.debug("查询消费者状态", consumerId);
-      message.body = {
-        ...body,
-        status: await consumer.getStats()
-      };
-      me.push(message);
-    } else {
-      console.debug("查询消费者状态（无效）", consumerId);
+    if(!consumer) {
+      console.debug("查询消费者状态（消费者无效）", roomId, consumerId);
+      return;
     }
+    console.debug("查询消费者状态", consumerId);
+    message.body = {
+      ...body,
+      status: await consumer.getStats()
+    };
+    this.push(message);
   }
 
   /**

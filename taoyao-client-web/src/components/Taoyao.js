@@ -1698,19 +1698,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 查询消费者状态信令
-   * 
-   * @param {*} consumerId 消费者ID
-   */
-  async mediaConsumerStatus(consumerId) {
-    const me = this;
-    return await me.request(protocol.buildMessage('media::consumer::status', {
-      roomId: me.roomId,
-      consumerId
-    }));
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -1814,6 +1801,18 @@ class Taoyao extends RemoteClient {
     } catch (error) {
       me.platformError("消费媒体异常", error);
     }
+  }
+
+  /**
+   * 查询消费者状态信令
+   * 
+   * @param {*} consumerId 消费者ID
+   */
+  async mediaConsumerStatus(consumerId) {
+    return await this.request(protocol.buildMessage("media::consumer::status", {
+      consumerId,
+      roomId: this.roomId,
+    }));
   }
 
   /**
