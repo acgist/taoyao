@@ -1587,11 +1587,11 @@ class Taoyao extends RemoteClient {
     const me = this;
     const consumer = me.consumers.get(consumerId);
     if(!consumer) {
-      me.platformError("请求关键帧消费者无效");
+      me.platformError("消费者无效");
       return;
     }
     if(consumer.kind !== "video") {
-      me.platformError("只能请求视频消费者关键帧");
+      me.platformError("只能请求视频消费者");
       return;
     }
     me.push(protocol.buildMessage("media::consumer::request::key::frame", {
@@ -1662,11 +1662,11 @@ class Taoyao extends RemoteClient {
     const me = this;
     const consumer = me.consumers.get(consumerId);
     if(!consumer) {
-      me.platformError("修改最佳空间层和时间层消费者无效");
+      me.platformError("消费者无效");
       return;
     }
     if(consumer.kind !== "video") {
-      me.platformError("只能修改视频消费者最佳空间层和时间层");
+      me.platformError("只能修改视频消费者");
       return;
     }
     me.push(protocol.buildMessage("media::consumer::set::preferred::layers", {
@@ -1674,26 +1674,6 @@ class Taoyao extends RemoteClient {
       consumerId,
       spatialLayer,
       temporalLayer,
-    }));
-  }
-
-  /**
-   * 设置消费者优先级信令
-   * 
-   * @param {*} consumerId 消费者ID
-   * @param {*} priority   优先级：1~255
-   */
-  mediaConsumerSetPriority(consumerId, priority) {
-    const me = this;
-    const consumer = me.consumers.get(consumerId);
-    if(!consumer) {
-      me.platformError("设置消费者优先级消费者无效");
-      return;
-    }
-    me.push(protocol.buildMessage("media::consumer::set::priority", {
-      roomId: me.roomId,
-      consumerId,
-      priority,
     }));
   }
 
@@ -1801,6 +1781,25 @@ class Taoyao extends RemoteClient {
     } catch (error) {
       me.platformError("消费媒体异常", error);
     }
+  }
+
+  /**
+   * 设置消费者优先级信令
+   * 
+   * @param {*} consumerId 消费者ID
+   * @param {*} priority   优先级：1~255
+   */
+  mediaConsumerSetPriority(consumerId, priority) {
+    const consumer = this.consumers.get(consumerId);
+    if(!consumer) {
+      this.platformError("消费者无效");
+      return;
+    }
+    this.push(protocol.buildMessage("media::consumer::set::priority", {
+      priority,
+      consumerId,
+      roomId: this.roomId,
+    }));
   }
 
   /**

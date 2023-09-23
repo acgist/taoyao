@@ -1080,23 +1080,22 @@ class Taoyao {
    * @param {*} body    消息主体
    */
   async mediaConsumerSetPriority(message, body) {
-    const me = this;
     const {
       roomId,
       consumerId,
       priority,
     } = body;
-    const room     = me.rooms.get(roomId);
+    const room     = this.rooms.get(roomId);
     const consumer = room?.consumers.get(consumerId);
-    if(consumer) {
-      console.debug("设置消费者优先级", consumerId, priority);
-      if(priority <= 0 || priority >= 256) {
-        await consumer.unsetPriority();
-      } else {
-        await consumer.setPriority(priority);
-      }
+    if(!consumer) {
+      console.debug("设置消费者优先级（消费者无效）", roomId, consumerId);
+      return;
+    }
+    console.debug("设置消费者优先级", consumerId, priority);
+    if(priority <= 0 || priority >= 256) {
+      await consumer.unsetPriority();
     } else {
-      console.debug("设置消费者优先级（无效）", consumerId);
+      await consumer.setPriority(priority);
     }
   }
 

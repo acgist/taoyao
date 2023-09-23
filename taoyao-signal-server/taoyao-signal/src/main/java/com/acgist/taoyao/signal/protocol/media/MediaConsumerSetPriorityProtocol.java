@@ -17,6 +17,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
  */
 @Protocol
 @Description(
+    memo = "如果优先级不在范围内表示取消优先级设置",
     body = """
     {
         "roomId"    : "房间ID",
