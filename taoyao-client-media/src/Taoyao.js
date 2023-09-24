@@ -1049,28 +1049,27 @@ class Taoyao {
   /**
    * 修改最佳空间层和时间层信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    * @param {*} body    消息主体
    */
   async mediaConsumerSetPreferredLayers(message, body) {
-    const me = this;
     const {
       roomId,
       consumerId,
       spatialLayer,
       temporalLayer,
     } = body;
-    const room     = me.rooms.get(roomId);
+    const room     = this.rooms.get(roomId);
     const consumer = room?.consumers.get(consumerId);
-    if(consumer) {
-      console.debug("修改最佳空间层和时间层", consumerId);
-      await consumer.setPreferredLayers({
-        spatialLayer,
-        temporalLayer
-      });
-    } else {
-      console.debug("修改最佳空间层和时间层（无效）", consumerId);
+    if(!consumer) {
+      console.debug("修改最佳空间层和时间层（消费者无效）", roomId, consumerId);
+      return;
     }
+    console.debug("修改最佳空间层和时间层", consumerId);
+    await consumer.setPreferredLayers({
+      spatialLayer,
+      temporalLayer
+    });
   }
 
   /**

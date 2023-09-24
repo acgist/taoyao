@@ -1652,32 +1652,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 修改最佳空间层和时间层信令
-   * 
-   * @param {*} consumerId    消费者ID
-   * @param {*} spatialLayer  空间层
-   * @param {*} temporalLayer 时间层
-   */
-  mediaConsumerSetPreferredLayers(consumerId, spatialLayer, temporalLayer) {
-    const me = this;
-    const consumer = me.consumers.get(consumerId);
-    if(!consumer) {
-      me.platformError("消费者无效");
-      return;
-    }
-    if(consumer.kind !== "video") {
-      me.platformError("只能修改视频消费者");
-      return;
-    }
-    me.push(protocol.buildMessage("media::consumer::set::preferred::layers", {
-      roomId: me.roomId,
-      consumerId,
-      spatialLayer,
-      temporalLayer,
-    }));
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -1781,6 +1755,31 @@ class Taoyao extends RemoteClient {
     } catch (error) {
       me.platformError("消费媒体异常", error);
     }
+  }
+
+  /**
+   * 修改最佳空间层和时间层信令
+   * 
+   * @param {*} consumerId    消费者ID
+   * @param {*} spatialLayer  空间层
+   * @param {*} temporalLayer 时间层
+   */
+  mediaConsumerSetPreferredLayers(consumerId, spatialLayer, temporalLayer) {
+    const consumer = this.consumers.get(consumerId);
+    if(!consumer) {
+      this.platformError("消费者无效");
+      return;
+    }
+    if(consumer.kind !== "video") {
+      this.platformError("只能修改视频消费者");
+      return;
+    }
+    this.push(protocol.buildMessage("media::consumer::set::preferred::layers", {
+      consumerId,
+      spatialLayer,
+      temporalLayer,
+      roomId: this.roomId,
+    }));
   }
 
   /**
