@@ -1643,15 +1643,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 媒体消费者评分信令
-   * 
-   * @param {*} message 信令消息
-   */
-  defaultMediaConsumerScore(message) {
-    console.debug("消费者评分", message);
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -1755,6 +1746,15 @@ class Taoyao extends RemoteClient {
     } catch (error) {
       me.platformError("消费媒体异常", error);
     }
+  }
+
+  /**
+   * 媒体消费者评分信令
+   * 
+   * @param {*} message 信令消息
+   */
+  defaultMediaConsumerScore(message) {
+    console.debug("消费者评分", message);
   }
 
   /**

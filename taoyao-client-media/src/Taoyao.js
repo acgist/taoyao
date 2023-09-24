@@ -883,44 +883,38 @@ class Taoyao {
           // consumer.observer.on("score", fn(score));
           consumer.on("score", (score) => {
             console.debug("消费者评分", consumer.id, streamId, score);
-            me.push(
-              protocol.buildMessage("media::consumer::score", {
-                roomId    : roomId,
-                consumerId: consumer.id,
-                score     : score,
-              })
-            );
+            me.push(protocol.buildMessage("media::consumer::score", {
+              score,
+              roomId,
+              consumerId: consumer.id,
+            }));
           });
           // consumer.observer.on("layerschange", fn(layers));
           consumer.on("layerschange", (layers) => {
             console.debug("消费者空间层和时间层改变", consumer.id, streamId, layers);
-            me.push(
-              protocol.buildMessage("media::consumer::layers::change", {
-                roomId       : roomId,
-                consumerId   : consumer.id,
-                spatialLayer : layers ? layers.spatialLayer  : null,
-                temporalLayer: layers ? layers.temporalLayer : null,
-              })
-            );
+            me.push(protocol.buildMessage("media::consumer::layers::change", {
+              roomId,
+              consumerId   : consumer.id,
+              spatialLayer : layers ? layers.spatialLayer  : null,
+              temporalLayer: layers ? layers.temporalLayer : null,
+            }));
           });
           consumer.observer.on("close", () => {
             if(room.consumers.delete(consumer.id)) {
               console.info("消费者关闭", consumer.id, streamId);
-              me.push(
-                protocol.buildMessage("media::consumer::close", {
-                  roomId    : roomId,
-                  consumerId: consumer.id
-                })
-              );
+              me.push(protocol.buildMessage("media::consumer::close", {
+                roomId,
+                consumerId: consumer.id
+              }));
             } else {
-              console.debug("消费者关闭（无效）", consumer.id, streamId);
+              console.debug("消费者关闭（消费者无效）", consumer.id, streamId);
             }
           });
           consumer.observer.on("pause", () => {
             console.debug("消费者暂停", consumer.id, streamId);
             me.push(
               protocol.buildMessage("media::consumer::pause", {
-                roomId    : roomId,
+                roomId,
                 consumerId: consumer.id
               })
             );
@@ -929,7 +923,7 @@ class Taoyao {
             console.debug("消费者恢复", consumer.id, streamId);
             me.push(
               protocol.buildMessage("media::consumer::resume", {
-                roomId    : roomId,
+                roomId,
                 consumerId: consumer.id
               })
             );
@@ -940,21 +934,19 @@ class Taoyao {
           //   console.info("消费者跟踪事件（trace）", consumer.id, streamId, trace);
           // });
           // 等待终端准备就绪：可以不用等待直接使用push方法
-          await me.request(
-            protocol.buildMessage("media::consume", {
-              roomId        : roomId,
-              clientId      : clientId,
-              sourceId      : sourceId,
-              streamId      : streamId,
-              producerId    : producerId,
-              consumerId    : consumer.id,
-              kind          : consumer.kind,
-              type          : consumer.type,
-              appData       : producer.appData,
-              rtpParameters : consumer.rtpParameters,
-              producerPaused: consumer.producerPaused,
-            })
-          );
+          await me.request(protocol.buildMessage("media::consume", {
+            roomId,
+            clientId,
+            sourceId,
+            streamId,
+            producerId,
+            consumerId    : consumer.id,
+            kind          : consumer.kind,
+            type          : consumer.type,
+            appData       : producer.appData,
+            rtpParameters : consumer.rtpParameters,
+            producerPaused: consumer.producerPaused,
+          }));
           await consumer.resume();
           consumer.localPaused = false;
         })()

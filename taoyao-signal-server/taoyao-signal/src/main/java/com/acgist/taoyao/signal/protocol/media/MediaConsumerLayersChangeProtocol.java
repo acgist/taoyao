@@ -11,34 +11,34 @@ import com.acgist.taoyao.signal.party.room.Room;
 import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**
- * 设置消费者优先级信令
+ * 消费者空间层和时间层改变信令
  * 
  * @author acgist
  */
 @Protocol
 @Description(
-    memo = "如果优先级不在范围内表示取消优先级设置",
     body = """
     {
-        "roomId"    : "房间ID",
-        "consumerId": "消费者ID",
-        "priority"  : 优先级（1~255）
+        "roomId"       : "房间ID"
+        "consumerId"   : "消费者ID",
+        "spatialLayer" : 最佳空间层,
+        "temporalLayer": 最佳时间层
     }
     """,
-    flow = "终端->信令服务->媒体服务"
+    flow = "媒体服务->信令服务+)终端"
 )
-public class MediaConsumerSetPriorityProtocol extends ProtocolRoomAdapter {
+public class MediaConsumerLayersChangeProtocol extends ProtocolRoomAdapter {
 
-    public static final String SIGNAL = "media::consumer::set::priority";
+    public static final String SIGNAL = "media::consumer::layers::change";
     
-    public MediaConsumerSetPriorityProtocol() {
-        super("设置消费者优先级信令", SIGNAL);
+    protected MediaConsumerLayersChangeProtocol() {
+        super("消费者空间层和时间层改变信令", SIGNAL);
     }
     
     @Override
     public void execute(String clientId, ClientType clientType, Room room, Client client, Client mediaClient, Message message, Map<String, Object> body) {
-        if(clientType.isClient()) {
-            mediaClient.push(message);
+        if(clientType.isMedia()) {
+            room.broadcast(message);
         } else {
             this.logNoAdapter(clientType);
         }
