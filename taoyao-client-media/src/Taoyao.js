@@ -921,17 +921,15 @@ class Taoyao {
           });
           consumer.observer.on("resume", () => {
             console.debug("消费者恢复", consumer.id, streamId);
-            me.push(
-              protocol.buildMessage("media::consumer::resume", {
-                roomId,
-                consumerId: consumer.id
-              })
-            );
+            me.push(protocol.buildMessage("media::consumer::resume", {
+              roomId,
+              consumerId: consumer.id
+            }));
           });
 					// await consumer.enableTraceEvent([ 'pli', 'fir', 'rtp', 'nack', 'keyframe' ]);
           // consumer.observer.on("trace", fn(trace));
           // consumer.on("trace", (trace) => {
-          //   console.info("消费者跟踪事件（trace）", consumer.id, streamId, trace);
+          //   console.debug("消费者跟踪事件（trace）", consumer.id, streamId, trace);
           // });
           // 等待终端准备就绪：可以不用等待直接使用push方法
           await me.request(protocol.buildMessage("media::consume", {
@@ -1021,21 +1019,23 @@ class Taoyao {
   /**
    * 恢复消费者信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    * @param {*} body    消息主体
    */
    async mediaConsumerResume(message, body) {
-    const me = this;
-    const { roomId, consumerId } = body;
-    const room     = me.rooms.get(roomId);
+    const {
+      roomId,
+      consumerId
+    } = body;
+    const room     = this.rooms.get(roomId);
     const consumer = room?.consumers.get(consumerId);
-    if(consumer) {
-      consumer.localPaused = false;
-      console.debug("恢复消费者", consumerId);
-      await consumer.resume();
-    } else {
-      console.debug("恢复消费者（无效）", consumerId);
+    if(!consumer) {
+      console.warn("恢复消费者（消费者无效）", consumerId);
+      return;
     }
+    consumer.localPaused = false;
+    console.debug("恢复消费者", consumerId);
+    await consumer.resume();
   }
 
   /**

@@ -1601,48 +1601,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 恢复消费者信令
-   * 
-   * @param {*} consumerId 消费者ID
-   */
-  mediaConsumerResume(consumerId) {
-    const me = this;
-    const consumer = me.consumers.get(consumerId);
-    if(consumer) {
-      if(!consumer.paused) {
-        return;
-      }
-      console.debug("恢复消费者", consumerId);
-      me.push(protocol.buildMessage("media::consumer::resume", {
-        roomId    : me.roomId,
-        consumerId: consumerId,
-      }));
-    } else {
-      console.debug("恢复消费者无效", consumerId);
-    }
-  }
-
-  /**
-  * 恢复消费者信令
-  * 
-  * @param {*} message 信令消息
-  */
-  defaultMediaConsumerResume(message) {
-    const me = this;
-    const {
-      roomId,
-      consumerId
-    } = message.body;
-    const consumer = me.consumers.get(consumerId);
-    if (consumer) {
-      console.debug("恢复消费者", consumerId);
-      consumer.resume();
-    } else {
-      console.debug("恢复消费者无效", consumerId);
-    }
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -1746,6 +1704,50 @@ class Taoyao extends RemoteClient {
     } catch (error) {
       me.platformError("消费媒体异常", error);
     }
+  }
+
+  /**
+   * 恢复消费者信令
+   * 
+   * @param {*} consumerId 消费者ID
+   */
+  mediaConsumerResume(consumerId) {
+    const consumer = this.consumers.get(consumerId);
+    if(!consumer) {
+      console.debug("恢复消费者（消费者无效）", consumerId);
+      return;
+    }
+    if(!consumer.paused) {
+      console.debug("恢复消费者（消费者已经恢复）", consumerId);
+      return;
+    }
+    console.debug("恢复消费者", consumerId);
+    this.push(protocol.buildMessage("media::consumer::resume", {
+      consumerId,
+      roomId: this.roomId,
+    }));
+  }
+
+  /**
+  * 恢复消费者信令
+  * 
+  * @param {*} message 信令消息
+  */
+  defaultMediaConsumerResume(message) {
+    const {
+      consumerId
+    } = message.body;
+    const consumer = this.consumers.get(consumerId);
+    if (!consumer) {
+      console.debug("恢复消费者（消费者无效）", consumerId);
+      return;
+    }
+    if(!consumer.paused) {
+      console.debug("恢复消费者（消费者已经恢复）", consumerId);
+      return;
+    }
+    console.debug("恢复消费者", consumerId);
+    consumer.resume();
   }
 
   /**

@@ -30,6 +30,24 @@ import lombok.extern.slf4j.Slf4j;
  * VP8  = 101
  * H264 = 107
  * 
+ * 注意：媒体格式和录制格式一致可以直接使用`copy`代替格式参数减小`CPU`占用
+ * 
+ * OPUS/VP8->AAC/H264(TS)
+ * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v 30 -i taoyao.sdp -c:a aac -c:v h264 -f mpegts taoyao.ts
+ * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v 30 -i taoyao.sdp -c:a aac -c:v h264 -f mpegts taoyao.ts
+ * 
+ * OPUS/VP8->AAC/H264(MP4)
+ * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v 30 -i taoyao.sdp -c:a aac -c:v h264 taoyao.mp4
+ * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v 30 -i taoyao.sdp -c:a aac -c:v h264 taoyao.mp4
+ * 
+ * PCMU/H264->AAC/H264(TS)
+ * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -i taoyao.sdp -c:a aac -c:v h264 -f mpegts taoyao.ts
+ * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -i taoyao.sdp -c:a aac -c:v h264 -f mpegts taoyao.ts
+ * 
+ * PCMU/H264->AAC/H264(MP4)
+ * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -i taoyao.sdp -c:a aac -c:v copy taoyao.mp4
+ * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -i taoyao.sdp -c:a aac -c:v copy taoyao.mp4
+ * 
  * @author acgist
  */
 @Slf4j
