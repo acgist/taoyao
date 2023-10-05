@@ -13,7 +13,8 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 
 /**
  * 请求关键帧信令
- * 注意：视频才有
+ * 
+ * 注意：视频消费者才有
  * 
  * @author acgist
  */

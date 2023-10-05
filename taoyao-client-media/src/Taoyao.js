@@ -999,21 +999,23 @@ class Taoyao {
   /**
    * 请求关键帧信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    * @param {*} body    消息主体
    */
   async mediaConsumerRequestKeyFrame(message, body) {
-    const me = this;
-    const { roomId, consumerId } = body;
-    const room     = me.rooms.get(roomId);
+    const {
+      roomId,
+      consumerId
+    } = body;
+    const room     = this.rooms.get(roomId);
     const consumer = room?.consumers.get(consumerId);
-    if(consumer) {
-      console.debug("请求关键帧", consumerId);
-      // 通过trace事件监听关键帧的信息
-      await consumer.requestKeyFrame();
-    } else {
-      console.debug("请求关键帧（无效）", consumerId);
+    if(!consumer) {
+      console.debug("请求关键帧（消费者无效）", roomId, consumerId);
+      return;
     }
+    console.debug("请求关键帧", consumerId);
+    // 通过trace事件监听关键帧的信息
+    await consumer.requestKeyFrame();
   }
 
   /**
@@ -1030,7 +1032,7 @@ class Taoyao {
     const room     = this.rooms.get(roomId);
     const consumer = room?.consumers.get(consumerId);
     if(!consumer) {
-      console.warn("恢复消费者（消费者无效）", consumerId);
+      console.warn("恢复消费者（消费者无效）", roomId, consumerId);
       return;
     }
     consumer.localPaused = false;

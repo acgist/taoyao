@@ -1579,28 +1579,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 请求关键帧信令
-   * 
-   * @param {*} consumerId 消费者ID
-   */
-  mediaConsumerRequestKeyFrame(consumerId) {
-    const me = this;
-    const consumer = me.consumers.get(consumerId);
-    if(!consumer) {
-      me.platformError("消费者无效");
-      return;
-    }
-    if(consumer.kind !== "video") {
-      me.platformError("只能请求视频消费者");
-      return;
-    }
-    me.push(protocol.buildMessage("media::consumer::request::key::frame", {
-      roomId    : me.roomId,
-      consumerId: consumerId,
-    }));
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -1704,6 +1682,27 @@ class Taoyao extends RemoteClient {
     } catch (error) {
       me.platformError("消费媒体异常", error);
     }
+  }
+
+  /**
+   * 请求关键帧信令
+   * 
+   * @param {*} consumerId 消费者ID
+   */
+  mediaConsumerRequestKeyFrame(consumerId) {
+    const consumer = this.consumers.get(consumerId);
+    if(!consumer) {
+      this.platformError("消费者无效");
+      return;
+    }
+    if(consumer.kind !== "video") {
+      this.platformError("只能请求视频消费者");
+      return;
+    }
+    this.push(protocol.buildMessage("media::consumer::request::key::frame", {
+      consumerId,
+      roomId: this.roomId,
+    }));
   }
 
   /**
@@ -2724,7 +2723,10 @@ class Taoyao extends RemoteClient {
       if(message instanceof Object) {
         callbackMessage = message;
       } else {
-        callbackMessage         = protocol.buildMessage("platform::error", {});
+        callbackMessage = protocol.buildMessage("platform::error", {
+          error,
+          message,
+        });
         callbackMessage.code    = "9999";
         callbackMessage.message = message;
       }

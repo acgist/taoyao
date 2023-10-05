@@ -18,7 +18,7 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
  * 
  * 码率：数据大小和时间的比值
  * 
- * 注意：只有Simulcast和SVC消费者有效
+ * 注意：只有Simulcast和SVC视频消费者有效
  * 
  * @author acgist
  */
