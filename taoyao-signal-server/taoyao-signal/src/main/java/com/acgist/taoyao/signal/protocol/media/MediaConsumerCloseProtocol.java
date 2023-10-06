@@ -54,7 +54,7 @@ public class MediaConsumerCloseProtocol extends ProtocolRoomAdapter implements A
         final Room room = event.getRoom();
         final Client mediaClient = event.getMediaClient();
         final Map<String, Object> body = Map.of(
-            Constant.ROOM_ID, room.getRoomId(),
+            Constant.ROOM_ID,     room.getRoomId(),
             Constant.CONSUMER_ID, event.getConsumerId()
         );
         mediaClient.push(this.build(body));

@@ -901,7 +901,7 @@ class Taoyao {
           });
           consumer.observer.on("close", () => {
             if(room.consumers.delete(consumer.id)) {
-              console.info("消费者关闭", consumer.id, streamId);
+              console.debug("消费者关闭", consumer.id, streamId);
               me.push(protocol.buildMessage("media::consumer::close", {
                 roomId,
                 consumerId: consumer.id
@@ -958,20 +958,22 @@ class Taoyao {
   /**
    * 关闭消费者信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    * @param {*} body    消息主体
    */
   async mediaConsumerClose(message, body) {
-    const me = this;
-    const { roomId, consumerId } = body;
-    const room     = me.rooms.get(roomId);
+    const {
+      roomId,
+      consumerId
+    } = body;
+    const room     = this.rooms.get(roomId);
     const consumer = room?.consumers.get(consumerId);
-    if(consumer) {
-      console.info("关闭消费者", consumerId);
-      await consumer.close();
-    } else {
-      console.debug("关闭消费者无效（无效）", consumerId);
+    if(!consumer) {
+      console.debug("关闭消费者（消费者无效）", roomId, consumerId);
+      return;
     }
+    console.debug("关闭消费者", consumerId);
+    await consumer.close();
   }
 
   /**

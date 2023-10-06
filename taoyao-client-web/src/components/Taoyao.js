@@ -1522,40 +1522,6 @@ class Taoyao extends RemoteClient {
   }
 
   /**
-   * 关闭消费者信令
-   *
-   * @param {*} consumerId 消费者ID
-   */
-  mediaConsumerClose(consumerId) {
-    const me = this;
-    me.push(protocol.buildMessage("media::consumer::close", {
-      roomId    : me.roomId,
-      consumerId: consumerId,
-    }));
-  }
-  
-  /**
-   * 关闭消费者信令
-   *
-   * @param {*} message 信令消息
-   * @param {*} body    消息主体
-   */
-  defaultMediaConsumerClose(message, body) {
-    const me = this;
-    const {
-      roomId,
-      consumerId
-    } = body;
-    const consumer = me.consumers.get(consumerId);
-    if (consumer) {
-      console.debug("关闭消费者", consumerId);
-      consumer.close();
-    } else {
-      console.debug("关闭消费者无效", consumerId);
-    }
-  }
-
-  /**
    * 消费媒体信令
    * 
    * @param {*} producerId 生产者ID
@@ -1660,6 +1626,37 @@ class Taoyao extends RemoteClient {
     } catch (error) {
       me.platformError("消费媒体异常", error);
     }
+  }
+
+  /**
+   * 关闭消费者信令
+   *
+   * @param {*} consumerId 消费者ID
+   */
+  mediaConsumerClose(consumerId) {
+    this.push(protocol.buildMessage("media::consumer::close", {
+      consumerId,
+      roomId: this.roomId,
+    }));
+  }
+  
+  /**
+   * 关闭消费者信令
+   *
+   * @param {*} message 信令消息
+   * @param {*} body    消息主体
+   */
+  defaultMediaConsumerClose(message, body) {
+    const {
+      consumerId
+    } = body;
+    const consumer = this.consumers.get(consumerId);
+    if(!consumer) {
+      console.debug("关闭消费者（消费者无效）", consumerId);
+      return;
+    }
+    console.debug("关闭消费者", consumerId);
+    consumer.close();
   }
 
   /**
