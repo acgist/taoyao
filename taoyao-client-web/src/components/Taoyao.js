@@ -758,20 +758,25 @@ class Taoyao extends RemoteClient {
    */
   async preCallback(message) {
     const me = this;
-    const { header, body } = message;
-    const { signal }       = header;
+    const {
+      header,
+      body
+    } = message;
+    const {
+      signal
+    } = header;
     switch (signal) {
       case "client::config":
-        me.defaultClientConfig(message);
+        me.defaultClientConfig(message, body);
         break;
       case "media::consume":
-        await me.defaultMediaConsume(message);
+        await me.defaultMediaConsume(message, body);
         break;
       case "media::data::consume":
-        me.defaultMediaDataConsume(message);
+        me.defaultMediaDataConsume(message, body);
         break;
       case "platform::error":
-        me.defaultPlatformError(message);
+        me.defaultPlatformError(message, body);
         break;
     }
   }
@@ -783,131 +788,133 @@ class Taoyao extends RemoteClient {
    */
   async postCallback(message) {
     const me = this;
-    const { header, body } = message;
-    const { signal }       = header;
+    const {
+      header,
+      body
+    } = message;
+    const {
+      signal
+    } = header;
     switch (signal) {
       case "client::broadcast":
-        me.defaultClientBroadcast(message);
+        me.defaultClientBroadcast(message, body);
         break;
       case "client::offline":
-        me.defaultClientOffline(message);
+        me.defaultClientOffline(message, body);
         break;
         case "client::online":
-        me.defaultClientOnline(message);
+        me.defaultClientOnline(message, body);
         break;
       case "client::reboot":
-        me.defaultClientReboot(message);
+        me.defaultClientReboot(message, body);
         break;
       case "client::shutdown":
-        me.defaultClientShutdown(message);
+        me.defaultClientShutdown(message, body);
         break;
       case "client::unicast":
-        me.defaultClientUnicast(message);
+        me.defaultClientUnicast(message, body);
         break;
       case "control::bell":
-        me.defaultControlBell(message);
+        me.defaultControlBell(message, body);
         break;
       case "control::client::record":
-        me.defaultControlClientReccord(message);
+        me.defaultControlClientReccord(message, body);
         break;
       case "control::config::audio":
-        me.defaultControlConfigAudio(message);
+        me.defaultControlConfigAudio(message, body);
         break;
       case "control::config::video":
-        me.defaultControlConfigVideo(message);
+        me.defaultControlConfigVideo(message, body);
         break;
       case "control::photograph":
-        me.defaultControlPhotograph(message);
+        me.defaultControlPhotograph(message, body);
         break;
       case "control::wakeup":
-        me.defaultControlWakeup(message);
+        me.defaultControlWakeup(message, body);
         break;
       case "media::audio::volume":
-        me.defaultMediaAudioVolume(message);
+        me.defaultMediaAudioVolume(message, body);
         break;
       case "media::consumer::close":
-        me.defaultMediaConsumerClose(message);
+        me.defaultMediaConsumerClose(message, body);
         break;
       case "media::consumer::pause":
-        me.defaultMediaConsumerPause(message);
+        me.defaultMediaConsumerPause(message, body);
         break;
       case "media::consumer::resume":
-        me.defaultMediaConsumerResume(message);
+        me.defaultMediaConsumerResume(message, body);
         break;
       case "media::consumer::score":
-        me.defaultMediaConsumerScore(message);
+        me.defaultMediaConsumerScore(message, body);
         break;
       case "media::data::consumer::close":
-        me.defaultMediaDataConsumerClose(message);
+        me.defaultMediaDataConsumerClose(message, body);
         break;
       case "media::data::producer::close":
-        me.defaultMediaDataProducerClose(message);
+        me.defaultMediaDataProducerClose(message, body);
         break;
       case "media::producer::close":
-        me.defaultMediaProducerClose(message);
+        me.defaultMediaProducerClose(message, body);
         break;
       case "media::producer::pause":
-        me.defaultMediaProducerPause(message);
+        me.defaultMediaProducerPause(message, body);
         break;
       case "media::producer::resume":
-        me.defaultMediaProducerResume(message);
+        me.defaultMediaProducerResume(message, body);
         break;
       case "media::producer::score":
-        me.defaultMediaProducerScore(message);
+        me.defaultMediaProducerScore(message, body);
         break;
       case "media::transport::close":
-        me.defaultMediaTransportClose(message);
+        me.defaultMediaTransportClose(message, body);
         break;
       case "media::video::orientation::change":
-        me.defaultMediaVideoOrientationChange(message);
-        break;
-      case "platform::error":
-        me.platformError(message);
+        me.defaultMediaVideoOrientationChange(message, body);
         break;
       case "platform::reboot":
-        me.defaultPlatformReboot(message);
+        me.defaultPlatformReboot(message, body);
         break;
       case "platform::shutdown":
-        me.defaultPlatformShutdown(message);
+        me.defaultPlatformShutdown(message, body);
         break;
       case "room::broadcast":
-        me.defaultRoomBroadcast(message);
+        me.defaultRoomBroadcast(message, body);
         break;
       case "room::client::list":
-        me.defaultRoomClientList(message);
+        me.defaultRoomClientList(message, body);
         break;
       case "room::close":
-        me.defaultRoomClose(message);
+        me.defaultRoomClose(message, body);
         break;
       case "room::create":
-        this.defaultRoomCreate(message);
+        this.defaultRoomCreate(message, body);
         break;
       case "room::enter":
-        me.defaultRoomEnter(message);
+        me.defaultRoomEnter(message, body);
         break;
       case "room::expel":
-        me.defaultRoomExpel(message);
+        me.defaultRoomExpel(message, body);
         break;
       case "room::invite":
-        me.defaultRoomInvite(message);
+        me.defaultRoomInvite(message, body);
         break;
       case "room::leave":
-        me.defaultRoomLeave(message);
+        me.defaultRoomLeave(message, body);
         break;
       case "session::call":
-        me.defaultSessionCall(message);
+        me.defaultSessionCall(message, body);
         break;
       case "session::close":
-        me.defaultSessionClose(message);
+        me.defaultSessionClose(message, body);
         break;
       case "session::exchange":
-        me.defaultSessionExchange(message);
+        me.defaultSessionExchange(message, body);
         break;
       case "session::pause":
-        me.defaultSessionPause(message);
+        me.defaultSessionPause(message, body);
         break;
       case "session::resume":
-        me.defaultSessionResume(message);
+        me.defaultSessionResume(message, body);
         break;
     }
   }
@@ -1141,14 +1148,10 @@ class Taoyao extends RemoteClient {
    * 终端广播信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultClientBroadcast(message) {
-    const me = this;
-    const {
-      header,
-      body,
-    } = message;
-    console.debug("终端广播", header, body);
+  defaultClientBroadcast(message, body) {
+    console.debug("终端广播", message);
   }
 
   /**
@@ -1164,10 +1167,11 @@ class Taoyao extends RemoteClient {
    * 终端配置信令
    *
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultClientConfig(message) {
+  defaultClientConfig(message, body) {
     const me = this;
-    const { media, webrtc } = message.body;
+    const { media, webrtc } = body;
     const { audio, video }  = media;
     me.audioConfig.sampleSize = {
       min  : media.minSampleSize,
@@ -1246,8 +1250,9 @@ class Taoyao extends RemoteClient {
    * 终端下线信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultClientOffline(message) {
+  defaultClientOffline(message, body) {
     console.debug("终端下线", message);
   }
 
@@ -1255,8 +1260,9 @@ class Taoyao extends RemoteClient {
    * 终端上线信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultClientOnline(message) {
+  defaultClientOnline(message, body) {
     console.debug("终端上线", message);
   }
 
@@ -1264,8 +1270,9 @@ class Taoyao extends RemoteClient {
    * 重启终端信令
    *
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultClientReboot(message) {
+  defaultClientReboot(message, body) {
     console.info("重启终端", message);
     location.reload();
   }
@@ -1274,8 +1281,9 @@ class Taoyao extends RemoteClient {
    * 关闭终端信令
    *
    * @param {*} message 消息
+   * @param {*} body    消息主体
    */
-  defaultClientShutdown(message) {
+  defaultClientShutdown(message, body) {
     console.info("关闭终端", message);
     window.close();
   }
@@ -1311,8 +1319,9 @@ class Taoyao extends RemoteClient {
    * 终端单播信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultClientUnicast(message) {
+  defaultClientUnicast(message, body) {
     console.debug("终端单播消息", message);
   }
 
@@ -1333,8 +1342,9 @@ class Taoyao extends RemoteClient {
    * 响铃信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultControlBell(message) {
+  defaultControlBell(message, body) {
     console.debug("响铃", message);
     this.push(message);
   }
@@ -1357,10 +1367,12 @@ class Taoyao extends RemoteClient {
    * 终端录像信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultControlClientReccord(message) {
+  defaultControlClientReccord(message, body) {
     console.debug("终端录像", message);
     this.push(message);
+    // TODO：录像
   }
 
   /**
@@ -1380,8 +1392,9 @@ class Taoyao extends RemoteClient {
    * 配置音频信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultControlConfigAudio(message) {
+  defaultControlConfigAudio(message, body) {
     console.debug("配置音频", message);
     this.push(message);
     // TODO：配置本地音频
@@ -1404,8 +1417,9 @@ class Taoyao extends RemoteClient {
    * 配置视频信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultControlConfigVideo(message) {
+  defaultControlConfigVideo(message, body) {
     console.debug("配置视频", message);
     this.push(message);
     // TODO：配置本地视频
@@ -1427,10 +1441,12 @@ class Taoyao extends RemoteClient {
    * 拍照信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultControlPhotograph(message) {
+  defaultControlPhotograph(message, body) {
     console.debug("拍照", message);
     this.push(message);
+    // TODO：拍照
   }
 
   /**
@@ -1463,8 +1479,9 @@ class Taoyao extends RemoteClient {
    * 终端唤醒信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultControlWakeup(message) {
+  defaultControlWakeup(message, body) {
     console.debug("终端唤醒", message);
     this.push(message);
   }
@@ -1473,13 +1490,14 @@ class Taoyao extends RemoteClient {
    * 终端音量信令
    *
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultMediaAudioVolume(message) {
+  defaultMediaAudioVolume(message, body) {
     const me = this;
     const {
       roomId,
       volumes
-    } = message.body;
+    } = body;
     if (volumes && volumes.length > 0) {
       // 声音
       volumes.forEach(v => {
@@ -1520,61 +1538,20 @@ class Taoyao extends RemoteClient {
    * 关闭消费者信令
    *
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultMediaConsumerClose(message) {
+  defaultMediaConsumerClose(message, body) {
     const me = this;
     const {
       roomId,
       consumerId
-    } = message.body;
+    } = body;
     const consumer = me.consumers.get(consumerId);
     if (consumer) {
       console.debug("关闭消费者", consumerId);
       consumer.close();
     } else {
       console.debug("关闭消费者无效", consumerId);
-    }
-  }
-
-  /**
-   * 暂停消费者信令
-   * 
-   * @param {*} consumerId 消费者ID
-   */
-  mediaConsumerPause(consumerId) {
-    const me = this;
-    const consumer = me.consumers.get(consumerId);
-    if(consumer) {
-      if(consumer.paused) {
-        return;
-      }
-      console.debug("暂停消费者", consumerId);
-      me.push(protocol.buildMessage("media::consumer::pause", {
-        roomId    : me.roomId,
-        consumerId: consumerId,
-      }));
-    } else {
-      console.debug("暂停消费者无效", consumerId);
-    }
-  }
-
-  /**
-   * 暂停消费者信令
-   * 
-   * @param {*} message 消息
-   */
-  defaultMediaConsumerPause(message) {
-    const me = this;
-    const {
-      roomId,
-      consumerId
-    } = message.body;
-    const consumer = me.consumers.get(consumerId);
-    if (consumer) {
-      console.debug("暂停消费者", consumerId);
-      consumer.pause();
-    } else {
-      console.debug("暂停消费者无效", consumerId);
     }
   }
 
@@ -1604,8 +1581,9 @@ class Taoyao extends RemoteClient {
    * const writableStream  = receiverStreams.writable || receiverStreams.writableStream;
    *
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultMediaConsume(message) {
+  async defaultMediaConsume(message, body) {
     const me = this;
     if (!me.audioConsume && !me.videoConsume) {
       console.debug("没有消费媒体");
@@ -1623,7 +1601,7 @@ class Taoyao extends RemoteClient {
       appData,
       rtpParameters,
       producerPaused,
-    } = message.body;
+    } = body;
     try {
       const consumer = await me.recvTransport.consume({
         id: consumerId,
@@ -1685,6 +1663,51 @@ class Taoyao extends RemoteClient {
   }
 
   /**
+   * 暂停消费者信令
+   * 
+   * @param {*} consumerId 消费者ID
+   */
+  mediaConsumerPause(consumerId) {
+    const consumer = this.consumers.get(consumerId);
+    if(!consumer) {
+      console.debug("暂停消费者（消费者无效）", consumerId);
+      return;
+    }
+    if(consumer.paused) {
+      console.debug("暂停消费者（消费者已经暂停）", consumerId);
+      return;
+    }
+    console.debug("暂停消费者", consumerId);
+    this.push(protocol.buildMessage("media::consumer::pause", {
+      consumerId,
+      roomId: this.roomId,
+    }));
+  }
+
+  /**
+   * 暂停消费者信令
+   * 
+   * @param {*} message 信令消息
+   * @param {*} body    消息主体
+   */
+  defaultMediaConsumerPause(message, body) {
+    const {
+      consumerId
+    } = body;
+    const consumer = this.consumers.get(consumerId);
+    if (!consumer) {
+      console.debug("暂停消费者（消费者无效）", consumerId);
+      return;
+    }
+    if(consumer.paused) {
+      console.debug("暂停消费者（消费者已经暂停）", consumerId);
+      return;
+    }
+    console.debug("暂停消费者", consumerId);
+    consumer.pause();
+  }
+
+  /**
    * 请求关键帧信令
    * 
    * @param {*} consumerId 消费者ID
@@ -1731,11 +1754,12 @@ class Taoyao extends RemoteClient {
   * 恢复消费者信令
   * 
   * @param {*} message 信令消息
+  * @param {*} body    消息主体
   */
-  defaultMediaConsumerResume(message) {
+  defaultMediaConsumerResume(message, body) {
     const {
       consumerId
-    } = message.body;
+    } = body;
     const consumer = this.consumers.get(consumerId);
     if (!consumer) {
       console.debug("恢复消费者（消费者无效）", consumerId);
@@ -1753,8 +1777,9 @@ class Taoyao extends RemoteClient {
    * 媒体消费者评分信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultMediaConsumerScore(message) {
+  defaultMediaConsumerScore(message, body) {
     console.debug("消费者评分", message);
   }
 
@@ -1834,8 +1859,9 @@ class Taoyao extends RemoteClient {
    * 消费数据信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultMediaDataConsume(message) {
+  async defaultMediaDataConsume(message, body) {
     const {
       roomId,
       clientId,
@@ -1847,7 +1873,7 @@ class Taoyao extends RemoteClient {
       appData,
       protocol,
       sctpStreamParameters,
-    } = message.body;
+    } = body;
     try {
       const dataConsumer = await this.recvTransport.consumeData({
         id            : consumerId,
@@ -1900,11 +1926,12 @@ class Taoyao extends RemoteClient {
    * 关闭数据消费者信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultMediaDataConsumerClose(message) {
+  defaultMediaDataConsumerClose(message, body) {
     const {
       consumerId
-    } = message.body;
+    } = body;
     const dataConsumer = this.dataConsumers.get(consumerId);
     if (!dataConsumer) {
       console.debug("关闭数据消费者（数据消费者无效）", consumerId);
@@ -1994,11 +2021,12 @@ class Taoyao extends RemoteClient {
    * 关闭数据生产者信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultMediaDataProducerClose(message) {
+  defaultMediaDataProducerClose(message, body) {
     const {
       producerId
-    } = message.body;
+    } = body;
     const producer = this.getProducer(producerId);
     if(!producer) {
       console.debug("关闭数据生产者（数据生产者无效）", producerId);
@@ -2369,11 +2397,12 @@ class Taoyao extends RemoteClient {
    * 关闭生产者信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultMediaProducerClose(message) {
+  async defaultMediaProducerClose(message, body) {
     const {
       producerId
-    } = message.body;
+    } = body;
     const producer = this.getProducer(producerId);
     if(!producer) {
       console.debug("关闭生产者（生产者无效）", producerId);
@@ -2408,12 +2437,13 @@ class Taoyao extends RemoteClient {
   /**
    * 暂停生产者信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultMediaProducerPause(message) {
+  defaultMediaProducerPause(message, body) {
     const {
       producerId
-    } = message.body;
+    } = body;
     const producer = this.getProducer(producerId);
     if (!producer) {
       console.debug("暂停生产者（生产者无效）", producerId);
@@ -2453,11 +2483,12 @@ class Taoyao extends RemoteClient {
    * 恢复生产者信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultMediaProducerResume(message) {
+  defaultMediaProducerResume(message, body) {
     const {
       producerId
-    } = message.body;
+    } = body;
     const producer = this.getProducer(producerId);
     if (!producer) {
       console.debug("恢复生产者（生产者无效）", producerId);
@@ -2475,8 +2506,9 @@ class Taoyao extends RemoteClient {
    * 媒体生产者评分信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultMediaProducerScore(message) {
+  defaultMediaProducerScore(message, body) {
     console.debug("生产者评分", message);
   }
 
@@ -2509,12 +2541,13 @@ class Taoyao extends RemoteClient {
    * 关闭通道信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultMediaTransportClose(message) {
+  defaultMediaTransportClose(message, body) {
     const {
       roomId,
       transportId
-    } = message.body;
+    } = body;
     if(this.recvTransport && this.recvTransport.id === transportId) {
       console.debug("关闭接收通道", transportId);
       this.recvTransport.close();
@@ -2706,8 +2739,9 @@ class Taoyao extends RemoteClient {
    * 视频方向变化信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultMediaVideoOrientationChange(message) {
+  defaultMediaVideoOrientationChange(message, body) {
     console.debug("视频方向变化", message);
   }
 
@@ -2744,8 +2778,9 @@ class Taoyao extends RemoteClient {
    * 平台异常信令
    *
    * @param {*} message 消息
+   * @param {*} body    消息主体
    */
-  defaultPlatformError(message) {
+  defaultPlatformError(message, body) {
     const {
       code
     } = message;
@@ -2770,8 +2805,9 @@ class Taoyao extends RemoteClient {
    * 重启平台信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultPlatformReboot(message) {
+  defaultPlatformReboot(message, body) {
     console.debug("重启平台", message);
   }
 
@@ -2801,8 +2837,9 @@ class Taoyao extends RemoteClient {
    * 关闭平台信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultPlatformShutdown(message) {
+  defaultPlatformShutdown(message, body) {
     console.debug("平台关闭", message);
   }
 
@@ -2822,8 +2859,9 @@ class Taoyao extends RemoteClient {
    * 房间广播信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultRoomBroadcast(message) {
+  defaultRoomBroadcast(message, body) {
     console.debug("房间广播", message);
   }
 
@@ -2860,11 +2898,12 @@ class Taoyao extends RemoteClient {
    * 房间终端列表信令
    *
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultRoomClientList(message) {
+  defaultRoomClientList(message, body) {
     const {
       clients
-    } = message.body;
+    } = body;
     clients.forEach(v => {
       if (v.clientId === this.clientId) {
         // 忽略自己
@@ -2887,11 +2926,12 @@ class Taoyao extends RemoteClient {
    * 关闭房间信令
    *
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultRoomClose(message) {
+  defaultRoomClose(message, body) {
     const {
       roomId
-    } = message.body;
+    } = body;
     if (roomId !== this.roomId) {
       return;
     }
@@ -2926,13 +2966,14 @@ class Taoyao extends RemoteClient {
    * 用于房间重建
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultRoomCreate(message) {
+  async defaultRoomCreate(message, body) {
     console.debug("创建房间", message);
     const {
       roomId,
       password
-    } = message.body;
+    } = body;
     if(this.roomId && roomId === this.roomId) {
       await this.roomLeave();
       await this.roomEnter(roomId, password);
@@ -2985,13 +3026,13 @@ class Taoyao extends RemoteClient {
    * 其他终端进入房间
    *
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultRoomEnter(message) {
+  defaultRoomEnter(message, body) {
     const {
-      roomId,
+      status,
       clientId,
-      status
-    } = message.body;
+    } = body;
     if (clientId === this.clientId) {
       // 忽略自己
     } else if(this.remoteClients.has(clientId)) {
@@ -3018,8 +3059,9 @@ class Taoyao extends RemoteClient {
    * 踢出房间信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultRoomExpel(message) {
+  async defaultRoomExpel(message, body) {
     console.debug("收到提出房间信令", message);
     await this.roomLeave();
   }
@@ -3040,13 +3082,14 @@ class Taoyao extends RemoteClient {
    * 邀请终端信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultRoomInvite(message) {
+  async defaultRoomInvite(message, body) {
     // 默认自动进入：如果需要确认使用回调函数重写
     const {
       roomId,
       password
-    } = message.body;
+    } = body;
     // H5只能同时进入一个房间
     if(this.roomId) {
       this.platformError("终端拒绝房间邀请");
@@ -3071,9 +3114,12 @@ class Taoyao extends RemoteClient {
    * 离开房间信令
    *
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  defaultRoomLeave(message) {
-    const { clientId } = message.body;
+  defaultRoomLeave(message, body) {
+    const {
+      clientId
+    } = body;
     if(clientId === this.clientId) {
       this.closeRoomMedia();
       console.debug("终端离开房间", clientId);
@@ -3155,8 +3201,9 @@ class Taoyao extends RemoteClient {
    * 发起会话信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultSessionCall(message) {
+  async defaultSessionCall(message, body) {
     await this.checkDevice();
     const {
       name,
@@ -3164,7 +3211,7 @@ class Taoyao extends RemoteClient {
       video = true,
       clientId,
       sessionId
-    } = message.body;
+    } = body;
     console.debug("接收会话", clientId, sessionId, audio, video);
     const session = new Session({
       name,
@@ -3200,9 +3247,12 @@ class Taoyao extends RemoteClient {
    * 关闭媒体信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultSessionClose(message) {
-    const { sessionId } = message.body;
+  async defaultSessionClose(message, body) {
+    const {
+      sessionId
+    } = body;
     const session = this.sessionClients.get(sessionId);
     if(session) {
       console.debug("关闭媒体", sessionId);
@@ -3217,9 +3267,9 @@ class Taoyao extends RemoteClient {
    * 媒体交换信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultSessionExchange(message) {
-    const body = message.body;
+  async defaultSessionExchange(message, body) {
     const {
       type,
       candidate,
@@ -3270,12 +3320,13 @@ class Taoyao extends RemoteClient {
    * 暂停媒体信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultSessionPause(message) {
+  async defaultSessionPause(message, body) {
     const {
       type,
       sessionId
-    } = message.body;
+    } = body;
     const session = this.sessionClients.get(sessionId);
     if(session) {
       console.debug("暂停媒体", type, sessionId);
@@ -3309,12 +3360,13 @@ class Taoyao extends RemoteClient {
    * 恢复媒体信令
    * 
    * @param {*} message 信令消息
+   * @param {*} body    消息主体
    */
-  async defaultSessionResume(message) {
+  async defaultSessionResume(message, body) {
     const {
       type,
       sessionId
-    } = message.body;
+    } = body;
     const session = this.sessionClients.get(sessionId);
     if(session) {
       console.debug("恢复媒体", type, sessionId);

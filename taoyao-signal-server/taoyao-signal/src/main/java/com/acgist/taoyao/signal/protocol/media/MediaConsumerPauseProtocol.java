@@ -33,7 +33,10 @@ import lombok.extern.slf4j.Slf4j;
         "consumerId": "消费者ID"
     }
     """,
-    flow = "终端->信令服务->媒体服务->信令服务->终端"
+    flow = {
+        "终端->信令服务->媒体服务->信令服务->终端",
+        "终端-[暂停生产者]>信令服务->媒体服务-[暂停消费者]>信令服务->终端"
+    }
 )
 public class MediaConsumerPauseProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaConsumerPauseEvent> {
 
@@ -49,7 +52,7 @@ public class MediaConsumerPauseProtocol extends ProtocolRoomAdapter implements A
         final Room room = event.getRoom();
         final Client mediaClient = event.getMediaClient();
         final Map<String, Object> body = Map.of(
-            Constant.ROOM_ID, room.getRoomId(),
+            Constant.ROOM_ID,     room.getRoomId(),
             Constant.CONSUMER_ID, event.getConsumerId()
         );
         mediaClient.push(this.build(body));
