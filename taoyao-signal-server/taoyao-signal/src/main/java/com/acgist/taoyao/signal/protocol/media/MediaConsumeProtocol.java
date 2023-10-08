@@ -39,14 +39,27 @@ import lombok.extern.slf4j.Slf4j;
     """,
     body = """
     {
-        "roomId"    : "房间ID"
+        "roomId"    : "房间ID",
         "producerId": "生产者ID"
+    }
+    {
+        "roomId"        : "房间ID",
+        "clientId"      : "消费者ID",
+        "sourceId"      : "生产者ID",
+        "streamId"      : "媒体ID",
+        "producerId"    : "生产者ID",
+        "consumerId"    : "消费者ID",
+        "kind"          : "消费者媒体类型",
+        "type"          : "消费者类型",
+        "appData"       : "APP数据",
+        "rtpParameters" : "RTP参数",
+        "producerPaused": "生产者是否暂停",
     }
     """,
     flow = {
+        "终端->信令服务->媒体服务=>信令服务->终端",
         "终端-[生产媒体]>信令服务-[消费媒体])信令服务=>信令服务->终端",
         "终端-[创建WebRTC通道]>信令服务-[消费媒体])信令服务=>信令服务->终端",
-        "终端->信令服务->媒体服务=>信令服务->终端"
     }
 )
 public class MediaConsumeProtocol extends ProtocolRoomAdapter implements ApplicationListener<MediaConsumeEvent> {
@@ -63,13 +76,13 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
         final Room room = event.getRoom();
         if(event.getProducer() != null) {
             // 生产媒体：其他终端消费
-            final Producer producer                  = event.getProducer();
+            final Producer producer = event.getProducer();
             final ClientWrapper produceClientWrapper = producer.getProducerClient();
             room.getClients().values().stream()
             .filter(v  -> v != produceClientWrapper)
             .filter(v  -> v.getRecvTransport() != null)
             .filter(v  -> v.getSubscribeType().canConsume(producer))
-            .forEach(v -> this.consume(room, v, producer, this.build()));
+            .forEach(consumeClientWrapper -> this.consume(room, consumeClientWrapper, producer, this.build()));
         } else if(event.getClientWrapper() != null) {
             // 创建WebRTC消费通道：消费其他终端
             final ClientWrapper consumeClientWrapper = event.getClientWrapper();
@@ -138,7 +151,7 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
         if(consumerClientWrapper.consumed(producer)) {
             // 消费通道就绪
             mediaClient.push(message);
-            log.info("{}消费通道就绪：{}", consumerClientId, streamId);
+            log.debug("{}消费通道就绪：{}", consumerClientId, streamId);
         } else {
             // 主动消费媒体
             final Transport recvTransport  = consumerClientWrapper.getRecvTransport();

@@ -804,7 +804,7 @@ class Taoyao {
   /**
    * 消费媒体信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    * @param {*} body    消息主体
    */
   async mediaConsume(message, body) {
@@ -818,8 +818,7 @@ class Taoyao {
       appData,
       rtpCapabilities,
     } = body;
-    const me        = this;
-    const room      = me.rooms.get(roomId);
+    const room      = this.rooms.get(roomId);
     const producer  = room?.producers.get(producerId);
     const transport = room?.transports.get(transportId);
     if (
@@ -828,8 +827,8 @@ class Taoyao {
       !transport       ||
       !rtpCapabilities ||
       !room.mediasoupRouter.canConsume({
-        producerId     : producerId,
-        rtpCapabilities: rtpCapabilities,
+        producerId,
+        rtpCapabilities,
       })
     ) {
       console.warn("不能消费媒体", body);
@@ -840,28 +839,21 @@ class Taoyao {
     for (let i = 0; i < consumerCount; i++) {
       promises.push(
         (async () => {
-          let consumer;
-          try {
-            consumer = await transport.consume({
-              // 默认暂停
-              paused         : true,
-              producerId     : producerId,
-              rtpCapabilities: rtpCapabilities,
-            });
-          } catch (error) {
-            console.error("创建消费者异常", body, error);
-            return;
-          }
+          const consumer = await transport.consume({
+            paused: true,
+            producerId,
+            rtpCapabilities,
+          });
           consumer.clientId = clientId;
           consumer.streamId = streamId;
           room.consumers.set(consumer.id, consumer);
           console.debug("创建消费者", consumer.id, streamId);
           consumer.on("transportclose", () => {
-            console.info("消费者关闭（通道关闭）", consumer.id, streamId);
+            console.debug("消费者关闭（通道关闭）", consumer.id, streamId);
             consumer.close();
           });
           consumer.on("producerclose", () => {
-            console.info("消费者关闭（生产者关闭）", consumer.id, streamId);
+            console.debug("消费者关闭（生产者关闭）", consumer.id, streamId);
             consumer.close();
           });
           consumer.on("producerpause", () => {
@@ -883,7 +875,7 @@ class Taoyao {
           // consumer.observer.on("score", fn(score));
           consumer.on("score", (score) => {
             console.debug("消费者评分", consumer.id, streamId, score);
-            me.push(protocol.buildMessage("media::consumer::score", {
+            this.push(protocol.buildMessage("media::consumer::score", {
               score,
               roomId,
               consumerId: consumer.id,
@@ -892,17 +884,17 @@ class Taoyao {
           // consumer.observer.on("layerschange", fn(layers));
           consumer.on("layerschange", (layers) => {
             console.debug("消费者空间层和时间层改变", consumer.id, streamId, layers);
-            me.push(protocol.buildMessage("media::consumer::layers::change", {
+            this.push(protocol.buildMessage("media::consumer::layers::change", {
               roomId,
               consumerId   : consumer.id,
-              spatialLayer : layers ? layers.spatialLayer  : null,
-              temporalLayer: layers ? layers.temporalLayer : null,
+              spatialLayer : layers?.spatialLayer,
+              temporalLayer: layers?.temporalLayer,
             }));
           });
           consumer.observer.on("close", () => {
             if(room.consumers.delete(consumer.id)) {
               console.debug("消费者关闭", consumer.id, streamId);
-              me.push(protocol.buildMessage("media::consumer::close", {
+              this.push(protocol.buildMessage("media::consumer::close", {
                 roomId,
                 consumerId: consumer.id
               }));
@@ -912,14 +904,14 @@ class Taoyao {
           });
           consumer.observer.on("pause", () => {
             console.debug("消费者暂停", consumer.id, streamId);
-            me.push(protocol.buildMessage("media::consumer::pause", {
+            this.push(protocol.buildMessage("media::consumer::pause", {
               roomId,
               consumerId: consumer.id
             }));
           });
           consumer.observer.on("resume", () => {
             console.debug("消费者恢复", consumer.id, streamId);
-            me.push(protocol.buildMessage("media::consumer::resume", {
+            this.push(protocol.buildMessage("media::consumer::resume", {
               roomId,
               consumerId: consumer.id
             }));
@@ -930,7 +922,7 @@ class Taoyao {
           //   console.debug("消费者跟踪事件（trace）", consumer.id, streamId, trace);
           // });
           // 等待终端准备就绪：可以不用等待直接使用push方法
-          await me.request(protocol.buildMessage("media::consume", {
+          await this.request(protocol.buildMessage("media::consume", {
             roomId,
             clientId,
             sourceId,

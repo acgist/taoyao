@@ -838,6 +838,9 @@ class Taoyao extends RemoteClient {
       case "media::consumer::close":
         me.defaultMediaConsumerClose(message, body);
         break;
+      case "media::consumer::layers::change":
+        this.defaultMediaConsumerLayersChange(message, body);
+        break;
       case "media::consumer::pause":
         me.defaultMediaConsumerPause(message, body);
         break;
@@ -1527,14 +1530,13 @@ class Taoyao extends RemoteClient {
    * @param {*} producerId 生产者ID
    */
   mediaConsume(producerId) {
-    const me = this;
-    if(!me.recvTransport) {
-      me.platformError("没有连接接收通道");
+    if(!this.recvTransport) {
+      this.platformError("没有连接接收通道");
       return;
     }
-    me.push(protocol.buildMessage("media::consume", {
-      roomId    : me.roomId,
-      producerId: producerId,
+    this.push(protocol.buildMessage("media::consume", {
+      producerId,
+      roomId: this.roomId,
     }));
   }
 
@@ -1550,8 +1552,7 @@ class Taoyao extends RemoteClient {
    * @param {*} body    消息主体
    */
   async defaultMediaConsume(message, body) {
-    const me = this;
-    if (!me.audioConsume && !me.videoConsume) {
+    if (!this.audioConsume && !this.videoConsume) {
       console.debug("没有消费媒体");
       return;
     }
@@ -1569,10 +1570,15 @@ class Taoyao extends RemoteClient {
       producerPaused,
     } = body;
     try {
-      const consumer = await me.recvTransport.consume({
+      const consumer = await this.recvTransport.consume({
         id: consumerId,
-        appData: { ...appData, clientId, sourceId, streamId },
-        // 让libwebrtc同步相同来源媒体
+        appData: {
+          ...appData,
+          clientId,
+          sourceId,
+          streamId
+        },
+        // libwebrtc同步相同来源媒体
         streamId: `${clientId}-${appData.videoSource || "taoyao"}`,
         kind,
         producerId,
@@ -1581,16 +1587,16 @@ class Taoyao extends RemoteClient {
       consumer.clientId = clientId;
       consumer.sourceId = sourceId;
       consumer.streamId = streamId;
-      me.consumers.set(consumer.id, consumer);
+      this.consumers.set(consumer.id, consumer);
       consumer.on("transportclose", () => {
         console.debug("消费者关闭（通道关闭）", consumer.id, streamId);
         consumer.close();
       });
       consumer.observer.on("close", () => {
-        if(me.consumers.delete(consumer.id)) {
+        if(this.consumers.delete(consumer.id)) {
           console.debug("消费者关闭", consumer.id, streamId);
         } else {
-          console.debug("消费者关闭（无效）", consumer.id, streamId);
+          console.debug("消费者关闭（消费者无效）", consumer.id, streamId);
         }
       });
       const {
@@ -1599,12 +1605,11 @@ class Taoyao extends RemoteClient {
       } = mediasoupClient.parseScalabilityMode(
         consumer.rtpParameters.encodings[0].scalabilityMode
       );
-      console.debug("时间层空间层", spatialLayers, temporalLayers);
-      me.push(message);
-      console.debug("远程媒体消费者", consumer);
+      this.push(message);
+      console.debug("添加远程媒体消费者", consumer, spatialLayers, temporalLayers);
       const track        = consumer.track;
-      const remoteClient = me.remoteClients.get(consumer.sourceId);
-      me.callbackTrack(sourceId, track);
+      const remoteClient = this.remoteClients.get(consumer.sourceId);
+      this.callbackTrack(sourceId, track);
       if (
         remoteClient       &&
         remoteClient.proxy &&
@@ -1621,10 +1626,10 @@ class Taoyao extends RemoteClient {
         }
         remoteClient.proxy.media(track, consumer);
       } else {
-        console.warn("远程终端没有实现代理", remoteClient);
+        console.warn("远程终端没有实现代理", consumer.sourceId, remoteClient);
       }
     } catch (error) {
-      me.platformError("消费媒体异常", error);
+      this.platformError("消费媒体异常", error);
     }
   }
 
@@ -1657,6 +1662,16 @@ class Taoyao extends RemoteClient {
     }
     console.debug("关闭消费者", consumerId);
     consumer.close();
+  }
+
+  /**
+   * 消费者空间层和时间层改变信令
+   * 
+   * @param {*} message 信令消息
+   * @param {*} body    信令主体
+   */
+  defaultMediaConsumerLayersChange(message, body) {
+    console.debug("消费者空间层和时间层改变", body);
   }
 
   /**
@@ -1903,7 +1918,7 @@ class Taoyao extends RemoteClient {
         console.debug("数据消费者消息", dataConsumer.id, streamId, message.toString("UTF-8"), ppid);
       });
     } catch (error) {
-      me.platformError("消费数据异常", error);
+      this.platformError("消费数据异常", error);
     }
   }
 
