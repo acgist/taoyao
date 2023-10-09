@@ -137,10 +137,16 @@ const signalChannel = {
    */
   async connect(address, reconnection = true) {
     const me = this;
+    // 直接返回旧的连接
     if (me.connected()) {
       return new Promise((resolve, reject) => {
         resolve(me.channel);
       });
+    }
+    // 关闭旧的无效连接
+    if(this.channel) {
+      console.debug("关闭旧的信令连接", this.address);
+      this.close();
     }
     me.address      = address;
     me.reconnection = reconnection;
@@ -473,8 +479,7 @@ class RemoteClient {
    * @param {*} volume 音量
    */
   setVolume(volume) {
-    const me = this;
-    me.volume = ((volume + 127) / 127 * 100) + "%";
+    this.volume = ((volume + 127) / 127 * 100) + "%";
   }
 
   /**
@@ -1496,7 +1501,6 @@ class Taoyao extends RemoteClient {
    * @param {*} body    消息主体
    */
   defaultMediaAudioVolume(message, body) {
-    const me = this;
     const {
       roomId,
       volumes
@@ -1508,19 +1512,17 @@ class Taoyao extends RemoteClient {
           volume,
           clientId
         } = v;
-        if (me.clientId === clientId) {
-          me.setVolume(volume);
+        if (this.clientId === clientId) {
+          this.setVolume(volume);
         } else {
-          const remoteClient = me.remoteClients.get(clientId);
+          const remoteClient = this.remoteClients.get(clientId);
           remoteClient?.setVolume(volume);
         }
       });
     } else {
       // 静音
-      me.volume = 0;
-      me.remoteClients.forEach(v => {
-        v.volume = 0;
-      });
+      this.setVolume(-127);
+      this.remoteClients.forEach(v => v.setVolume(-127));
     }
   }
 

@@ -19,8 +19,8 @@ import com.acgist.taoyao.signal.protocol.ProtocolRoomAdapter;
 @Description(
     body = """
     {
-        "roomId"  : "房间ID",
-        "volumes" : [
+        "roomId" : "房间ID",
+        "volumes": [
             {
                 "volume"  : 音量,
                 "clientId": "终端ID"

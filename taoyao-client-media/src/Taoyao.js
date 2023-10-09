@@ -271,42 +271,43 @@ class Room {
    * 音量监控
    */
   handleAudioLevelObserver() {
-    const me = this;
     // 静音监控
-    me.audioLevelObserver.on("silence", () => {
-      me.taoyao.push(protocol.buildMessage("media::audio::volume", {
-        roomId: me.roomId,
+    this.audioLevelObserver.on("silence", () => {
+      this.taoyao.push(protocol.buildMessage("media::audio::volume", {
+        roomId: this.roomId,
       }));
     });
-    // me.audioLevelObserver.observer.on("silence", () => {});
+    // this.audioLevelObserver.observer.on("silence", () => {});
     // 音量监控
-    me.audioLevelObserver.on("volumes", (volumes) => {
+    this.audioLevelObserver.on("volumes", (volumes) => {
       const notifyVolumes = [];
       for (const value of volumes) {
-        const { volume, producer } = value;
+        const {
+          volume,
+          producer
+        } = value;
         notifyVolumes.push({
           volume  : volume,
           clientId: producer.clientId
         });
       }
-      me.taoyao.push(protocol.buildMessage("media::audio::volume", {
-        roomId : me.roomId,
+      this.taoyao.push(protocol.buildMessage("media::audio::volume", {
+        roomId : this.roomId,
         volumes: notifyVolumes
       }));
     });
-    // me.audioLevelObserver.observer.on("volumes", (volumes) => {});
+    // this.audioLevelObserver.observer.on("volumes", (volumes) => {});
   }
   /**
    * 当前讲话终端监控
    */
   handleActiveSpeakerObserver() {
-    const me = this;
     // 不用通知直接使用音量监控即可
-    me.activeSpeakerObserver.on("dominantspeaker", (dominantSpeaker) => {
+    this.activeSpeakerObserver.on("dominantspeaker", (dominantSpeaker) => {
       const producer = dominantSpeaker.producer;
       console.debug("当前讲话终端", producer.id, producer.clientId);
     });
-    // me.activeSpeakerObserver.observer.on("dominantspeaker", (dominantSpeaker) => {});
+    // this.activeSpeakerObserver.observer.on("dominantspeaker", (dominantSpeaker) => {});
   }
   /**
    * 房间使用情况
