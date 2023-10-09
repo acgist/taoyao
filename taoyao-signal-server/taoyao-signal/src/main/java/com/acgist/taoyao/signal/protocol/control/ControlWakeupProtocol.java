@@ -12,6 +12,8 @@ import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
 /**
  * 终端唤醒信令
  * 
+ * 注意：不能自己唤醒自己
+ * 
  * @author acgist
  */
 @Protocol

@@ -1474,8 +1474,12 @@ class Taoyao extends RemoteClient {
    * 
    * @param {*} clientId 目标终端ID
    */
-  controlWakeup(clientId) {
-    this.request(protocol.buildMessage("control::wakeup", {
+  async controlWakeup(clientId) {
+    if(clientId === this.clientId) {
+      console.warn("不能自己唤醒自己");
+      return;
+    }
+    return await this.request(protocol.buildMessage("control::wakeup", {
       to: clientId
     }));
   }
