@@ -137,16 +137,13 @@ const signalChannel = {
    */
   async connect(address, reconnection = true) {
     const me = this;
-    // 直接返回旧的连接
     if (me.connected()) {
+      this.taoyao.connect = true;
       return new Promise((resolve, reject) => {
         resolve(me.channel);
       });
-    }
-    // 关闭旧的无效连接
-    if(this.channel) {
-      console.debug("关闭旧的信令连接", this.address);
-      this.close();
+    } else {
+      this.taoyao.connect = false;
     }
     me.address      = address;
     me.reconnection = reconnection;
