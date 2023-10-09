@@ -5,6 +5,8 @@ import java.util.Map;
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
 import com.acgist.taoyao.boot.model.Message;
+import com.acgist.taoyao.boot.model.MessageCode;
+import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.signal.client.Client;
 import com.acgist.taoyao.signal.client.ClientType;
 import com.acgist.taoyao.signal.protocol.ProtocolControlAdapter;
@@ -38,6 +40,9 @@ public class ControlWakeupProtocol extends ProtocolControlAdapter implements ICo
     
     @Override
     public void execute(String clientId, ClientType clientType, Client client, Client targetClient, Message message, Map<String, Object> body) {
+        if(client.equals(targetClient)) {
+            throw MessageCodeException.of(MessageCode.CODE_3400, "不能自己唤醒自己");
+        }
         client.push(targetClient.request(message));
     }
 
