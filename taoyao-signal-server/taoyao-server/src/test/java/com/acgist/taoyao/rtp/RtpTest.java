@@ -94,6 +94,7 @@ public class RtpTest {
             }
         }).start();
         // ffmpeg不支持rtcpMux
+        // 循环推流：-stream_loop 4 | -stream_loop -1
 //      ffmpeg -re -i video.mp4 -c:v vp8    -map 0:0 -f tee "[select=v:f=rtp:ssrc=123456:payload_type=102]rtp://192.168.1.110:40793?rtcpport=47218"
 //      ffmpeg -re -i video.mp4 -c:v libvpx -map 0:0 -f tee "[select=v:f=rtp:ssrc=123456:payload_type=102]rtp://192.168.1.110:40793?rtcpport=47218"
         // 音频视频同时传输

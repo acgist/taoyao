@@ -30,7 +30,14 @@ import lombok.extern.slf4j.Slf4j;
  * VP8  = 101
  * H264 = 107
  * 
- * 注意：媒体格式和录制格式一致可以直接使用`copy`代替格式参数减小`CPU`占用
+ * 注意：
+ * 1. 媒体格式和录制格式一致可以直接使用`copy`代替格式参数减小`CPU`占用
+ * 2. 录制`TS`时`copy`使用`ffmpeg`推`mp4`文件流第一帧会报错（媒体流不会）
+ * 3. 录制过程中`FFmpeg`产生的日志过大可以关闭日志`-loglevel quiet`输出
+ * 4. 分片
+ *      -f segment -segment_time 10 taoyao-%d.mp4
+ *      -f segment -segment_time 10 -segment_format mpegts taoyao-%d.ts
+ *      -f segment -segment_time 10 -segment_format mpegts -segment_list taoyao.m3u8 taoyao-%d.ts
  * 
  * OPUS/VP8->AAC/H264(TS)
  * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v 30 -i taoyao.sdp -c:a aac -c:v h264 -f mpegts taoyao.ts
