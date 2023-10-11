@@ -1460,12 +1460,11 @@ class Taoyao extends RemoteClient {
    * @param {*} clientId 终端ID
    * @param {*} enabled  录制状态
    */
-   controlServerRecord(clientId, enabled) {
-    const me = this;
-    me.request(protocol.buildMessage("control::server::record", {
-      to     : clientId,
-      roomId : me.roomId,
-      enabled: enabled
+  async controlServerRecord(clientId, enabled) {
+    return await this.request(protocol.buildMessage("control::server::record", {
+      enabled,
+      to    : clientId,
+      roomId: this.roomId,
     }));
   }
 

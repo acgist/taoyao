@@ -2,7 +2,6 @@ package com.acgist.taoyao.signal.protocol.control;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.context.ApplicationListener;
 import org.springframework.scheduling.annotation.Async;
@@ -70,15 +69,15 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
     @Override
     public void execute(String clientId, ClientType clientType, Client client, Client targetClient, Message message, Map<String, Object> body) {
         String filepath;
-        final String roomId   = MapUtils.get(body, Constant.ROOM_ID);
+        final String  roomId  = MapUtils.get(body, Constant.ROOM_ID);
         final Boolean enabled = MapUtils.get(body, Constant.ENABLED, Boolean.TRUE);
-        final Room room = this.roomManager.getRoom(roomId);
+        final Room    room    = this.roomManager.getRoom(roomId);
         if(enabled) {
             filepath = this.start(room, room.clientWrapper(targetClient));
         } else {
             filepath = this.stop(room, room.clientWrapper(targetClient));
         }
-        body.put(Constant.FILEPATH, filepath);
+        body.put(Constant.FILEPATH,  filepath);
         body.put(Constant.CLIENT_ID, clientId);
         client.push(message);
     }
@@ -86,7 +85,7 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
     @Override
     public Message execute(String roomId, String clientId, Boolean enabled) {
         String filepath;
-        final Room room     = this.roomManager.getRoom(roomId);
+        final Room   room   = this.roomManager.getRoom(roomId);
         final Client client = this.clientManager.getClients(clientId);
         if(enabled) {
             filepath = this.start(room, room.clientWrapper(client));
@@ -106,7 +105,6 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
      * 
      * @param room          房间
      * @param clientWrapper 终端
-     * @param mediaClient   媒体终端
      * 
      * @return 文件地址
      */
@@ -114,38 +112,38 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         if(clientWrapper == null) {
             throw MessageCodeException.of("终端没有进入房间");
         }
+        final Recorder recorder;
         synchronized (clientWrapper) {
-            final Recorder recorder = clientWrapper.getRecorder();
-            if(recorder != null) {
-                return recorder.getFilepath();
+            final Recorder oldRecorder = clientWrapper.getRecorder();
+            if(oldRecorder != null) {
+                return oldRecorder.getFilepath();
             }
+            // 打开录像线程
+            recorder = new Recorder(this.idService.buildUuid(), room, clientWrapper, this.ffmpegProperties);
+            recorder.start();
+            clientWrapper.setRecorder(recorder);
         }
-        final String name = UUID.randomUUID().toString();
-        // 打开录像线程
-        final Recorder recorder = new Recorder(name, room, clientWrapper, this.ffmpegProperties);
-        recorder.start();
-        clientWrapper.setRecorder(recorder);
         // 打开媒体录像
         final Message message = this.build();
         final Map<String, Object> body = new HashMap<>();
-        body.put(Constant.HOST, this.ffmpegProperties.getHost());
-        body.put(Constant.ROOM_ID, room.getRoomId());
-        body.put(Constant.ENABLED, true);
-        body.put(Constant.FILEPATH, recorder.getFilepath());
-        body.put(Constant.CLIENT_ID, clientWrapper.getClientId());
-        body.put(Constant.AUDIO_PORT, recorder.getAudioPort());
-        body.put(Constant.VIDEO_PORT, recorder.getVideoPort());
-        body.put(Constant.AUDIO_RTCP_PORT, recorder.getAudioRtcpPort());
-        body.put(Constant.VIDEO_RTCP_PORT, recorder.getVideoRtcpPort());
+        body.put(Constant.HOST,             this.ffmpegProperties.getHost());
+        body.put(Constant.ROOM_ID,          room.getRoomId());
+        body.put(Constant.ENABLED,          true);
+        body.put(Constant.FILEPATH,         recorder.getFilepath());
+        body.put(Constant.CLIENT_ID,        clientWrapper.getClientId());
+        body.put(Constant.AUDIO_PORT,       recorder.getAudioPort());
+        body.put(Constant.VIDEO_PORT,       recorder.getVideoPort());
+        body.put(Constant.AUDIO_RTCP_PORT,  recorder.getAudioRtcpPort());
+        body.put(Constant.VIDEO_RTCP_PORT,  recorder.getVideoRtcpPort());
         body.put(Constant.RTP_CAPABILITIES, clientWrapper.getRtpCapabilities());
         clientWrapper.getProducers().values().forEach(producer -> {
             if(producer.getKind() == Kind.AUDIO) {
                 recorder.setAudioStreamId(Constant.STREAM_ID_CONSUMER.apply(producer.getStreamId(), clientWrapper.getClientId()));
-                body.put(Constant.AUDIO_STREAM_ID, recorder.getAudioStreamId());
+                body.put(Constant.AUDIO_STREAM_ID,   recorder.getAudioStreamId());
                 body.put(Constant.AUDIO_PRODUCER_ID, producer.getProducerId());
             } else if(producer.getKind() == Kind.VIDEO) {
-                recorder.setAudioStreamId(Constant.STREAM_ID_CONSUMER.apply(producer.getStreamId(), clientWrapper.getClientId()));
-                body.put(Constant.VIDEO_STREAM_ID, recorder.getVideoStreamId());
+                recorder.setVideoStreamId(Constant.STREAM_ID_CONSUMER.apply(producer.getStreamId(), clientWrapper.getClientId()));
+                body.put(Constant.VIDEO_STREAM_ID,   recorder.getVideoStreamId());
                 body.put(Constant.VIDEO_PRODUCER_ID, producer.getProducerId());
             } else {
                 // 忽略
@@ -153,7 +151,7 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
         });
         message.setBody(body);
         final Client mediaClient = room.getMediaClient();
-        final Message response = mediaClient.request(message);
+        final Message response   = mediaClient.request(message);
         final Map<String, String> responseBody = response.body();
         recorder.setAudioConsumerId(responseBody.get(Constant.AUDIO_CONSUMER_ID));
         recorder.setVideoConsumerId(responseBody.get(Constant.VIDEO_CONSUMER_ID));
@@ -177,19 +175,19 @@ public class ControlServerRecordProtocol extends ProtocolControlAdapter implemen
             if(recorder == null) {
                 return null;
             }
+            // 关闭录像线程
+            recorder.stop();
+            clientWrapper.setRecorder(null);
         }
-        // 关闭录像线程
-        recorder.stop();
-        clientWrapper.setRecorder(null);
         // 关闭媒体录像
         final Message message = this.build();
         final Map<String, Object> body = new HashMap<>();
-        body.put(Constant.ROOM_ID, room.getRoomId());
-        body.put(Constant.ENABLED, false);
-        body.put(Constant.AUDIO_STREAM_ID, recorder.getAudioStreamId());
-        body.put(Constant.VIDEO_STREAM_ID, recorder.getVideoStreamId());
-        body.put(Constant.AUDIO_CONSUMER_ID, recorder.getAudioConsumerId());
-        body.put(Constant.VIDEO_CONSUMER_ID, recorder.getVideoConsumerId());
+        body.put(Constant.ROOM_ID,            room.getRoomId());
+        body.put(Constant.ENABLED,            false);
+        body.put(Constant.AUDIO_STREAM_ID,    recorder.getAudioStreamId());
+        body.put(Constant.VIDEO_STREAM_ID,    recorder.getVideoStreamId());
+        body.put(Constant.AUDIO_CONSUMER_ID,  recorder.getAudioConsumerId());
+        body.put(Constant.VIDEO_CONSUMER_ID,  recorder.getVideoConsumerId());
         body.put(Constant.AUDIO_TRANSPORT_ID, recorder.getAudioTransportId());
         body.put(Constant.VIDEO_TRANSPORT_ID, recorder.getVideoTransportId());
         message.setBody(body);

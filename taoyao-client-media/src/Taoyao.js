@@ -606,34 +606,35 @@ class Taoyao {
   /**
    * 服务端录像信令
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    * @param {*} body    消息主体
    */
   async controlServerRecord(message, body) {
-    const me                  = this;
-    const { enabled, roomId } = body;
-    const room                = me.rooms.get(roomId);
+    const {
+      roomId,
+      enabled,
+    } = body;
+    const room = this.rooms.get(roomId);
     if(!room) {
       // 直接关闭房间时，房间关闭可能早于结束录像。
-      console.info("服务端录像房间无效", roomId);
+      console.debug("服务端录像房间无效", roomId);
       return;
     }
     if(enabled) {
-      await me.controlServerRecordStart(message, body, room);
+      await this.controlServerRecordStart(message, body, room);
     } else {
-      await me.controlServerRecordStop(message, body, room);
+      await this.controlServerRecordStop(message, body, room);
     }
   }
 
   /**
    * 开始服务端录像
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    * @param {*} body    消息主体
    * @param {*} room    房间
    */
   async controlServerRecordStart(message, body, room) {
-    const me = this;
     const {
       host,
       roomId,
@@ -665,7 +666,7 @@ class Taoyao {
       const audioTransport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
       audioTransportId     = audioTransport.id;
       room.transports.set(audioTransportId, audioTransport);
-      me.transportEvent("plain", roomId, audioTransport);
+      this.transportEvent("plain", roomId, audioTransport);
       audioTransport.clientId = clientId;
       await audioTransport.connect({
         ip      : host,
@@ -683,16 +684,16 @@ class Taoyao {
       audioConsumer.streamId = audioStreamId;
       room.consumers.set(audioConsumerId, audioConsumer);
       audioConsumer.observer.on("close", () => {
-        console.info("关闭服务端录像音频消费者", audioConsumerId);
+        console.debug("关闭服务端录像音频消费者", audioConsumerId);
         room.consumers.delete(audioConsumerId);
       });
-      console.debug("创建服务器录像音频消费者", audioTransportId, audioConsumerId, audioTransport.tuple, audioRtpParameters);
+      console.debug("创建服务器录像音频消费者", audioTransportId, audioConsumerId, audioTransport.tuple, audioRtpParameters.codecs);
     }
     if(videoProducerId) {
       const videoTransport = await room.mediasoupRouter.createPlainTransport(plainTransportOptions);
       videoTransportId     = videoTransport.id;
       room.transports.set(videoTransportId, videoTransport);
-      me.transportEvent("plain", roomId, videoTransport);
+      this.transportEvent("plain", roomId, videoTransport);
       videoTransport.clientId = clientId;
       await videoTransport.connect({
         ip      : host,
@@ -710,18 +711,22 @@ class Taoyao {
       videoConsumer.streamId = videoStreamId;
       room.consumers.set(videoConsumerId, videoConsumer);
       videoConsumer.observer.on("close", () => {
-        console.info("关闭服务器录像视频消费者", videoConsumerId);
+        console.debug("关闭服务器录像视频消费者", videoConsumerId);
         room.consumers.delete(videoConsumerId);
       });
-      console.debug("创建服务器录像视频消费者", videoTransportId, videoConsumerId, videoTransport.tuple, videoRtpParameters);
+      console.debug("创建服务器录像视频消费者", videoTransportId, videoConsumerId, videoTransport.tuple, videoRtpParameters.codecs);
     }
     if(audioConsumer) {
       await audioConsumer.resume();
     }
     if(videoConsumer) {
       await videoConsumer.resume();
+    }
+    try {
       // 请求录像关键帧
-      me.requestKeyFrameForRecord(0, filepath, videoConsumer);
+      this.requestKeyFrameForRecord(0, filepath, videoConsumer);
+    } catch (error) {
+      console.error("请求录像关键帧异常", error);
     }
     message.body = {
       roomId            : roomId,
@@ -732,7 +737,7 @@ class Taoyao {
       audioRtpParameters: audioRtpParameters,
       videoRtpParameters: videoRtpParameters,
     };
-    me.push(message);
+    this.push(message);
   }
 
   /**
@@ -748,35 +753,34 @@ class Taoyao {
       requestKeyFrameMaxIndex,
       requestKeyFrameFileSize
     } = config.record;
-    if(++index > requestKeyFrameMaxIndex) {
+    if(index >= requestKeyFrameMaxIndex) {
       console.warn("请求录像关键帧次数超限", filepath, index);
       return;
     }
     if(videoConsumer.closed) {
-      console.warn("请求录像关键帧视频关闭", filepath);
+      console.warn("请求录像关键帧视频关闭", filepath, index);
       return;
     }
     // 判断文件大小验证是否已经开始录像：创建文件 -> 视频信息 -> 视频数据 -> 封装视频
     if(fs.existsSync(filepath) && fs.statSync(filepath).size >= requestKeyFrameFileSize) {
-      console.info("请求录像关键帧已经开始录像", filepath);
+      console.info("请求录像关键帧已经开始录像", filepath, index);
       return;
     }
     console.debug("请求录像关键帧", filepath, index);
     videoConsumer.requestKeyFrame();
     setTimeout(() => {
-      this.requestKeyFrameForRecord(index, filepath, videoConsumer);
+      this.requestKeyFrameForRecord(++index, filepath, videoConsumer);
     }, 1000);
   }
 
   /**
    * 结束服务端录像
    * 
-   * @param {*} message 消息
+   * @param {*} message 信令消息
    * @param {*} body    消息主体
    * @param {*} room    房间
    */
   async controlServerRecordStop(message, body, room) {
-    const me = this;
     const {
       audioStreamId,    videoStreamId,
       audioConsumerId,  videoConsumerId,
@@ -785,21 +789,21 @@ class Taoyao {
     console.info("结束服务端录像", audioStreamId, videoStreamId);
     const audioConsumer = room.consumers.get(audioConsumerId);
     if(audioConsumer) {
-      audioConsumer.close();
+      await audioConsumer.close();
     }
     const videoConsumer = room.consumers.get(videoConsumerId);
     if(videoConsumer) {
-      videoConsumer.close();
+      await videoConsumer.close();
     }
     const audioTransport = room.transports.get(audioTransportId);
     if(audioTransport) {
-      audioTransport.close();
+      await audioTransport.close();
     }
     const videoTransport = room.transports.get(videoTransportId);
     if(videoTransport) {
-      videoTransport.close();
+      await videoTransport.close();
     }
-    me.push(message);
+    this.push(message);
   }
 
   /**
