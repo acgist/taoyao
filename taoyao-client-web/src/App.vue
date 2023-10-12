@@ -154,7 +154,7 @@ export default {
   methods: {
     async connectSignal() {
       this.taoyao = new Taoyao({ ...this.config });
-      // this.taoyao = new Taoyao({ ...this.config, fileVideo: video标签对象, videoSource: "file" });
+      // this.taoyao = new Taoyao({ ...this.config, fileVideo: video对象, videoSource: "file" });
       await this.taoyao.connectSignal(this.callback);
       this.signalVisible  = false;
       this.remoteClients  = this.taoyao.remoteClients;

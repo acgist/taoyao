@@ -1436,8 +1436,7 @@ class Taoyao extends RemoteClient {
    * @param {*} clientId 终端ID
    */
   controlPhotograph(clientId) {
-    const me = this;
-    me.request(protocol.buildMessage("control::photograph", {
+    this.request(protocol.buildMessage("control::photograph", {
       to: clientId
     }));
   }
@@ -1451,7 +1450,6 @@ class Taoyao extends RemoteClient {
   defaultControlPhotograph(message, body) {
     console.debug("拍照", message);
     this.push(message);
-    // TODO：拍照
   }
 
   /**
