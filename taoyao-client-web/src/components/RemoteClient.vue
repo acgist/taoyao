@@ -21,8 +21,8 @@
           <el-button>视频质量</el-button>
         </template>
         <el-table @row-click="chooseRatio" :data="taoyao.options">
-          <el-table-column width="100" property="value" label="标识" />
-          <el-table-column width="100" property="label" label="名称" />
+          <el-table-column width="100" property="label" label="标识" />
+          <el-table-column width="100" property="value" label="宽高" />
         </el-table>
       </el-popover>
       <el-button @click="taoyao.roomExpel(client.clientId)" title="踢出" :icon="CircleClose" circle />
@@ -91,7 +91,7 @@ export default {
   },
   methods: {
     chooseRatio(row) {
-      const { value, label } = row;
+      const { label, value } = row;
       this.taoyao.setVideoConfig(this.client.clientId, label);
     },
     media(track, consumer) {

@@ -263,10 +263,14 @@ class Session {
   videoEnabled;
   // 本地音频
   localAudioTrack;
+  // 本地音频发送者
+  localAudioSender;
   // 本地音频是否可用（暂停关闭）
   localAudioEnabled;
   // 本地视频
   localVideoTrack;
+  // 本地视频发送者
+  localVideoSender;
   // 本地视频是否可用（暂停关闭）
   localVideoEnabled;
   // 远程音频
@@ -1203,9 +1207,10 @@ class Taoyao extends RemoteClient {
       ideal: video.frameRate,
       max  : media.maxFrameRate,
     };
-    me.options      = Object.keys(media.videos).map(key => ({
-      value: key,
-      label: media.videos[key].resolution
+    me.options = Object.keys(media.videos).map(key => ({
+      ...media.videos[key],
+      label: key,
+      value: media.videos[key].resolution,
     }));
     me.mediaConfig  = media;
     me.webrtcConfig = webrtc;
@@ -1411,8 +1416,8 @@ class Taoyao extends RemoteClient {
    * @param {*} clientId 终端ID
    * @param {*} config   视频配置
    */
-  controlConfigVideo(clientId, config) {
-    this.request(protocol.buildMessage("control::config::video", {
+  async controlConfigVideo(clientId, config) {
+    return await this.request(protocol.buildMessage("control::config::video", {
       ...config,
       to: clientId
     }));
@@ -1425,9 +1430,24 @@ class Taoyao extends RemoteClient {
    * @param {*} body    消息主体
    */
   defaultControlConfigVideo(message, body) {
-    console.debug("配置视频", message);
+    const {
+      width,
+      height,
+      frameRate,
+    } = body;
+    if(width) {
+      this.videoConfig.width.ideal = width;
+    }
+    if(height) {
+      this.videoConfig.height.ideal = height;
+    }
+    if(frameRate) {
+      this.videoConfig.frameRate.ideal = frameRate;
+    }
+    console.debug("配置视频", body, this.videoConfig);
     this.push(message);
-    // TODO：配置本地视频
+    // 更新本地视频
+    this.setLocalVideoConfig();
   }
 
   /**
@@ -2341,6 +2361,10 @@ class Taoyao extends RemoteClient {
    * @param {*} 更新视频轨道
    */
   async updateVideoProducer(videoTrack) {
+    if(!this.videoProducer) {
+      console.debug("没有发布视频忽略更新");
+      return;
+    }
     const track = videoTrack || await this.getVideoTrack();
     await this.videoProducer.replaceTrack({
       track
@@ -2351,6 +2375,22 @@ class Taoyao extends RemoteClient {
     } else {
       console.warn("终端没有实现服务代理");
     }
+  }
+
+  /**
+   * 更新视频轨道
+   * 
+   * @param {*} videoTrack 更新视频轨道
+   */
+  async updateVideoSession(videoTrack) {
+    this.sessionClients.forEach(async (v, k) => {
+      const localStream = await this.getStream();
+      // TODO：更新音频
+      if(v.localVideoEnabled) {
+        v.localVideoTrack = videoTrack || localStream.getVideoTracks()[0];
+        v.localVideoSender.replaceTrack(v.localVideoTrack);
+      }
+    });
   }
 
   /**
@@ -3469,7 +3509,7 @@ class Taoyao extends RemoteClient {
       session.localAudioTrack = localStream.getAudioTracks()[0];
       if(session.localAudioTrack) {
         session.localAudioEnabled = true;
-        await session.peerConnection.addTrack(session.localAudioTrack, localStream);
+        session.localAudioSender = await session.peerConnection.addTrack(session.localAudioTrack, localStream);
       } else {
         session.localAudioEnabled = false;
       }
@@ -3480,7 +3520,7 @@ class Taoyao extends RemoteClient {
       session.localVideoTrack = localStream.getVideoTracks()[0];
       if(session.localVideoTrack) {
         session.localVideoEnabled = true;
-        await session.peerConnection.addTrack(session.localVideoTrack, localStream);
+        session.localVideoSender = await session.peerConnection.addTrack(session.localVideoTrack, localStream);
       } else {
         session.localVideoEnabled = false;
       }
@@ -3596,8 +3636,11 @@ class Taoyao extends RemoteClient {
    */
   setLocalVideoConfig(label) {
     const me = this;
-    // TODO：设置本地配置
+    if(label) {
+      // TODO：设置本地配置
+    }
     me.updateVideoProducer();
+    me.updateVideoSession();
   }
 
   /**
@@ -3609,8 +3652,18 @@ class Taoyao extends RemoteClient {
     const me = this;
     if(clientId === me.clientId) {
       me.setLocalVideoConfig(label);
+      return;
     }
     // TODO：更新远程配置
+    const option = this.options.find(v => v.label === label);
+    if(!option) {
+      console.warn("不支持的视频配置", label, this.options);
+      return;
+    }
+    this.controlConfigVideo(
+      clientId,
+      option,
+    );
   }
 
   /**

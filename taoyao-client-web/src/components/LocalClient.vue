@@ -19,8 +19,8 @@
           <el-button>视频质量</el-button>
         </template>
         <el-table @cell-click="chooseRatio" :data="taoyao.options">
-          <el-table-column width="100" property="value" label="标识" />
-          <el-table-column width="100" property="label" label="名称" />
+          <el-table-column width="100" property="label" label="标识" />
+          <el-table-column width="100" property="value" label="高宽" />
         </el-table>
       </el-popover>
     </div>
@@ -84,7 +84,7 @@ export default {
   },
   methods: {
     chooseRatio(row) {
-      const { value, label } = row;
+      const { label, value } = row;
       this.taoyao.setLocalVideoConfig(label);
     },
     media(track, producer) {
