@@ -1341,7 +1341,7 @@ class Taoyao extends RemoteClient {
   /**
    * 响铃信令
    * 
-   * @param {*} clientId 目标终端ID
+   * @param {*} clientId 终端ID
    * @param {*} enabled  是否响铃
    */
   controlBell(clientId, enabled) {
@@ -1353,6 +1353,8 @@ class Taoyao extends RemoteClient {
 
   /**
    * 响铃信令
+   * 
+   * 注意：自己实现本地响铃
    * 
    * @param {*} message 信令消息
    * @param {*} body    消息主体
@@ -1369,23 +1371,23 @@ class Taoyao extends RemoteClient {
    * @param {*} enabled  录制状态
    */
   controlClientRecord(clientId, enabled) {
-    const me = this;
-    me.request(protocol.buildMessage("control::client::record", {
-      to     : clientId,
-      enabled: enabled
+    this.request(protocol.buildMessage("control::client::record", {
+      enabled,
+      to: clientId,
     }));
   }
 
   /**
    * 终端录像信令
    * 
+   * 注意：自己实现本地录像（localClientRecord）
+   * 
    * @param {*} message 信令消息
    * @param {*} body    消息主体
    */
   defaultControlClientReccord(message, body) {
-    console.debug("终端录像", message);
+    console.debug("录像", message);
     this.push(message);
-    // TODO：录像
   }
 
   /**
@@ -1476,6 +1478,8 @@ class Taoyao extends RemoteClient {
   /**
    * 拍照信令
    * 
+   * 注意：自己实现本地拍照（localPhotograph）
+   * 
    * @param {*} message 信令消息
    * @param {*} body    消息主体
    */
@@ -1501,7 +1505,7 @@ class Taoyao extends RemoteClient {
   /**
    * 终端唤醒信令
    * 
-   * @param {*} clientId 目标终端ID
+   * @param {*} clientId 终端ID
    */
   async controlWakeup(clientId) {
     if(clientId === this.clientId) {
@@ -3564,7 +3568,7 @@ class Taoyao extends RemoteClient {
         peerConnection.restartIce();
       }
     }
-    const localStream      = await this.getStream({
+    const localStream = await this.getStream({
       audioEnabled: true,
       videoEnabled: true,
     });
