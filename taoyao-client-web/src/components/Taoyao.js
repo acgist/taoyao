@@ -1318,7 +1318,7 @@ class Taoyao extends RemoteClient {
   /**
    * 终端单播信令
    * 
-   * @param {*} clientId 接收终端ID
+   * @param {*} clientId 终端ID
    * @param {*} message  消息内容
    */
   clientUnicast(clientId, message) {
@@ -1335,7 +1335,7 @@ class Taoyao extends RemoteClient {
    * @param {*} body    消息主体
    */
   defaultClientUnicast(message, body) {
-    console.debug("终端单播消息", message);
+    console.debug("终端单播", message);
   }
 
   /**
@@ -1344,8 +1344,8 @@ class Taoyao extends RemoteClient {
    * @param {*} clientId 终端ID
    * @param {*} enabled  是否响铃
    */
-  controlBell(clientId, enabled) {
-    this.request(protocol.buildMessage("control::bell", {
+  async controlBell(clientId, enabled) {
+    return await this.request(protocol.buildMessage("control::bell", {
       enabled,
       to: clientId,
     }));
@@ -1370,8 +1370,8 @@ class Taoyao extends RemoteClient {
    * @param {*} clientId 终端ID
    * @param {*} enabled  录制状态
    */
-  controlClientRecord(clientId, enabled) {
-    this.request(protocol.buildMessage("control::client::record", {
+  async controlClientRecord(clientId, enabled) {
+    return await this.request(protocol.buildMessage("control::client::record", {
       enabled,
       to: clientId,
     }));
@@ -1396,8 +1396,8 @@ class Taoyao extends RemoteClient {
    * @param {*} clientId 终端ID
    * @param {*} config   音频配置
    */
-  controlConfigAudio(clientId, config) {
-    this.request(protocol.buildMessage("control::config::audio", {
+  async controlConfigAudio(clientId, config) {
+    return await this.request(protocol.buildMessage("control::config::audio", {
       ...config,
       to: clientId
     }));
@@ -1469,8 +1469,8 @@ class Taoyao extends RemoteClient {
    * 
    * @param {*} clientId 终端ID
    */
-  controlPhotograph(clientId) {
-    this.request(protocol.buildMessage("control::photograph", {
+  async controlPhotograph(clientId) {
+    return await this.request(protocol.buildMessage("control::photograph", {
       to: clientId
     }));
   }
