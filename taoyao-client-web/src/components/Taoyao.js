@@ -1256,7 +1256,10 @@ class Taoyao extends RemoteClient {
     const response = await this.request(protocol.buildMessage("client::list", {
       clientType
     }));
-    return response.body;
+    const {
+      body
+    } = response;
+    return body || [];
   }
 
   /**
@@ -1312,7 +1315,10 @@ class Taoyao extends RemoteClient {
     const response = await this.request(protocol.buildMessage("client::status", {
       clientId
     }));
-    return response.body;
+    const {
+      body
+    } = response;
+    return body || {};
   }
 
   /**
