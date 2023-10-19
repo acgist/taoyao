@@ -1230,11 +1230,14 @@ class Taoyao extends RemoteClient {
   /**
    * @returns 媒体服务列表
    */
-  async mediaList() {
+  async mediaServerList() {
     const response = await this.request(protocol.buildMessage("client::list", {
       clientType: "MEDIA" 
     }));
-    return response.body;
+    const {
+      body
+    } = response;
+    return body || [];
   }
 
   /**
@@ -1242,7 +1245,10 @@ class Taoyao extends RemoteClient {
    */
   async mediaClientList() {
     const response = await this.request(protocol.buildMessage("client::list", {}));
-    return response.body.filter(v => {
+    const {
+      body
+    } = response;
+    return (body || []).filter(v => {
       return v.clientType === "WEB" || v.clientType === "CAMERA" || v.clientType === "MOBILE";
     });
   }
