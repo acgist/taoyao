@@ -53,7 +53,7 @@ public class ClientConfigProtocol extends ProtocolClientAdapter implements Appli
     @Async
     @Override
     public void onApplicationEvent(ClientConfigEvent event) {
-        final Client client         = event.getClient();
+        final Client client = event.getClient();
         final ClientType clientType = client.getClientType();
         client.push(this.build(clientType));
     }
@@ -69,7 +69,7 @@ public class ClientConfigProtocol extends ProtocolClientAdapter implements Appli
      * @return 消息
      */
     public Message build(ClientType clientType) {
-        final Message message            = super.build();
+        final Message message = super.build();
         final Map<String, Object> config = new HashMap<>();
         // 日期时间
         config.put(Constant.DATETIME, DateUtils.format(LocalDateTime.now(), DateTimeStyle.YYYYMMDDHH24MMSS));

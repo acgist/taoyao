@@ -1182,48 +1182,53 @@ class Taoyao extends RemoteClient {
    * @param {*} body    消息主体
    */
   defaultClientConfig(message, body) {
-    const me = this;
-    const { media, webrtc } = body;
-    const { audio, video }  = media;
-    me.audioConfig.sampleSize = {
+    const {
+      media,
+      webrtc
+    } = body;
+    const {
+      audio,
+      video
+    } = media;
+    this.audioConfig.sampleSize = {
       min  : media.minSampleSize,
       ideal: audio.sampleSize,
       max  : media.maxSampleSize,
     };
-    me.audioConfig.sampleRate = {
+    this.audioConfig.sampleRate = {
       min  : media.minSampleRate,
       ideal: audio.sampleRate,
       max  : media.maxSampleRate,
     };
-    me.videoConfig.width = {
+    this.videoConfig.width = {
       min  : media.minWidth,
       ideal: video.width,
       max  : media.maxWidth,
     };
-    me.videoConfig.height = {
+    this.videoConfig.height = {
       min  : media.minHeight,
       ideal: video.height,
       max  : media.maxHeight,
     };
-    me.videoConfig.frameRate = {
+    this.videoConfig.frameRate = {
       min  : media.minFrameRate,
       ideal: video.frameRate,
       max  : media.maxFrameRate,
     };
-    me.options = Object.keys(media.videos).map(key => ({
+    this.options = Object.keys(media.videos).map(key => ({
       ...media.videos[key],
       label: key,
       value: media.videos[key].resolution,
     }));
-    me.mediaConfig  = media;
-    me.webrtcConfig = webrtc;
+    this.mediaConfig  = media;
+    this.webrtcConfig = webrtc;
     console.debug(
       "终端媒体配置",
-      me.options,
-      me.audioConfig,
-      me.videoConfig,
-      me.mediaConfig,
-      me.webrtcConfig
+      this.options,
+      this.audioConfig,
+      this.videoConfig,
+      this.mediaConfig,
+      this.webrtcConfig
     );
   }
 
