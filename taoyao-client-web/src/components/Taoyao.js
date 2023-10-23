@@ -173,8 +173,8 @@ const signalChannel = {
         console.warn("信令通道关闭", me.channel);
         me.taoyao.connect = false;
         if(!me.connected()) {
-          me.taoyao.closeRoomMedia();
-          me.taoyao.closeSessionMedia();
+          await me.taoyao.closeRoomMedia();
+          await me.taoyao.closeSessionMedia();
         }
         if (me.reconnection) {
           me.reconnect();
@@ -1170,9 +1170,8 @@ class Taoyao extends RemoteClient {
    * 关闭终端信令
    */
   async clientClose() {
-    const me = this;
-    await me.request(protocol.buildMessage("client::close", {}));
-    me.closeAll();
+    await this.request(protocol.buildMessage("client::close", {}));
+    await this.closeAll();
   }
 
   /**
@@ -3918,7 +3917,7 @@ class Taoyao extends RemoteClient {
   /**
    * 关闭视频会话媒体
    */
-  closeSessionMedia() {
+  async closeSessionMedia() {
     console.debug("关闭视频会话媒体");
     this.sessionClients.forEach((session, sessionId) => {
       session.close();
@@ -3931,13 +3930,13 @@ class Taoyao extends RemoteClient {
   /**
    * 关闭资源
    */
-  closeAll() {
+  async closeAll() {
     if(this.closed) {
       return;
     }
     this.closed = true;
-    this.closeRoomMedia();
-    this.closeSessionMedia();
+    await this.closeRoomMedia();
+    await this.closeSessionMedia();
     signalChannel.close();
   }
 }
