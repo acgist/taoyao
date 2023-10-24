@@ -1124,11 +1124,10 @@ class Taoyao extends RemoteClient {
   /**
    * 终端告警信令
    * 
-   * @param {*} message 
+   * @param {*} message 告警描述
    */
   clientAlarm(message) {
-    const me       = this;
-    const date     = new Date();
+    const date = new Date();
     const datetime = ""                                             +
       date.getFullYear()                                            +
       ((date.getMonth()   < 9  ? "0" : "") + (date.getMonth() + 1)) +
@@ -1136,7 +1135,7 @@ class Taoyao extends RemoteClient {
       ((date.getHours()   < 10 ? "0" : "") + date.getHours())       +
       ((date.getMinutes() < 10 ? "0" : "") + date.getMinutes())     +
       ((date.getSeconds() < 10 ? "0" : "") + date.getSeconds());
-    me.push(protocol.buildMessage("client::alarm", {
+    this.push(protocol.buildMessage("client::alarm", {
       message,
       datetime,
     }));
@@ -1149,8 +1148,7 @@ class Taoyao extends RemoteClient {
    * @param {*} clientType 终端类型（可选）
    */
   clientBroadcast(message, clientType) {
-    const me = this;
-    me.push(protocol.buildMessage("client::broadcast", {
+    this.push(protocol.buildMessage("client::broadcast", {
       ...message,
       clientType,
     }));
