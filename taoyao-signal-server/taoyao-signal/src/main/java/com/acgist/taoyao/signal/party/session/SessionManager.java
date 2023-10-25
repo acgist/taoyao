@@ -37,9 +37,10 @@ public class SessionManager {
      * @return 会话
      */
     public Session call(Client source, Client target) {
-        final Session session = new Session(this.idService.buildUuid(), source, target);
-        this.sessions.put(session.getId(), session);
-        log.info("创建会话：{} - {} - {}", session.getId(), session.getSourceClientId(), session.getTargetClientId());
+        final String sessionId = this.idService.buildUuid();
+        final Session session = new Session(sessionId, source, target);
+        this.sessions.put(sessionId, session);
+        log.info("创建会话：{} - {} - {}", sessionId, session.getSourceClientId(), session.getTargetClientId());
         return session;
     }
     
