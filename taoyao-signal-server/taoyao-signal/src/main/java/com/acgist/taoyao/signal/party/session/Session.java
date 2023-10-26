@@ -45,9 +45,7 @@ public class Session implements Closeable {
      * @return 是否通过
      */
     public boolean authenticate(Client client) {
-        return
-            this.source == client ||
-            this.target == client;
+        return this.source == client || this.target == client;
     }
     
     /**
