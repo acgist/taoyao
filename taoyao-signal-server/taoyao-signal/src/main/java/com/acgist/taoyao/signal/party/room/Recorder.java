@@ -34,22 +34,27 @@ import lombok.extern.slf4j.Slf4j;
  * 1. 媒体格式和录制格式一致可以直接使用`copy`代替格式参数减小`CPU`占用
  * 2. 录制`TS`时`copy`使用`ffmpeg`推`mp4`文件流第一帧会报错（媒体流不会）
  * 3. 录制过程中`FFmpeg`产生的日志过大可以关闭日志`-loglevel quiet`输出
- * 4. 分片
- *      -f segment -segment_time 10 taoyao-%d.mp4
- *      -f segment -segment_time 10 -segment_format mpegts taoyao-%d.ts
- *      -f segment -segment_time 10 -segment_format mpegts -segment_list taoyao.m3u8 taoyao-%d.ts
+ * 4. 分片：-c:v copy容易导致分片时间不准
+ *     ffmpeg -i video.mp4 -c:a aac -c:v copy -f segment -segment_time 10 -segment_list taoyao.m3u8 %06d.ts
+ *     ffmpeg -i video.mp4 -c:a aac -c:v copy -f segment -segment_time 10 -segment_format ts -segment_list taoyao.m3u8 %06d.ts
+ *     ffmpeg -i video.mp4 -c:a aac -c:v copy -f segment -segment_time 10 -segment_format -segment_list taoyao.m3u8 %06d.ts
+ *     ffmpeg -i video.mp4 -c:a aac -c:v copy -f segment -segment_time 10 -segment_format mpegts -segment_list taoyao.m3u8 %06d.ts
+ *     ffmpeg -i video.mp4 -c:a aac -c:v copy -f segment -segment_time 10 -segment_format -segment_list taoyao.m3u8 %06d.mp4
+ *     ffmpeg -i video.mp4 -c:a aac -c:v copy -f segment -segment_time 10 -segment_format mp4 -segment_list taoyao.m3u8 %06d.mp4
+ * 
+ *     ffmpeg -i video.mp4 -c:a aac -c:v copy -hls_time 10 -hls_list_size 0 -hls_segment_filename "%06d.ts" taoyao.m3u8
  * 
  * OPUS/VP8->AAC/H264(TS)
- * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v 30 -i taoyao.sdp -c:a aac -c:v h264 -f mpegts taoyao.ts
- * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v 30 -i taoyao.sdp -c:a aac -c:v h264 -f mpegts taoyao.ts
+ * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v 30 -i taoyao.sdp -c:a aac -c:v h264 taoyao.ts
+ * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v 30 -i taoyao.sdp -c:a aac -c:v h264 taoyao.ts
  * 
  * OPUS/VP8->AAC/H264(MP4)
  * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v 30 -i taoyao.sdp -c:a aac -c:v h264 taoyao.mp4
  * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -c:a libopus -c:v libvpx -r:v 30 -i taoyao.sdp -c:a aac -c:v h264 taoyao.mp4
  * 
  * PCMU/H264->AAC/H264(TS)
- * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -i taoyao.sdp -c:a aac -c:v h264 -f mpegts taoyao.ts
- * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -i taoyao.sdp -c:a aac -c:v h264 -f mpegts taoyao.ts
+ * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -i taoyao.sdp -c:a aac -c:v h264 taoyao.ts
+ * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -i taoyao.sdp -c:a aac -c:v h264 taoyao.ts
  * 
  * PCMU/H264->AAC/H264(MP4)
  * ffmpeg -y -protocol_whitelist "file,rtp,udp" -thread_queue_size 1024 -i taoyao.sdp -c:a aac -c:v copy taoyao.mp4
