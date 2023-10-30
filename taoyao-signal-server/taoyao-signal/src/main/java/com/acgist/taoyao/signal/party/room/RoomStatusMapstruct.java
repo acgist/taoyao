@@ -4,8 +4,13 @@ import org.mapstruct.Mapper;
 import org.mapstruct.MappingConstants.ComponentModel;
 import org.mapstruct.MappingTarget;
 
+/**
+ * 房间状态映射
+ * 
+ * @author acgist
+ */
 @Mapper(componentModel = ComponentModel.SPRING)
-public interface RoomMapstruct {
+public interface RoomStatusMapstruct {
 
     /**
      * 对象拷贝
