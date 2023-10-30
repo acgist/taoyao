@@ -57,7 +57,6 @@ public class RoomCreateProtocol extends ProtocolClientAdapter implements Applica
     @Override
     public void onApplicationEvent(MediaServerRegisterEvent event) {
         this.roomManager.recreate(event.getClient(), this.build());
-        
     }
 
     @Override

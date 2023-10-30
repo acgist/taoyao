@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 
 import com.acgist.taoyao.boot.annotation.Manager;
 import com.acgist.taoyao.boot.config.Constant;
+import com.acgist.taoyao.boot.model.Header;
 import com.acgist.taoyao.boot.model.Message;
 import com.acgist.taoyao.boot.model.MessageCodeException;
 import com.acgist.taoyao.boot.service.IdService;
@@ -77,38 +78,6 @@ public class RoomManager {
     }
 
     /**
-     * 重建房间
-     * 
-     * @param mediaClient 媒体服务终端
-     * @param message     消息
-     */
-    public void recreate(Client mediaClient, Message message) {
-        this.rooms.stream()
-        .filter(room -> mediaClient.getClientId().equals(room.getMediaClient().getClientId()))
-        .forEach(room -> {
-            log.info("重建房间：{}", room.getRoomId());
-            final Message clone = message.cloneWithoutBody();
-            clone.getHeader().setId(this.idService.buildId());
-            clone.setBody(Map.of(Constant.ROOM_ID, room.getRoomId()));
-            // 异步发送防止线程卡死
-            mediaClient.push(clone);
-            // 同步需要添加异步注解
-//          mediaClient.request(clone);
-            // 更新媒体服务
-            room.setMediaClient(mediaClient);
-            if(room.getPassword() != null) {
-                clone.setBody(Map.of(
-                    Constant.ROOM_ID,  room.getRoomId(),
-                    Constant.PASSWORD, room.getPassword()
-                ));
-            }
-            room.getClients().forEach((client, wrapper) -> {
-                client.push(clone);
-            });
-        });
-    }
-
-    /**
      * 创建房间
      * 
      * @param name          名称
@@ -123,8 +92,8 @@ public class RoomManager {
         if(mediaClient == null) {
             throw MessageCodeException.of("无效媒体服务：" + mediaClientId);
         }
-        final String roomId         = this.idService.buildUuid();
-        final Room room             = new Room(roomId, password, mediaClient, this);
+        final String roomId = this.idService.buildUuid();
+        final Room room = new Room(roomId, password, mediaClient, this);
         final RoomStatus roomStatus = room.getRoomStatus();
         roomStatus.setName(name);
         roomStatus.setRoomId(roomId);
@@ -137,13 +106,46 @@ public class RoomManager {
         this.rooms.add(room);
         return room;
     }
+    
+    /**
+     * 重建房间
+     * 
+     * @param mediaClient 媒体服务终端
+     * @param message     消息
+     */
+    public void recreate(Client mediaClient, Message message) {
+        this.rooms.stream()
+        .filter(room -> mediaClient.getClientId().equals(room.getMediaClient().getClientId()))
+        .forEach(room -> {
+            log.info("重建房间：{}", room.getRoomId());
+            final Header header = message.getHeader();
+            header.setId(this.idService.buildId());
+            message.setBody(Map.of(Constant.ROOM_ID, room.getRoomId()));
+            // 异步发送防止线程卡死
+            mediaClient.push(message);
+            // 同步需要添加异步注解
+//          mediaClient.request(message);
+            // 更新媒体服务
+            room.setMediaClient(mediaClient);
+            if(room.getPassword() != null) {
+                message.setBody(Map.of(
+                    Constant.ROOM_ID,  room.getRoomId(),
+                    Constant.PASSWORD, room.getPassword()
+                ));
+            }
+            room.getClients().forEach((client, wrapper) -> {
+                client.push(message);
+            });
+        });
+    }
 
     /**
-     * 离开房间
+     * 离开所有房间
      * 
      * @param client 终端
      */
     public void leave(Client client) {
+        log.info("终端离开所有房间：{}", client.getClientId());
         this.rooms.forEach(v -> v.leave(client));
     }
     
@@ -153,6 +155,7 @@ public class RoomManager {
      * @param room 房间
      */
     public void remove(Room room) {
+        log.info("移除房间：{}", room.getRoomId());
         this.rooms.remove(room);
     }
     
