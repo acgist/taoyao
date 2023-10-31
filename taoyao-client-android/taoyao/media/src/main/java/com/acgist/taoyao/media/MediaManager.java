@@ -23,6 +23,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.webrtc.AudioSource;
 import org.webrtc.AudioTrack;
 import org.webrtc.Camera2Enumerator;
+import org.webrtc.CameraEnumerationAndroid;
 import org.webrtc.CameraEnumerator;
 import org.webrtc.CameraVideoCapturer;
 import org.webrtc.CapturerObserver;
@@ -46,6 +47,7 @@ import org.webrtc.audio.JavaAudioDeviceModule;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -512,6 +514,10 @@ public final class MediaManager {
         final CameraEnumerator cameraEnumerator = new Camera2Enumerator(this.context);
         final String[] names = cameraEnumerator.getDeviceNames();
         for (String name : names) {
+            final List<CameraEnumerationAndroid.CaptureFormat> list = cameraEnumerator.getSupportedFormats(name);
+            list.forEach(value -> {
+                Log.d(MediaManager.class.getSimpleName(), "支持的分辨率：" + name + " = " + value.width + "*" + value.height);
+            });
             if (this.videoSourceType == VideoSourceType.BACK && cameraEnumerator.isBackFacing(name)) {
                 this.videoCapturer = cameraEnumerator.createCapturer(name, new MediaCameraEventsHandler());
             } else if (this.videoSourceType == VideoSourceType.FRONT && cameraEnumerator.isFrontFacing(name)) {

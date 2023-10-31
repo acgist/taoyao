@@ -109,9 +109,7 @@ public class Room extends OperatorAdapter {
      * @return 是否认证
      */
     public boolean authenticate(Client client) {
-        return
-            this.mediaClient == client ||
-            this.clients.containsKey(client);
+        return this.mediaClient == client || this.clients.containsKey(client);
     }
     
     /**
