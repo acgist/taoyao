@@ -195,9 +195,9 @@ public class Recorder {
             this.running = true;
         }
         this.buildSdpfile();
-        this.thread = new Thread(this::record);
+        this.thread = new Thread(this::recordVideo);
         this.thread.setDaemon(true);
-        this.thread.setName("TaoyaoRecord");
+        this.thread.setName("TaoyaoRecord-" + this.clientWrapper.getClientId());
         this.thread.start();
         this.updateRecordStatus(true);
         log.info("开始媒体录像：{}", this.folder);
@@ -206,7 +206,7 @@ public class Recorder {
     /**
      * 录像视频
      */
-    private void record() {
+    private void recordVideo() {
         final String recordScript = String.format(
             this.ffmpegProperties.getRecord(),
             this.ffmpegProperties.getFrameRate(),
