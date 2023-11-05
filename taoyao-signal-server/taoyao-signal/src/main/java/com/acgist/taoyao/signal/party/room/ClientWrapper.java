@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * 终端包装器
+ * 进入房间后封装相关对象
  * 
  * @author acgist
  */
@@ -43,8 +44,6 @@ public class ClientWrapper implements AutoCloseable {
     private final String clientId;
     /**
      * 媒体订阅类型
-     * 指定订阅类型终端注册或者生成媒体后会自动进行媒体推流拉流
-     * 没有订阅任何媒体时需要用户自己对媒体进行消费控制
      */
     private SubscribeType subscribeType;
     /**
