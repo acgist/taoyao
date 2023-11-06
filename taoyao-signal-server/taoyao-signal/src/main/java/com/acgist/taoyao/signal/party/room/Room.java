@@ -353,5 +353,90 @@ public class Room extends OperatorAdapter {
         this.dataProducers.values().stream().filter(v -> !this.clients.containsValue(v.getProducerClient())).forEach(DataProducer::close);
         this.transports.values().stream().filter(v -> !this.clients.containsKey(v.getClient())).forEach(Transport::close);
     }
+
+    /**
+     * 移除消费者
+     * 
+     * @param consumerId 消费者ID
+     */
+    public void removeConsumer(String consumerId) {
+        final Consumer consumer = this.consumers.remove(consumerId);
+        if(consumer == null) {
+            log.info("移除消费者：{}", consumerId);
+        } else {
+            log.info("移除消费者：{} - {}", consumerId, consumer.getStreamId());
+        }
+    }
+    
+    /**
+     * 移除生产者
+     * 
+     * @param producerId 生产者ID
+     */
+    public void removeProducer(String producerId) {
+        final Producer producer = this.producers.get(producerId);
+        if(producer == null) {
+            log.info("移除生产者：{}", producerId);
+        } else {
+            log.info("移除生产者：{} - {}", producerId, producer.getStreamId());
+        }
+    }
+    
+    /**
+     * 移除数据消费者
+     * 
+     * @param consumerId 数据消费者ID
+     */
+    public void removeDataConsumer(String consumerId) {
+        final DataConsumer consumer = this.dataConsumers.get(consumerId);
+        if(consumer == null) {
+            log.info("移除数据消费者：{}", consumerId);
+        } else {
+            log.info("移除数据消费者：{} - {}", consumerId, consumer.getStreamId());
+        }
+    }
+    
+    /**
+     * 移除数据生产者
+     * 
+     * @param producerId 数据生产者ID
+     */
+    public void removeDataProducer(String producerId) {
+        final DataProducer producer = this.dataProducers.get(producerId);
+        if(producer == null) {
+            log.info("移除数据生产者：{}", producerId);
+        } else {
+            log.info("移除数据生产者：{} - {}", producerId, producer.getStreamId());
+        }
+    }
+    
+    /**
+     * 移除终端
+     * 
+     * @param clientId 终端ID
+     */
+    public void removeClient(String clientId) {
+        final ClientWrapper client = this.clientWrapper(clientId);
+        if(client == null) {
+            log.info("移除终端：{}", clientId);
+        } else {
+            this.clients.remove(client.getClient());
+            log.info("移除终端：{}", clientId);
+        }
+    }
+    
+    /**
+     * 移除通道
+     * 
+     * @param transportId 通道ID
+     */
+    public void removeTransport(String transportId) {
+        final Transport transport = this.transports.get(transportId);
+        if(transport == null) {
+            log.info("移除通道：{}", transportId);
+        } else {
+            log.info("移除通道：{}", transportId);
+        }
+    }
     
 }
