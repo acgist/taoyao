@@ -184,11 +184,14 @@ public final class ScriptUtils {
             if(this.process.isAlive()) {
                 log.info("强制结束命令：{}", this.script);
                 // 所有子进程
-                this.process.children().forEach(process -> {
-                    process.destroy();
-                });
+                this.process.children().forEach(ProcessHandle::destroy);
+//              this.process.children().forEach(ProcessHandle::destroyForcibly);
+                // 所有派生进程
+//              this.process.descendants().forEach(ProcessHandle::destroy);
+//              this.process.descendants().forEach(ProcessHandle::destroyForcibly);
                 // 当前父进程
                 this.process.destroy();
+//              this.process.destroyForcibly();
             } else {
                 log.debug("正常结束命令：{}", this.script);
             }
