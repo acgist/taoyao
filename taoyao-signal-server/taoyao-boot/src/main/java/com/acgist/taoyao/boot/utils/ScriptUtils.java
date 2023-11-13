@@ -3,6 +3,7 @@ package com.acgist.taoyao.boot.utils;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -22,6 +23,17 @@ import lombok.extern.slf4j.Slf4j;
 public final class ScriptUtils {
     
     private ScriptUtils() {
+    }
+
+    /**
+     * 执行命令
+     * 
+     * @param args 命令参数
+     * 
+     * @return 执行结果
+     */
+    public static final ScriptExecutor execute(String ... args) {
+        return ScriptUtils.execute(String.join(" ", args));
     }
 
     /**
@@ -108,13 +120,15 @@ public final class ScriptUtils {
             }
             log.debug("开始执行命令：{}", this.script);
             this.running = true;
+            final CountDownLatch latch = new CountDownLatch(2);
             try (
                 final InputStream input = this.process.getInputStream();
                 final InputStream error = this.process.getErrorStream();
             ) {
-                this.streamThread(linux, "TaoyaoScriptInput", this.input, input);
-                this.streamThread(linux, "TaoyaoScriptError", this.error, error);
+                this.streamThread(linux, "TaoyaoScriptInput", this.input, input, latch);
+                this.streamThread(linux, "TaoyaoScriptError", this.error, error, latch);
                 this.code = this.process.waitFor();
+                latch.await();
             }
             this.running = false;
             log.debug("""
@@ -130,8 +144,11 @@ public final class ScriptUtils {
          * @param name    线程名称
          * @param builder 日志记录
          * @param input   日志输入流
+         * @param latch   计数器
+         * 
+         * @return 线程
          */
-        private void streamThread(boolean linux, String name, StringBuilder builder, InputStream input) {
+        private Thread streamThread(boolean linux, String name, StringBuilder builder, InputStream input, CountDownLatch latch) {
             final Thread streamThread = new Thread(() -> {
                 try {
                     int length;
@@ -141,11 +158,14 @@ public final class ScriptUtils {
                     }
                 } catch (Exception e) {
                     log.error("读取执行命令日志异常", e);
+                } finally {
+                    latch.countDown();
                 }
             });
             streamThread.setName(name);
             streamThread.setDaemon(true);
             streamThread.start();
+            return streamThread;
         }
         
         /**
@@ -173,7 +193,7 @@ public final class ScriptUtils {
                 wait = 5000;
             }
             // 等待正常结束
-            while(this.process.isAlive() && wait >= 0) {
+            while(this.process.isAlive() && wait > 0) {
                 wait -= 10;
                 try {
                     Thread.sleep(10);
@@ -184,11 +204,9 @@ public final class ScriptUtils {
             if(this.process.isAlive()) {
                 log.info("强制结束命令：{}", this.script);
                 // 所有子进程
-                this.process.children().forEach(ProcessHandle::destroy);
-//              this.process.children().forEach(ProcessHandle::destroyForcibly);
+                this.process.children().forEach(this::destroy);
                 // 所有派生进程
-//              this.process.descendants().forEach(ProcessHandle::destroy);
-//              this.process.descendants().forEach(ProcessHandle::destroyForcibly);
+                this.process.descendants().forEach(this::destroy);
                 // 当前父进程
                 this.process.destroy();
 //              this.process.destroyForcibly();
@@ -201,7 +219,25 @@ public final class ScriptUtils {
          * @return 执行结果
          */
         public String getResult() {
-            return this.input.isEmpty() ? this.error.toString() : this.input.toString();
+            if(this.code == 0) {
+                return this.input.toString();
+            } else {
+                return this.error.toString();
+            }
+        }
+
+        /**
+         * 销毁线程
+         * 
+         * @param handle 线程
+         */
+        private void destroy(ProcessHandle handle) {
+            try {
+                handle.destroy();
+//              handle.destroyForcibly();
+            } catch (Exception e) {
+                log.error("销毁线程异常", e);
+            }
         }
         
     }
