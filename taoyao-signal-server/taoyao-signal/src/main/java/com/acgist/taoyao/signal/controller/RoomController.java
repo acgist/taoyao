@@ -61,7 +61,8 @@ public class RoomController {
     @ApiResponse(content = @Content(schema = @Schema(implementation = ClientStatus.class)))
     public Message listClient(@PathVariable String roomId) {
         final Room room = this.roomManager.getRoom(roomId);
-        return Message.success(room == null ? List.of() : room.getClientStatus());
+        final List<ClientStatus> list = room == null ? List.of() : room.getClientStatus();
+        return Message.success(list);
     }
     
 }
