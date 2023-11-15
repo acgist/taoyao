@@ -70,10 +70,10 @@ public class ProtocolController {
         this.applicationContext.getBeansOfType(Protocol.class).entrySet().stream()
         .sorted((a, z) -> a.getValue().signal().compareTo(z.getValue().signal()))
         .forEach(e -> {
-            final String key        = e.getKey();
+            final String   key      = e.getKey();
             final Protocol protocol = e.getValue();
-            final String name       = protocol.name();
-            final String signal     = protocol.signal();
+            final String   name     = protocol.name();
+            final String   signal   = protocol.signal();
             final Class<?> clazz;
             if(
                 AopUtils.isAopProxy(e)              ||
