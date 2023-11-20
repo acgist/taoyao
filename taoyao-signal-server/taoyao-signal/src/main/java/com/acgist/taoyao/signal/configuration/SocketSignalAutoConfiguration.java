@@ -59,6 +59,7 @@ public class SocketSignalAutoConfiguration {
     private void buildSecret(SocketProperties socketProperties) {
         log.info("Socket信令加密策略：{}", socketProperties.getEncrypt());
         if(socketProperties.getEncrypt() == null) {
+            log.info("Socket信令加密策略为空使用明文");
             return;
         }
         if(StringUtils.isNotEmpty(socketProperties.getEncryptSecret())) {
