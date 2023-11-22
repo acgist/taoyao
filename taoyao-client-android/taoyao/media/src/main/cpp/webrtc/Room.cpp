@@ -105,7 +105,7 @@ namespace acgist {
          * @return 生产者ID
          */
         std::future<std::string> OnProduceData(mediasoupclient::SendTransport* transport, const nlohmann::json& sctpStreamParameters, const std::string& label, const std::string& protocol, const nlohmann::json& appData) override {
-            const std::string cTransportId   = transport->GetId();
+            const std::string cTransportId = transport->GetId();
             LOG_I("生产数据：%s - %s - %s -%s", this->room->roomId.data(), cTransportId.data(), label.data(), protocol.data());
             std::promise <std::string> promise;
             return promise.get_future();
