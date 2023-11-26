@@ -49,6 +49,13 @@ public enum ClientType {
     }
     
     /**
+     * @return 是否是媒体服务
+     */
+    public boolean isMedia() {
+        return this == MEDIA;
+    }
+    
+    /**
      * @return 是否是媒体终端
      */
     public boolean isClient() {
@@ -56,13 +63,6 @@ public enum ClientType {
             this == WEB    ||
             this == CAMERA ||
             this == MOBILE;
-    }
-    
-    /**
-     * @return 是否是媒体服务
-     */
-    public boolean isMedia() {
-        return this == MEDIA;
     }
     
     /**
@@ -79,7 +79,7 @@ public enum ClientType {
      */
     public static final ClientType of(String value) {
         final ClientType[] types = ClientType.values();
-        for (ClientType type : types) {
+        for (final ClientType type : types) {
             if(type.name().equalsIgnoreCase(value)) {
                 return type;
             }
@@ -88,17 +88,18 @@ public enum ClientType {
     }
     
     /**
-     * 媒体终端类型列表
-     */
-    public static final ClientType[] MEDIA_CLIENT_TYPE
-    =
-    Stream.of(ClientType.values()).filter(ClientType::isClient).toArray(ClientType[]::new);
-    
-    /**
      * 媒体服务类型列表
      */
-    public static final ClientType[] MEDIA_SERVER_TYPE
-    =
-    Stream.of(ClientType.values()).filter(ClientType::isMedia).toArray(ClientType[]::new);
+    public static final ClientType[] MEDIA_TYPE = Stream.of(ClientType.values()).filter(ClientType::isMedia).toArray(ClientType[]::new);
+    
+    /**
+     * 媒体终端类型列表
+     */
+    public static final ClientType[] CLIENT_TYPE = Stream.of(ClientType.values()).filter(ClientType::isClient).toArray(ClientType[]::new);
+    
+    /**
+     * 应用服务类型列表
+     */
+    public static final ClientType[] SERVER_TYPE = Stream.of(ClientType.values()).filter(ClientType::isServer).toArray(ClientType[]::new);
     
 }
