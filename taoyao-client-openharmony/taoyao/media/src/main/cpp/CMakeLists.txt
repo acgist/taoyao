@@ -45,4 +45,5 @@ target_link_libraries(
     ${PROJECT_NAME} PUBLIC
     mediasoupclient
     libace_napi.z.so
+    libhilog_ndk.z.so
 )

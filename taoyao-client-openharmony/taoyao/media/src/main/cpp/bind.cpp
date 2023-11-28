@@ -14,12 +14,23 @@
 
 namespace acgist {
 
-acgist::MediaManager* mediaManager;
+acgist::MediaManager* mediaManager = nullptr;
 std::map<std::string, acgist::Room*> roomMap;
 std::map<std::string, acgist::SessionClient*> sessionMap;
 
 static void init() {
-//    OH_LOG_INFO(LOG_APP, "加载bind");
+    OH_LOG_INFO(LOG_APP, "加载libtaoyao");
+    // TODO：输出编码能力
+    mediaManager = new MediaManager();
+    mediaManager->initPeerConnectionFactory();
+}
+
+static void shutdown() {
+    OH_LOG_INFO(LOG_APP, "卸载libtaoyao");
+    if (mediaManager != nullptr) {
+        delete mediaManager;
+        mediaManager = nullptr;
+    }
 }
 
 static napi_value sessionCall(napi_env env, napi_callback_info info) { return 0; }

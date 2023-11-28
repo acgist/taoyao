@@ -8,6 +8,7 @@ import hilog from '@ohos.hilog';
 import webSocket from '@ohos.net.webSocket';
 
 import { setting } from './Setting';
+import libtaoyao from 'libtaoyao.so'
 
 interface BusinessError<T = void> extends Error {
   code: number;

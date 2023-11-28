@@ -15,6 +15,9 @@ namespace acgist {
 
 class MediaManager {
 public:
+    MediaManager();
+    ~MediaManager();
+public:
     webrtc::PeerConnectionFactory* peerConnectionFactoryPtr;
 public:
     void initPeerConnectionFactory();
