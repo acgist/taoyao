@@ -26,4 +26,4 @@ public:
 
 }
 
-#endif taoyao_MediaManager_HPP
+#endif // taoyao_MediaManager_HPP

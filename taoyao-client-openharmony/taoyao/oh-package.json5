@@ -1,10 +1,10 @@
 {
-  "name": "taoyao",
-  "main": "",
+  "name"  : "taoyao",
+  "main"  : "",
   "author": "acgist",
-  "description": "桃夭鸿蒙终端",
   "version": "1.0.0",
   "license": "Apache-2.0",
+  "description" : "桃夭鸿蒙终端",
   "dependencies": {},
   "devDependencies": {
     "@ohos/hypium": "1.0.6"

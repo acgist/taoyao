@@ -1,11 +1,10 @@
 {
-  "apiType": 'stageMode',
+  "apiType": "stageMode",
   "buildOption": {
     "externalNativeOptions": {
       "path": "./src/main/cpp/CMakeLists.txt",
-      "arguments": "",
-//    "cFlags": "-std=c17",
-      "cppFlags": "-std=c++17",
+      "cppFlags"  : "-std=c++17",
+      "arguments" : "",
       "abiFilters": [ "arm64-v8a" ]
     }
   },

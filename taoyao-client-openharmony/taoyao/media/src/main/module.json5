@@ -1,11 +1,11 @@
 {
   "module": {
-    "name": "media",
-    "type": "entry",
+    "name" : "media",
+    "type" : "entry",
     "pages": "$profile:main_pages",
     "description": "$string:module_desc",
     "mainElement": "EntryAbility",
-    "installationFree": false,
+    "installationFree"   : false,
     "deliveryWithInstall": true,
     "deviceTypes": [
       "phone",
@@ -13,8 +13,8 @@
     ],
     "abilities": [
       {
-        "name": "EntryAbility",
-        "icon": "$media:icon",
+        "name" : "EntryAbility",
+        "icon" : "$media:icon",
         "label": "$string:EntryAbility_label",
         "exported": true,
         "srcEntry": "./ets/entryability/EntryAbility.ts",
@@ -31,6 +31,26 @@
             ]
           }
         ]
+      }
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.CAMERA",
+        "usedScene": {
+          "when": "always"
+        }
+      },
+      {
+        "name": "ohos.permission.INTERNET",
+        "usedScene": {
+          "when": "always"
+        }
+      },
+      {
+        "name": "ohos.permission.MICROPHONE",
+        "usedScene": {
+          "when": "always"
+        }
       }
     ]
   }

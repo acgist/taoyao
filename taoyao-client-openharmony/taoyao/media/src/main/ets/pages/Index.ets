@@ -1,25 +1,31 @@
-import hilog from '@ohos.hilog';
-// import testNapi from 'libtaoyao.so'
+import { signal } from "../taoyao/TaoyaoSignal";
 
 @Entry
 @Component
 struct Index {
 
-  @State message: string = 'Hello World'
-
   build() {
     Row() {
       Column() {
-        Text(this.message)
-          .fontSize(50)
+        Button("连接信令")
+          .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
-            // hilog.info(0x0000, 'testTag', 'Test NAPI 2 + 3 = %{public}d', testNapi.add(2, 3));
-          })
+            signal.connect();
+          });
       }
-      .width('100%')
+      .width('50%');
+      Column() {
+        Button("断开信令")
+          .fontSize(20)
+          .fontWeight(FontWeight.Bold)
+          .onClick(() => {
+            signal.close();
+          });
+      }
+      .width('50%');
     }
-    .height('100%')
+    .height('100%');
   }
 
 }

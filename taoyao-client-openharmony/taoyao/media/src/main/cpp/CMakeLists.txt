@@ -23,7 +23,16 @@ set(LIBWEBRTC_BINARY_PATH  "${CMAKE_CURRENT_SOURCE_DIR}/deps/webrtc/lib/arm64-v8
 
 add_subdirectory("./deps/libmediasoupclient")
 
-add_library(${PROJECT_NAME} SHARED hello.cpp)
+add_library(
+    ${PROJECT_NAME} SHARED
+    bind.cpp
+    media/Room.cpp
+    media/Client.cpp
+    media/LocalClient.cpp
+    media/RemoteClient.cpp
+    media/MediaManager.cpp
+    media/SessionClient.cpp
+)
 
 target_include_directories(
     ${PROJECT_NAME} PUBLIC

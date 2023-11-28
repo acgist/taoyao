@@ -1,10 +1,10 @@
 {
-  "name": "media",
-  "main": "",
+  "name"  : "media",
+  "main"  : "",
   "author": "acgist",
-  "description": "桃夭媒体终端",
   "license": "Apache-2.0",
   "version": "1.0.0",
+  "description" : "桃夭媒体终端",
   "dependencies": {},
   "devDependencies": {
     "@types/libtaoyao.so": "file:./src/main/cpp/types/libtaoyao"

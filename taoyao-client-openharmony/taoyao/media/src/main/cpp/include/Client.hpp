@@ -16,4 +16,4 @@ public:
 
 }
 
-#endif taoyao_Client_HPP
+#endif // taoyao_Client_HPP

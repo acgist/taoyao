@@ -7,4 +7,4 @@
 #ifndef taoyao_RoomClient_HPP
 #define taoyao_RoomClient_HPP
 
-#endif taoyao_RoomClient_HPP
+#endif // taoyao_RoomClient_HPP
