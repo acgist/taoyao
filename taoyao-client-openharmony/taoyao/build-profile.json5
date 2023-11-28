@@ -1,0 +1,41 @@
+{
+  "app": {
+    "compileSdkVersion": 9,
+    "compatibleSdkVersion": 9,
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default"
+      }
+    ],
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\acgis\\.ohos\\config\\auto_debug_taoyao_com.acgist.taoyao_30086000001511570.cer",
+          "storePassword": "0000001B6B72744A79D44F625FF6D295CE824032D543A50BF93BD6985B89C7B657379C8735401C2A9700CC",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001B6120DA129145E921FE4068BC61E7D7B5F4BF9386D51C895374C65BF9FE5890AFCD0F992B21E509",
+          "profile": "C:\\Users\\acgis\\.ohos\\config\\auto_debug_taoyao_com.acgist.taoyao_30086000001511570.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\acgis\\.ohos\\config\\auto_debug_taoyao_com.acgist.taoyao_30086000001511570.p12"
+        }
+      }
+    ],
+  },
+  "modules": [
+    {
+      "name": "media",
+      "srcPath": "./media",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}
