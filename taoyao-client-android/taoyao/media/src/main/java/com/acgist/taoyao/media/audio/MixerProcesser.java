@@ -105,6 +105,7 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
         this.audioSource   = MediaRecorder.AudioSource.MIC;
         this.channelCount  = channelCount;
         this.channelConfig = AudioFormat.CHANNEL_IN_MONO;
+//      this.channelConfig = AudioFormat.CHANNEL_IN_STEREO;
         this.audioRecord   = new AudioRecord.Builder()
             .setAudioFormat(
                 new AudioFormat.Builder()
@@ -147,8 +148,10 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
         byte[] localData  = null;
         byte[] remoteData = null;
         byte[] recordData = null;
+        int mixLocal, mixRemote, mixValue;
         JavaAudioDeviceModule.AudioSamples local  = null;
         JavaAudioDeviceModule.AudioSamples remote = null;
+        final ByteBuffer mixBuffer = ByteBuffer.allocateDirect(2);
         // 采集数据大小：采样频率 / (一千毫秒 / 回调频率毫秒) * 通道数量 * 采样数据大小
         final ByteBuffer byteBuffer = ByteBuffer.allocateDirect(this.sampleRate / (1000 / 10) * this.channelCount * 2);
         while(!this.close) {
@@ -185,11 +188,36 @@ public class MixerProcesser extends Thread implements JavaAudioDeviceModule.Samp
                             mixData = new byte[mixDataLength];
                         }
                         // 如果多路远程声音变小：(remote * 远程路数 + local) / (远程路数 + 1)
-                        for (int index = 0; index < mixDataLength; index++) {
+                        for (int index = 0; index < mixDataLength; index += 2) {
 //                          -0x8000 ~ 0x7FFF;
-                            mixData[index] = (byte) (((localData[index] + remoteData[index]) & 0x7FFF) / 2);
+//                          mixData[index] = (byte) (localData[index] + remoteData[index]);
+//                          mixData[index] = (byte) (((localData[index] + remoteData[index]) & 0x7FFF) / 2);
 //                          mixData[index] = (byte) (((localData[index] + remoteData[index]) & 0xFFFF) / 2);
 //                          mixData[index] = (byte) (((localData[index] + remoteData[index] * remoteCount) & 0xFFFF) / (1 + remoteCount));
+                            mixBuffer.clear();
+                            mixBuffer.put(localData[index + 1]);
+                            mixBuffer.put(localData[index]);
+                            mixBuffer.flip();
+                            mixLocal = mixBuffer.getShort();
+                            mixBuffer.flip();
+                            mixBuffer.put(remoteData[index + 1]);
+                            mixBuffer.put(remoteData[index]);
+                            mixBuffer.flip();
+                            mixRemote = mixBuffer.getShort();
+                            mixValue = mixLocal + mixRemote;
+                            if(mixValue > Short.MAX_VALUE) {
+                                mixValue = Short.MAX_VALUE;
+                            }
+                            if(mixValue < Short.MIN_VALUE) {
+                                mixValue = Short.MIN_VALUE;
+                            }
+                            // 不能使用下面这个
+//                          mixValue = mixValue & 0xFFFF;
+                            mixBuffer.flip();
+                            mixBuffer.putShort((short) mixValue);
+                            mixBuffer.flip();
+                            mixData[index + 1] = mixBuffer.get();
+                            mixData[index]     = mixBuffer.get();
                         }
                         pts += mixData.length * (1_000_000 / local.getSampleRate() / 2);
                         this.recordClient.onPcm(pts, mixData);

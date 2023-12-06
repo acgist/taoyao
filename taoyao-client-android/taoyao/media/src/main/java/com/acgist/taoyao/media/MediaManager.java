@@ -406,6 +406,7 @@ public final class MediaManager {
 //          .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
 //          .build();
         final JavaAudioDeviceModule javaAudioDeviceModule = JavaAudioDeviceModule.builder(this.context)
+            // 设置声音配置：采样播放（不会影响传输）
 //          .setSampleRate(48000)
 //          .setSampleRate(mediaAudioProperties.getSampleRate())
 //          .setAudioFormat(AudioFormat.ENCODING_PCM_16BIT)
