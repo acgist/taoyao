@@ -15,9 +15,6 @@ acgist::MediaManager::~MediaManager() {
 }
 
 void acgist::MediaManager::initPeerConnectionFactory() {
-//    webrtc::PeerConnectionFactoryDependencies peerConnectionFactoryDependencies;
-//    webrtc::PeerConnectionFactory::Create(PeerConnectionFactoryDependencies dependencies)
-//    webrtc::PeerConnectionFactoryDependencies c;
-//    this->peerConnectionFactoryPtr = webrtc::PeerConnectionFactory::Create(c);
+    webrtc::PeerConnectionFactoryDependencies dependencies;
+//    webrtc::PeerConnectionFactory::Create(dependencies);
 }
-

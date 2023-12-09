@@ -11,7 +11,7 @@
     "signingConfigs": [
       {
         "name": "default",
-        "type": "HarmonyOS",
+        "type": "OpenHarmony",
         "material": {
           "signAlg" : "SHA256withECDSA",
           "keyAlias": "debugKey",

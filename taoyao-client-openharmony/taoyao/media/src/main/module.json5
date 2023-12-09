@@ -8,7 +8,7 @@
     "installationFree"   : false,
     "deliveryWithInstall": true,
     "deviceTypes": [
-      "phone",
+      "default",
       "tablet"
     ],
     "abilities": [

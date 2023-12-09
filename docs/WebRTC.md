@@ -24,13 +24,14 @@
 ```
 # 编译工具
 mkdir -p /data
+cd /data
 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
 
 # 下载源码
 mkdir -p /data/webrtc
 cd /data/webrtc
 /data/depot_tools/fetch --nohooks webrtc_android
-/data/depot_tools/gclient sync
+#/data/depot_tools/gclient sync
 
 # 切换分支
 cd src
@@ -60,39 +61,29 @@ source ./build/android/envsetup.sh
 # 编译项目
 ./tools_webrtc/android/build_aar.py --build-dir ./out/release-build/ --arch x86 x86_64 arm64-v8a armeabi-v7a
 
-# 安装re2c
-#sudo apt-get install re2c
-cd /data
-wget https://github.com/skvadrik/re2c/releases/download/3.0/re2c-3.0.tar.xz
-tar -Jxvf re2c-3.0.tar.xz
-cd re2c-3.0
-./configure
-make && make install
-
 # 安装ninja
-cd /data
-git clone https://github.com/ninja-build/ninja.git
-cd ninja
-./configure.py --bootstrap
-ln -sf /data/ninja/ninja /usr/bin/ninja
+apt install ninja-build
+
+# 环境变量
+PATH=$PATH:/data/webrtc/src/third_party/depot_tools/
 
 # 生成静态库
 cd /data/webrtc/src
-/data/depot_tools/autoninja -C ./out/release-build/x86 webrtc         &&
-/data/depot_tools/autoninja -C ./out/release-build/x86_64 webrtc      &&
-/data/depot_tools/autoninja -C ./out/release-build/arm64-v8a webrtc   &&
+/data/depot_tools/autoninja -C ./out/release-build/x86         webrtc &&
+/data/depot_tools/autoninja -C ./out/release-build/x86_64      webrtc &&
+/data/depot_tools/autoninja -C ./out/release-build/arm64-v8a   webrtc &&
 /data/depot_tools/autoninja -C ./out/release-build/armeabi-v7a webrtc
 
 # 打包文件
 zip -r lib.zip out libwebrtc.aar
 
 # 提取源代码
-zip -r java.zip \
-sdk/android/api/ \
-sdk/android/src/ \
-rtc_base/java/src/ \
-modules/audio_device/android/java/src/ \
-out/release-build/arm64-v8a/gen/sdk/android/video_api_java/generated_java/input_srcjars/ \
+zip -r java.zip                                                                             \
+sdk/android/api/                                                                            \
+sdk/android/src/                                                                            \
+rtc_base/java/src/                                                                          \
+modules/audio_device/android/java/src/                                                      \
+out/release-build/arm64-v8a/gen/sdk/android/video_api_java/generated_java/input_srcjars/    \
 out/release-build/arm64-v8a/gen/sdk/android/peerconnection_java/generated_java/input_srcjars/
 
 # 提取头文件
@@ -127,13 +118,56 @@ https://mediasoup.org/documentation/v3/libmediasoupclient/installation/
 
 ```
 # 编译
-cmake . -B build \
--DCMAKE_BUILD_TYPE=Debug | Release \
--DMEDIASOUPCLIENT_LOG_DEV=OFF \
--DMEDIASOUPCLIENT_LOG_TRACE=OFF \
--DMEDIASOUPCLIENT_BUILD_TESTS=OFF \
--DLIBWEBRTC_INCLUDE_PATH:PATH=PATH_TO_LIBWEBRTC_SOURCES \
--DLIBWEBRTC_BINARY_PATH:PATH=PATH_TO_LIBWEBRTC_BINARY
+cmake . -B build                                        \
+-DCMAKE_BUILD_TYPE=Debug | Release                      \
+-DMEDIASOUPCLIENT_LOG_DEV=OFF                           \
+-DMEDIASOUPCLIENT_LOG_TRACE=OFF                         \
+-DMEDIASOUPCLIENT_BUILD_TESTS=OFF                       \
+-DLIBWEBRTC_BINARY_PATH:PATH=PATH_TO_LIBWEBRTC_BINARY   \
+-DLIBWEBRTC_INCLUDE_PATH:PATH=PATH_TO_LIBWEBRTC_SOURCES
 make -C build
 make install -C build
 ```
+
+## Linux（鸿蒙）
+
+```
+# 编译工具
+mkdir -p /data
+cd /data
+git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+
+# 下载源码
+mkdir -p /data/webrtc
+cd /data/webrtc
+/data/depot_tools/fetch --nohooks webrtc
+#/data/depot_tools/gclient sync
+
+# 切换分支
+cd src
+git checkout -b m94 branch-heads/4606
+/data/depot_tools/gclient sync
+
+# 编译依赖
+./build/install-build-deps.sh
+
+# 鸿蒙工具
+wget https://repo.huaweicloud.com/openharmony/os/4.0-Release/ohos-sdk-windows_linux-public.tar.gz
+
+# 编译项目
+./buildtools/linux64/gn gen out/Release-clang-x64 --args='target_os="linux" target_cpu="x64" is_clang=true is_debug=false use_rtti=true rtc_use_h264=true use_custom_libcxx=true rtc_include_tests=false is_component_build=false treat_warnings_as_errors=false rtc_build_examples=false'
+./third_party/depot_tools/ninja -C out/Release-clang-x64
+
+./buildtools/linux64/gn gen out/Release-clang-x86 --args='target_os="linux" target_cpu="x86" is_clang=true is_debug=false use_rtti=true rtc_use_h264=true use_custom_libcxx=true rtc_include_tests=false is_component_build=false treat_warnings_as_errors=false rtc_build_examples=false'
+./third_party/depot_tools/ninja -C out/Release-clang-x86
+
+./build/linux/sysroot_scripts/install-sysroot.py --arch=arm
+./buildtools/linux64/gn gen out/Release-clang-arm --args='target_os="linux" target_cpu="arm" is_clang=true is_debug=false use_rtti=true rtc_use_h264=true use_custom_libcxx=true rtc_include_tests=false is_component_build=false treat_warnings_as_errors=false rtc_build_examples=false'
+./third_party/depot_tools/ninja -C out/Release-clang-arm
+
+./build/linux/sysroot_scripts/install-sysroot.py --arch=arm64
+./buildtools/linux64/gn gen out/Release-clang-arm64 --args='target_os="linux" target_cpu="arm64" is_clang=true is_debug=false use_rtti=true rtc_use_h264=true use_custom_libcxx=true rtc_include_tests=false is_component_build=false treat_warnings_as_errors=false rtc_build_examples=false'
+./third_party/depot_tools/ninja -C out/Release-clang-arm64
+```
+
+* https://github.com/webrtc-sdk/webrtc-build/blob/main/docs/build.md
