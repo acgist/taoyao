@@ -109,7 +109,7 @@ public final class ScriptUtils {
          * @throws IOException          IO异常
          * @throws InterruptedException 线程异常
          */
-        public void execute() throws InterruptedException, IOException {
+        public void execute() throws IOException, InterruptedException {
             final boolean linux = FileUtils.linux();
             if(linux) {
                 this.processBuilder = new ProcessBuilder("/bin/bash", "-c", this.script);
