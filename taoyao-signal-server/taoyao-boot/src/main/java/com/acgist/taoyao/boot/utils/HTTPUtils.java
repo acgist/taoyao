@@ -38,9 +38,7 @@ public final class HTTPUtils {
     /**
      * 无效IP验证
      */
-    private static final Function<String, Boolean> NEXT_IP
-    =
-    ip -> StringUtils.isEmpty(ip) || "unknown".equalsIgnoreCase(ip);
+    private static final Function<String, Boolean> IP_CHECKER = ip -> StringUtils.isEmpty(ip) || "unknown".equalsIgnoreCase(ip);
     
     private HTTPUtils() {
     }
@@ -75,10 +73,10 @@ public final class HTTPUtils {
      */
     public static final String clientIP(HttpServletRequest request) {
         String ip = request.getHeader("X-Forwarded-For");
-        if (NEXT_IP.apply(ip)) {
+        if (IP_CHECKER.apply(ip)) {
             ip = request.getHeader("X-Real-IP");
         }
-        if (NEXT_IP.apply(ip)) {
+        if (IP_CHECKER.apply(ip)) {
             ip = request.getRemoteAddr();
         }
         return ip;
