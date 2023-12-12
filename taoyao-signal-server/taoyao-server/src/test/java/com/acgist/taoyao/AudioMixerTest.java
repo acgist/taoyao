@@ -1,7 +1,9 @@
 package com.acgist.taoyao;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -48,6 +50,22 @@ public class AudioMixerTest {
             target[i]     = buffer.get();
         }
         Files.write(Paths.get("C:\\Users\\acgis\\桌面\\3.pcm"), target);
+    }
+    
+    @Test
+    public void testStereoToMono() throws IOException {
+        final File file  = new File("C:\\Users\\acgis\\桌面\\src.pcm");
+        final File left  = new File("C:\\Users\\acgis\\桌面\\left.pcm");
+        final File right = new File("C:\\Users\\acgis\\桌面\\right.pcm");
+        final byte[] bytes = Files.readAllBytes(file.toPath());
+        final OutputStream leftOutput  = new FileOutputStream(left);
+        final OutputStream rightOutput = new FileOutputStream(right);
+        for (int index = 0; index < bytes.length; index += 4) {
+            leftOutput.write( new byte[] {bytes[index],     bytes[index + 1]});
+            rightOutput.write(new byte[] {bytes[index + 2], bytes[index + 3]});
+        }
+        leftOutput.close();
+        rightOutput.close();
     }
     
 }

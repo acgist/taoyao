@@ -280,7 +280,7 @@ public final class ErrorUtils {
      * @return 首个参数
      */
     private static final String getFirstParams(Object ... params) {
-        for (Object object : params) {
+        for (final Object object : params) {
             if(object != null) {
                 return object.toString();
             }
