@@ -220,11 +220,13 @@ public final class ErrorUtils {
      * @return 异常信息
      */
     public static final String message(MessageCode messageCode, Throwable throwable) {
+        // 校验异常
         if(throwable instanceof BindException bindException) {
             return bindException.getAllErrors().stream()
                 .map(ObjectError::getDefaultMessage)
                 .collect(Collectors.joining(" && "));
         }
+        // 校验异常
         if(throwable instanceof ConstraintViolationException violationException) {
             return violationException.getConstraintViolations().stream()
                 .map(ConstraintViolation::getMessage)
@@ -235,10 +237,10 @@ public final class ErrorUtils {
         if(StringUtils.isNotEmpty(message) && messageCode != MessageCode.CODE_9999) {
             return message;
         }
-        // 少量信息直接返回
-        if(StringUtils.isNotEmpty(message) && message.length() <= Byte.MAX_VALUE) {
-            return message;
-        }
+        // 不要直接返回异常堆栈信息
+//      if(StringUtils.isNotEmpty(message)) {
+//          return message;
+//      }
         // 其他情况不能直接返回异常信息
         return messageCode.getMessage();
     }

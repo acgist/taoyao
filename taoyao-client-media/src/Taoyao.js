@@ -926,7 +926,7 @@ class Taoyao {
           // consumer.on("trace", (trace) => {
           //   console.debug("消费者跟踪事件（trace）", consumer.id, streamId, trace);
           // });
-          // 等待终端准备就绪：可以不用等待直接使用push方法
+          // 等待终端准备就绪：必须等待就绪不然容易导致SSRC重复异常
           await this.request(protocol.buildMessage("media::consume", {
             roomId,
             clientId,
