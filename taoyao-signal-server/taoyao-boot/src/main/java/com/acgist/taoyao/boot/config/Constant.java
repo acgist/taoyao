@@ -319,17 +319,13 @@ public interface Constant {
      * type       媒体类型
      * producerId 生产者终端ID
      */
-    public static final BiFunction<String, String, String> STREAM_ID_PRODUCER
-    =
-    (type, producerId) -> type + "::" + producerId;
+    public static final BiFunction<String, String, String> STREAM_ID_PRODUCER = (type, producerId) -> type + "::" + producerId;
     
     /**
      * 消费者ID生成器
      * producerStreamId 生产者媒体ID
      * consumerId       消费者终端ID
      */
-    public static final BiFunction<String, String, String> STREAM_ID_CONSUMER
-    =
-    (producerStreamId, consumerId) -> producerStreamId + "->" + consumerId;
+    public static final BiFunction<String, String, String> STREAM_ID_CONSUMER = (producerStreamId, consumerId) -> producerStreamId + "->" + consumerId;
     
 }
