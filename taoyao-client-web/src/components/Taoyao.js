@@ -241,6 +241,7 @@ const signalChannel = {
  * 视频会话
  */
 class Session {
+
   // 会话ID
   id;
   // 是否关闭
@@ -379,23 +380,23 @@ class Session {
     this.remoteAudioEnabled = false;
     this.remoteVideoEnabled = false;
     if(this.localAudioTrack) {
-      this.localAudioTrack.stop();
+      await this.localAudioTrack.stop();
       this.localAudioTrack = null;
     }
     if(this.localVideoTrack) {
-      this.localVideoTrack.stop();
+      await this.localVideoTrack.stop();
       this.localVideoTrack = null;
     }
     if(this.remoteAudioTrack) {
-      this.remoteAudioTrack.stop();
+      await this.remoteAudioTrack.stop();
       this.remoteAudioTrack = null;
     }
     if(this.remoteVideoTrack) {
-      this.remoteVideoTrack.stop();
+      await this.remoteVideoTrack.stop();
       this.remoteVideoTrack = null;
     }
     if(this.peerConnection) {
-      this.peerConnection.close();
+      await this.peerConnection.close();
       this.peerConnection = null;
     }
   }
@@ -415,7 +416,7 @@ class Session {
       return;
     }
     if(
-      !candidate ||
+      !candidate                            ||
       candidate.sdpMid        === undefined ||
       candidate.candidate     === undefined ||
       candidate.sdpMLineIndex === undefined
@@ -430,12 +431,14 @@ class Session {
       setTimeout(() => this.addIceCandidate(candidate, ++index), 100);
     }
   }
+
 };
 
 /**
  * 远程终端
  */
 class RemoteClient {
+
   // 终端ID
   id;
   // 是否关闭
@@ -477,6 +480,8 @@ class RemoteClient {
   /**
    * 设置音量
    * 
+   * 可以直接通过本地AudioWorklet对象获取音量
+   * 
    * @param {*} volume 音量
    */
   setVolume(volume) {
@@ -484,42 +489,43 @@ class RemoteClient {
   }
 
   /**
-   * 关闭媒体
+   * 关闭终端
    */
   async close() {
-    const me = this;
-    if(me.closed) {
+    if(this.closed) {
       return;
     }
-    console.debug("关闭终端", me.clientId);
-    me.closed = true;
-    if(me.audioTrack) {
-      await me.audioTrack.stop();
-      me.audioTrack = null;
+    console.debug("关闭终端", this.clientId);
+    this.closed = true;
+    if(this.audioTrack) {
+      await this.audioTrack.stop();
+      this.audioTrack = null;
     }
-    if(me.videoTrack) {
-      await me.videoTrack.stop();
-      me.videoTrack = null;
+    if(this.videoTrack) {
+      await this.videoTrack.stop();
+      this.videoTrack = null;
     }
-    if(me.dataConsumer) {
-      await me.dataConsumer.close();
-      me.dataConsumer = null;
+    if(this.dataConsumer) {
+      await this.dataConsumer.close();
+      this.dataConsumer = null;
     }
-    if(me.audioConsumer) {
-      await me.audioConsumer.close();
-      me.audioConsumer = null;
+    if(this.audioConsumer) {
+      await this.audioConsumer.close();
+      this.audioConsumer = null;
     }
-    if(me.videoConsumer) {
-      await me.videoConsumer.close();
-      me.videoConsumer = null;
+    if(this.videoConsumer) {
+      await this.videoConsumer.close();
+      this.videoConsumer = null;
     }
   }
+
 }
 
 /**
  * 桃夭终端
  */
 class Taoyao extends RemoteClient {
+  
   // 信令连接
   connect;
   // 信令地址
