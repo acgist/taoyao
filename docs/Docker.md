@@ -13,6 +13,7 @@ docker exec -it acgist/taoyao-client-web:1.0.0 /bin/bash
 # 媒体服务
 docker pull acgist/taoyao-client-media:1.0.0
 docker run --name="taoyao-client-media" -d acgist/taoyao-client-media:1.0.0
+docker run --name="taoyao-client-media" --net=host -d acgist/taoyao-client-media:1.0.0
 docker run --name="taoyao-client-media" -it acgist/taoyao-client-media:1.0.0 /bin/bash
 docker exec -it acgist/taoyao-client-media:1.0.0 /bin/bash
 
@@ -70,4 +71,48 @@ EXPOSE 9999/tcp
 COPY taoyao-signal-server /data/taoyao/taoyao-signal-server
 WORKDIR /data/taoyao/taoyao-signal-server
 CMD ./deploy/bin/startup.sh
+```
+
+## DockerCompose
+
+注意需要自己配置媒体服务（修改IP地址）
+
+```
+version: "3.1"
+
+services:
+
+  taoyao-client-web:
+    image: acgist/taoyao-client-web:1.0.0
+    restart: always
+    privileged: true
+    network_mode: host
+    container_name: taoyao-client-web
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=Asia/Shanghai
+
+  taoyao-client-media:
+    image: acgist/taoyao-client-media:1.0.0
+    restart: always
+    privileged: true
+    network_mode: host
+    container_name: taoyao-client-media
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./taoyao-client-media/Config.js:/data/taoyao/taoyao-client-media/src/Config.js
+    environment:
+      - TZ=Asia/Shanghai
+
+  taoyao-signal-server:
+    image: acgist/taoyao-signal-server:1.0.0
+    restart: always
+    privileged: true
+    network_mode: host
+    container_name: taoyao-signal-server
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+    environment:
+      - TZ=Asia/Shanghai
 ```

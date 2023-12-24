@@ -607,7 +607,6 @@ class Taoyao extends RemoteClient {
   // 本地录像数据
   mediaRecorderChunks = [];
 
-  // TODO：默认关闭data通道
   constructor({
     name,
     clientId,
@@ -660,14 +659,14 @@ class Taoyao extends RemoteClient {
    * @returns Promise<WebSocket>
    */
   async connectSignal(callback) {
-    const me = this;
     this.closed          = false;
-    me.callback          = callback;
-    signalChannel.taoyao = me;
+    this.callback        = callback;
+    signalChannel.taoyao = this;
     return await signalChannel.connect(
-      `wss://${me.host}:${me.port}/websocket.signal`
+      `wss://${this.host}:${this.port}/websocket.signal`
     );
   }
+
   /**
    * 异步请求
    *
@@ -675,12 +674,11 @@ class Taoyao extends RemoteClient {
    * @param {*} callback 信令回调
    */
   push(message, callback) {
-    const me = this;
-    const { header, body } = message;
-    const { id }           = header;
+    const { header } = message;
+    const { id }     = header;
     // 请求回调
     if (callback) {
-      me.callbackMapping.set(id, callback);
+      this.callbackMapping.set(id, callback);
     }
     // 发送消息
     try {
@@ -689,6 +687,7 @@ class Taoyao extends RemoteClient {
       console.error("异步请求异常", message, error);
     }
   }
+
   /**
    * 同步请求
    *
@@ -697,17 +696,16 @@ class Taoyao extends RemoteClient {
    * @returns Promise
    */
   async request(message) {
-    const me = this;
     return new Promise((resolve, reject) => {
-      const { header, body } = message;
-      const { id }           = header;
+      const { header } = message;
+      const { id }     = header;
       // 设置超时
       const rejectTimeout = setTimeout(() => {
-        me.callbackMapping.delete(id);
+        this.callbackMapping.delete(id);
         reject("请求超时", message);
       }, 5000);
       // 请求回调
-      me.callbackMapping.set(id, (response) => {
+      this.callbackMapping.set(id, (response) => {
         resolve(response);
         clearTimeout(rejectTimeout);
         // 默认不用继续处理
@@ -733,35 +731,29 @@ class Taoyao extends RemoteClient {
    * @param {*} message 信令消息
    */
   async on(message) {
-    const me = this;
-    const { code, header, body } = message;
-    const { id, signal }         = header;
+    const { code, header } = message;
+    const { id }           = header;
     if(code !== "0000") {
       console.warn("信令错误", message);
     }
     // 请求回调
-    if (me.callbackMapping.has(id)) {
+    if (this.callbackMapping.has(id)) {
       try {
-        if(
-          me.callbackMapping.get(id)(message)
-        ) {
+        if(this.callbackMapping.get(id)(message)) {
           return;
         }
       } finally {
-        me.callbackMapping.delete(id);
+        this.callbackMapping.delete(id);
       }
     }
     // 前置回调
-    await me.preCallback(message);
+    await this.preCallback(message);
     // 全局回调
-    if (
-      me.callback &&
-      await me.callback(message)
-    ) {
+    if (this.callback && await this.callback(message)) {
       return;
     }
     // 后置回调
-    await me.postCallback(message);
+    await this.postCallback(message);
   }
 
   /**
@@ -770,26 +762,20 @@ class Taoyao extends RemoteClient {
    * @param {*} message 消息
    */
   async preCallback(message) {
-    const me = this;
-    const {
-      header,
-      body
-    } = message;
-    const {
-      signal
-    } = header;
+    const { header, body } = message;
+    const { signal }       = header;
     switch (signal) {
       case "client::config":
-        me.defaultClientConfig(message, body);
+        this.defaultClientConfig(message, body);
         break;
       case "media::consume":
-        await me.defaultMediaConsume(message, body);
+        await this.defaultMediaConsume(message, body);
         break;
       case "media::data::consume":
-        me.defaultMediaDataConsume(message, body);
+        await this.defaultMediaDataConsume(message, body);
         break;
       case "platform::error":
-        me.defaultPlatformError(message, body);
+        this.defaultPlatformError(message, body);
         break;
     }
   }
@@ -800,137 +786,131 @@ class Taoyao extends RemoteClient {
    * @param {*} message 信令消息
    */
   async postCallback(message) {
-    const me = this;
-    const {
-      header,
-      body
-    } = message;
-    const {
-      signal
-    } = header;
+    const { header, body } = message;
+    const { signal }       = header;
     switch (signal) {
       case "client::broadcast":
-        me.defaultClientBroadcast(message, body);
+        this.defaultClientBroadcast(message, body);
         break;
       case "client::offline":
-        me.defaultClientOffline(message, body);
+        this.defaultClientOffline(message, body);
         break;
         case "client::online":
-        me.defaultClientOnline(message, body);
+        this.defaultClientOnline(message, body);
         break;
       case "client::reboot":
-        me.defaultClientReboot(message, body);
+        this.defaultClientReboot(message, body);
         break;
       case "client::shutdown":
-        me.defaultClientShutdown(message, body);
+        this.defaultClientShutdown(message, body);
         break;
       case "client::unicast":
-        me.defaultClientUnicast(message, body);
+        this.defaultClientUnicast(message, body);
         break;
       case "control::bell":
-        me.defaultControlBell(message, body);
+        this.defaultControlBell(message, body);
         break;
       case "control::client::record":
-        me.defaultControlClientReccord(message, body);
+        this.defaultControlClientReccord(message, body);
         break;
       case "control::config::audio":
-        me.defaultControlConfigAudio(message, body);
+        this.defaultControlConfigAudio(message, body);
         break;
       case "control::config::video":
-        me.defaultControlConfigVideo(message, body);
+        this.defaultControlConfigVideo(message, body);
         break;
       case "control::photograph":
-        me.defaultControlPhotograph(message, body);
+        this.defaultControlPhotograph(message, body);
         break;
       case "control::wakeup":
-        me.defaultControlWakeup(message, body);
+        this.defaultControlWakeup(message, body);
         break;
       case "media::audio::volume":
-        me.defaultMediaAudioVolume(message, body);
+        this.defaultMediaAudioVolume(message, body);
         break;
       case "media::consumer::close":
-        me.defaultMediaConsumerClose(message, body);
+        this.defaultMediaConsumerClose(message, body);
         break;
       case "media::consumer::layers::change":
         this.defaultMediaConsumerLayersChange(message, body);
         break;
       case "media::consumer::pause":
-        me.defaultMediaConsumerPause(message, body);
+        this.defaultMediaConsumerPause(message, body);
         break;
       case "media::consumer::resume":
-        me.defaultMediaConsumerResume(message, body);
+        this.defaultMediaConsumerResume(message, body);
         break;
       case "media::consumer::score":
-        me.defaultMediaConsumerScore(message, body);
+        this.defaultMediaConsumerScore(message, body);
         break;
       case "media::data::consumer::close":
-        me.defaultMediaDataConsumerClose(message, body);
+        this.defaultMediaDataConsumerClose(message, body);
         break;
       case "media::data::producer::close":
-        me.defaultMediaDataProducerClose(message, body);
+        this.defaultMediaDataProducerClose(message, body);
         break;
       case "media::producer::close":
-        me.defaultMediaProducerClose(message, body);
+        this.defaultMediaProducerClose(message, body);
         break;
       case "media::producer::pause":
-        me.defaultMediaProducerPause(message, body);
+        this.defaultMediaProducerPause(message, body);
         break;
       case "media::producer::resume":
-        me.defaultMediaProducerResume(message, body);
+        this.defaultMediaProducerResume(message, body);
         break;
       case "media::producer::score":
-        me.defaultMediaProducerScore(message, body);
+        this.defaultMediaProducerScore(message, body);
         break;
       case "media::transport::close":
-        me.defaultMediaTransportClose(message, body);
+        this.defaultMediaTransportClose(message, body);
         break;
       case "media::video::orientation::change":
-        me.defaultMediaVideoOrientationChange(message, body);
+        this.defaultMediaVideoOrientationChange(message, body);
         break;
       case "platform::reboot":
-        me.defaultPlatformReboot(message, body);
+        this.defaultPlatformReboot(message, body);
         break;
       case "platform::shutdown":
-        me.defaultPlatformShutdown(message, body);
+        this.defaultPlatformShutdown(message, body);
         break;
       case "room::broadcast":
-        me.defaultRoomBroadcast(message, body);
+        this.defaultRoomBroadcast(message, body);
         break;
       case "room::client::list":
-        me.defaultRoomClientList(message, body);
+        this.defaultRoomClientList(message, body);
         break;
       case "room::close":
-        me.defaultRoomClose(message, body);
+        this.defaultRoomClose(message, body);
         break;
       case "room::create":
         this.defaultRoomCreate(message, body);
         break;
       case "room::enter":
-        me.defaultRoomEnter(message, body);
+        this.defaultRoomEnter(message, body);
         break;
       case "room::expel":
-        me.defaultRoomExpel(message, body);
+        this.defaultRoomExpel(message, body);
         break;
       case "room::invite":
-        me.defaultRoomInvite(message, body);
+        this.defaultRoomInvite(message, body);
         break;
       case "room::leave":
-        me.defaultRoomLeave(message, body);
+        this.defaultRoomLeave(message, body);
         break;
       case "session::call":
-        me.defaultSessionCall(message, body);
+        this.defaultSessionCall(message, body);
         break;
       case "session::close":
-        me.defaultSessionClose(message, body);
+        this.defaultSessionClose(message, body);
         break;
       case "session::exchange":
-        me.defaultSessionExchange(message, body);
+        this.defaultSessionExchange(message, body);
         break;
       case "session::pause":
-        me.defaultSessionPause(message, body);
+        this.defaultSessionPause(message, body);
         break;
       case "session::resume":
-        me.defaultSessionResume(message, body);
+        this.defaultSessionResume(message, body);
         break;
     }
   }
@@ -941,13 +921,12 @@ class Taoyao extends RemoteClient {
    * @returns 生产者
    */
   getProducer(producerId) {
-    const me = this;
-    if(me.audioProducer?.id === producerId) {
-      return me.audioProducer;
-    } else if(me.videoProducer?.id === producerId) {
-      return me.videoProducer;
-    } else if(me.dataProducer?.id === producerId) {
-      return me.dataProducer;
+    if(this.audioProducer?.id === producerId) {
+      return this.audioProducer;
+    } else if(this.videoProducer?.id === producerId) {
+      return this.videoProducer;
+    } else if(this.dataProducer?.id === producerId) {
+      return this.dataProducer;
     } else {
       return null;
     }
