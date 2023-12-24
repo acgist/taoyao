@@ -954,13 +954,14 @@ class Taoyao extends RemoteClient {
       return;
     }
     console.debug("选择文件", file);
-    this.fileVideo = document.createElement("video");
+    this.fileVideo          = document.createElement("video");
+    this.fileVideoObjectURL = URL.createObjectURL(input.files[0]);
+    this.fileVideo.src      = this.fileVideoObjectURL;
     this.fileVideo.loop     = true;
     this.fileVideo.muted    = true;
     this.fileVideo.controls = true;
-    this.fileVideo.src      = URL.createObjectURL(input.files[0]);
     if(config.media.filePreview) {
-      this.fileVideo.style         = "position:fixed;top:1rem;left:1rem;width:128px;border:2px solid #FFF;";
+      this.fileVideo.style = "position:fixed;top:1rem;left:1rem;width:128px;border:2px solid #FFF;";
     } else {
       this.fileVideo.style.display = "none";
     }
@@ -975,34 +976,38 @@ class Taoyao extends RemoteClient {
   async closeFileVideo() {
     if(this.fileVideo) {
       this.fileVideo.remove();
+      this.fileVideo = null;
     }
     if(this.fileVideoObjectURL) {
       URL.revokeObjectURL(this.fileVideoObjectURL);
+      this.fileVideoObjectURL = null;
     }
   }
 
   /**
+   * @param {*} audioEnabled 是否采集音频
+   * @param {*} videoEnabled 是否采集视频
+   * 
    * @returns 媒体
    */
   async getStream({
     audioEnabled,
     videoEnabled,
   }) {
-    const me = this;
     let stream;
-    if (me.videoSource === "file") {
+    if (this.videoSource === "file") {
       await this.getFileVideo();
-      stream = me.fileVideo.captureStream();
-    } else if (me.videoSource === "camera") {
-      console.debug("媒体配置", me.audioConfig, me.videoConfig);
+      stream = this.fileVideo.captureStream();
+    } else if (this.videoSource === "camera") {
+      console.debug("媒体配置", this.audioConfig, this.videoConfig);
       stream = await navigator.mediaDevices.getUserMedia({
-        audio: audioEnabled && me.audioConfig,
-        video: videoEnabled && me.videoConfig,
+        audio: audioEnabled && this.audioConfig,
+        video: videoEnabled && this.videoConfig,
       });
-    } else if (me.videoSource === "screen") {
+    } else if (this.videoSource === "screen") {
       // 音频配置：视频可能没有音频
       const audioConfig = {
-        ...me.audioConfig
+        ...this.audioConfig
       };
       // 删除min/max
       delete audioConfig.sampleSize.min;
@@ -1027,7 +1032,7 @@ class Taoyao extends RemoteClient {
         video: videoEnabled && videoConfig,
       });
     } else {
-      console.warn("不支持的视频来源", me.videoSource);
+      console.warn("不支持的视频来源", this.videoSource);
     }
     stream.getAudioTracks().forEach(track => {
       console.debug(
@@ -1050,9 +1055,8 @@ class Taoyao extends RemoteClient {
    * @returns 音频轨道
    */
   async getAudioTrack() {
-    const me = this;
     const stream = await navigator.mediaDevices.getUserMedia({
-      audio: me.audioConfig,
+      audio: this.audioConfig,
       video: false,
     });
     const track = stream.getAudioTracks()[0];
@@ -1069,16 +1073,15 @@ class Taoyao extends RemoteClient {
    */
   async getVideoTrack() {
     let stream;
-    const me = this;
-    if (me.videoSource === "file") {
+    if (this.videoSource === "file") {
       await this.getFileVideo();
-      stream = me.fileVideo.captureStream();
-    } else if (me.videoSource === "camera") {
+      stream = this.fileVideo.captureStream();
+    } else if (this.videoSource === "camera") {
       stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
-        video: me.videoConfig,
+        video: this.videoConfig,
       });
-    } else if (me.videoSource === "screen") {
+    } else if (this.videoSource === "screen") {
       // 视频配置
       const videoConfig = {
         ...this.videoConfig,
@@ -1096,7 +1099,7 @@ class Taoyao extends RemoteClient {
         video: videoConfig,
       });
     } else {
-      console.warn("不支持的视频来源", me.videoSource);
+      console.warn("不支持的视频来源", this.videoSource);
     }
     const track = stream.getVideoTracks()[0];
     console.debug(
@@ -3653,9 +3656,8 @@ class Taoyao extends RemoteClient {
    * @param {*} enabled     是否录像
    */
   localClientRecord(audioStream, videoStream, enabled) {
-    const me = this;
     if (enabled) {
-      if (me.mediaRecorder) {
+      if (this.mediaRecorder) {
         console.debug("本地录像机已经存在");
         return;
       }
@@ -3666,13 +3668,13 @@ class Taoyao extends RemoteClient {
       if(videoStream) {
         videoStream.getVideoTracks().forEach(track => stream.addTrack(track));
       }
-      me.mediaRecorder = new MediaRecorder(stream, {
+      this.mediaRecorder = new MediaRecorder(stream, {
         audioBitsPerSecond: 256  * 1000,
         videoBitsPerSecond: 1600 * 1000,
         mimeType: 'video/webm;codecs=opus,h264',
       });
-      me.mediaRecorder.onstop = (e) => {
-        const blob             = new Blob(me.mediaRecorderChunks);
+      this.mediaRecorder.onstop = (e) => {
+        const blob             = new Blob(this.mediaRecorderChunks);
         const objectURL        = URL.createObjectURL(blob);
         const download         = document.createElement("a");
         download.href          = objectURL;
@@ -3682,19 +3684,19 @@ class Taoyao extends RemoteClient {
         download.click();
         download.remove();
         URL.revokeObjectURL(objectURL);
-        me.mediaRecorderChunks = [];
+        this.mediaRecorderChunks = [];
       };
-      me.mediaRecorder.ondataavailable = (e) => {
-        me.mediaRecorderChunks.push(e.data);
+      this.mediaRecorder.ondataavailable = (e) => {
+        this.mediaRecorderChunks.push(e.data);
       };
-      me.mediaRecorder.start();
+      this.mediaRecorder.start();
     } else {
-      if (!me.mediaRecorder) {
+      if (!this.mediaRecorder) {
         console.debug("本地录像机无效");
         return;
       }
-      me.mediaRecorder.stop();
-      me.mediaRecorder = null;
+      this.mediaRecorder.stop();
+      this.mediaRecorder = null;
     }
   }
 
@@ -3704,8 +3706,21 @@ class Taoyao extends RemoteClient {
    * @param {*} label 配置
    */
   setLocalAudioConfig(label) {
+    // 修改配置
     if(label) {
-      // TODO：更新本地配置
+      const option = this.options.find(v => v.label === label);
+      if(option) {
+        const {
+          sampleSize,
+          sampleRate,
+        } = option;
+        if(sampleSize) {
+          this.audioConfig.sampleSize.ideal = sampleSize;
+        }
+        if(sampleSize) {
+          this.audioConfig.sampleRate.ideal = sampleRate;
+        }
+      }
     }
     this.updateAudioProducer();
     this.updateAudioSession();
@@ -3717,12 +3732,28 @@ class Taoyao extends RemoteClient {
    * @param {*} label 配置
    */
   setLocalVideoConfig(label) {
-    const me = this;
+    // 修改配置
     if(label) {
-      // TODO：更新本地配置
+      const option = this.options.find(v => v.label === label);
+      if(option) {
+        const {
+          width,
+          height,
+          frameRate,
+        } = option;
+        if(width) {
+          this.videoConfig.width.ideal = width;
+        }
+        if(height) {
+          this.videoConfig.height.ideal = height;
+        }
+        if(frameRate) {
+          this.videoConfig.frameRate.ideal = frameRate;
+        }
+      }
     }
-    me.updateVideoProducer();
-    me.updateVideoSession();
+    this.updateVideoProducer();
+    this.updateVideoSession();
   }
 
   /**
@@ -3731,12 +3762,10 @@ class Taoyao extends RemoteClient {
    * @param {*} label 配置
    */
   setVideoConfig(clientId, label) {
-    const me = this;
-    if(clientId === me.clientId) {
-      me.setLocalVideoConfig(label);
+    if(clientId === this.clientId) {
+      this.setLocalVideoConfig(label);
       return;
     }
-    // TODO：更新远程配置
     const option = this.options.find(v => v.label === label);
     if(!option) {
       console.warn("不支持的视频配置", label, this.options);
