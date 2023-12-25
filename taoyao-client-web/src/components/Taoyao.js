@@ -1000,6 +1000,17 @@ class Taoyao extends RemoteClient {
       stream = this.fileVideo.captureStream();
     } else if (this.videoSource === "camera") {
       console.debug("媒体配置", this.audioConfig, this.videoConfig);
+      // 删除min/max
+      // delete this.audioConfig.sampleSize.min;
+      // delete this.audioConfig.sampleSize.max;
+      // delete this.audioConfig.sampleRate.min;
+      // delete this.audioConfig.sampleRate.max;
+      // delete this.videoConfig.width.min;
+      // delete this.videoConfig.width.max;
+      // delete this.videoConfig.height.min;
+      // delete this.videoConfig.height.max;
+      // delete this.videoConfig.frameRate.min;
+      // delete this.videoConfig.frameRate.max;
       stream = await navigator.mediaDevices.getUserMedia({
         audio: audioEnabled && this.audioConfig,
         video: videoEnabled && this.videoConfig,
@@ -1055,6 +1066,11 @@ class Taoyao extends RemoteClient {
    * @returns 音频轨道
    */
   async getAudioTrack() {
+    // 删除min/max
+    // delete this.audioConfig.sampleSize.min;
+    // delete this.audioConfig.sampleSize.max;
+    // delete this.audioConfig.sampleRate.min;
+    // delete this.audioConfig.sampleRate.max;
     const stream = await navigator.mediaDevices.getUserMedia({
       audio: this.audioConfig,
       video: false,
@@ -1077,6 +1093,13 @@ class Taoyao extends RemoteClient {
       await this.getFileVideo();
       stream = this.fileVideo.captureStream();
     } else if (this.videoSource === "camera") {
+      // 删除min/max
+      // delete this.videoConfig.width.min;
+      // delete this.videoConfig.width.max;
+      // delete this.videoConfig.height.min;
+      // delete this.videoConfig.height.max;
+      // delete this.videoConfig.frameRate.min;
+      // delete this.videoConfig.frameRate.max;
       stream = await navigator.mediaDevices.getUserMedia({
         audio: false,
         video: this.videoConfig,
@@ -3126,7 +3149,11 @@ class Taoyao extends RemoteClient {
       return response;
     }
     const routerRtpCapabilities = response.body.rtpCapabilities;
-    this.mediasoupDevice        = new mediasoupClient.Device();
+    if (this.isIPhoneMicro()) {
+      this.mediasoupDevice = new mediasoupClient.Device({ handlerName: "Safari12" });
+    } else {
+      this.mediasoupDevice = new mediasoupClient.Device();
+    }
     await this.mediasoupDevice.load({ routerRtpCapabilities });
     response = await this.request(protocol.buildMessage("room::enter", {
       roomId          : roomId,
@@ -3827,6 +3854,13 @@ class Taoyao extends RemoteClient {
       }
     }
     return stats;
+  }
+
+  /**
+   * @returns 是否是苹果微信
+   */
+  isIPhoneMicro() {
+    return navigator.userAgent.match(/iPhone/i) && navigator.userAgent.match(/(MicroMessenger|micromessenger)/i);
   }
 
   /**

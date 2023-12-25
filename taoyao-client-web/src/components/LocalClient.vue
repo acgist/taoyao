@@ -60,10 +60,10 @@ export default {
     return {
       audio        : null,
       video        : null,
-      clientRecord : false,
-      serverRecord : false,
       audioStream  : null,
       videoStream  : null,
+      clientRecord : false,
+      serverRecord : false,
       dataProducer : null,
       audioProducer: null,
       videoProducer: null,

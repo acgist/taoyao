@@ -64,10 +64,10 @@ export default {
     return {
       audio       : null,
       video       : null,
-      clientRecord: false,
-      serverRecord: false,
       audioStream : null,
       videoStream : null,
+      clientRecord: false,
+      serverRecord: false,
     };
   },
   async mounted() {

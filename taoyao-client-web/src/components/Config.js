@@ -14,7 +14,8 @@ const config = {
     // 终端类型
     clientType: "WEB",
   },
-}
+};
+
 /**
  * 音频默认配置
  * 配置：{ min: 8000, exact: 32000, ideal: 32000, max: 48000 }
@@ -31,7 +32,7 @@ const defaultAudioConfig = {
   // 延迟时间（单位：秒）：500毫秒以内较好
   // latency      : 0.4,
   // 采样位数：8|16|32
-  sampleSize      : { min: 8,    ideal: 16,    max: 32 },
+  sampleSize      : { min: 8,    ideal: 16,    max: 32    },
   // 采样率：8000|16000|32000|48000
   sampleRate      : { min: 8000, ideal: 32000, max: 48000 },
   // 声道数量：1|2
@@ -60,7 +61,7 @@ const defaultVideoConfig = {
   // 高度
   height        : { min: 480, ideal: 720,  max: 2160 },
   // 帧率
-  frameRate     : { min: 15,  ideal: 24,   max: 45 },
+  frameRate     : { min: 15,  ideal: 24,   max: 45   },
   // 摄像头：user|left|right|environment
   facingMode    : "environment",
   // 裁剪
@@ -81,7 +82,7 @@ const defaultShareScreenConfig = {
   logicalSurface: true,
   // 视频来源：window|monitor|browser|application
   displaySurface: "monitor",
-}
+};
 
 /**
  * SVC默认配置
