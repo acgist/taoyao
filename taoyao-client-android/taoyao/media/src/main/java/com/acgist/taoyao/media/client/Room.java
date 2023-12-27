@@ -104,7 +104,7 @@ public class Room extends CloseableClient implements RouterCallback {
     /**
      * 房间指针
      */
-    private final long nativeRoomPointer;
+    private long nativeRoomPointer;
     /**
      * 本地终端
      */
@@ -392,6 +392,7 @@ public class Room extends CloseableClient implements RouterCallback {
             super.close();
             // 关闭Mediasoup房间
             this.nativeCloseRoom(this.nativeRoomPointer);
+            this.nativeRoomPointer = 0L;
             // 关闭远程媒体
             this.remoteClients.values().forEach(this::closeRemoteClient);
             this.remoteClients.clear();

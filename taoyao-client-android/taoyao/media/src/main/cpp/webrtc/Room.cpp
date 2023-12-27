@@ -288,16 +288,46 @@ namespace acgist {
 
     Room::~Room() {
         // TODO：解决析构函数不是虚函数的问题
-        delete this->rtcConfiguration;
-        delete this->device;
-        delete this->sendListener;
-        delete this->sendTransport;
-        delete this->recvListener;
-        delete this->recvTransport;
-        delete this->audioProducer;
-        delete this->videoProducer;
-        delete this->producerListener;
-        delete this->consumerListener;
+        if(this->rtcConfiguration != nullptr) {
+            delete this->rtcConfiguration;
+            this->rtcConfiguration = nullptr;
+        }
+        if(this->device != nullptr) {
+            delete this->device;
+            this->device = nullptr;
+        }
+        if(this->sendListener != nullptr) {
+            delete this->sendListener;
+            this->sendListener = nullptr;
+        }
+        if(this->sendTransport != nullptr) {
+            delete this->sendTransport;
+            this->sendTransport = nullptr;
+        }
+        if(this->recvListener != nullptr) {
+            delete this->recvListener;
+            this->recvListener = nullptr;
+        }
+        if(this->recvTransport != nullptr) {
+            delete this->recvTransport;
+            this->recvTransport = nullptr;
+        }
+        if(this->audioProducer != nullptr) {
+            delete this->audioProducer;
+            this->audioProducer = nullptr;
+        }
+        if(this->videoProducer != nullptr) {
+            delete this->videoProducer;
+            this->videoProducer = nullptr;
+        }
+        if(this->producerListener != nullptr) {
+            delete this->producerListener;
+            this->producerListener = nullptr;
+        }
+        if(this->consumerListener != nullptr) {
+            delete this->consumerListener;
+            this->consumerListener = nullptr;
+        }
     }
 
     void Room::enterRoom(
@@ -542,6 +572,9 @@ namespace acgist {
         jlong factoryPointer, jobject jRtcConfiguration
     ) {
         Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
 //      webrtc::PeerConnectionInterface::RTCConfiguration rtcConfiguration(webrtc::PeerConnectionInterface::RTCConfigurationType::kSafe);
         webrtc::PeerConnectionInterface::RTCConfiguration rtcConfiguration(webrtc::PeerConnectionInterface::RTCConfigurationType::kAggressive);
         webrtc::JavaParamRef<jobject> jRtcConfigurationRef(env, jRtcConfiguration);
@@ -561,13 +594,19 @@ namespace acgist {
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeCloseRoom(JNIEnv* env, jobject me, jlong nativeRoomPointer) {
         Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
         room->closeRoom(env);
         delete room;
     }
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeCreateSendTransport(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jBody) {
-        Room* room       = (Room*) nativeRoomPointer;
+        Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
         const char* body = env->GetStringUTFChars(jBody, nullptr);
         room->createSendTransport(env, body);
         env->DeleteLocalRef(jBody);
@@ -576,7 +615,10 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeCreateRecvTransport(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jBody) {
-        Room* room       = (Room*) nativeRoomPointer;
+        Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
         const char* body = env->GetStringUTFChars(jBody, nullptr);
         room->createRecvTransport(env, body);
         env->DeleteLocalRef(jBody);
@@ -586,18 +628,27 @@ namespace acgist {
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaProduceAudio(JNIEnv* env, jobject me, jlong nativeRoomPointer, jlong mediaStreamPointer) {
         Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
         room->mediaProduceAudio(env, (webrtc::MediaStreamInterface*) mediaStreamPointer);
     }
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaProduceVideo(JNIEnv* env, jobject me, jlong nativeRoomPointer, jlong mediaStreamPointer) {
         Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
         room->mediaProduceVideo(env, (webrtc::MediaStreamInterface*) mediaStreamPointer);
     }
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaConsume(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jMessage) {
-        Room* room          = (Room*) nativeRoomPointer;
+        Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
         const char* message = env->GetStringUTFChars(jMessage, nullptr);
         room->mediaConsume(env, message);
         env->DeleteLocalRef(jMessage);
@@ -606,7 +657,10 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaProducerPause(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jProducerId) {
-        Room* room             = (Room*) nativeRoomPointer;
+        Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
         const char* producerId = env->GetStringUTFChars(jProducerId, nullptr);
         room->mediaProducerPause(env, producerId);
         env->DeleteLocalRef(jProducerId);
@@ -615,7 +669,10 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaProducerResume(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jProducerId) {
-        Room* room             = (Room*) nativeRoomPointer;
+        Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
         const char* producerId = env->GetStringUTFChars(jProducerId, nullptr);
         room->mediaProducerResume(env, producerId);
         env->DeleteLocalRef(jProducerId);
@@ -624,7 +681,10 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaProducerClose(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jProducerId) {
-        Room* room             = (Room*) nativeRoomPointer;
+        Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
         const char* producerId = env->GetStringUTFChars(jProducerId, nullptr);
         room->mediaProducerClose(env, producerId);
         env->DeleteLocalRef(jProducerId);
@@ -633,7 +693,10 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaConsumerPause(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jConsumerId) {
-        Room* room             = (Room*) nativeRoomPointer;
+        Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
         const char* consumerId = env->GetStringUTFChars(jConsumerId, nullptr);
         room->mediaConsumerPause(env, consumerId);
         env->DeleteLocalRef(jConsumerId);
@@ -642,7 +705,10 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaConsumerResume(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jConsumerId) {
-        Room* room             = (Room*) nativeRoomPointer;
+        Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
         const char* consumerId = env->GetStringUTFChars(jConsumerId, nullptr);
         room->mediaConsumerResume(env, consumerId);
         env->DeleteLocalRef(jConsumerId);
@@ -651,7 +717,10 @@ namespace acgist {
 
     extern "C" JNIEXPORT void JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeMediaConsumerClose(JNIEnv* env, jobject me, jlong nativeRoomPointer, jstring jConsumerId) {
-        Room* room             = (Room*) nativeRoomPointer;
+        Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
         const char* consumerId = env->GetStringUTFChars(jConsumerId, nullptr);
         room->mediaConsumerClose(env, consumerId);
         env->DeleteLocalRef(jConsumerId);
