@@ -90,7 +90,7 @@
     <!-- 终端 -->
     <div class="clients">
       <!-- 本地终端 -->
-      <LocalClient   v-if="taoyao && taoyao.roomId"                                ref="local-client"               :client="taoyao" :taoyao="taoyao"></LocalClient>
+      <LocalClient   v-if="taoyao && taoyao.roomId"                                 ref="local-client"              :client="taoyao" :taoyao="taoyao"></LocalClient>
       <!-- 远程终端 -->
       <RemoteClient  v-for="kv in remoteClients"  :key="'remote-client-'  + kv[0]" :ref="'remote-client-'  + kv[0]" :client="kv[1]"  :taoyao="taoyao"></RemoteClient>
       <!-- 远程会话 -->

@@ -104,7 +104,7 @@ public class Room extends CloseableClient implements RouterCallback {
     /**
      * 房间指针
      */
-    private long nativeRoomPointer;
+    private volatile long nativeRoomPointer;
     /**
      * 本地终端
      */
