@@ -118,20 +118,21 @@ module.exports = {
           clockRate : 90000,
           parameters: {
             "packetization-mode"     : 1,
-            "profile-level-id"       : "4d0032",
+            "profile-level-id"       : "42e01f",
             "level-asymmetry-allowed": 1,
             "x-google-start-bitrate" : 400,
             // "x-google-min-bitrate": 800,
             // "x-google-max-bitrate": 1600,
           },
         },
+        // 安卓H5失败
         {
           kind      : "video",
           mimeType  : "video/h264",
           clockRate : 90000,
           parameters: {
             "packetization-mode"     : 1,
-            "profile-level-id"       : "42e01f",
+            "profile-level-id"       : "4d0032",
             "level-asymmetry-allowed": 1,
             "x-google-start-bitrate" : 400,
             // "x-google-min-bitrate": 800,

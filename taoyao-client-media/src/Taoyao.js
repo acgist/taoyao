@@ -271,6 +271,7 @@ class Room {
     this.handleAudioLevelObserver();
     this.handleActiveSpeakerObserver();
   }
+
   /**
    * 音量监控
    */
@@ -302,6 +303,7 @@ class Room {
     });
     // this.audioLevelObserver.observer.on("volumes", (volumes) => {});
   }
+
   /**
    * 当前讲话终端监控
    */
@@ -313,44 +315,45 @@ class Room {
     });
     // this.activeSpeakerObserver.observer.on("dominantspeaker", (dominantSpeaker) => {});
   }
+
   /**
    * 房间使用情况
    */
   usage() {
-    const me = this;
-    console.info("房间标识",          me.roomId);
-    console.info("房间媒体通道数量",   me.transports.size);
-    console.info("房间媒体生产者数量", me.producers.size);
-    console.info("房间媒体消费者数量", me.consumers.size);
-    console.info("房间数据生产者数量", me.dataProducers.size);
-    console.info("房间数据消费者数量", me.dataConsumers.size);
+    console.info("房间标识",          this.roomId);
+    console.info("房间媒体通道数量",   this.transports.size);
+    console.info("房间媒体生产者数量", this.producers.size);
+    console.info("房间媒体消费者数量", this.consumers.size);
+    console.info("房间数据生产者数量", this.dataProducers.size);
+    console.info("房间数据消费者数量", this.dataConsumers.size);
   }
 
   /**
    * 关闭房间
    */
   closeAll() {
-    const me = this;
-    if (me.close) {
+    if (this.close) {
       return;
     }
-    console.info("关闭房间", me.roomId);
-    me.close = true;
-    me.audioLevelObserver.close();
-    me.activeSpeakerObserver.close();
-    me.consumers.forEach(v => v.close());
-    me.producers.forEach(v => v.close());
-    me.dataConsumers.forEach(v => v.close());
-    me.dataProducers.forEach(v => v.close());
-    me.transports.forEach(v => v.close());
-    me.mediasoupRouter.close();
+    console.info("关闭房间", this.roomId);
+    this.close = true;
+    this.audioLevelObserver.close();
+    this.activeSpeakerObserver.close();
+    this.consumers.forEach(v => v.close());
+    this.producers.forEach(v => v.close());
+    this.dataConsumers.forEach(v => v.close());
+    this.dataProducers.forEach(v => v.close());
+    this.transports.forEach(v => v.close());
+    this.mediasoupRouter.close();
   }
+
 };
 
 /**
  * 桃夭信令
  */
 class Taoyao {
+
   // 是否连接
   connect = false;
   // 房间列表：房间ID=房间
@@ -377,119 +380,125 @@ class Taoyao {
    * @param {*} message 消息
    */
   on(message) {
-    const me = this;
     // 解构
-    const { code, header, body } = message;
-    const { id, signal }         = header;
+    const {
+      code,
+      header,
+      body
+    } = message;
+    const {
+      id,
+      signal
+    } = header;
     if(code !== "0000") {
       console.warn("信令错误", message);
     }
     // 请求回调
-    if (me.callbackMapping.has(id)) {
+    if (this.callbackMapping.has(id)) {
       try {
-        me.callbackMapping.get(id)(message);
+        this.callbackMapping.get(id)(message);
       } finally {
-        me.callbackMapping.delete(id);
+        this.callbackMapping.delete(id);
       }
       return;
     }
     // 执行信令
     switch (signal) {
       case "client::reboot":
-        me.clientReboot(message, body);
+        this.clientReboot(message, body);
         break;
       case "client::shutdown":
-        me.clientShutdown(message, body);
+        this.clientShutdown(message, body);
         break;
       case "control::server::record":
-        me.controlServerRecord(message, body);
+        this.controlServerRecord(message, body);
         break;
       case "media::consume":
-        me.mediaConsume(message, body);
+        this.mediaConsume(message, body);
         break;
       case "media::consumer::close":
-        me.mediaConsumerClose(message, body);
+        this.mediaConsumerClose(message, body);
         break;
       case "media::consumer::pause":
-        me.mediaConsumerPause(message, body);
+        this.mediaConsumerPause(message, body);
         break;
       case "media::consumer::request::key::frame":
-        me.mediaConsumerRequestKeyFrame(message, body);
+        this.mediaConsumerRequestKeyFrame(message, body);
         break;
       case "media::consumer::resume":
-        me.mediaConsumerResume(message, body);
+        this.mediaConsumerResume(message, body);
         break;
       case "media::consumer::set::preferred::layers":
-        me.mediaConsumerSetPreferredLayers(message, body);
+        this.mediaConsumerSetPreferredLayers(message, body);
         break;
       case "media::consumer::set::priority":
-        me.mediaConsumerSetPriority(message, body);
+        this.mediaConsumerSetPriority(message, body);
         break;
       case "media::consumer::status":
-        me.mediaConsumerStatus(message, body);
+        this.mediaConsumerStatus(message, body);
         break;
       case "media::data::consume":
-        me.mediaDataConsume(message, body);
+        this.mediaDataConsume(message, body);
         break;
       case "media::data::consumer::close":
-        me.mediaDataConsumerClose(message, body);
+        this.mediaDataConsumerClose(message, body);
         break;
       case "media::data::consumer::status":
-        me.mediaDataConsumerStatus(message, body);
+        this.mediaDataConsumerStatus(message, body);
         break;
       case "media::data::produce":
-        me.mediaDataProduce(message, body);
+        this.mediaDataProduce(message, body);
         break;
       case "media::data::producer::close":
-        me.mediaDataProducerClose(message, body);
+        this.mediaDataProducerClose(message, body);
         break;
       case "media::data::producer::status":
-        me.mediaDataProducerStatus(message, body);
+        this.mediaDataProducerStatus(message, body);
         break;
       case "media::ice::restart":
-        me.mediaIceRestart(message, body);
+        this.mediaIceRestart(message, body);
         break;
       case "media::produce":
-        me.mediaProduce(message, body);
+        this.mediaProduce(message, body);
         break;
       case "media::producer::close":
-        me.mediaProducerClose(message, body);
+        this.mediaProducerClose(message, body);
         break;
       case "media::producer::pause":
-        me.mediaProducerPause(message, body);
+        this.mediaProducerPause(message, body);
         break;
       case "media::producer::resume":
-        me.mediaProducerResume(message, body);
+        this.mediaProducerResume(message, body);
         break;
       case "media::producer::status":
-        me.mediaProducerStatus(message, body);
+        this.mediaProducerStatus(message, body);
         break;
       case "media::router::rtp::capabilities":
-        me.mediaRouterRtpCapabilities(message, body);
+        this.mediaRouterRtpCapabilities(message, body);
         break;
       case "media::transport::close":
-        me.mediaTransportClose(message, body);
+        this.mediaTransportClose(message, body);
         break;
       case "media::transport::plain::create":
-        me.mediaTransportPlainCreate(message, body);
+        this.mediaTransportPlainCreate(message, body);
         break;
       case "media::transport::status":
-        me.mediaTransportStatus(message, body);
+        this.mediaTransportStatus(message, body);
         break;
       case "media::transport::webrtc::connect":
-        me.mediaTransportWebrtcConnect(message, body);
+        this.mediaTransportWebrtcConnect(message, body);
         break;
       case "media::transport::webrtc::create":
-        me.mediaTransportWebrtcCreate(message, body);
+        this.mediaTransportWebrtcCreate(message, body);
         break;
       case "platform::error":
-        me.platformError(message, body);
+        this.platformError(message, body);
         break;
       case "room::close":
-        me.roomClose(message, body);
+        this.roomClose(message, body);
         break;
       case "room::create":
-        me.roomCreate(message, body);
+        this.roomCreate(message, body);
         break;
     }
   }
@@ -515,17 +524,16 @@ class Taoyao {
    * @returns Promise
    */
   async request(message) {
-    const me = this;
     return new Promise((resolve, reject) => {
       const { header, body } = message;
       const { id }           = header;
       // 设置超时
       const rejectTimeout = setTimeout(() => {
-        me.callbackMapping.delete(id);
+        this.callbackMapping.delete(id);
         reject("请求超时", message);
       }, 5000);
       // 请求回调
-      me.callbackMapping.set(id, (response) => {
+      this.callbackMapping.set(id, (response) => {
         resolve(response);
         clearTimeout(rejectTimeout);
         return true;
@@ -543,23 +551,21 @@ class Taoyao {
    * 打印日志
    */
   async usage() {
-    const me = this;
-    for (const worker of me.mediasoupWorkers) {
+    for (const worker of this.mediasoupWorkers) {
       const usage = await worker.getResourceUsage();
       console.info("工作线程使用情况", worker.pid, usage);
     }
-    console.info("工作线程数量", me.mediasoupWorkers.length);
-    console.info("现存房间数量", me.rooms.size);
-    Array.from(me.rooms.values()).forEach((room) => room.usage());
+    console.info("工作线程数量", this.mediasoupWorkers.length);
+    console.info("现存房间数量", this.rooms.size);
+    Array.from(this.rooms.values()).forEach((room) => room.usage());
   }
 
   /**
    * @returns 下个工作线程
    */
   nextMediasoupWorker() {
-    const me = this;
-    const worker = me.mediasoupWorkers[me.nextMediasoupWorkerIndex];
-    me.nextMediasoupWorkerIndex = ++me.nextMediasoupWorkerIndex % me.mediasoupWorkers.length;
+    const worker = this.mediasoupWorkers[this.nextMediasoupWorkerIndex];
+    this.nextMediasoupWorkerIndex = ++this.nextMediasoupWorkerIndex % this.mediasoupWorkers.length;
     return worker;
   }
   
