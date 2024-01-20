@@ -66,6 +66,7 @@ set nocompatible
 vi /etc/network/interfaces
 
 ---
+auto enp0s3
 iface enp0s3 inet static
 address 192.168.1.110
 gateway 192.168.1.1
@@ -80,6 +81,17 @@ ifup enp0s3
 ### 设置国内镜像
 
 ```
+# DNS
+sudo vim /etc/systemd/resolved.conf
+
+---
+DNS=233.5.5.5 233.6.6.6 114.114.114.114 8.8.8.8
+---
+
+sudo systemctl restart systemd-resolved
+sudo systemctl enable systemd-resolved
+sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+
 # 配置
 vi /etc/apt/sources.list
 
@@ -96,6 +108,7 @@ deb-src https://mirrors.aliyun.com/debian/ bullseye-backports main non-free cont
 
 # 更新系统
 apt update
+apt upgrade
 ```
 
 ### 安装依赖
