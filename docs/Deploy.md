@@ -17,7 +17,7 @@ Android >= 9.0
 
 ## Debian
 
-`CentOS 7`实在是太旧了，软件更新非常麻烦，所以直接使用`Debian`作为测试，系统配置全部使用`root`用户。
+`CentOS 7`实在是太旧了，软件更新非常麻烦，所以直接使用`Debian`作为测试。
 
 ### 系统参数
 
@@ -395,17 +395,26 @@ wget http://www.ffmpeg.org/releases/ffmpeg-5.1.3.tar.xz
 tar -Jxvf ffmpeg-5.1.3.tar.xz
 cd ffmpeg-5.1.3/
 PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/"
-./configure \
---enable-static \
---enable-shared \
---enable-gpl \
---enable-libvpx \
+./configure      \
+--enable-static  \
+--enable-shared  \
+--enable-gpl     \
+--enable-libvpx  \
 --enable-libopus \
 --enable-libx264 \
 --enable-libx265 \
 --enable-encoder=libvpx_vp8 --enable-decoder=vp8 --enable-parser=vp8 \
 --enable-encoder=libvpx_vp9 --enable-decoder=vp9 --enable-parser=vp9
 make && sudo make install
+
+# 链接文件
+vim /etc/ld.so.conf
+
+---
+/usr/local/lib/
+---
+
+ldconfig
 
 # 验证
 ffmpeg -version
@@ -645,11 +654,11 @@ openssl pkcs12 -export -clcerts -in server.crt -inkey server.key -out server.p12
 ## 清理源码
 
 ```
-sudo rm -rf \
-/data/dev/cmake \
+sudo rm -rf      \
+/data/dev/cmake  \
 /data/dev/ffmpeg \
 /data/dev/python \
-/data/dev/maven/apache-maven-3.8.8-bin.tar.gz \
+/data/dev/maven/apache-maven-3.8.8-bin.tar.gz   \
 /data/dev/nodejs/node-v18.16.0-linux-x64.tar.xz \
 /data/dev/java/openjdk-17.0.2_linux-x64_bin.tar.gz
 ```
