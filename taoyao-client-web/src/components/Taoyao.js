@@ -2839,7 +2839,7 @@ class Taoyao extends RemoteClient {
       forceTcp        : this.forceTcp,
       producing       : false,
       consuming       : true,
-      sctpCapabilities: this.dataProduce ? this.mediasoupDevice.sctpCapabilities : undefined,
+      sctpCapabilities: this.dataConsume ? this.mediasoupDevice.sctpCapabilities : undefined,
     }));
     const {
       transportId,

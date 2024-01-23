@@ -288,7 +288,7 @@ public class Room extends CloseableClient implements RouterCallback {
                 "forceTcp", false,
                 "producing", false,
                 "consuming", true,
-                "sctpCapabilities", this.dataProduce ? this.sctpCapabilities : null
+                "sctpCapabilities", this.dataConsume ? this.sctpCapabilities : null
             ),
             response -> {
                 this.nativeCreateRecvTransport(this.nativeRoomPointer, JSONUtils.toJSON(response.body()));
