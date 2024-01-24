@@ -510,7 +510,7 @@ pm2 start|stop|restart taoyao-client-media
 
 > 下载依赖建议备份方便再次编译使用
 
-### Mediasoup单独编译
+### Mediasoup单独编译（旧版）
 
 编译媒体服务时会自动编译`mediasoup`所以忽略单独编译
 
@@ -522,6 +522,16 @@ make
 
 # 清理结果
 make clean
+```
+
+### Mediasoup单独编译（新版）
+
+* 需要`python3`和`pip3`
+* 源码[mediasoup-3.13.16.zip](https://pan.baidu.com/s/1E_DXv32D9ODyj5J-o-ji_g?pwd=hudc)（包含依赖）
+
+```
+npm install
+node npm-scripts.mjs worker:build
 ```
 
 ## 安装Web终端
