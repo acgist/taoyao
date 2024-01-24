@@ -10,8 +10,8 @@ Maven   >= 3.8.0
 CMake   >= 3.26.0
 NodeJS  >= v18.16.0
 Python  >= 3.8.0 with PIP
-ffmpeg  >= 4.3.0
-gcc/g++ >= 10.2.0
+FFmpeg  >= 4.3.0
+GCC/G++ >= 10.2.0
 Android >= 9.0
 ```
 
@@ -190,7 +190,7 @@ sudo apt install git
 git --version
 ```
 
-## 安装gcc/g++
+## 安装GCC/G++
 
 ```
 # 安装
@@ -348,7 +348,7 @@ trusted-host = mirrors.aliyun.com
 pip config list
 ```
 
-## 安装ffmpeg
+## 安装FFmpeg
 
 ```
 mkdir -p /data/dev/ffmpeg ; cd $_
@@ -657,7 +657,7 @@ openssl pkcs12 -export -clcerts -in server.crt -inkey server.key -out server.p12
 # 设置密码：-deststorepass 123456
 ```
 
-## gcc/g++路径配置
+## GCC/G++路径配置
 
 ```
 # 安装路径
