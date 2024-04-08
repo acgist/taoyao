@@ -382,6 +382,16 @@ public class Room extends CloseableClient implements RouterCallback {
         remoteClient.close();
     }
 
+    /**
+     * 设置码率
+     *
+     * @param minBitrate 最小码率
+     * @param maxBitrate 最大码率
+     */
+    public void setBitrate(int minBitrate, int maxBitrate) {
+        this.nativeSetBitrate(this.nativeRoomPointer, minBitrate, maxBitrate);
+    }
+
     @Override
     public void close() {
         synchronized (this) {
@@ -772,5 +782,14 @@ public class Room extends CloseableClient implements RouterCallback {
      * @param consumerId        消费者ID
      */
     private native void nativeMediaConsumerClose(long nativeRoomPointer, String consumerId);
+
+    /**
+     * Mediasoup设置码率
+     *
+     * @param nativeRoomPointer 房间指针
+     * @param minBitrate        最小码率
+     * @param maxBitrate        最大码率
+     */
+    private native void nativeSetBitrate(long nativeRoomPointer, int minBitrate, int maxBitrate);
 
 }

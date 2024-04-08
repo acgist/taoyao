@@ -743,4 +743,13 @@ namespace acgist {
         env->ReleaseStringUTFChars(jConsumerId, consumerId);
     }
 
+    extern "C" JNIEXPORT void JNICALL
+    Java_com_acgist_taoyao_media_client_Room_nativeSetBitrate(JNIEnv* env, jobject me, jlong nativeRoomPointer, jint minBitrate, jint maxBitrate) {
+        Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
+        room->setBitrate(minBitrate, maxBitrate);
+    }
+
 }
