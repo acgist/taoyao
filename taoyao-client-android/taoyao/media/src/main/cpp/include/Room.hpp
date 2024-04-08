@@ -8,7 +8,11 @@
 #include "sdk/android/native_api/jni/scoped_java_ref.h"
 
 #include "Log.hpp"
+#define private   public
+#define protected public
 #include "RouterCallback.hpp"
+#undef private
+#undef protected
 
 /**
  * 视频房间头文件
@@ -175,6 +179,13 @@ namespace acgist {
          * @param env JNIEnv
          */
         void closeRoom(JNIEnv* env);
+        /**
+         * 设置码率
+         *
+         * @param minBitrate 最小码率
+         * @param maxBitrate 最大码率
+         */
+        void setBitrate(int minBitrate, int maxBitrate);
     };
 
 }

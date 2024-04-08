@@ -207,7 +207,7 @@ public final class DateUtils {
      * 
      * @return 日期字符串
      */
-    public static String format(LocalDate localDate, DateStyle format) {
+    public static final String format(LocalDate localDate, DateStyle format) {
         return localDate != null && format != null ? format.getDateTimeFormatter().format(localDate) : null;
     }
     
@@ -219,7 +219,7 @@ public final class DateUtils {
      * 
      * @return 时间字符串
      */
-    public static String format(LocalTime localTime, TimeStyle format) {
+    public static final String format(LocalTime localTime, TimeStyle format) {
         return localTime != null && format != null ? format.getDateTimeFormatter().format(localTime) : null;
     }
     
@@ -231,7 +231,7 @@ public final class DateUtils {
      * 
      * @return 日期时间字符串
      */
-    public static String format(LocalDateTime localDateTime, DateTimeStyle format) {
+    public static final String format(LocalDateTime localDateTime, DateTimeStyle format) {
         return localDateTime != null && format != null ? format.getDateTimeFormatter().format(localDateTime) : null;
     }
 

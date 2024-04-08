@@ -552,6 +552,22 @@ namespace acgist {
         this->closeRoomCallback(env);
     }
 
+    void Room::setBitrate(int minBitrate, int maxBitrate) {
+        if(
+            this->sendTransport                  == nullptr ||
+            this->sendTransport->handler         == nullptr ||
+            this->sendTransport->handler->pc     == nullptr ||
+            this->sendTransport->handler->pc->pc == nullptr
+            ) {
+            return;
+        }
+        webrtc::BitrateSettings settings;
+        settings.min_bitrate_bps = minBitrate;
+        settings.max_bitrate_bps = maxBitrate;
+        settings.start_bitrate_bps = minBitrate;
+        this->sendTransport->handler->pc->pc->SetBitrate(settings);
+    }
+
     extern "C" JNIEXPORT jlong JNICALL
     Java_com_acgist_taoyao_media_client_Room_nativeNewRoom(
         JNIEnv* env, jobject me,
