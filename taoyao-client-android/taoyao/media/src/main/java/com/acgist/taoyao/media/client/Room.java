@@ -207,6 +207,8 @@ public class Room extends CloseableClient implements RouterCallback {
                 iceServers = new ArrayList<>();
             }
             this.rtcConfiguration = new PeerConnection.RTCConfiguration(iceServers);
+//          this.rtcConfiguration.enableCpuOveruseDetection = true;
+
             // 开始协商
             return this.taoyao.requestFuture(
                 this.taoyao.buildMessage("media::router::rtp::capabilities", "roomId", this.roomId),
@@ -383,13 +385,14 @@ public class Room extends CloseableClient implements RouterCallback {
     }
 
     /**
-     * 设置码率
+     * 动态设置帧率码率
      *
-     * @param minBitrate 最小码率
-     * @param maxBitrate 最大码率
+     * @param maxFramerate 最大帧率
+     * @param minBitrate   最小码率
+     * @param maxBitrate   最大码率
      */
-    public void setBitrate(int minBitrate, int maxBitrate) {
-        this.nativeSetBitrate(this.nativeRoomPointer, minBitrate, maxBitrate);
+    public void setBitrate(int maxFramerate, int minBitrate, int maxBitrate) {
+        this.nativeSetBitrate(this.nativeRoomPointer, maxFramerate, minBitrate, maxBitrate);
     }
 
     @Override
@@ -787,9 +790,10 @@ public class Room extends CloseableClient implements RouterCallback {
      * Mediasoup设置码率
      *
      * @param nativeRoomPointer 房间指针
+     * @param maxFramerate      最大帧率
      * @param minBitrate        最小码率
      * @param maxBitrate        最大码率
      */
-    private native void nativeSetBitrate(long nativeRoomPointer, int minBitrate, int maxBitrate);
+    private native void nativeSetBitrate(long nativeRoomPointer, int maxFramerate, int minBitrate, int maxBitrate);
 
 }

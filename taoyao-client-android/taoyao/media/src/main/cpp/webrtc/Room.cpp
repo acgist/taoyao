@@ -552,20 +552,48 @@ namespace acgist {
         this->closeRoomCallback(env);
     }
 
-    void Room::setBitrate(int minBitrate, int maxBitrate) {
+    void Room::setBitrate(int maxFramerate, int minBitrate, int maxBitrate) {
+//        if(
+//            this->sendTransport                      == nullptr ||
+//            this->sendTransport->sendHandler         == nullptr ||
+//            this->sendTransport->sendHandler->pc     == nullptr ||
+//            this->sendTransport->sendHandler->pc->pc == nullptr
+//        ) {
+//            return;
+//        }
+//        webrtc::BitrateSettings settings;
+//        settings.min_bitrate_bps = minBitrate;
+//        settings.max_bitrate_bps = maxBitrate;
+//        settings.start_bitrate_bps = minBitrate;
+//        this->sendTransport->sendHandler->pc->pc->SetBitrate(settings);
+        webrtc::RtpSenderInterface* rtpSender;
         if(
-            this->sendTransport                  == nullptr ||
-            this->sendTransport->handler         == nullptr ||
-            this->sendTransport->handler->pc     == nullptr ||
-            this->sendTransport->handler->pc->pc == nullptr
-            ) {
+            this->videoProducer == nullptr ||
+            (rtpSender = this->videoProducer->GetRtpSender()) == nullptr
+        ) {
             return;
         }
-        webrtc::BitrateSettings settings;
-        settings.min_bitrate_bps = minBitrate;
-        settings.max_bitrate_bps = maxBitrate;
-        settings.start_bitrate_bps = minBitrate;
-        this->sendTransport->handler->pc->pc->SetBitrate(settings);
+        webrtc::RtpParameters rtpParameters = rtpSender->GetParameters();
+        auto& encodings = rtpParameters.encodings;
+        for(
+            auto iterator = encodings.begin();
+            iterator != encodings.end();
+            ++iterator
+        ) {
+            if(maxFramerate > 0) {
+                LOG_I("当前最大帧率：%d - %d - %f", maxFramerate, iterator->max_framerate, iterator->scale_resolution_down_by);
+                iterator->max_framerate = maxFramerate;
+            }
+            if(minBitrate > 0) {
+                LOG_I("当前最小码率：%d - %d", minBitrate, iterator->min_bitrate_bps);
+                iterator->min_bitrate_bps = minBitrate;
+            }
+            if(maxBitrate > 0) {
+                LOG_I("当前最大码率：%d - %d", maxBitrate, iterator->max_bitrate_bps);
+                iterator->max_bitrate_bps = maxBitrate;
+            }
+        }
+        rtpSender->SetParameters(rtpParameters);
     }
 
     extern "C" JNIEXPORT jlong JNICALL
@@ -744,12 +772,12 @@ namespace acgist {
     }
 
     extern "C" JNIEXPORT void JNICALL
-    Java_com_acgist_taoyao_media_client_Room_nativeSetBitrate(JNIEnv* env, jobject me, jlong nativeRoomPointer, jint minBitrate, jint maxBitrate) {
+    Java_com_acgist_taoyao_media_client_Room_nativeSetBitrate(JNIEnv* env, jobject me, jlong nativeRoomPointer, jint maxFramerate, jint minBitrate, jint maxBitrate) {
         Room* room = (Room*) nativeRoomPointer;
         if(room == nullptr) {
             return;
         }
-        room->setBitrate(minBitrate, maxBitrate);
+        room->setBitrate(maxFramerate, minBitrate, maxBitrate);
     }
 
 }
