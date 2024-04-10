@@ -342,6 +342,8 @@ namespace acgist {
         }
         this->factory          = factory;
         this->rtcConfiguration = new webrtc::PeerConnectionInterface::RTCConfiguration(rtcConfiguration);
+//      this->rtcConfiguration->set_cpu_adaptation(false);
+//      this->rtcConfiguration->set_experiment_cpu_load_estimator(false);
         mediasoupclient::PeerConnection::Options options;
         options.config      = rtcConfiguration;
         options.factory     = factory;
@@ -418,7 +420,7 @@ namespace acgist {
         nlohmann::json codecOptions =
             {
                 // x-google-start-bitrate
-                { "videoGoogleStartBitrate", 400  },
+                { "videoGoogleStartBitrate", 1200 },
                 // x-google-min-bitrate
                 { "videoGoogleMinBitrate",   800  },
                 // x-google-max-bitrate
@@ -581,7 +583,7 @@ namespace acgist {
             ++iterator
         ) {
             if(maxFramerate > 0) {
-                LOG_I("当前最大帧率：%d - %d - %f", maxFramerate, iterator->max_framerate, iterator->scale_resolution_down_by);
+                LOG_I("当前最大帧率：%d - %d", maxFramerate, iterator->max_framerate);
                 iterator->max_framerate = maxFramerate;
             }
             if(minBitrate > 0) {
@@ -592,6 +594,9 @@ namespace acgist {
                 LOG_I("当前最大码率：%d - %d", maxBitrate, iterator->max_bitrate_bps);
                 iterator->max_bitrate_bps = maxBitrate;
             }
+//            iterator->bitrate_priority = 4.0;
+//            iterator->network_priority = webrtc::Priority::kHigh;
+//            iterator->scale_resolution_down_by = 2;
         }
         rtpSender->SetParameters(rtpParameters);
     }

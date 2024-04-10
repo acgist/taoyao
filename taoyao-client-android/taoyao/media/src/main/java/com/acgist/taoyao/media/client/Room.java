@@ -208,7 +208,6 @@ public class Room extends CloseableClient implements RouterCallback {
             }
             this.rtcConfiguration = new PeerConnection.RTCConfiguration(iceServers);
 //          this.rtcConfiguration.enableCpuOveruseDetection = true;
-
             // 开始协商
             return this.taoyao.requestFuture(
                 this.taoyao.buildMessage("media::router::rtp::capabilities", "roomId", this.roomId),
