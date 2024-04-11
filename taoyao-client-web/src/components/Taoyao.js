@@ -2329,6 +2329,9 @@ class Taoyao extends RemoteClient {
         videoSource: this.videoSource
       },
     });
+    // let oldParameters = this.videoProducer.rtpSender.getParameters();
+    // oldParameters.encodings[0].maxBitrate = 800000;
+    // this.videoProducer.rtpSender.setParameters(oldParameters);
     this.callbackTrack(this.clientId, track);
     if (this.proxy && this.proxy.media) {
       this.proxy.media(track, this.videoProducer);
