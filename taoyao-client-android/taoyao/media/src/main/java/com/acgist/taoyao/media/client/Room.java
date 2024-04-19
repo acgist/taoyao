@@ -386,6 +386,8 @@ public class Room extends CloseableClient implements RouterCallback {
     /**
      * 动态设置帧率码率
      *
+     * HardwareVideoEncoder#updateBitrate()
+     *
      * @param maxFramerate 最大帧率
      * @param minBitrate   最小码率
      * @param maxBitrate   最大码率
