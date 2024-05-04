@@ -11,7 +11,7 @@ struct Index {
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
-            // signal.connect();
+            signal.connect();
           });
       }
       .width('50%');
@@ -20,7 +20,7 @@ struct Index {
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
-            // signal.close();
+            signal.close();
           });
       }
       .width('50%');

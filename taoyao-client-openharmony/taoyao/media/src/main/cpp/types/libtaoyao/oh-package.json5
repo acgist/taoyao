@@ -1,6 +1,6 @@
 {
   "name": "libtaoyao.so",
   "types": "./index.d.ts",
-  "version": "",
+  "version": "1.0.0",
   "description": "桃夭媒体依赖"
 }

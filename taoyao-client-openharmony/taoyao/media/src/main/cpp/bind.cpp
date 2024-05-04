@@ -70,7 +70,7 @@ static napi_value Init(napi_env env, napi_value exports) {
 }
 EXTERN_C_END
 
-static napi_module taoyaoModule = {
+static napi_module libtaoyaoModule = {
     .nm_version       = 1,
     .nm_flags         = 0,
     .nm_filename      = nullptr,
@@ -81,6 +81,6 @@ static napi_module taoyaoModule = {
 };
 
 extern "C" __attribute__((constructor)) void RegisterEntryModule(void) {
-    napi_module_register(&taoyaoModule);
+    napi_module_register(&libtaoyaoModule);
     acgist::init();
 }
