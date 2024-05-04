@@ -1,0 +1,13 @@
+{
+  "name"  : "taoyao",
+  "main"  : "",
+  "author": "acgist",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "description" : "桃夭鸿蒙终端",
+  "dependencies": {},
+  "devDependencies": {
+    "@ohos/hamock": "1.0.0",
+    "@ohos/hypium": "1.0.13"
+  },
+}

@@ -1,0 +1,41 @@
+{
+  "app": {
+    "products": [
+      {
+        "name"         : "default",
+        "runtimeOS"    : "OpenHarmony",
+        "signingConfig": "default",
+        "compileSdkVersion"   : 11,
+        "compatibleSdkVersion": 11
+      }
+    ],
+    "signingConfigs": [
+      {
+        "name": "default",
+        "material": {
+          "signAlg" : "SHA256withECDSA",
+          "keyAlias": "debugKey",
+          "profile"      : "C:/Users/acgis/.ohos/config/openharmony/default_taoyao_RrmPaKOZ5zMCU4QlpK1kz_6UoyvfsA4RcQxqexSUJ_8=.p7b",
+          "certpath"     : "C:/Users/acgis/.ohos/config/openharmony/default_taoyao_RrmPaKOZ5zMCU4QlpK1kz_6UoyvfsA4RcQxqexSUJ_8=.cer",
+          "storeFile"    : "C:/Users/acgis/.ohos/config/openharmony/default_taoyao_RrmPaKOZ5zMCU4QlpK1kz_6UoyvfsA4RcQxqexSUJ_8=.p12",
+          "keyPassword"  : "0000001B8701B2982D8D56F7049724D2E89B72966750D8E2D94B37DDF1538D9D16EB00C8D4DA39EE4C0FC7",
+          "storePassword": "0000001B64642A0B174393A9875F6FCDE476F4BA4682F1EF92210832926366EA9E075136DCBB6361C9D4DD"
+        }
+      }
+    ],
+  },
+  "modules": [
+    {
+      "name": "media",
+      "srcPath": "./media",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

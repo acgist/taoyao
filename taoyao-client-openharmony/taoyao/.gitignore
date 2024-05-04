@@ -1,0 +1,14 @@
+.cxx
+.idea
+.test
+.hvigor
+.clangd
+.clang-tidy
+.clang-format
+local.properties
+oh-package-lock.json5
+
+deps
+build
+oh_modules
+node_modules
