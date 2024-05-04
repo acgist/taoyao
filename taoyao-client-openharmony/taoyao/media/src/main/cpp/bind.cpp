@@ -32,19 +32,19 @@ static void shutdown() {
 //     this->roomMap
 }
 
-static napi_value mediaConsume(napi_env env, napi_callback_info info) { return 0; }
-static napi_value mediaConsumerClose(napi_env env, napi_callback_info info) { return 0; }
-static napi_value mediaConsumerPause(napi_env env, napi_callback_info info) { return 0; }
+static napi_value mediaConsume(napi_env env,       napi_callback_info info)  { return 0; }
+static napi_value mediaConsumerClose(napi_env env, napi_callback_info info)  { return 0; }
+static napi_value mediaConsumerPause(napi_env env, napi_callback_info info)  { return 0; }
 static napi_value mediaConsumerResume(napi_env env, napi_callback_info info) { return 0; }
-static napi_value mediaProducerClose(napi_env env, napi_callback_info info) { return 0; }
-static napi_value mediaProducerPause(napi_env env, napi_callback_info info) { return 0; }
+static napi_value mediaProducerClose(napi_env env, napi_callback_info info)  { return 0; }
+static napi_value mediaProducerPause(napi_env env, napi_callback_info info)  { return 0; }
 static napi_value mediaProducerResume(napi_env env, napi_callback_info info) { return 0; }
-static napi_value roomClientList(napi_env env, napi_callback_info info) { return 0; }
-static napi_value roomClose(napi_env env, napi_callback_info info) { return 0; }
-static napi_value roomEnter(napi_env env, napi_callback_info info) { return 0; }
-static napi_value roomExpel(napi_env env, napi_callback_info info) { return 0; }
+static napi_value roomClientList(napi_env env,      napi_callback_info info) { return 0; }
+static napi_value roomClose(napi_env env,  napi_callback_info info) { return 0; }
+static napi_value roomEnter(napi_env env,  napi_callback_info info) { return 0; }
+static napi_value roomExpel(napi_env env,  napi_callback_info info) { return 0; }
 static napi_value roomInvite(napi_env env, napi_callback_info info) { return 0; }
-static napi_value roomLeave(napi_env env, napi_callback_info info) { return 0; }
+static napi_value roomLeave(napi_env env,  napi_callback_info info) { return 0; }
 
 }
 

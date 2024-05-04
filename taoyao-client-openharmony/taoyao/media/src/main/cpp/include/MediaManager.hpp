@@ -3,6 +3,8 @@
  * 提供通道等等创建
  * 
  * @author acgist
+ * 
+ * https://docs.openharmony.cn/pages/v4.0/zh-cn/application-dev/media/obtain-supported-codecs.md
  */
 
 #ifndef taoyao_MediaManager_HPP

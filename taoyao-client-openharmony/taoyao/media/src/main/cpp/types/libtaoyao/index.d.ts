@@ -1,9 +1,4 @@
-export const sessionCall    : () => void;
-export const sessionPause   : () => void;
-export const sessionResume  : () => void;
-export const sessionExchange: () => void;
-export const sessionClose   : () => void;
-export const mediaConsume   : () => void;
+export const mediaConsume       : () => void;
 export const mediaConsumerClose : () => void;
 export const mediaConsumerPause : () => void;
 export const mediaConsumerResume: () => void;

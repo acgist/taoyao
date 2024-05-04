@@ -34,6 +34,12 @@ add_library(
     media/RoomClient.cpp
     media/LocalClient.cpp
     media/RemoteClient.cpp
+    media/Player.cpp
+    media/AudioPlayer.cpp
+    media/VideoPlayer.cpp
+    media/Capturer.cpp
+    media/AudioCapturer.cpp
+    media/VideoCapturer.cpp
     media/MediaManager.cpp
 )
 

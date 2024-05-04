@@ -19,6 +19,10 @@ public:
     
 };
 
+class AudioCapturer {};
+
+class VideoCapturer {};
+
 }
 
 #endif // taoyao_Capturer_HPP
