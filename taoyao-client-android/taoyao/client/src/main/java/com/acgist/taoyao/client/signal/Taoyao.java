@@ -648,7 +648,7 @@ public final class Taoyao implements ITaoyao {
             case "room::close"                       -> this.roomClose(message, message.body());
             case "room::enter"                       -> this.roomEnter(message, message.body());
             case "room::expel"                       -> this.roomExpel(message, message.body());
-            case "room::invite"                      -> this.roomInivte(message, message.body());
+            case "room::invite"                      -> this.roomInvite(message, message.body());
             case "room::leave"                       -> this.roomLeave(message, message.body());
             case "session::call"                     -> this.sessionCall(message, message.body());
             case "session::close"                    -> this.sessionClose(message, message.body());
@@ -1062,7 +1062,7 @@ public final class Taoyao implements ITaoyao {
      * @param message 信令消息
      * @param body    信令主体
      */
-    private void roomInivte(Message message, Map<String, Object> body) {
+    private void roomInvite(Message message, Map<String, Object> body) {
         final String roomId   = MapUtils.get(body, "roomId");
         final String password = MapUtils.get(body, "password");
         // 安卓可以同时进入多个房间

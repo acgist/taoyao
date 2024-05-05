@@ -1,5 +1,7 @@
 /**
  * 播放器
+ * 
+ * https://docs.openharmony.cn/pages/v4.0/zh-cn/application-dev/media/using-ohaudio-for-playback.md
  */
 
 #ifndef TAOYAO_PALYER_H

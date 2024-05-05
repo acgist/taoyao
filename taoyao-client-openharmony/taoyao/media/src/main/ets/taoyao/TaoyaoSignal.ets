@@ -47,12 +47,12 @@ class TaoyaoSignal {
     hilog.info(0x0000, "TaoyaoSignal", "连接信令：%s", setting.signalAddress);
     this.socket = webSocket.createWebSocket();
     this.socket.on("open", (err: BusinessError, value: Object) => {
-      hilog.info(0x0000, "TaoyaoSignal", "打开信令：%s", setting.signalAddress);
+      hilog.info(0x0000, "TaoyaoSignal", "打开信令：%s", setting.signalAddress, value, err);
       this.register();
       this.connected = true;
     });
     this.socket.on("message", (err: BusinessError, value: string | ArrayBuffer) => {
-      hilog.debug(0x0000, "TaoyaoSignal", "信令消息：%s", value);
+      hilog.debug(0x0000, "TaoyaoSignal", "信令消息：%s", value, err);
       try {
         this.onMessage(value.toString());
       } catch (error) {
@@ -60,7 +60,7 @@ class TaoyaoSignal {
       }
     });
     this.socket.on("close", (err: BusinessError, value: Object) => {
-      hilog.error(0x0000, "TaoyaoSignal", "关闭信令：%s", setting.signalAddress, err);
+      hilog.error(0x0000, "TaoyaoSignal", "关闭信令：%s", setting.signalAddress, value, err);
       this.reconnect();
     });
     this.socket.on("error", (err: BusinessError) => {
@@ -68,7 +68,7 @@ class TaoyaoSignal {
       this.reconnect();
     });
     this.socket.connect(setting.signalAddress, (err: BusinessError, value: boolean) => {
-      hilog.info(0x0000, "TaoyaoSignal", "信令连接成功：%s", setting.signalAddress);
+      hilog.info(0x0000, "TaoyaoSignal", "信令连接成功：%s", setting.signalAddress, value, err);
     });
   };
 
@@ -223,7 +223,8 @@ class TaoyaoSignal {
     const json  : Record<string, Object> = JSON.parse(message);
     const header: Record<string, Object> = json.header as Record<string, Object>;
     const body  : Record<string, Object> = json.body as Record<string, Object>;
-    const id    : number = header.id as number;
+    const id    : number = header.id     as number;
+    const signal: string = header.signal as string;
     if (this.callbackMapping.has(id)) {
       hilog.debug(0x0000, "TaoyaoSignal", "处理同步消息：%s", message);
       try {
@@ -236,12 +237,32 @@ class TaoyaoSignal {
       }
     }
     hilog.debug(0x0000, "TaoyaoSignal", "处理异步消息：%s", message);
-    // TODO
+    switch (signal) {
+      case "room::invite":
+        taoyaoModule.roomInvite(message);
+        break;
+      default:
+        hilog.error(0x0000, "TaoyaoSignal", "没有适配信令：%s", signal);
+        break;
+    }
+  }
+
+  nativeSend(signal: string, body: string) {
+    this.send(signal, JSON.parse(body));
+  }
+
+  nativeRequest(signal: string, body: string): string {
+    const response = this.request(signal, JSON.parse(body));
+    return JSON.stringify(response);
   }
 
 }
 
 const signal = new TaoyaoSignal();
+
+// 注册回调
+taoyaoModule.registerSend(signal.nativeSend);
+taoyaoModule.registerRequest(signal.nativeRequest);
 
 export {
   signal

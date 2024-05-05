@@ -18,9 +18,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++17 -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++17 -O3")
 
-set(MEDIASOUPCLIENT_LOG_DEV     OFF)
-set(MEDIASOUPCLIENT_LOG_TRACE   OFF)
-set(MEDIASOUPCLIENT_BUILD_TESTS OFF)
+option(MEDIASOUPCLIENT_LOG_DEV     OFF)
+option(MEDIASOUPCLIENT_LOG_TRACE   OFF)
+option(MEDIASOUPCLIENT_BUILD_TESTS OFF)
 set(LIBWEBRTC_BINARY_PATH  "${CMAKE_CURRENT_SOURCE_DIR}/deps/webrtc/lib/")
 set(LIBWEBRTC_INCLUDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/webrtc/src/")
 
@@ -54,6 +54,23 @@ target_include_directories(
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
     mediasoupclient
+    ${LIBWEBRTC_BINARY_PATH}/libwebrtc.a
+    # NAPI
     libace_napi.z.so
+    # LOG
     libhilog_ndk.z.so
+    # 媒体
+    libohaudio.so
+    libnative_media_aenc.so
+    libnative_media_venc.so
+    libnative_media_core.so
+    libnative_media_codecbase.so
+)
+
+target_compile_definitions(${PROJECT_NAME} PUBLIC
+	$<$<NOT:$<PLATFORM_ID:Windows>>:WEBRTC_POSIX>
+	$<$<PLATFORM_ID:Windows>:WEBRTC_WIN>
+	$<$<PLATFORM_ID:Windows>:NOMINMAX>
+	$<$<PLATFORM_ID:Windows>:WIN32_LEAN_AND_MEAN>
+	$<$<PLATFORM_ID:Darwin>:WEBRTC_MAC>
 )

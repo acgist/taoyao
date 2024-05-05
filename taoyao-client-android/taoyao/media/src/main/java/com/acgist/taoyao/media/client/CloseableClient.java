@@ -54,7 +54,6 @@ public abstract class CloseableClient implements Closeable {
         this.init = true;
     }
 
-
     @Override
     public void close() {
         this.close = true;
