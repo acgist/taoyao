@@ -13,10 +13,24 @@
 #include <memory>
 #include <thread>
 
-#include "pc/peer_connection.h"
-#include "pc/peer_connection_factory.h"
+#include "api/media_stream_interface.h"
+#include "api/peer_connection_interface.h"
+#include "api/video/video_sink_interface.h"
+#include "api/video/video_source_interface.h"
 
 namespace acgist {
+
+class TaoyaoAudioSink : public webrtc::AudioTrackSinkInterface {
+    
+};
+
+class TaoyaoVideoSource : public webrtc::VideoTrackSourceInterface {
+    
+};
+
+class TaoyaoVideoSink : public rtc::VideoSinkInterface<webrtc::RecordableEncodedFrame> {
+    
+};
 
 class MediaManager {
 public:
@@ -35,12 +49,22 @@ public:
     int newLocalClient();
     // 释放本地终端
     int releaseLocalClient();
-    void startCapture();
-    void startAudioCapture();
-    void startVideoCapture();
-    void stopCapture();
-    void stopAudioCapture();
-    void stopVideoCapture();
+    // 开始采集
+    bool startCapture();
+    // 开始采集音频
+    bool startAudioCapture();
+    // 开始采集视频
+    bool startVideoCapture();
+    // 结束采集
+    bool stopCapture();
+    // 结束采集音频
+    bool stopAudioCapture();
+    // 结束采集视频
+    bool stopVideoCapture();
+    // 音频来源
+    rtc::scoped_refptr<webrtc::AudioTrackInterface> getAudioTrack();
+    // 视频来源
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> getVideoTrack();
 };
 
 }

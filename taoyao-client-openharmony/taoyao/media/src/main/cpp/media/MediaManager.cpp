@@ -54,3 +54,29 @@ bool acgist::MediaManager::initPeerConnectionFactory() {
 int acgist::MediaManager::newLocalClient() {
     this->localClientRef++;
 }
+
+bool acgist::MediaManager::startCapture() {
+    this->startAudioCapture();
+    this->startVideoCapture();
+}
+
+bool acgist::MediaManager::startAudioCapture() {
+
+    return true;
+}
+
+rtc::scoped_refptr<webrtc::AudioTrackInterface> acgist::MediaManager::getAudioTrack() {
+    cricket::AudioOptions options;
+    options.highpass_filter = true;
+    options.auto_gain_control = true;
+    options.echo_cancellation = true;
+    options.noise_suppression = true;
+    auto audioSource = this->peerConnectionFactory->CreateAudioSource(options);
+    return this->peerConnectionFactory->CreateAudioTrack("taoyao-audio", audioSource.get());
+}
+
+rtc::scoped_refptr<webrtc::VideoTrackInterface> acgist::MediaManager::getVideoTrack() {
+//     webrtc::VideoTrackSourceInterface videoSource;
+//     this->peerConnectionFactory->CreateVideoTrack("taoyao-video", videoSource);
+    return nullptr;
+}

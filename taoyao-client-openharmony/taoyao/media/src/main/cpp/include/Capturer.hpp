@@ -14,11 +14,53 @@
 #ifndef taoyao_Capturer_HPP
 #define taoyao_Capturer_HPP
 
+#include <map>
+
 #include "api/media_stream_track.h"
+
+#include <ohaudio/native_audiocapturer.h>
+#include <ohaudio/native_audiostreambuilder.h>
 
 namespace acgist {
 
+/**
+ * 采集器
+ * 
+ * @tparam Sink 输出管道
+ */
+template <typename Sink>
 class Capturer {
+    
+public:
+    std::map<std::string, Sink*> map;
+
+public:
+    Capturer();
+    virtual ~Capturer();
+    
+public:
+    // 开始采集
+    virtual bool start() = 0;
+    // 结束采集
+    virtual bool stop() = 0;
+    
+};
+
+/**
+ * 音频采集器
+ */
+class AudioCapturer: public Capturer<webrtc::AudioTrackSinkInterface> {
+
+public:
+    // 音频流构造器
+    OH_AudioStreamBuilder* builder = nullptr;
+    // 音频采集器
+    OH_AudioCapturer* audioCapturer = nullptr;
+
+
+public:
+    AudioCapturer();
+    virtual ~AudioCapturer();
     
 public:
     virtual bool start();
@@ -26,9 +68,19 @@ public:
     
 };
 
-class AudioCapturer {};
-
-class VideoCapturer {};
+/**
+ * 视频采集器
+ */
+class VideoCapturer: public Capturer<rtc::VideoSinkInterface<webrtc::RecordableEncodedFrame>> {
+    
+public:
+    VideoCapturer();
+    virtual ~VideoCapturer();
+    
+public:
+    virtual bool start();
+    virtual bool stop();
+};
 
 }
 

@@ -38,7 +38,15 @@ static std::map<std::string, acgist::Room*> roomMap;
  * 支持的编解码
  */
 static void printSupportCodec() {
-    
+    // TODO：是否需要释放
+    OH_AVCapability* opus = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_AUDIO_OPUS, false);
+    OH_LOG_INFO(LOG_APP, "是否支持OPUS：%o", OH_AVCapability_IsHardware(opus));
+    OH_AVCapability* pcmu = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_AUDIO_G711MU, false);
+    OH_LOG_INFO(LOG_APP, "是否支持PCMU：%o", OH_AVCapability_IsHardware(pcmu));
+    OH_AVCapability* h264 = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_VIDEO_AVC, false);
+    OH_LOG_INFO(LOG_APP, "是否支持H264：%o", OH_AVCapability_IsHardware(h264));
+    OH_AVCapability* h265 = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_VIDEO_HEVC, false);
+    OH_LOG_INFO(LOG_APP, "是否支持H264：%o", OH_AVCapability_IsHardware(h265));
 }
 
 /**
