@@ -24,6 +24,7 @@
 |taoyao-client-web|H5终端|浏览器终端|
 |taoyao-client-media|媒体终端|媒体服务|
 |taoyao-client-android|安卓终端|安卓终端|
+|taoyao-client-openharmony|鸿蒙终端|鸿蒙终端|
 |taoyao-signal-server|信令服务|终端信令控制|
 
 ### Web终端功能
@@ -56,6 +57,14 @@
 |录像|支持|完成|录像|
 |混音|支持|完成|多路混音|
 |水印|支持|完成|视频水印|
+
+### OpenHarmony终端功能
+
+|功能|是否支持|是否实现|描述|
+|:--|:--|:--|:--|
+|Mediasoup|支持|完成|视频房间（会议模式）|
+
+> 鸿蒙不会实现所有功能，其他功能可以参考`Web`或者`Android`自行实现。
 
 ### 注意事项
 
