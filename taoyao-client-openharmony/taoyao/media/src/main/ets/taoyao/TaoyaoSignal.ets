@@ -166,6 +166,7 @@ class TaoyaoSignal {
       "body"  : body
     };
     try {
+    hilog.debug(0x0000, "TaoyaoSignal", "发送消息：%o", message);
       this.socket?.send(JSON.stringify(message));
     } catch (error) {
       hilog.error(0x0000, "TaoyaoSignal", "发送消息异常：%o", message, error);
@@ -206,6 +207,7 @@ class TaoyaoSignal {
       });
       // 发送消息
       try {
+        hilog.debug(0x0000, "TaoyaoSignal", "发送请求：%o", message);
         this.socket?.send(JSON.stringify(message));
       } catch (error) {
         hilog.error(0x0000, "TaoyaoSignal", "发送消息异常：%o", message, error);
@@ -222,7 +224,7 @@ class TaoyaoSignal {
   onMessage(message: string) {
     const json  : Record<string, Object> = JSON.parse(message);
     const header: Record<string, Object> = json.header as Record<string, Object>;
-    const body  : Record<string, Object> = json.body as Record<string, Object>;
+    const body  : Record<string, Object> = json.body   as Record<string, Object>;
     const id    : number = header.id     as number;
     const signal: string = header.signal as string;
     if (this.callbackMapping.has(id)) {
@@ -251,8 +253,8 @@ class TaoyaoSignal {
     this.send(signal, JSON.parse(body));
   }
 
-  nativeRequest(signal: string, body: string): string {
-    const response = this.request(signal, JSON.parse(body));
+  async nativeRequest(signal: string, body: string): Promise<string> {
+    const response = await this.request(signal, JSON.parse(body));
     return JSON.stringify(response);
   }
 

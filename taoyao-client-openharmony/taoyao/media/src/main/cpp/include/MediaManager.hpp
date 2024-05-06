@@ -4,9 +4,8 @@
  * 
  * @author acgist
  * 
- * https://docs.openharmony.cn/pages/v4.0/zh-cn/application-dev/media/obtain-supported-codecs.md
+ * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/avcodec/obtain-supported-codecs.md
  */
-
 #ifndef taoyao_MediaManager_HPP
 #define taoyao_MediaManager_HPP
 

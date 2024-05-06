@@ -3,7 +3,6 @@
  * 
  * @author acgist
  */
-
 #ifndef taoyao_Room_HPP
 #define taoyao_Room_HPP
 

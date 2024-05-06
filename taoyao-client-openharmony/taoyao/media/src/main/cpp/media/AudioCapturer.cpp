@@ -19,23 +19,22 @@ static int32_t OnStreamEvent(OH_AudioCapturer* capturer, void* userData, OH_Audi
 static int32_t OnInterruptEvent(OH_AudioCapturer* capturer, void* userData, OH_AudioInterrupt_ForceType type, OH_AudioInterrupt_Hint hint);
 
 acgist::AudioCapturer::AudioCapturer() {
-    OH_AudioStream_Result ret = OH_AudioStreamBuilder_Create(&builder, AUDIOSTREAM_TYPE_RENDERER);
+    OH_AudioStream_Result ret = OH_AudioStreamBuilder_Create(&this->builder, AUDIOSTREAM_TYPE_RENDERER);
     OH_LOG_INFO(LOG_APP, "构造音频采集：%o", ret);
 }
 
 acgist::AudioCapturer::~AudioCapturer() {
-    OH_AudioStream_Result ret = OH_AudioStreamBuilder_Destroy(builder);
-    // TODO: 是否需要delete
-    builder = nullptr;
+    OH_AudioStream_Result ret = OH_AudioStreamBuilder_Destroy(this->builder);
+    this->builder = nullptr;
     OH_LOG_INFO(LOG_APP, "释放音频采集：%o", ret);
 }
 
 bool acgist::AudioCapturer::start() {
     // 配置采集参数
-    OH_AudioStreamBuilder_SetSamplingRate(builder, samplingRate);
-    OH_AudioStreamBuilder_SetChannelCount(builder, channelCount);
-    OH_AudioStreamBuilder_SetLatencyMode(builder, latencyMode);
-    OH_AudioStreamBuilder_SetSampleFormat(builder, sampleFormat);
+    OH_AudioStreamBuilder_SetSamplingRate(this->builder, samplingRate);
+    OH_AudioStreamBuilder_SetChannelCount(this->builder, channelCount);
+    OH_AudioStreamBuilder_SetLatencyMode(this->builder, latencyMode);
+    OH_AudioStreamBuilder_SetSampleFormat(this->builder, sampleFormat);
     OH_LOG_DEBUG(LOG_APP, "配置音频格式：%d %d %o %o", samplingRate, channelCount, latencyMode, sampleFormat);
     // 设置回调函数
     OH_AudioCapturer_Callbacks callbacks;
@@ -43,24 +42,24 @@ bool acgist::AudioCapturer::start() {
     callbacks.OH_AudioCapturer_OnReadData       = OnReadData;
     callbacks.OH_AudioCapturer_OnStreamEvent    = OnStreamEvent;
     callbacks.OH_AudioCapturer_OnInterruptEvent = OnInterruptEvent;
-    OH_AudioStream_Result ret = OH_AudioStreamBuilder_SetCapturerCallback(builder, callbacks, this);
+    OH_AudioStream_Result ret = OH_AudioStreamBuilder_SetCapturerCallback(this->builder, callbacks, this);
     OH_LOG_DEBUG(LOG_APP, "设置回调函数：%o", ret);
     // 构造音频采集器
-    ret = OH_AudioStreamBuilder_GenerateCapturer(builder, &audioCapturer);
+    ret = OH_AudioStreamBuilder_GenerateCapturer(this->builder, &this->audioCapturer);
     OH_LOG_DEBUG(LOG_APP, "构造音频采集器：%o", ret);
     // 开始录制
-    ret = OH_AudioCapturer_Start(audioCapturer);
+    ret = OH_AudioCapturer_Start(this->audioCapturer);
     OH_LOG_DEBUG(LOG_APP, "开始录制：%o", ret);
     return ret == OH_AudioStream_Result::AUDIOSTREAM_SUCCESS;
 }
 
 bool acgist::AudioCapturer::stop() {
     // 停止录制
-    OH_AudioStream_Result ret = OH_AudioCapturer_Stop(audioCapturer);
+    OH_AudioStream_Result ret = OH_AudioCapturer_Stop(this->audioCapturer);
     OH_LOG_DEBUG(LOG_APP, "停止录制：%o", ret);
     // 释放音频采集器
-    ret = OH_AudioCapturer_Release(audioCapturer);
-    audioCapturer = nullptr;
+    ret = OH_AudioCapturer_Release(this->audioCapturer);
+    this->audioCapturer = nullptr;
     OH_LOG_DEBUG(LOG_APP, "释放音频采集器：%o", ret);
     return ret == OH_AudioStream_Result::AUDIOSTREAM_SUCCESS;
 }
@@ -73,11 +72,7 @@ static int32_t OnError(OH_AudioCapturer* capturer, void* userData, OH_AudioStrea
 static int32_t OnReadData(OH_AudioCapturer* capturer, void* userData, void* buffer, int32_t length) {
     acgist::AudioCapturer* audioCapturer = (acgist::AudioCapturer*) userData;
     int64_t timeMillis = rtc::TimeMillis();
-    for (
-        auto iterator = audioCapturer->map.begin();
-        iterator != audioCapturer->map.end();
-        ++iterator
-    ) {
+    for (auto iterator = audioCapturer->map.begin(); iterator != audioCapturer->map.end(); ++iterator) {
         iterator->second->OnData(buffer, 16, samplingRate, channelCount, sizeof(buffer) / 2, timeMillis);
     }
     return 0;

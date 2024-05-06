@@ -1,5 +1,7 @@
 /**
- * 方法绑定
+ * NAPI(NODE-API)
+ * 
+ * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/reference/native-lib/napi.md
  */
 
 #include <map>
@@ -71,7 +73,7 @@ static void init() {
 /**
  * 卸载系统
  */
-static napi_value shutdown(napi_env env,  napi_callback_info info) {
+static napi_value shutdown(napi_env env, napi_callback_info info) {
     if(!initTaoyao) {
         OH_LOG_INFO(LOG_APP, "已经卸载libtaoyao");
         return 0;
@@ -80,7 +82,13 @@ static napi_value shutdown(napi_env env,  napi_callback_info info) {
     OH_LOG_INFO(LOG_APP, "卸载libtaoyao");
     OH_LOG_INFO(LOG_APP, "释放mediasoupclient");
     mediasoupclient::Cleanup();
-//     this->roomMap
+    // 删除房间
+    for(auto iterator = roomMap.begin(); iterator != roomMap.end(); ++iterator) {
+        delete iterator->second;
+        iterator->second = nullptr;
+    }
+    roomMap.clear();
+    // 关闭媒体
     if (mediaManager != nullptr) {
         delete mediaManager;
         mediaManager = nullptr;
@@ -90,6 +98,9 @@ static napi_value shutdown(napi_env env,  napi_callback_info info) {
     return 0;
 }
 
+/**
+ * 发送消息
+ */
 static void send(const std::string& signal, const std::string& body) {
     napi_value ret;
     napi_value callback = nullptr;
@@ -101,6 +112,9 @@ static void send(const std::string& signal, const std::string& body) {
     // napi_get_undefined(acgist::env, &ret);
 }
 
+/**
+ * 发送请求
+ */
 static std::string request(const std::string& signal, const std::string& body) {
     napi_value ret;
     napi_value callback = nullptr;
@@ -115,34 +129,27 @@ static std::string request(const std::string& signal, const std::string& body) {
     return chars;
 }
 
-static napi_value mediaConsume(napi_env env,       napi_callback_info info)  { return 0; }
-
-static napi_value mediaConsumerClose(napi_env env, napi_callback_info info)  { return 0; }
-
-static napi_value mediaConsumerPause(napi_env env, napi_callback_info info)  { return 0; }
-
-static napi_value mediaConsumerResume(napi_env env, napi_callback_info info) { return 0; }
-
-static napi_value mediaProducerClose(napi_env env, napi_callback_info info)  { return 0; }
-
-static napi_value mediaProducerPause(napi_env env, napi_callback_info info)  { return 0; }
-
-static napi_value mediaProducerResume(napi_env env, napi_callback_info info) { return 0; }
-
-static napi_value roomClientList(napi_env env,      napi_callback_info info) { return 0; }
-
-static napi_value roomClose(napi_env env,  napi_callback_info info) { return 0; }
+/**
+ * 房间关闭
+ */
+static napi_value roomClose(napi_env env, napi_callback_info info) { return 0; }
 
 /**
- * 其他终端进入房间
+ * 进入房间
+ * 其他终端进入房间，自己进入房间逻辑参考房间邀请。
  */
 static napi_value roomEnter(napi_env env, napi_callback_info info) {
     return 0;
 }
 
-static napi_value roomExpel(napi_env env,  napi_callback_info info) { return 0; }
+/**
+ * 踢出房间
+ * 踢出房间以后终端离开房间
+ */
+static napi_value roomExpel(napi_env env, napi_callback_info info) { return 0; }
 
 /**
+ * 房间邀请
  * 邀请终端进入房间
  */
 static napi_value roomInvite(napi_env env, napi_callback_info info) {
@@ -174,8 +181,56 @@ static napi_value roomInvite(napi_env env, napi_callback_info info) {
     return ret;
 }
 
-static napi_value roomLeave(napi_env env,  napi_callback_info info) { return 0; }
+/**
+ * 离开房间
+ * 其他终端离开房间
+ */
+static napi_value roomLeave(napi_env env, napi_callback_info info) { return 0; }
 
+/**
+ * 终端列表
+ * 房间所有终端列表首次进入方便加载终端列表信息
+ */
+static napi_value roomClientList(napi_env env, napi_callback_info info) { return 0; }
+
+/**
+ * 媒体消费（被动通知）
+ */
+static napi_value mediaConsume(napi_env env, napi_callback_info info)  { return 0; }
+
+/**
+ * 消费者关闭（被动通知）
+ */
+static napi_value mediaConsumerClose(napi_env env, napi_callback_info info)  { return 0; }
+
+/**
+ * 消费者暂停（被动通知）
+ */
+static napi_value mediaConsumerPause(napi_env env, napi_callback_info info)  { return 0; }
+
+/**
+ * 消费者恢复（被动通知）
+ */
+static napi_value mediaConsumerResume(napi_env env, napi_callback_info info) { return 0; }
+
+/**
+ * 生产者关闭（被动通知）
+ */
+static napi_value mediaProducerClose(napi_env env, napi_callback_info info)  { return 0; }
+
+/**
+ * 生产者暂停（被动通知）
+ */
+static napi_value mediaProducerPause(napi_env env, napi_callback_info info)  { return 0; }
+
+/**
+ * 生产者恢复（被动通知）
+ */
+static napi_value mediaProducerResume(napi_env env, napi_callback_info info) { return 0; }
+
+/**
+ * 注册发送回调
+ */
 static napi_value registerSend(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
@@ -184,7 +239,10 @@ static napi_value registerSend(napi_env env, napi_callback_info info) {
     return 0;
 }
 
-static napi_value registerRequest(napi_env env,  napi_callback_info info) {
+/**
+ * 注册请求回调
+ */
+static napi_value registerRequest(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value args[1] = { nullptr };
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
@@ -200,6 +258,13 @@ EXTERN_C_START
 static napi_value Init(napi_env env, napi_value exports) {
     acgist::env = env;
     napi_property_descriptor desc[] = {
+        { "shutdown",            nullptr, acgist::shutdown,            nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "roomClose",           nullptr, acgist::roomClose,           nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "roomEnter",           nullptr, acgist::roomEnter,           nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "roomExpel",           nullptr, acgist::roomExpel,           nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "roomInvite",          nullptr, acgist::roomInvite,          nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "roomLeave",           nullptr, acgist::roomLeave,           nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "roomClientList",      nullptr, acgist::roomClientList,      nullptr, nullptr, nullptr, napi_default, nullptr },
         { "mediaConsume",        nullptr, acgist::mediaConsume,        nullptr, nullptr, nullptr, napi_default, nullptr },
         { "mediaConsumerClose",  nullptr, acgist::mediaConsumerClose,  nullptr, nullptr, nullptr, napi_default, nullptr },
         { "mediaConsumerPause",  nullptr, acgist::mediaConsumerPause,  nullptr, nullptr, nullptr, napi_default, nullptr },
@@ -207,13 +272,6 @@ static napi_value Init(napi_env env, napi_value exports) {
         { "mediaProducerClose",  nullptr, acgist::mediaProducerClose,  nullptr, nullptr, nullptr, napi_default, nullptr },
         { "mediaProducerPause",  nullptr, acgist::mediaProducerPause,  nullptr, nullptr, nullptr, napi_default, nullptr },
         { "mediaProducerResume", nullptr, acgist::mediaProducerResume, nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "roomClientList",      nullptr, acgist::roomClientList,      nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "roomClose",           nullptr, acgist::roomClose,           nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "roomEnter",           nullptr, acgist::roomEnter,           nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "roomExpel",           nullptr, acgist::roomExpel,           nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "roomInvite",          nullptr, acgist::roomInvite,          nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "roomLeave",           nullptr, acgist::roomLeave,           nullptr, nullptr, nullptr, napi_default, nullptr },
-        { "shutdown",            nullptr, acgist::shutdown,            nullptr, nullptr, nullptr, napi_default, nullptr },
         { "registerSend",        nullptr, acgist::registerSend,        nullptr, nullptr, nullptr, napi_default, nullptr },
         { "registerRequest",     nullptr, acgist::registerRequest,     nullptr, nullptr, nullptr, napi_default, nullptr },
     };

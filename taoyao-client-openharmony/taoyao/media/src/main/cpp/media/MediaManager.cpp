@@ -65,6 +65,10 @@ bool acgist::MediaManager::startAudioCapture() {
     return true;
 }
 
+bool acgist::MediaManager::startVideoCapture() {
+    return true;
+}
+
 rtc::scoped_refptr<webrtc::AudioTrackInterface> acgist::MediaManager::getAudioTrack() {
     cricket::AudioOptions options;
     options.highpass_filter = true;

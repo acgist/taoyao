@@ -40,6 +40,7 @@ add_library(
     media/Capturer.cpp
     media/AudioCapturer.cpp
     media/VideoCapturer.cpp
+    media/VideoEncoder.cpp
     media/MediaManager.cpp
 )
 
