@@ -4,9 +4,6 @@
 
 #include "rtc_base/time_utils.h"
 
-#include <ohaudio/native_audiocapturer.h>
-#include <ohaudio/native_audiostreambuilder.h>
-
 // 采样率
 static int32_t samplingRate = 48000;
 // 声道数
@@ -16,8 +13,8 @@ static OH_AudioStream_LatencyMode  latencyMode  = OH_AudioStream_LatencyMode::AU
 // 音频格式
 static OH_AudioStream_SampleFormat sampleFormat = OH_AudioStream_SampleFormat::AUDIOSTREAM_SAMPLE_S16LE;
 
-static int32_t OnReadData(OH_AudioCapturer* capturer, void* userData, void* buffer, int32_t length);
 static int32_t OnError(OH_AudioCapturer* capturer, void* userData, OH_AudioStream_Result error);
+static int32_t OnReadData(OH_AudioCapturer* capturer, void* userData, void* buffer, int32_t length);
 static int32_t OnStreamEvent(OH_AudioCapturer* capturer, void* userData, OH_AudioStream_Event event);
 static int32_t OnInterruptEvent(OH_AudioCapturer* capturer, void* userData, OH_AudioInterrupt_ForceType type, OH_AudioInterrupt_Hint hint);
 
@@ -42,8 +39,8 @@ bool acgist::AudioCapturer::start() {
     OH_LOG_DEBUG(LOG_APP, "配置音频格式：%d %d %o %o", samplingRate, channelCount, latencyMode, sampleFormat);
     // 设置回调函数
     OH_AudioCapturer_Callbacks callbacks;
-    callbacks.OH_AudioCapturer_OnReadData       = OnReadData;
     callbacks.OH_AudioCapturer_OnError          = OnError;
+    callbacks.OH_AudioCapturer_OnReadData       = OnReadData;
     callbacks.OH_AudioCapturer_OnStreamEvent    = OnStreamEvent;
     callbacks.OH_AudioCapturer_OnInterruptEvent = OnInterruptEvent;
     OH_AudioStream_Result ret = OH_AudioStreamBuilder_SetCapturerCallback(builder, callbacks, this);
@@ -54,6 +51,7 @@ bool acgist::AudioCapturer::start() {
     // 开始录制
     ret = OH_AudioCapturer_Start(audioCapturer);
     OH_LOG_DEBUG(LOG_APP, "开始录制：%o", ret);
+    return ret == OH_AudioStream_Result::AUDIOSTREAM_SUCCESS;
 }
 
 bool acgist::AudioCapturer::stop() {
@@ -64,6 +62,12 @@ bool acgist::AudioCapturer::stop() {
     ret = OH_AudioCapturer_Release(audioCapturer);
     audioCapturer = nullptr;
     OH_LOG_DEBUG(LOG_APP, "释放音频采集器：%o", ret);
+    return ret == OH_AudioStream_Result::AUDIOSTREAM_SUCCESS;
+}
+
+static int32_t OnError(OH_AudioCapturer* capturer, void* userData, OH_AudioStream_Result error) {
+    OH_LOG_ERROR(LOG_APP, "音频采集发生异常：%o", error);
+    return 0;
 }
 
 static int32_t OnReadData(OH_AudioCapturer* capturer, void* userData, void* buffer, int32_t length) {
@@ -76,16 +80,15 @@ static int32_t OnReadData(OH_AudioCapturer* capturer, void* userData, void* buff
     ) {
         iterator->second->OnData(buffer, 16, samplingRate, channelCount, sizeof(buffer) / 2, timeMillis);
     }
-}
-
-static int32_t OnError(OH_AudioCapturer* capturer, void* userData, OH_AudioStream_Result error) {
-    OH_LOG_ERROR(LOG_APP, "音频采集发生异常：%o", error);
+    return 0;
 }
 
 static int32_t OnStreamEvent(OH_AudioCapturer* capturer, void* userData, OH_AudioStream_Event event) {
     OH_LOG_DEBUG(LOG_APP, "音频采集事件：%o", event);
+    return 0;
 }
 
 static int32_t OnInterruptEvent(OH_AudioCapturer* capturer, void* userData, OH_AudioInterrupt_ForceType type, OH_AudioInterrupt_Hint hint) {
     OH_LOG_DEBUG(LOG_APP, "音频采集打断：%o %o", type, hint);
+    return 0;
 }

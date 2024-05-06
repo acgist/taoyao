@@ -5,8 +5,10 @@
  * 
  * https://docs.openharmony.cn/pages/v4.0/zh-cn/application-dev/media/audio-encoding.md
  * https://docs.openharmony.cn/pages/v4.0/zh-cn/application-dev/media/video-encoding.md
+ * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/media/avscreen-capture.md
  * https://docs.openharmony.cn/pages/v4.0/zh-cn/application-dev/media/obtain-supported-codecs.md
- * https://docs.openharmony.cn/pages/v4.0/zh-cn/application-dev/media/using-ohaudio-for-recording.md
+ * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/camera/native-camera-recording.md
+ * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/audio/using-ohaudio-for-recording.md
  * https://docs.openharmony.cn/pages/v4.0/zh-cn/application-dev/reference/native-lib/third_party_opengl/opengles.md
  * https://docs.openharmony.cn/pages/v4.0/zh-cn/application-dev/reference/native-lib/third_party_opensles/opensles.md
  */
@@ -15,6 +17,9 @@
 #define taoyao_Capturer_HPP
 
 #include <map>
+
+#include "ohcamera/camera.h"
+#include "ohcamera/video_output.h"
 
 #include "api/media_stream_track.h"
 
@@ -57,7 +62,6 @@ public:
     // 音频采集器
     OH_AudioCapturer* audioCapturer = nullptr;
 
-
 public:
     AudioCapturer();
     virtual ~AudioCapturer();
@@ -73,6 +77,13 @@ public:
  */
 class VideoCapturer: public Capturer<rtc::VideoSinkInterface<webrtc::RecordableEncodedFrame>> {
     
+public:
+    Camera_Device* camera_Device;
+    Camera_Manager* camera_Manager;
+    Camera_VideoOutput* camera_VideoOutput;
+    Camera_VideoProfile* camera_VideoProfile;
+    Camera_OutputCapability* camera_OutputCapability;
+
 public:
     VideoCapturer();
     virtual ~VideoCapturer();

@@ -36,18 +36,42 @@
     "requestPermissions": [
       {
         "name": "ohos.permission.CAMERA",
+        "reason": "视频",
         "usedScene": {
           "when": "always"
         }
       },
       {
         "name": "ohos.permission.INTERNET",
+        "reason": "网络",
         "usedScene": {
           "when": "always"
         }
       },
       {
         "name": "ohos.permission.MICROPHONE",
+        "reason": "音频",
+        "usedScene": {
+          "when": "always"
+        }
+      },
+      {
+        "name": "ohos.permission.READ_MEDIA",
+        "reason": "录制文件",
+        "usedScene": {
+          "when": "always"
+        }
+      },
+      {
+        "name": "ohos.permission.WRITE_MEDIA",
+        "reason": "录制文件",
+        "usedScene": {
+          "when": "always"
+        }
+      },
+      {
+        "name": "ohos.permission.MEDIA_LOCATION",
+        "reason": "地理位置",
         "usedScene": {
           "when": "always"
         }

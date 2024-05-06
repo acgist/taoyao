@@ -61,6 +61,7 @@ target_link_libraries(
     libhilog_ndk.z.so
     # 媒体
     libohaudio.so
+    libohcamera.so
     libnative_media_aenc.so
     libnative_media_venc.so
     libnative_media_core.so
