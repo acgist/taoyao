@@ -107,8 +107,8 @@ void send(const std::string& signal, const std::string& body) {
     napi_value callback = nullptr;
     napi_get_reference_value(env, acgist::sendRef, &callback);
     napi_value data[2];
-    napi_create_string_utf8(acgist::env, signal.c_str(), NAPI_AUTO_LENGTH, &data[0]);
-    napi_create_string_utf8(acgist::env, body.c_str(),   NAPI_AUTO_LENGTH, &data[1]);
+    napi_create_string_utf8(acgist::env, signal.data(), NAPI_AUTO_LENGTH, &data[0]);
+    napi_create_string_utf8(acgist::env, body.data(),   NAPI_AUTO_LENGTH, &data[1]);
     napi_call_function(acgist::env, nullptr, callback, 2, data, &ret);
     // napi_get_undefined(acgist::env, &ret);
 }
@@ -121,8 +121,8 @@ std::string request(const std::string& signal, const std::string& body) {
     napi_value callback = nullptr;
     napi_get_reference_value(env, acgist::requestRef, &callback);
     napi_value data[2];
-    napi_create_string_utf8(acgist::env, signal.c_str(), NAPI_AUTO_LENGTH, &data[0]);
-    napi_create_string_utf8(acgist::env, body.c_str(),   NAPI_AUTO_LENGTH, &data[1]);
+    napi_create_string_utf8(acgist::env, signal.data(), NAPI_AUTO_LENGTH, &data[0]);
+    napi_create_string_utf8(acgist::env, body.data(),   NAPI_AUTO_LENGTH, &data[1]);
     napi_call_function(acgist::env, nullptr, callback, 2, data, &ret);
     char chars[2048];
     size_t length;
@@ -175,6 +175,7 @@ static napi_value roomInvite(napi_env env, napi_callback_info info) {
     napi_get_value_string_utf8(env, args[0], chars, sizeof(chars), &length);
     nlohmann::json json  = nlohmann::json::parse(chars);
     nlohmann::json body  = json["body"];
+    // TODO: 试试引用
     std::string roomId   = body["roomId"];
     std::string password = body["password"];
     napi_value ret;
@@ -182,7 +183,7 @@ static napi_value roomInvite(napi_env env, napi_callback_info info) {
         std::lock_guard<std::mutex> guard(roomMutex);
         auto iterator = roomMap.find(roomId);
         if(iterator == roomMap.end()) {
-            OH_LOG_INFO(LOG_APP, "进入房间：%s", roomId.c_str());
+            OH_LOG_INFO(LOG_APP, "进入房间：%s", roomId.data());
             auto room = new acgist::Room(roomId, mediaManager);
             roomMap[roomId] = room;
             int enterRet = room->enter(password);
@@ -191,7 +192,7 @@ static napi_value roomInvite(napi_env env, napi_callback_info info) {
             }
             napi_create_int32(env, enterRet, &ret);
         } else {
-            OH_LOG_INFO(LOG_APP, "已经进入房间：%s", roomId.c_str());
+            OH_LOG_INFO(LOG_APP, "已经进入房间：%s", roomId.data());
             napi_create_int32(env, -1, &ret);
         }
     }

@@ -84,8 +84,8 @@ int acgist::Room::enter(const std::string& password) {
     requestBody = {
         { "roomId",   this->roomId },
         { "password", password     },
-        { "rtpCapabilities",  this->device->GetRtpCapabilities().dump()  },
-        { "sctpCapabilities", this->device->GetSctpCapabilities().dump() }
+        { "rtpCapabilities",  this->device->GetRtpCapabilities()  },
+        { "sctpCapabilities", this->device->GetSctpCapabilities() }
     };
     response = acgist::request("room::enter", requestBody.dump());
     OH_LOG_INFO(LOG_APP, "进入房间：%s", this->roomId.data());

@@ -7,3 +7,8 @@
 [submodule "taoyao-client-android/libmediasoupclient"]
 	path = taoyao-client-android/libmediasoupclient
 	url = https://gitee.com/acgist/libmediasoupclient.git
+[submodule "taoyao-client-openharmony/libmediasoupclient"]
+
+	path = taoyao-client-openharmony/libmediasoupclient
+
+	url = https://gitee.com/acgist/libmediasoupclient.git
