@@ -12,8 +12,9 @@
  * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/camera/native-camera-recording.md
  * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/audio/using-ohaudio-for-recording.md
  */
-#ifndef taoyao_Capturer_HPP
-#define taoyao_Capturer_HPP
+
+#ifndef TAOYAO_CAPTURER_HPP
+#define TAOYAO_CAPTURER_HPP
 
 #include <map>
 
@@ -172,4 +173,4 @@ public:
 
 }
 
-#endif // taoyao_Capturer_HPP
+#endif // TAOYAO_CAPTURER_HPP

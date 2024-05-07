@@ -3,8 +3,10 @@
 ## 支持版本
 
 * SDK     28~32
+* WebRTC  m94
 * Gradle  7.5
 * Andoird 9~12
+* libmediasoupclient 3.4.0
 
 ## C++终端
 

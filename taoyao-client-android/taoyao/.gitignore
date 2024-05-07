@@ -2,6 +2,7 @@
 .idea
 .gradle
 
-media/deps
+media/deps/webrtc
+media/deps/libmediasoupclient
 
 local.properties

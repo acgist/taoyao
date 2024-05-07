@@ -5,10 +5,5 @@ acgist::LocalClient::LocalClient(acgist::MediaManager* mediaManager) : acgist::R
 }
 
 acgist::LocalClient::~LocalClient() {
-    this->release();
     this->mediaManager->releaseLocalClient();
-}
-
-bool acgist::LocalClient::release() {
-    return true;
 }

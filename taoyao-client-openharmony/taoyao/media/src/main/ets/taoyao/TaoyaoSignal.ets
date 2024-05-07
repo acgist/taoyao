@@ -1,5 +1,5 @@
 /**
- * 信令连接
+ * 信令
  *
  * @author acgist
  */
@@ -44,7 +44,6 @@ class TaoyaoSignal {
       this.socket.close();
     }
     this.connected = false;
-    hilog.info(0x0000, "TaoyaoSignal", "连接信令：%s", setting.signalAddress);
     this.socket = webSocket.createWebSocket();
     this.socket.on("open", (err: BusinessError, value: Object) => {
       hilog.info(0x0000, "TaoyaoSignal", "打开信令：%s", setting.signalAddress, value, err);
@@ -52,11 +51,12 @@ class TaoyaoSignal {
       this.connected = true;
     });
     this.socket.on("message", (err: BusinessError, value: string | ArrayBuffer) => {
-      hilog.debug(0x0000, "TaoyaoSignal", "信令消息：%s", value, err);
+      const message = value?.toString();
+      hilog.debug(0x0000, "TaoyaoSignal", "信令消息：%s", message, err);
       try {
-        this.onMessage(value.toString());
+        this.onMessage(message);
       } catch (error) {
-        hilog.error(0x0000, "TaoyaoSignal", "处理信令消息异常：%s", value, error);
+        hilog.error(0x0000, "TaoyaoSignal", "处理信令消息异常：%s", message, error);
       }
     });
     this.socket.on("close", (err: BusinessError, value: Object) => {
@@ -67,6 +67,7 @@ class TaoyaoSignal {
       hilog.error(0x0000, "TaoyaoSignal", "信令异常：%s", setting.signalAddress, err);
       this.reconnect();
     });
+    hilog.info(0x0000, "TaoyaoSignal", "连接信令：%s", setting.signalAddress);
     this.socket.connect(setting.signalAddress, (err: BusinessError, value: boolean) => {
       hilog.info(0x0000, "TaoyaoSignal", "信令连接成功：%s", setting.signalAddress, value, err);
     });
@@ -109,15 +110,15 @@ class TaoyaoSignal {
       "battery"   : 100,
       "charging"  : true
     });
-    const body    : Record<string, Object> = response.body as Record<string, Object>;
-    const index   : number = body.index as number;
+    const body  = response.body as Record<string, Object>;
+    const index = body.index    as number;
     this.clientIndex = index;
     hilog.info(0x0000, "TaoyaoSignal", "信令注册成功：%d", index);
     this.heartbeat();
   }
 
   /**
-   * 心跳
+   * 心跳信令
    */
   heartbeat() {
     if(this.heartbeatTimer) {
@@ -166,7 +167,7 @@ class TaoyaoSignal {
       "body"  : body
     };
     try {
-    hilog.debug(0x0000, "TaoyaoSignal", "发送消息：%o", message);
+      hilog.debug(0x0000, "TaoyaoSignal", "发送消息：%o", message);
       this.socket?.send(JSON.stringify(message));
     } catch (error) {
       hilog.error(0x0000, "TaoyaoSignal", "发送消息异常：%o", message, error);
@@ -182,8 +183,8 @@ class TaoyaoSignal {
    * @returns 响应
    */
   async request(signal: string, body: Record<string, Object>): Promise<Record<string, Object>> {
-    const id = this.buildId();
     return new Promise<Record<string, Object>>((resolve, reject) => {
+      const id = this.buildId();
       const header: Record<string, Object> = {
         "v"     : setting.version,
         "id"    : id,
@@ -224,13 +225,12 @@ class TaoyaoSignal {
   onMessage(message: string) {
     const json  : Record<string, Object> = JSON.parse(message);
     const header: Record<string, Object> = json.header as Record<string, Object>;
-    const body  : Record<string, Object> = json.body   as Record<string, Object>;
     const id    : number = header.id     as number;
     const signal: string = header.signal as string;
     if (this.callbackMapping.has(id)) {
       hilog.debug(0x0000, "TaoyaoSignal", "处理同步消息：%s", message);
       try {
-        const callback: Function = this.callbackMapping.get(id) as Function;
+        const callback = this.callbackMapping.get(id) as Function;
         if(callback(json)) {
           return;
         }
@@ -238,21 +238,73 @@ class TaoyaoSignal {
         this.callbackMapping.delete(id);
       }
     }
-    hilog.debug(0x0000, "TaoyaoSignal", "处理异步消息：%s", message);
+    let ret: number = 0;
     switch (signal) {
+      case "room::close":
+        ret = taoyaoModule.roomClose(message);
+        break;
+      case "room::enter":
+        ret = taoyaoModule.roomEnter(message);
+        break;
+      case "room::expel":
+        ret = taoyaoModule.roomExpel(message);
+        break;
       case "room::invite":
-        taoyaoModule.roomInvite(message);
+        ret = taoyaoModule.roomInvite(message);
+        break;
+      case "room::leave":
+        ret = taoyaoModule.roomLeave(message);
+        break;
+      case "room::client::list":
+        ret = taoyaoModule.roomClientList(message);
+        break;
+      case "media::consume":
+        ret = taoyaoModule.mediaConsume(message);
+        break;
+      case "media::consumer::close":
+        ret = taoyaoModule.mediaConsumerClose(message);
+        break;
+      case "media::consumer::pause":
+        ret = taoyaoModule.mediaConsumerPause(message);
+        break;
+      case "media::consumer::resume":
+        ret = taoyaoModule.mediaConsumerResume(message);
+        break;
+      case "media::producer::close":
+        ret = taoyaoModule.mediaProducerClose(message);
+        break;
+      case "media::producer::pause":
+        ret = taoyaoModule.mediaProducerPause(message);
+        break;
+      case "media::producer::resume":
+        ret = taoyaoModule.mediaProducerResume(message);
         break;
       default:
-        hilog.error(0x0000, "TaoyaoSignal", "没有适配信令：%s", signal);
+        ret = -1;
+        hilog.warn(0x0000, "TaoyaoSignal", "没有适配信令：%s", signal);
         break;
     }
+    hilog.debug(0x0000, "TaoyaoSignal", "处理异步消息：%d %s", ret, message);
   }
 
+  /**
+   * 注册发送消息
+   *
+   * @param signal 信令
+   * @param body   主体
+   */
   nativeSend(signal: string, body: string) {
     this.send(signal, JSON.parse(body));
   }
 
+  /**
+   * 注册请求消息
+   *
+   * @param signal 信令
+   * @param body   主体
+   *
+   * @returns  响应
+   */
   async nativeRequest(signal: string, body: string): Promise<string> {
     const response = await this.request(signal, JSON.parse(body));
     return JSON.stringify(response);
@@ -262,6 +314,8 @@ class TaoyaoSignal {
 
 const signal = new TaoyaoSignal();
 
+// 加载系统
+taoyaoModule.init(JSON.stringify(setting.signal));
 // 注册回调
 taoyaoModule.registerSend(signal.nativeSend);
 taoyaoModule.registerRequest(signal.nativeRequest);

@@ -3,8 +3,9 @@
  * 
  * @author acgist
  */
-#ifndef taoyao_Room_HPP
-#define taoyao_Room_HPP
+
+#ifndef TAOYAO_ROOM_HPP
+#define TAOYAO_ROOM_HPP
 
 #include <map>
 #include <string>
@@ -218,7 +219,9 @@ public:
     acgist::MediaManager* mediaManager = nullptr;
     // 本地终端
     acgist::LocalClient* client = nullptr;
-    // 远程终端
+    // ID映射：consumerId = clientId
+    std::map<std::string, std::string> consumerIdClientId;
+    // 远程终端：clientId = RemoteClient
     std::map<std::string, acgist::RemoteClient*> clients;
     // WebRTC配置
     webrtc::PeerConnectionInterface::RTCConfiguration rtcConfiguration;
@@ -240,8 +243,10 @@ public:
     mediasoupclient::Producer::Listener* producerListener = nullptr;
     // 消费者监听器
     mediasoupclient::Consumer::Listener* consumerListener = nullptr;
-    // 消费者列表
-    std::map<std::string, mediasoupclient::Consumer*> consumers;
+    // 本地音频
+    rtc::scoped_refptr<webrtc::AudioTrackInterface> audioTrack = nullptr;
+    // 本地视频
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack = nullptr;
 
 public:
     Room(const std::string& roomId, acgist::MediaManager* mediaManager);
@@ -262,19 +267,47 @@ public:
      * @return 状态
      */
     int produceMedia();
+    // 创建发送通道
     int createSendTransport();
+    // 创建接收通道
     int createRecvTransport();
+    // 生产音频
     int produceAudio();
+    // 生产视频
     int produceVideo();
+    // 关闭房间
     int close();
-    int closeConsumer();
+    // 关闭本地消费者
+    int closeClient();
+    // 关闭远程消费者
+    int closeClients();
+    // 关闭音频生产者
     int closeAudioProducer();
+    // 关闭视频生产者
     int closeVideoProducer();
+    // 关闭通道
     int closeTransport();
-    int newRemoteClient();
+    // 新建远程终端
+    int newRemoteClient(const std::string& clientId, const std::string& name);
+    // 删除远程终端
+    int closeRemoteClient(const std::string& clientId);
+    // 新增消费者
+    int newConsumer(nlohmann::json& body);
+    // 删除消费者
+    int closeConsumer(const std::string& consumerId);
+    // 暂停消费者
+    int pauseConsumer(const std::string& consumerId);
+    // 恢复消费者
+    int resumeConsumer(const std::string& consumerId);
+    // 关闭生产者
+    int closeProducer(const std::string& producerId);
+    // 暂停生产者
+    int pauseProducer(const std::string& producerId);
+    // 恢复生产者
+    int resumeProducer(const std::string& producerId);
     
 };
 
 }
 
-#endif // taoyao_Room_HPP
+#endif // TAOYAO_ROOM_HPP

@@ -14,7 +14,7 @@ struct Index {
             signal.connect();
           });
       }
-      .width('50%');
+      .width("50%");
       Column() {
         Button("断开信令")
           .fontSize(20)
@@ -23,9 +23,9 @@ struct Index {
             signal.close();
           });
       }
-      .width('50%');
+      .width("50%");
     }
-    .height('100%');
+    .height("100%");
   }
 
 }

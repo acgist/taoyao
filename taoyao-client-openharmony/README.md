@@ -3,6 +3,8 @@
 ## 支持版本
 
 * SDK 11
+* WebRTC m114
+* libmediasoupclient m120
 
 ## C++终端
 

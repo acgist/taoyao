@@ -8,7 +8,9 @@
 local.properties
 oh-package-lock.json5
 
-deps
 build
 oh_modules
 node_modules
+
+media/src/main/cpp/deps/webrtc
+media/src/main/cpp/deps/libmediasoupclient

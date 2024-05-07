@@ -14,7 +14,7 @@
 #include <api/video_codecs/builtin_video_decoder_factory.h>
 #include <api/video_codecs/builtin_video_encoder_factory.h>
 
-static std::mutex refMutex;
+static std::mutex lockMutex;
 
 acgist::MediaManager::MediaManager() {
 }
@@ -23,7 +23,11 @@ acgist::MediaManager::~MediaManager() {
     // TODO：验证是否需要释放线程和工厂
 }
 
-bool acgist::MediaManager::initPeerConnectionFactory() {
+bool acgist::MediaManager::init() {
+    return true;
+}
+
+bool acgist::MediaManager::newPeerConnectionFactory() {
     OH_LOG_INFO(LOG_APP, "加载PeerConnectionFactory");
     this->networkThread   = rtc::Thread::CreateWithSocketServer();
     this->signalingThread = rtc::Thread::Create();
@@ -33,6 +37,7 @@ bool acgist::MediaManager::initPeerConnectionFactory() {
     this->workerThread->SetName("worker_thread", nullptr);
     if (!this->networkThread->Start() || !this->signalingThread->Start() || !this->workerThread->Start()) {
         OH_LOG_WARN(LOG_APP, "WebRTC线程启动失败");
+        // TODO: 释放线程
         return false;
     }
     this->peerConnectionFactory = webrtc::CreatePeerConnectionFactory(
@@ -47,25 +52,43 @@ bool acgist::MediaManager::initPeerConnectionFactory() {
         nullptr,
         nullptr,
         // TODO: 视频工厂
-//         webrtc::CreateBuiltinVideoEncoderFactory(),
-//         webrtc::CreateBuiltinVideoDecoderFactory(),
+        // webrtc::CreateBuiltinVideoEncoderFactory(),
+        // webrtc::CreateBuiltinVideoDecoderFactory(),
         nullptr /* audio_mixer      */,
         nullptr /* audio_processing */
     );
     return this->peerConnectionFactory != nullptr;
 }
 
+bool acgist::MediaManager::releasePeerConnectionFactory() {
+    OH_LOG_INFO(LOG_APP, "释放PeerConnectionFactory");
+    // TODO：释放
+    return true;
+}
+
 int acgist::MediaManager::newLocalClient() {
     {
-        std::lock_guard<std::mutex> guard(refMutex);
+        std::lock_guard<std::mutex> mediaLock(lockMutex);
         this->localClientRef++;
+        if(this->localClientRef > 0) {
+            this->newPeerConnectionFactory();
+            this->startCapture();
+        }
     }
 }
 
 int acgist::MediaManager::releaseLocalClient() {
     {
-        std::lock_guard<std::mutex> guard(refMutex);
+        std::lock_guard<std::mutex> mediaLock(lockMutex);
         this->localClientRef--;
+        if(this->localClientRef <= 0) {
+            if(this->localClientRef < 0) {
+                this->localClientRef = 0;
+            } else {
+                this->stopCapture();
+                this->releasePeerConnectionFactory();
+            }
+        }
     }
 }
 
@@ -80,6 +103,18 @@ bool acgist::MediaManager::startAudioCapture() {
 }
 
 bool acgist::MediaManager::startVideoCapture() {
+    return true;
+}
+
+bool acgist::MediaManager::stopCapture() {
+    return true;
+}
+
+bool acgist::MediaManager::stopAudioCapture() {
+    return true;
+}
+
+bool acgist::MediaManager::stopVideoCapture() {
     return true;
 }
 

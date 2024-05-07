@@ -5,6 +5,7 @@
       "path": "./src/main/cpp/CMakeLists.txt",
       "cppFlags"  : "",
       "arguments" : "",
+      // 不要自作多情添加一些配置🤡🤡🤡🤡
       // "cppFlags"  : "-D_LIBCPP_STD_VER=17",
       // "arguments" : "-DOHOS_STL=c++_static",
       // "arguments" : "-DOHOS_STL=c++_shared",

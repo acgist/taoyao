@@ -6,8 +6,9 @@
  * 
  * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/avcodec/obtain-supported-codecs.md
  */
-#ifndef taoyao_MediaManager_HPP
-#define taoyao_MediaManager_HPP
+
+#ifndef TAOYAO_MEDIAMANAGER_HPP
+#define TAOYAO_MEDIAMANAGER_HPP
 
 #include <memory>
 #include <thread>
@@ -20,30 +21,36 @@
 namespace acgist {
 
 class TaoyaoAudioSink : public webrtc::AudioTrackSinkInterface {
-    
 };
 
 class TaoyaoVideoSource : public webrtc::VideoTrackSourceInterface {
-    
 };
 
 class TaoyaoVideoSink : public rtc::VideoSinkInterface<webrtc::RecordableEncodedFrame> {
-    
 };
 
 class MediaManager {
+
 public:
     MediaManager();
-    ~MediaManager();
+    virtual ~MediaManager();
+
 public:
     int localClientRef = 0;
     std::unique_ptr<rtc::Thread> networkThread   = nullptr;
     std::unique_ptr<rtc::Thread> signalingThread = nullptr;
     std::unique_ptr<rtc::Thread> workerThread    = nullptr;
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> peerConnectionFactory = nullptr;
-public:
+
+protected:
     // 加载PC工厂
-    bool initPeerConnectionFactory();
+    bool newPeerConnectionFactory();
+    // 释放PC工厂
+    bool releasePeerConnectionFactory();
+
+public:
+    // 加载媒体
+    bool init();
     // 新增本地终端
     int newLocalClient();
     // 释放本地终端
@@ -64,8 +71,9 @@ public:
     rtc::scoped_refptr<webrtc::AudioTrackInterface> getAudioTrack();
     // 视频来源
     rtc::scoped_refptr<webrtc::VideoTrackInterface> getVideoTrack();
+
 };
 
 }
 
-#endif // taoyao_MediaManager_HPP
+#endif // TAOYAO_MEDIAMANAGER_HPP

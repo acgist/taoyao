@@ -1,3 +1,4 @@
+export const init      : (json: string) => number;
 export const shutdown  : (json: string) => number;
 export const roomClose : (json: string) => number;
 export const roomEnter : (json: string) => number;
