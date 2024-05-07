@@ -14,14 +14,15 @@
 #include "mediasoupclient.hpp"
 
 #include "./include/Room.hpp"
+#include "./include/Signal.hpp"
 #include "./include/MediaManager.hpp"
 
 #include <multimedia/player_framework/native_avcapability.h>
 #include <multimedia/player_framework/native_avcodec_base.h>
 
-namespace acgist {
-
 static std::mutex roomMutex;
+
+namespace acgist {
 
 // JS环境
 static napi_env env = nullptr;
@@ -101,7 +102,7 @@ static napi_value shutdown(napi_env env, napi_callback_info info) {
 /**
  * 发送消息
  */
-static void send(const std::string& signal, const std::string& body) {
+void send(const std::string& signal, const std::string& body) {
     napi_value ret;
     napi_value callback = nullptr;
     napi_get_reference_value(env, acgist::sendRef, &callback);
@@ -115,7 +116,7 @@ static void send(const std::string& signal, const std::string& body) {
 /**
  * 发送请求
  */
-static std::string request(const std::string& signal, const std::string& body) {
+std::string request(const std::string& signal, const std::string& body) {
     napi_value ret;
     napi_value callback = nullptr;
     napi_get_reference_value(env, acgist::requestRef, &callback);
@@ -132,7 +133,20 @@ static std::string request(const std::string& signal, const std::string& body) {
 /**
  * 房间关闭
  */
-static napi_value roomClose(napi_env env, napi_callback_info info) { return 0; }
+static napi_value roomClose(napi_env env, napi_callback_info info) {
+    {
+        std::lock_guard<std::mutex> guard(roomMutex);
+        auto iterator = roomMap.find("roomId");
+        if(iterator == roomMap.end()) {
+            
+        } else {
+            delete iterator->second;
+            iterator->second = nullptr;
+            roomMap.erase(iterator);
+        }
+    }
+    return 0;
+}
 
 /**
  * 进入房间
@@ -153,30 +167,33 @@ static napi_value roomExpel(napi_env env, napi_callback_info info) { return 0; }
  * 邀请终端进入房间
  */
 static napi_value roomInvite(napi_env env, napi_callback_info info) {
-    napi_value ret;
     size_t argc = 1;
     napi_value args[1] = { nullptr };
-    // TODO: 是否需要释放
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);
-    char chars[2048];
     size_t length;
-    // TODO: 是否需要释放
+    char chars[2048];
     napi_get_value_string_utf8(env, args[0], chars, sizeof(chars), &length);
     nlohmann::json json  = nlohmann::json::parse(chars);
     nlohmann::json body  = json["body"];
     std::string roomId   = body["roomId"];
     std::string password = body["password"];
-    std::lock_guard<std::mutex> guard(roomMutex);
-    auto iterator = roomMap.find(roomId);
-    if(iterator == roomMap.end()) {
-        OH_LOG_INFO(LOG_APP, "进入房间：%s", roomId.c_str());
-        auto room = new acgist::Room(roomId, mediaManager);
-        roomMap[roomId] = room;
-        int enterRet = room->enter(password);
-        napi_create_int32(env, enterRet, &ret);
-    } else {
-        OH_LOG_INFO(LOG_APP, "已经进入房间：%s", roomId.c_str());
-        napi_create_int32(env, -1, &ret);
+    napi_value ret;
+    {
+        std::lock_guard<std::mutex> guard(roomMutex);
+        auto iterator = roomMap.find(roomId);
+        if(iterator == roomMap.end()) {
+            OH_LOG_INFO(LOG_APP, "进入房间：%s", roomId.c_str());
+            auto room = new acgist::Room(roomId, mediaManager);
+            roomMap[roomId] = room;
+            int enterRet = room->enter(password);
+            if(enterRet == acgist::SUCCESS_CODE) {
+                room->produceMedia();
+            }
+            napi_create_int32(env, enterRet, &ret);
+        } else {
+            OH_LOG_INFO(LOG_APP, "已经进入房间：%s", roomId.c_str());
+            napi_create_int32(env, -1, &ret);
+        }
     }
     return ret;
 }

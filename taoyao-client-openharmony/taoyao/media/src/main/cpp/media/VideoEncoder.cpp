@@ -147,13 +147,12 @@ static void OnNewOutputBuffer(OH_AVCodec* codec, uint32_t index, OH_AVBuffer* bu
     OH_AVErrCode ret = OH_AVBuffer_GetBufferAttr(buffer, &info);
     char* data = reinterpret_cast<char*>(OH_AVBuffer_GetAddr(buffer));
     // TODO: 解析
-    rtc::scoped_refptr<webrtc::I420Buffer> videoFrameBuffer = webrtc::I420Buffer::Copy(width, height, (uint8_t*)data, 0, (uint8_t*)data, 0, (uint8_t*)data, 0);
+    rtc::scoped_refptr<webrtc::I420Buffer> videoFrameBuffer = webrtc::I420Buffer::Copy(width, height, (uint8_t*) data, 0, (uint8_t*) data, 0, (uint8_t*) data, 0);
     // webrtc::NV12Buffer::Create(width, height);
     webrtc::VideoFrame::Builder builder;
     webrtc::VideoFrame videoFrame = builder
         .set_timestamp_ms(rtc::TimeMillis())
         .set_video_frame_buffer(videoFrameBuffer)
-        .set_rotation(webrtc::VideoRotation::kVideoRotation_0)
         .build();
     for (auto iterator = videoCapturer->map.begin(); iterator != videoCapturer->map.end(); ++iterator) {
         iterator->second->OnFrame(videoFrame);

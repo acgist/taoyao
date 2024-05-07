@@ -1,5 +1,7 @@
 #include "../include/MediaManager.hpp"
 
+#include <mutex>
+
 #include "hilog/log.h"
 
 #include "api/create_peerconnection_factory.h"
@@ -11,6 +13,8 @@
 #include <api/audio_codecs/builtin_audio_encoder_factory.h>
 #include <api/video_codecs/builtin_video_decoder_factory.h>
 #include <api/video_codecs/builtin_video_encoder_factory.h>
+
+static std::mutex refMutex;
 
 acgist::MediaManager::MediaManager() {
 }
@@ -52,7 +56,17 @@ bool acgist::MediaManager::initPeerConnectionFactory() {
 }
 
 int acgist::MediaManager::newLocalClient() {
-    this->localClientRef++;
+    {
+        std::lock_guard<std::mutex> guard(refMutex);
+        this->localClientRef++;
+    }
+}
+
+int acgist::MediaManager::releaseLocalClient() {
+    {
+        std::lock_guard<std::mutex> guard(refMutex);
+        this->localClientRef--;
+    }
 }
 
 bool acgist::MediaManager::startCapture() {
@@ -71,7 +85,7 @@ bool acgist::MediaManager::startVideoCapture() {
 
 rtc::scoped_refptr<webrtc::AudioTrackInterface> acgist::MediaManager::getAudioTrack() {
     cricket::AudioOptions options;
-    options.highpass_filter = true;
+    options.highpass_filter   = true;
     options.auto_gain_control = true;
     options.echo_cancellation = true;
     options.noise_suppression = true;

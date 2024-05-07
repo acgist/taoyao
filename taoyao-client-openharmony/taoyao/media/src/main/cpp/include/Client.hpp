@@ -10,7 +10,22 @@
 
 namespace acgist {
 
+/**
+ * 终端
+ */
 class Client {
+
+public:
+    // 媒体管理
+    acgist::MediaManager* mediaManager = nullptr;
+    // 音频轨道
+    webrtc::AudioTrackInterface* audioTrack = nullptr;
+    // 视频轨道
+    webrtc::VideoTrackInterface* videoTrack = nullptr;
+
+public:
+    Client(acgist::MediaManager* mediaManager);
+    virtual ~Client();
     
 public:
     /**
@@ -22,18 +37,45 @@ public:
     
 };
 
+/**
+ * 房间终端
+ */
 class RoomClient : public Client {
     
 public:
-    acgist::MediaManager* mediaManager;
+    RoomClient(acgist::MediaManager* mediaManager);
+    virtual ~RoomClient();
+    
+public:
+    virtual bool release() override;
     
 };
 
+/**
+ * 本地终端
+ */
 class LocalClient : public RoomClient {
+
+public:
+    LocalClient(acgist::MediaManager* mediaManager);
+    virtual ~LocalClient();
+
+public:
+    virtual bool release() override;
     
 };
 
+/**
+ * 远程终端
+ */
 class RemoteClient : public RoomClient {
+
+public:
+    RemoteClient(acgist::MediaManager* mediaManager);
+    virtual ~RemoteClient();
+
+public:
+    virtual bool release() override;
     
 };
 
