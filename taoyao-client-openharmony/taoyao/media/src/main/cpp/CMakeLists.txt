@@ -29,6 +29,7 @@ add_subdirectory("./deps/libmediasoupclient")
 add_library(
     ${PROJECT_NAME} SHARED
     bind.cpp
+    media/WebRTC.cpp
     media/Room.cpp
     media/Client.cpp
     media/RoomClient.cpp
@@ -60,19 +61,21 @@ target_link_libraries(
     libace_napi.z.so
     # LOG
     libhilog_ndk.z.so
-    # 媒体
+    # 音频
     libohaudio.so
+    # 相机
     libohcamera.so
+    # 编码解码
     libnative_media_aenc.so
     libnative_media_venc.so
     libnative_media_core.so
     libnative_media_codecbase.so
+    # EGL
+    libEGL.so
+    libGLESv3.so
+    # 图片
+    libnative_image.so
+    libnative_buffer.so
+    libnative_window.so
 )
 
-target_compile_definitions(${PROJECT_NAME} PUBLIC
-	$<$<NOT:$<PLATFORM_ID:Windows>>:WEBRTC_POSIX>
-	$<$<PLATFORM_ID:Windows>:WEBRTC_WIN>
-	$<$<PLATFORM_ID:Windows>:NOMINMAX>
-	$<$<PLATFORM_ID:Windows>:WIN32_LEAN_AND_MEAN>
-	$<$<PLATFORM_ID:Darwin>:WEBRTC_MAC>
-)

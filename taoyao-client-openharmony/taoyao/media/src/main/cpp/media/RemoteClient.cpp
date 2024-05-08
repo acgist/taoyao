@@ -18,7 +18,7 @@ acgist::RemoteClient::~RemoteClient() {
 }
 
 bool acgist::RemoteClient::addConsumer(const std::string& consumerId, mediasoupclient::Consumer* consumer) {
-    std::lock_guard<std::mutex> clientLock(lockMutex);
+    std::lock_guard<std::mutex> clientLock(clientMutex);
     auto oldConsumer = this->consumers.find(clientId);
     if(oldConsumer != this->consumers.end()) {
         OH_LOG_INFO(LOG_APP, "关闭旧的消费者：%s", consumerId.data());
@@ -35,7 +35,7 @@ bool acgist::RemoteClient::addConsumer(const std::string& consumerId, mediasoupc
 }
 
 bool acgist::RemoteClient::closeConsumer(const std::string& consumerId) {
-    std::lock_guard<std::mutex> clientLock(lockMutex);
+    std::lock_guard<std::mutex> clientLock(clientMutex);
     auto consumer = this->consumers.find(consumerId);
     if(consumer == this->consumers.end()) {
         OH_LOG_INFO(LOG_APP, "消费者已经关闭：%s", consumerId.data());
@@ -50,7 +50,7 @@ bool acgist::RemoteClient::closeConsumer(const std::string& consumerId) {
 }
 
 bool acgist::RemoteClient::pauseConsumer(const std::string& consumerId) {
-    std::lock_guard<std::mutex> clientLock(lockMutex);
+    std::lock_guard<std::mutex> clientLock(clientMutex);
     auto consumer = this->consumers.find(consumerId);
     if(consumer == this->consumers.end()) {
         OH_LOG_INFO(LOG_APP, "无效消费者：%s", consumerId.data());
@@ -62,7 +62,7 @@ bool acgist::RemoteClient::pauseConsumer(const std::string& consumerId) {
 }
 
 bool acgist::RemoteClient::resumeConsumer(const std::string& consumerId) {
-    std::lock_guard<std::mutex> clientLock(lockMutex);
+    std::lock_guard<std::mutex> clientLock(clientMutex);
     auto consumer = this->consumers.find(consumerId);
     if(consumer == this->consumers.end()) {
         OH_LOG_INFO(LOG_APP, "无效消费者：%s", consumerId.data());

@@ -1,7 +1,10 @@
 /**
  * 播放器
  * 
+ * @author acgist
+ * 
  * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/media/video-playback.md
+ * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/media/media-kit-intro.md
  * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/audio/audio-playback-overview.md
  * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/media/using-ndk-avplayer-for-playerback.md
  */

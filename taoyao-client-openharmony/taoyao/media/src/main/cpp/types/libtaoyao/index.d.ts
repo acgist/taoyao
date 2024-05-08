@@ -1,4 +1,8 @@
-export const init      : (json: string) => number;
+export const init: (
+  json   : string,
+  push   : (signal: string, body: string, id: number) => void,
+  request: (signal: string, body: string, id: number) => Promise<string>
+) => number;
 export const shutdown  : (json: string) => number;
 export const roomClose : (json: string) => number;
 export const roomEnter : (json: string) => number;
@@ -13,5 +17,3 @@ export const mediaConsumerResume: (json: string) => number;
 export const mediaProducerClose : (json: string) => number;
 export const mediaProducerPause : (json: string) => number;
 export const mediaProducerResume: (json: string) => number;
-export const registerSend   : (callback: (signal: string, body: string) => void)            => number;
-export const registerRequest: (callback: (signal: string, body: string) => Promise<string>) => number;

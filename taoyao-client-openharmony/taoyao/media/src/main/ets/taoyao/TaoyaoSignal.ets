@@ -125,7 +125,7 @@ class TaoyaoSignal {
       clearInterval(this.heartbeatTimer);
     }
     this.heartbeatTimer = setInterval(() => {
-      this.send("client::heartbeat", {
+      this.push("client::heartbeat", {
         "battery" : 100,
         "charging": true,
       });
@@ -155,11 +155,13 @@ class TaoyaoSignal {
    *
    * @param signal 信令
    * @param body   主体
+   * @param oldId  旧的ID
    */
-  send(signal: string, body: Record<string, Object>) {
+  push(signal: string, body: Record<string, Object>, oldId: number = 0) {
+    const id = oldId || this.buildId();
     const header: Record<string, Object> = {
       "v"     : setting.version,
-      "id"    : this.buildId(),
+      "id"    : id,
       "signal": signal
     };
     const message: Record<string, Object> = {
@@ -179,12 +181,13 @@ class TaoyaoSignal {
    *
    * @param signal 信令
    * @param body   主体
+   * @param oldId  旧的ID
    *
    * @returns 响应
    */
-  async request(signal: string, body: Record<string, Object>): Promise<Record<string, Object>> {
+  async request(signal: string, body: Record<string, Object>, oldId: number = 0): Promise<Record<string, Object>> {
     return new Promise<Record<string, Object>>((resolve, reject) => {
-      const id = this.buildId();
+      const id = oldId || this.buildId();
       const header: Record<string, Object> = {
         "v"     : setting.version,
         "id"    : id,
@@ -292,9 +295,10 @@ class TaoyaoSignal {
    *
    * @param signal 信令
    * @param body   主体
+   * @param id     ID
    */
-  nativeSend(signal: string, body: string) {
-    this.send(signal, JSON.parse(body));
+  nativePush(signal: string, body: string, id: number = 0) {
+    this.push(signal, JSON.parse(body), id);
   }
 
   /**
@@ -302,11 +306,12 @@ class TaoyaoSignal {
    *
    * @param signal 信令
    * @param body   主体
+   * @param id     ID
    *
    * @returns  响应
    */
-  async nativeRequest(signal: string, body: string): Promise<string> {
-    const response = await this.request(signal, JSON.parse(body));
+  async nativeRequest(signal: string, body: string, id: number = 0): Promise<string> {
+    const response = await this.request(signal, JSON.parse(body), id);
     return JSON.stringify(response);
   }
 
@@ -315,10 +320,7 @@ class TaoyaoSignal {
 const signal = new TaoyaoSignal();
 
 // 加载系统
-taoyaoModule.init(JSON.stringify(setting.signal));
-// 注册回调
-taoyaoModule.registerSend(signal.nativeSend);
-taoyaoModule.registerRequest(signal.nativeRequest);
+taoyaoModule.init(JSON.stringify(setting.signal), signal.nativePush, signal.nativeRequest);
 
 export {
   signal

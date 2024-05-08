@@ -2,21 +2,14 @@
 
 #include "hilog/log.h"
 
-#include "rtc_base/time_utils.h"
-
-#include "api/video/nv12_buffer.h"
-#include "api/video/i420_buffer.h"
-
+#include <native_window/external_window.h>
 #include <multimedia/player_framework/native_avbuffer.h>
+#include <multimedia/player_framework/native_averrors.h>
 #include <multimedia/player_framework/native_avformat.h>
 #include <multimedia/player_framework/native_avcodec_base.h>
 #include <multimedia/player_framework/native_avcapability.h>
 
-static uint32_t width   = 720;
-static uint32_t height  = 480;
-static uint64_t bitrate = 3'000'000L;
-static double frameRate = 30.0;
-
+// 编码回调
 static void OnError(OH_AVCodec* codec, int32_t errorCode, void* userData);
 static void OnStreamChanged(OH_AVCodec* codec, OH_AVFormat* format, void* userData);
 static void OnNeedInputBuffer(OH_AVCodec* codec, uint32_t index, OH_AVBuffer* buffer, void* userData);
@@ -31,17 +24,45 @@ acgist::VideoEncoder::VideoEncoder() {
     OH_AVCodecCallback callback = { &OnError, &OnStreamChanged, &OnNeedInputBuffer, &OnNewOutputBuffer };
     OH_AVErrCode ret = OH_VideoEncoder_RegisterCallback(this->avCodec, callback, this);
     OH_LOG_INFO(LOG_APP, "注册编码回调：%o", ret);
-    // 配置编码参数：https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/avcodec/video-encoding.md
+    // 配置编码参数
     OH_AVFormat* format = OH_AVFormat_Create();
-    // 配置视频帧宽度（必须）
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_WIDTH, width);
-    // 配置视频帧高度（必须）
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_HEIGHT, height);
-    // 配置视频颜色格式（必须）
+    this->initFormatConfig(format);
+    ret = OH_VideoEncoder_Configure(this->avCodec, format);
+    OH_AVFormat_Destroy(format);
+    OH_LOG_INFO(LOG_APP, "配置编码参数：%o %d %d %f %ld", ret, acgist::width, acgist::height, acgist::frameRate, acgist::bitrate);
+    // 准备就绪
+    ret = OH_VideoEncoder_Prepare(this->avCodec);
+    OH_LOG_INFO(LOG_APP, "视频编码准备就绪：%o", ret);
+    // 配置surface
+    ret = OH_VideoEncoder_GetSurface(this->avCodec, &this->nativeWindow);
+    OH_LOG_INFO(LOG_APP, "配置视频窗口：%o", ret);
+}
+
+acgist::VideoEncoder::~VideoEncoder() {
+    if(this->avCodec != nullptr) {
+        OH_AVErrCode ret = OH_VideoEncoder_Destroy(this->avCodec);
+        this->avCodec = nullptr;
+        OH_LOG_INFO(LOG_APP, "释放视频编码器：%o", ret);
+    }
+    if(this->nativeWindow != nullptr) {
+        OH_NativeWindow_DestroyNativeWindow(this->nativeWindow);
+        this->nativeWindow = nullptr;
+        OH_LOG_INFO(LOG_APP, "释放视频窗口");
+    }
+}
+
+void acgist::VideoEncoder::initFormatConfig(OH_AVFormat* format) {
+    // https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/avcodec/video-encoding.md
+    // 配置视频宽度
+    OH_AVFormat_SetIntValue(format, OH_MD_KEY_WIDTH, acgist::width);
+    // 配置视频高度
+    OH_AVFormat_SetIntValue(format, OH_MD_KEY_HEIGHT, acgist::height);
+    // 配置视频比特率
+    OH_AVFormat_SetLongValue(format, OH_MD_KEY_BITRATE, acgist::bitrate);
+    // 配置视频帧率
+    OH_AVFormat_SetDoubleValue(format, OH_MD_KEY_FRAME_RATE, acgist::frameRate);
+    // 配置视频颜色格式
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_PIXEL_FORMAT, AV_PIXEL_FORMAT_YUVI420);
-    // OH_AVFormat_SetIntValue(format, OH_MD_KEY_PIXEL_FORMAT, AV_PIXEL_FORMAT_NV12);
-    // 配置视频帧速率
-    OH_AVFormat_SetDoubleValue(format, OH_MD_KEY_FRAME_RATE, frameRate);
     // 配置视频YUV值范围标志
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_RANGE_FLAG, false);
     // 配置视频原色
@@ -56,24 +77,8 @@ acgist::VideoEncoder::VideoEncoder() {
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_PROFILE, static_cast<int32_t>(OH_AVCProfile::AVC_PROFILE_BASELINE));
     // 配置编码比特率模式
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_VIDEO_ENCODE_BITRATE_MODE, static_cast<int32_t>(OH_VideoEncodeBitrateMode::CBR));
-    // 配置比特率
-    OH_AVFormat_SetLongValue(format, OH_MD_KEY_BITRATE, bitrate);
     // 配置所需的编码质量：只有在恒定质量模式下配置的编码器才支持此配置
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_QUALITY, 0);
-    ret = OH_VideoEncoder_Configure(this->avCodec, format);
-    OH_AVFormat_Destroy(format);
-    OH_LOG_INFO(LOG_APP, "配置编码参数：%o %d %d %f %ld", ret, width, height, frameRate, bitrate);
-    ret = OH_VideoEncoder_Prepare(this->avCodec);
-    OH_LOG_INFO(LOG_APP, "视频编码准备就绪：%o", ret);
-    ret = OH_VideoEncoder_GetSurface(this->avCodec, &this->nativeWindow);
-    OH_LOG_INFO(LOG_APP, "配置surface：%o", ret);
-}
-
-acgist::VideoEncoder::~VideoEncoder() {
-    OH_AVErrCode ret = OH_VideoEncoder_Destroy(this->avCodec);
-    this->avCodec = nullptr;
-    OH_LOG_INFO(LOG_APP, "释放视频编码器：%o", ret);
-    // TODO: delete nativeWindow
 }
 
 void acgist::VideoEncoder::restart() {
@@ -117,7 +122,7 @@ void acgist::VideoEncoder::resetDoubleConfig(const char* key, double value) {
 bool acgist::VideoEncoder::start() {
     OH_AVErrCode ret = OH_VideoEncoder_Start(this->avCodec);
     OH_LOG_INFO(LOG_APP, "开始视频编码：%o", ret);
-    return true;
+    return ret == OH_AVErrCode::AV_ERR_OK;
 }
 
 bool acgist::VideoEncoder::stop() {
@@ -125,7 +130,7 @@ bool acgist::VideoEncoder::stop() {
     OH_LOG_INFO(LOG_APP, "通知视频编码结束：%o", ret);
     ret = OH_VideoEncoder_Stop(this->avCodec);
     OH_LOG_INFO(LOG_APP, "结束视频编码：%o", ret);
-    return true;
+    return ret == OH_AVErrCode::AV_ERR_OK;
 }
 
 static void OnError(OH_AVCodec* codec, int32_t errorCode, void* userData) {
@@ -146,18 +151,6 @@ static void OnNewOutputBuffer(OH_AVCodec* codec, uint32_t index, OH_AVBuffer* bu
     OH_AVCodecBufferAttr info;
     OH_AVErrCode ret = OH_AVBuffer_GetBufferAttr(buffer, &info);
     char* data = reinterpret_cast<char*>(OH_AVBuffer_GetAddr(buffer));
-    // TODO: 解析
-    rtc::scoped_refptr<webrtc::I420Buffer> videoFrameBuffer = webrtc::I420Buffer::Copy(width, height, (uint8_t*) data, 0, (uint8_t*) data, 0, (uint8_t*) data, 0);
-    // webrtc::NV12Buffer::Create(width, height);
-    webrtc::VideoFrame::Builder builder;
-    webrtc::VideoFrame videoFrame = builder
-        .set_timestamp_ms(rtc::TimeMillis())
-        .set_video_frame_buffer(videoFrameBuffer)
-        .build();
-    for (auto iterator = videoCapturer->map.begin(); iterator != videoCapturer->map.end(); ++iterator) {
-        iterator->second->OnFrame(videoFrame);
-    }
-    // TODO: 释放webrtc
-    videoFrameBuffer->Release();
+    // TODO: 继续处理
     ret = OH_VideoEncoder_FreeOutputBuffer(codec, index);
 }

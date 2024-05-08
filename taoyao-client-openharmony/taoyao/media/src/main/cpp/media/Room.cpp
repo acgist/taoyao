@@ -180,7 +180,7 @@ int acgist::Room::produceAudio() {
     };
     this->audioProducer = this->sendTransport->Produce(
         this->producerListener,
-        this->audioTrack,
+        this->audioTrack.get(),
         nullptr,
         &codecOptions,
         nullptr
@@ -224,7 +224,7 @@ int acgist::Room::produceVideo() {
     // nlohmann::json codec = this->device->GetRtpCapabilities()["codec"];
     this->videoProducer = this->sendTransport->Produce(
         this->producerListener,
-        this->videoTrack,
+        this->videoTrack.get(),
         nullptr,
         &codecOptions,
         nullptr
@@ -303,7 +303,7 @@ int acgist::Room::newRemoteClient(const std::string& clientId, const std::string
     if(oldClient != this->clients.end()) {
         OH_LOG_INFO(LOG_APP, "已经存在远程终端：%s", clientId.data());
         delete oldClient->second;
-        oldClient->second = null;
+        oldClient->second = nullptr;
         this->clients.erase(oldClient);
     }
     OH_LOG_INFO(LOG_APP, "新增远程终端：%s", clientId.data());
@@ -324,7 +324,7 @@ int acgist::Room::closeRemoteClient(const std::string& clientId) {
     OH_LOG_INFO(LOG_APP, "删除远程终端：%s", clientId.data());
     delete client->second;
     client->second = nullptr;
-    this->clients->erase(client);
+    this->clients.erase(client);
     // TODO: 清理consumerIdClientId
     return 0;
 }
@@ -347,9 +347,9 @@ int acgist::Room::newConsumer(nlohmann::json& body) {
     if(oldClient == this->clients.end()) {
         // 假如媒体上来时间比进入房间消息快：基本上不可能出现这种情况
         client = new acgist::RemoteClient(this->mediaManager);
-        client->clientId = clientId;
-        client->name     = clientId;
-        this->clients.insert({ clientId, client });
+        client->clientId = sourceId;
+        client->name     = sourceId;
+        this->clients.insert({ sourceId, client });
     } else {
         client = oldClient->second;
     }
@@ -412,14 +412,14 @@ int acgist::Room::closeProducer(const std::string& producerId) {
         OH_LOG_INFO(LOG_APP, "关闭音频生产者：%s", producerId.data());
         this->audioProducer->Close();
         delete this->audioProducer;
-        this->audioProducer == nullptr;
+        this->audioProducer = nullptr;
         // TODO: 释放
         // this->videoTrack->Dspo
     } else if(this->videoProducer != nullptr && this->videoProducer->GetId() == producerId) {
         OH_LOG_INFO(LOG_APP, "关闭视频生产者：%s", producerId.data());
         this->videoProducer->Close();
         delete this->videoProducer;
-        this->videoProducer == nullptr;
+        this->videoProducer = nullptr;
         // TODO: 释放
         // this->videoTrack->Dspo
     } else {
@@ -465,11 +465,11 @@ acgist::SendListener::~SendListener() {
 std::future<void> acgist::SendListener::OnConnect(mediasoupclient::Transport* transport, const nlohmann::json& dtlsParameters) {
     OH_LOG_INFO(LOG_APP, "连接发送通道：%s - %s", this->room->roomId.data(), transport->GetId().data());
     nlohmann::json requestBody = {
-        { "roomId",           this->roomId       },
+        { "roomId",           this->room->roomId },
         { "transportId",      transport->GetId() },
         { "dtlsParameters",   dtlsParameters     },
     };
-    std::string response = acgist::send("media::transport::webrtc::connect", requestBody.dump());
+    acgist::push("media::transport::webrtc::connect", requestBody.dump());
     std::promise<void> promise;
     promise.set_value();
     return promise.get_future();
@@ -480,11 +480,11 @@ void acgist::SendListener::OnConnectionStateChange(mediasoupclient::Transport* t
     // TODO: 异常关闭逻辑
 }
 
-std::future<std::string> acgist::SendListener::OnProduce(mediasoupclient::SendTransport* transport, const std::string& kind, nlohmann::json rtpParameters, const nlohmann::json& appData) override {
+std::future<std::string> acgist::SendListener::OnProduce(mediasoupclient::SendTransport* transport, const std::string& kind, nlohmann::json rtpParameters, const nlohmann::json& appData) {
     OH_LOG_INFO(LOG_APP, "生产媒体：%s - %s - %s", this->room->roomId.data(), transport->GetId().data(), kind.data());
     nlohmann::json requestBody = {
         { "kind",          kind               },
-        { "roomId",        this.roomId        },
+        { "roomId",        this->room->roomId },
         { "transportId",   transport->GetId() },
         { "rtpParameters", rtpParameters      },
     };
@@ -497,7 +497,7 @@ std::future<std::string> acgist::SendListener::OnProduce(mediasoupclient::SendTr
     return promise.get_future();
 }
 
-std::future<std::string> acgist::SendListener::OnProduceData(mediasoupclient::SendTransport* transport, const nlohmann::json& sctpStreamParameters, const std::string& label, const std::string& protocol, const nlohmann::json& appData) override; {
+std::future<std::string> acgist::SendListener::OnProduceData(mediasoupclient::SendTransport* transport, const nlohmann::json& sctpStreamParameters, const std::string& label, const std::string& protocol, const nlohmann::json& appData) {
     OH_LOG_INFO(LOG_APP, "生产数据：%s - %s - %s - %s", this->room->roomId.data(), transport->GetId().data(), label.data(), protocol.data());
     // TODO: 代码实现
     std::promise<std::string> promise;
@@ -514,11 +514,11 @@ acgist::RecvListener::~RecvListener() {
 std::future<void> acgist::RecvListener::OnConnect(mediasoupclient::Transport* transport, const nlohmann::json& dtlsParameters) {
     OH_LOG_INFO(LOG_APP, "连接接收通道：%s - %s", this->room->roomId.data(), transport->GetId().data());
     nlohmann::json requestBody = {
-        { "roomId",           this->roomId       },
+        { "roomId",           this->room->roomId },
         { "transportId",      transport->GetId() },
         { "dtlsParameters",   dtlsParameters     },
     };
-    std::string response = acgist::send("media::transport::webrtc::connect", requestBody.dump());
+    acgist::push("media::transport::webrtc::connect", requestBody.dump());
     std::promise<void> promise;
     promise.set_value();
     return promise.get_future();

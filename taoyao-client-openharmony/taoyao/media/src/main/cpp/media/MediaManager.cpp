@@ -14,7 +14,7 @@
 #include <api/video_codecs/builtin_video_decoder_factory.h>
 #include <api/video_codecs/builtin_video_encoder_factory.h>
 
-static std::mutex lockMutex;
+static std::mutex mediaMutex;
 
 acgist::MediaManager::MediaManager() {
 }
@@ -28,6 +28,9 @@ bool acgist::MediaManager::init() {
 }
 
 bool acgist::MediaManager::newPeerConnectionFactory() {
+    if(this->peerConnectionFactory != nullptr) {
+        return true;
+    }
     OH_LOG_INFO(LOG_APP, "加载PeerConnectionFactory");
     this->networkThread   = rtc::Thread::CreateWithSocketServer();
     this->signalingThread = rtc::Thread::Create();
@@ -49,11 +52,8 @@ bool acgist::MediaManager::newPeerConnectionFactory() {
         nullptr /* default_adm */,
         webrtc::CreateBuiltinAudioEncoderFactory(),
         webrtc::CreateBuiltinAudioDecoderFactory(),
-        nullptr,
-        nullptr,
-        // TODO: 视频工厂
-        // webrtc::CreateBuiltinVideoEncoderFactory(),
-        // webrtc::CreateBuiltinVideoDecoderFactory(),
+        webrtc::CreateBuiltinVideoEncoderFactory(),
+        webrtc::CreateBuiltinVideoDecoderFactory(),
         nullptr /* audio_mixer      */,
         nullptr /* audio_processing */
     );
@@ -61,6 +61,9 @@ bool acgist::MediaManager::newPeerConnectionFactory() {
 }
 
 bool acgist::MediaManager::releasePeerConnectionFactory() {
+    if(this->peerConnectionFactory == nullptr) {
+        return true;
+    }
     OH_LOG_INFO(LOG_APP, "释放PeerConnectionFactory");
     // TODO：释放
     return true;
@@ -68,7 +71,7 @@ bool acgist::MediaManager::releasePeerConnectionFactory() {
 
 int acgist::MediaManager::newLocalClient() {
     {
-        std::lock_guard<std::mutex> mediaLock(lockMutex);
+        std::lock_guard<std::mutex> mediaLock(mediaMutex);
         this->localClientRef++;
         if(this->localClientRef > 0) {
             this->newPeerConnectionFactory();
@@ -79,7 +82,7 @@ int acgist::MediaManager::newLocalClient() {
 
 int acgist::MediaManager::releaseLocalClient() {
     {
-        std::lock_guard<std::mutex> mediaLock(lockMutex);
+        std::lock_guard<std::mutex> mediaLock(mediaMutex);
         this->localClientRef--;
         if(this->localClientRef <= 0) {
             if(this->localClientRef < 0) {
