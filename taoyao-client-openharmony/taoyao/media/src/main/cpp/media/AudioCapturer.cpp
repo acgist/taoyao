@@ -39,6 +39,10 @@ acgist::AudioCapturer::~AudioCapturer() {
 }
 
 bool acgist::AudioCapturer::start() {
+    if(this->running) {
+        return true;
+    }
+    this->running = true;
     // 构造音频采集器
     OH_AudioStream_Result ret = OH_AudioStreamBuilder_GenerateCapturer(this->builder, &this->audioCapturer);
     OH_LOG_DEBUG(LOG_APP, "构造音频采集器：%o", ret);
@@ -49,6 +53,10 @@ bool acgist::AudioCapturer::start() {
 }
 
 bool acgist::AudioCapturer::stop() {
+    if(!this->running) {
+        return true;
+    }
+    this->running = false;
     if(this->audioCapturer == nullptr) {
         return true;
     }

@@ -52,6 +52,9 @@ namespace acgist {
 template <typename Sink>
 class Capturer {
     
+protected:
+    bool running = false;
+    
 public:
     // id = rtc::scoped_refptr
     std::map<std::string, Sink*> map;

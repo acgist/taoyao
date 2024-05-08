@@ -71,6 +71,10 @@ acgist::VideoCapturer::~VideoCapturer() {
 }
 
 bool acgist::VideoCapturer::start() {
+    if (this->running) {
+        return true;
+    }
+    this->running = true;
     OH_CaptureSession_BeginConfig(this->cameraCaptureSession);
     Camera_ErrorCode ret = OH_CaptureSession_AddVideoOutput(this->cameraCaptureSession, this->cameraVideoOutput);
     OH_LOG_INFO(LOG_APP, "视频捕获绑定会话：%o", ret);
@@ -90,6 +94,10 @@ bool acgist::VideoCapturer::start() {
 }
 
 bool acgist::VideoCapturer::stop() {
+    if (!this->running) {
+        return true;
+    }
+    this->running = false;
     OH_NativeImage_DetachContext(this->nativeImage);
     OH_CaptureSession_BeginConfig(this->cameraCaptureSession);
     Camera_ErrorCode ret = OH_CaptureSession_RemoveVideoOutput(this->cameraCaptureSession, this->cameraVideoOutput);
@@ -106,7 +114,8 @@ bool acgist::VideoCapturer::stop() {
 void acgist::VideoCapturer::initOpenGLES() {
     // IMAGE WINDOW
     glGenTextures(this->textureSize, &this->textureId);
-    this->nativeImage  = OH_NativeImage_Create(this->textureId, GL_TEXTURE_2D);
+    this->nativeImage = OH_NativeImage_Create(this->textureId, GL_TEXTURE_2D);
+    // TODO: 验证是否需要window
 //    this->nativeWindow = OH_NativeImage_AcquireNativeWindow(this->nativeImage);
 //    OH_NativeWindow_NativeWindowHandleOpt(this->nativeWindow, SET_BUFFER_GEOMETRY, acgist::width, acgist::height);
 //    OH_NativeWindow_NativeWindowHandleOpt(this->nativeWindow, SET_TIMEOUT, 100'000);
@@ -168,15 +177,30 @@ void acgist::VideoCapturer::initOpenGLES() {
 }
 
 void acgist::VideoCapturer::releaseOpenGLES() {
-    glDeleteTextures(this->textureSize, &this->textureId);
-    EGLBoolean ret = eglDestroySurface(this->eglDisplay, this->eglSurface);
-    OH_LOG_INFO(LOG_APP, "销毁EGLSurface：%d", ret);
-    ret = eglDestroyContext(this->eglDisplay, this->eglContext);
-    OH_LOG_INFO(LOG_APP, "销毁EGLContext：%d", ret);
-    OH_NativeImage_Destroy(&this->nativeImage);
-    this->nativeImage = nullptr;
-    OH_NativeWindow_DestroyNativeWindow(this->nativeWindow);
-    this->nativeWindow = nullptr;
+    if(this->textureId != 0) {
+        glDeleteTextures(this->textureSize, &this->textureId);
+        this->textureId = 0;
+    }
+    if(this->eglSurface != EGL_NO_SURFACE) {
+        EGLBoolean ret = eglDestroySurface(this->eglDisplay, this->eglSurface);
+        this->eglSurface = EGL_NO_SURFACE;
+        OH_LOG_INFO(LOG_APP, "销毁EGLSurface：%d", ret);
+    }
+    if(this->eglContext != EGL_NO_CONTEXT) {
+        EGLBoolean ret = eglDestroyContext(this->eglDisplay, this->eglContext);
+        this->eglContext = EGL_NO_CONTEXT;
+        OH_LOG_INFO(LOG_APP, "销毁EGLContext：%d", ret);
+    }
+    if(this->nativeImage != nullptr) {
+        OH_NativeImage_Destroy(&this->nativeImage);
+        this->nativeImage = nullptr;
+        OH_LOG_INFO(LOG_APP, "销毁nativeImage");
+    }
+    if(this->nativeWindow != nullptr) {
+        OH_NativeWindow_DestroyNativeWindow(this->nativeWindow);
+        this->nativeWindow = nullptr;
+        OH_LOG_INFO(LOG_APP, "销毁nativeWindow");
+    }
 }
 
 static void onError(Camera_VideoOutput* videoOutput, Camera_ErrorCode errorCode) {
