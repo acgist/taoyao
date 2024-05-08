@@ -13,12 +13,12 @@ static int32_t OnInterruptEvent(OH_AudioCapturer* capturer, void* userData, OH_A
 acgist::AudioCapturer::AudioCapturer() {
     OH_AudioStream_Result ret = OH_AudioStreamBuilder_Create(&this->builder, AUDIOSTREAM_TYPE_RENDERER);
     OH_LOG_INFO(LOG_APP, "构造音频构造器：%o", ret);
-    // 配置音频参数
+    // 配置音频录制参数
     OH_AudioStreamBuilder_SetSamplingRate(this->builder, acgist::samplingRate);
     OH_AudioStreamBuilder_SetChannelCount(this->builder, acgist::channelCount);
     OH_AudioStreamBuilder_SetLatencyMode(this->builder,  OH_AudioStream_LatencyMode::AUDIOSTREAM_LATENCY_MODE_NORMAL);
     OH_AudioStreamBuilder_SetSampleFormat(this->builder, OH_AudioStream_SampleFormat::AUDIOSTREAM_SAMPLE_S16LE);
-    OH_LOG_DEBUG(LOG_APP, "配置音频参数：%d %d", acgist::samplingRate, acgist::channelCount);
+    OH_LOG_DEBUG(LOG_APP, "配置音频录制参数：%d %d", acgist::samplingRate, acgist::channelCount);
     // 设置回调函数
     OH_AudioCapturer_Callbacks callbacks;
     callbacks.OH_AudioCapturer_OnError          = OnError;
@@ -26,7 +26,7 @@ acgist::AudioCapturer::AudioCapturer() {
     callbacks.OH_AudioCapturer_OnStreamEvent    = OnStreamEvent;
     callbacks.OH_AudioCapturer_OnInterruptEvent = OnInterruptEvent;
     ret = OH_AudioStreamBuilder_SetCapturerCallback(this->builder, callbacks, this);
-    OH_LOG_DEBUG(LOG_APP, "设置回调函数：%o", ret);
+    OH_LOG_DEBUG(LOG_APP, "设置录制回调函数：%o", ret);
 }
 
 acgist::AudioCapturer::~AudioCapturer() {

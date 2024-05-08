@@ -12,12 +12,20 @@
 #ifndef TAOYAO_PALYER_HPP
 #define TAOYAO_PALYER_HPP
 
+#include "./Signal.hpp"
+
+#include <ohaudio/native_audiorenderer.h>
+#include <ohaudio/native_audiostreambuilder.h>
+
 namespace acgist {
 
 /**
  * 播放器
  */
 class Player {
+    
+protected:
+    bool running = false;
     
 public:
     Player();
@@ -27,7 +35,7 @@ public:
     // 开始播放
     virtual bool start() = 0;
     // 结束播放
-    virtual bool stop() = 0;
+    virtual bool stop()  = 0;
     
 };
 
@@ -37,12 +45,18 @@ public:
 class AudioPlayer: public Player {
 
 public:
+    // 音频构造器
+    OH_AudioStreamBuilder* builder  = nullptr;
+    // 音频播放器
+    OH_AudioRenderer* audioRenderer = nullptr;;
+
+public:
     AudioPlayer();
     virtual ~AudioPlayer();
 
 public:
     virtual bool start() override;
-    virtual bool stop() override;
+    virtual bool stop()  override;
     
 };
 
@@ -59,7 +73,7 @@ public:
 
 public:
     virtual bool start() override;
-    virtual bool stop() override;
+    virtual bool stop()  override;
     
 };
 
