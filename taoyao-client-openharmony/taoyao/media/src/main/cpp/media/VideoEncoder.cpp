@@ -1,4 +1,4 @@
-#include "../include/Capturer.hpp"
+#include "../include/WebRTC.hpp"
 
 #include "hilog/log.h"
 
@@ -146,7 +146,6 @@ static void OnNeedInputBuffer(OH_AVCodec* codec, uint32_t index, OH_AVBuffer* bu
 }
 
 static void OnNewOutputBuffer(OH_AVCodec* codec, uint32_t index, OH_AVBuffer* buffer, void* userData) {
-    acgist::VideoCapturer* videoCapturer = (acgist::VideoCapturer*) userData;
     // TODO: 全局是否性能更好
     OH_AVCodecBufferAttr info;
     OH_AVErrCode ret = OH_AVBuffer_GetBufferAttr(buffer, &info);

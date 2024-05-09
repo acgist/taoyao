@@ -42,6 +42,9 @@ acgist::VideoCapturer::VideoCapturer() {
     OH_LOG_INFO(LOG_APP, "获取摄像头输出功能：%o %d %d", ret, this->cameraIndex, this->cameraOutputCapability->videoProfilesSize);
     // 注册相机状态回调
     // OH_CameraManager_RegisterCallback(this->cameraManager, CameraManager_Callbacks* callback);
+//    char surfaceId[OH_XCOMPONENT_ID_LEN_MAX + 1] = {};
+//    uint64_t idSize = OH_XCOMPONENT_ID_LEN_MAX + 1;
+//    OH_NativeXComponent_GetXComponentId((OH_NativeXComponent*) this->nativeWindow, surfaceId, idSize);
     ret = OH_CameraManager_CreateVideoOutput(this->cameraManager, this->cameraOutputCapability->videoProfiles[0], (char*) this->surfaceId, &this->cameraVideoOutput);
     OH_LOG_INFO(LOG_APP, "创建摄像头视频输出：%o", ret);
     ret = OH_CameraManager_CreateCaptureSession(this->cameraManager, &this->cameraCaptureSession);
@@ -109,6 +112,46 @@ bool acgist::VideoCapturer::stop() {
     // OH_VideoOutput_UnregisterCallback(this->cameraVideoOutput, callback);
     OH_LOG_INFO(LOG_APP, "结束视频捕获：%o", ret);
     return ret = Camera_ErrorCode::CAMERA_OK;
+}
+
+void acgist::VideoCapturer::initVulkan() {
+    // vkApplicationInfo
+    this->vkApplicationInfo.sType            = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+    this->vkApplicationInfo.apiVersion       = VK_API_VERSION_1_3;
+    this->vkApplicationInfo.pEngineName      = "vulkan-taoyao";
+    this->vkApplicationInfo.pApplicationName = "vulkan-taoyao";
+    OH_LOG_INFO(LOG_APP, "配置vkApplicationInfo");
+    // vkInstanceCreateInfo
+    this->vkInstanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    this->vkInstanceCreateInfo.pNext = NULL;
+    this->vkInstanceCreateInfo.pApplicationInfo = &this->vkApplicationInfo;
+    OH_LOG_INFO(LOG_APP, "配置vkInstanceCreateInfo");
+    // vkInstanceCreateInfo
+    std::vector<const char*> instanceExtensions = {
+        VK_KHR_SURFACE_EXTENSION_NAME,
+        VK_OHOS_SURFACE_EXTENSION_NAME
+    };
+    vkInstanceCreateInfo.enabledExtensionCount   = static_cast<uint32_t>(instanceExtensions.size());
+    vkInstanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.data();
+    OH_LOG_INFO(LOG_APP, "配置vkInstanceCreateInfo");
+    VkResult ret = vkCreateInstance(&this->vkInstanceCreateInfo, nullptr, &this->vkInstance);
+    OH_LOG_INFO(LOG_APP, "加载vkInstance：%o", ret);
+    this->vkSurfaceCreateInfoOHOS.sType  = VK_STRUCTURE_TYPE_SURFACE_CREATE_INFO_OHOS;
+    this->vkSurfaceCreateInfoOHOS.window = this->nativeWindow;
+    OH_LOG_INFO(LOG_APP, "配置vkSurfaceCreateInfoOHOS");
+    ret = vkCreateSurfaceOHOS(this->vkInstance, &this->vkSurfaceCreateInfoOHOS, nullptr, &this->vkSurfaceKHR);
+    OH_LOG_INFO(LOG_APP, "加载vkSurfaceKHR：%o", ret);
+}
+
+void acgist::VideoCapturer::releaseVulkan() {
+    if(this->vkSurfaceKHR != VK_NULL_HANDLE) {
+        vkDestroySurfaceKHR(this->vkInstance, this->vkSurfaceKHR, nullptr);
+        this->vkSurfaceKHR = VK_NULL_HANDLE;
+    }
+    if(this->vkInstance != VK_NULL_HANDLE) {
+        vkDestroyInstance(this->vkInstance, nullptr);
+        this->vkInstance = VK_NULL_HANDLE;
+    }
 }
 
 void acgist::VideoCapturer::initOpenGLES() {

@@ -35,6 +35,14 @@ class TaoyaoSignal {
   // 当前终端索引
   clientIndex: number = 99999;
 
+  init() {
+    taoyaoModule.init(JSON.stringify(setting.signal), signal.nativePush, signal.nativeRequest);
+  }
+
+  shutdown() {
+    taoyaoModule.shutdown("{}");
+  }
+
   /**
    * 连接信令
    */

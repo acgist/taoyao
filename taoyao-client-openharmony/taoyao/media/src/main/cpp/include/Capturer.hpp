@@ -19,6 +19,11 @@
 #ifndef TAOYAO_CAPTURER_HPP
 #define TAOYAO_CAPTURER_HPP
 
+#define __VULKAN__ true
+#ifndef __VULKAN__
+#define __OPENGL__ true
+#endif
+
 #include <map>
 
 #include <EGL/egl.h>
@@ -26,6 +31,8 @@
 #include <GLES3/gl32.h>
 
 #include "./Signal.hpp"
+
+#include <vulkan/vulkan.h>
 
 #include <native_image/native_image.h>
 #include <native_buffer/native_buffer.h>
@@ -39,8 +46,6 @@
 
 #include <ohaudio/native_audiocapturer.h>
 #include <ohaudio/native_audiostreambuilder.h>
-
-#include <multimedia/player_framework/native_avcodec_videoencoder.h>
 
 namespace acgist {
 
@@ -129,62 +134,35 @@ public:
 };
 
 /**
- * 视频编码
- */
-class VideoEncoder {
-    
-public:
-    // 视频编码器
-    OH_AVCodec* avCodec = nullptr;
-    // 视频窗口
-    OHNativeWindow* nativeWindow = nullptr;
-    
-public:
-    VideoEncoder();
-    virtual ~VideoEncoder();
-    
-public:
-    // 初始配置
-    void initFormatConfig(OH_AVFormat* format);
-    // 重新开始
-    void restart();
-    // 动态配置
-    void reset(OH_AVFormat* format);
-    // 动态配置
-    void resetIntConfig(const char* key, int32_t value);
-    // 动态配置
-    void resetLongConfig(const char* key, int64_t value);
-    // 动态配置
-    void resetDoubleConfig(const char* key, double value);
-    // 开始编码
-    virtual bool start();
-    // 结束编码
-    virtual bool stop();
-    
-};
-
-/**
  * 视频采集器
  */
 class VideoCapturer: public Capturer<rtc::VideoSinkInterface<webrtc::VideoFrame>> {
     
 public:
+    // ================ Vulkan ================
+    VkInstance vkInstance = VK_NULL_HANDLE;
+    VkSurfaceKHR vkSurfaceKHR = VK_NULL_HANDLE;
+    VkApplicationInfo vkApplicationInfo = {};
+    VkInstanceCreateInfo vkInstanceCreateInfo = {};
+    VkSurfaceCreateInfoOHOS vkSurfaceCreateInfoOHOS = {};
+    // ================ OpenGL ES ================
     // SurfaceId
     uint64_t surfaceId = 0;
     // OpenGL纹理指针
     GLuint textureId = 0;
     // OpenGL纹理数量
     GLsizei textureSize = 1;
-    // NativeImage
-    OH_NativeImage* nativeImage = nullptr;
-    // OHNativeWindow
-    OHNativeWindow* nativeWindow = nullptr;
     // EGL显示设备
     EGLDisplay eglDisplay = EGL_NO_DISPLAY;
     // EGL上下文
     EGLContext eglContext = EGL_NO_CONTEXT;
     // EGL Surface
     EGLSurface eglSurface = EGL_NO_SURFACE;
+    // ================ Camera ================
+    // NativeImage
+    OH_NativeImage* nativeImage = nullptr;
+    // OHNativeWindow
+    OHNativeWindow* nativeWindow = nullptr;
     // 摄像头设备数量
     uint32_t cameraSize = 0;
     // 摄像头索引
@@ -205,6 +183,8 @@ public:
     virtual ~VideoCapturer();
     
 public:
+    void initVulkan();
+    void releaseVulkan();
     void initOpenGLES();
     void releaseOpenGLES();
     virtual bool start() override;

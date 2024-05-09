@@ -1,9 +1,9 @@
 #include "../include/Player.hpp"
 
+#include <hilog/log.h>
+
 #include <ohaudio/native_audiorenderer.h>
 #include <ohaudio/native_audiostreambuilder.h>
-
-#include <hilog/log.h>
 
 // 播放回调
 static int32_t OnError(OH_AudioRenderer* renderer, void* userData, OH_AudioStream_Result error);

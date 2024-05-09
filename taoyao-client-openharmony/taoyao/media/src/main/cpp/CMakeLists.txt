@@ -8,14 +8,14 @@ project(taoyao VERSION 1.0.0 LANGUAGES C CXX)
 
 # C编译选项
 set(CMAKE_C_STANDARD 17)
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c17 -O3")
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -std=c17 -O0 -g")
+#set(CMAKE_C_FLAGS        "${CMAKE_C_FLAGS}         -std=c17 -O3")
+set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG}   -std=c17 -O0 -g")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -std=c17 -O3")
 
 # C++编译选项
 set(CMAKE_CXX_STANDARD 17)
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++17 -O0 -g")
+#set(CMAKE_CXX_FLAGS        "${CMAKE_CXX_FLAGS}         -std=c++17 -O3")
+set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -std=c++17 -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++17 -O3")
 
 option(MEDIASOUPCLIENT_LOG_DEV     OFF)
@@ -23,6 +23,8 @@ option(MEDIASOUPCLIENT_LOG_TRACE   OFF)
 option(MEDIASOUPCLIENT_BUILD_TESTS OFF)
 set(LIBWEBRTC_BINARY_PATH  "${CMAKE_CURRENT_SOURCE_DIR}/deps/webrtc/lib/")
 set(LIBWEBRTC_INCLUDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/webrtc/src/")
+
+ADD_DEFINITIONS(-DVK_USE_PLATFORM_OHOS=1)
 
 add_subdirectory("./deps/libmediasoupclient")
 
@@ -38,6 +40,7 @@ add_library(
     media/Player.cpp
     media/AudioPlayer.cpp
     media/VideoPlayer.cpp
+    media/VideoDecoder.cpp
     media/Capturer.cpp
     media/AudioCapturer.cpp
     media/VideoCapturer.cpp
@@ -61,21 +64,26 @@ target_link_libraries(
     libace_napi.z.so
     # LOG
     libhilog_ndk.z.so
+    # EGL
+    libEGL.so
+    # OpenGL ES
+    libGLESv3.so
+    # Vulkan
+    libvulkan.so
     # 音频
     libohaudio.so
     # 相机
     libohcamera.so
+    # 图片
+    libnative_image.so
     # 编码解码
     libnative_media_aenc.so
     libnative_media_venc.so
     libnative_media_core.so
     libnative_media_codecbase.so
-    # EGL
-    libEGL.so
-    libGLESv3.so
-    # 图片
-    libnative_image.so
+    # NativeBuffer
     libnative_buffer.so
+    # NativeWindow
     libnative_window.so
 )
 
