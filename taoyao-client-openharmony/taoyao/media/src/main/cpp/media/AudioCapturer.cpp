@@ -1,8 +1,10 @@
+/**
+ * 音频采集不用实现（系统已经实现）
+ * 这里只是用来学习使用
+ */
 #include "../include/Capturer.hpp"
 
 #include <hilog/log.h>
-
-#include "rtc_base/time_utils.h"
 
 // 采集回调
 static int32_t OnError(OH_AudioCapturer* capturer, void* userData, OH_AudioStream_Result error);
@@ -77,10 +79,7 @@ static int32_t OnError(OH_AudioCapturer* capturer, void* userData, OH_AudioStrea
 
 static int32_t OnReadData(OH_AudioCapturer* capturer, void* userData, void* buffer, int32_t length) {
     acgist::AudioCapturer* audioCapturer = (acgist::AudioCapturer*) userData;
-    int64_t timeMillis = rtc::TimeMillis();
-    for (auto iterator = audioCapturer->map.begin(); iterator != audioCapturer->map.end(); ++iterator) {
-        iterator->second->OnData(buffer, acgist::bitsPerSample, acgist::samplingRate, acgist::channelCount, sizeof(buffer) / 2, timeMillis);
-    }
+    audioCapturer->source->OnData(buffer, acgist::bitsPerSample, acgist::samplingRate, acgist::channelCount, sizeof(buffer) / 2);
     return 0;
 }
 

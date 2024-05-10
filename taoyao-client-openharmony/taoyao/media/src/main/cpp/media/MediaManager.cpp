@@ -2,7 +2,7 @@
 
 #include <mutex>
 
-#include "hilog/log.h"
+#include <hilog/log.h>
 
 #include "api/create_peerconnection_factory.h"
 #include "api/audio_codecs/audio_decoder_factory.h"
@@ -45,17 +45,23 @@ bool acgist::MediaManager::newPeerConnectionFactory() {
     }
     this->peerConnectionFactory = webrtc::CreatePeerConnectionFactory(
         this->networkThread.get(),
-        // worker和signaling使用相同线程
         this->workerThread.get(),
         // this->signalingThread.get(),
         this->signalingThread.get(),
-        nullptr /* default_adm */,
+        // 音频设备
+        nullptr,
+        // 音频编码
         webrtc::CreateBuiltinAudioEncoderFactory(),
+        // 音频解码
         webrtc::CreateBuiltinAudioDecoderFactory(),
+        // 视频编码
         webrtc::CreateBuiltinVideoEncoderFactory(),
+        // 视频解码
         webrtc::CreateBuiltinVideoDecoderFactory(),
-        nullptr /* audio_mixer      */,
-        nullptr /* audio_processing */
+        // 混音
+        nullptr,
+        // 音频处理
+        nullptr
     );
     return this->peerConnectionFactory != nullptr;
 }
@@ -65,7 +71,11 @@ bool acgist::MediaManager::releasePeerConnectionFactory() {
         return true;
     }
     OH_LOG_INFO(LOG_APP, "释放PeerConnectionFactory");
-    // TODO：释放
+    if(this->peerConnectionFactory != nullptr) {
+        this->peerConnectionFactory->Release();
+        // delete this->peerConnectionFactory;
+        this->peerConnectionFactory = nullptr;
+    }
     return true;
 }
 
@@ -78,6 +88,7 @@ int acgist::MediaManager::newLocalClient() {
             this->startCapture();
         }
     }
+    return this->localClientRef;
 }
 
 int acgist::MediaManager::releaseLocalClient() {
@@ -93,31 +104,56 @@ int acgist::MediaManager::releaseLocalClient() {
             }
         }
     }
+    return this->localClientRef;
 }
 
 bool acgist::MediaManager::startCapture() {
     this->startAudioCapture();
     this->startVideoCapture();
+    return true;
 }
 
 bool acgist::MediaManager::startAudioCapture() {
-
+    if(this->audioCapturer != nullptr) {
+        return true;
+    }
+    this->audioCapturer = new acgist::AudioCapturer();
+    this->audioCapturer->start();
     return true;
 }
 
 bool acgist::MediaManager::startVideoCapture() {
+    if(this->videoCapturer != nullptr) {
+        return true;
+    }
+    this->videoCapturer = new acgist::VideoCapturer();
+    this->videoCapturer->start();
     return true;
 }
 
 bool acgist::MediaManager::stopCapture() {
+    this->stopAudioCapture();
+    this->stopVideoCapture();
     return true;
 }
 
 bool acgist::MediaManager::stopAudioCapture() {
+    if(this->audioCapturer == nullptr) {
+        return true;
+    }
+    this->audioCapturer->stop();
+    delete this->audioCapturer;
+    this->audioCapturer = nullptr;
     return true;
 }
 
 bool acgist::MediaManager::stopVideoCapture() {
+    if(this->videoCapturer == nullptr) {
+        return true;
+    }
+    this->videoCapturer->stop();
+    delete this->videoCapturer;
+    this->videoCapturer = nullptr;
     return true;
 }
 
@@ -127,12 +163,11 @@ rtc::scoped_refptr<webrtc::AudioTrackInterface> acgist::MediaManager::getAudioTr
     options.auto_gain_control = true;
     options.echo_cancellation = true;
     options.noise_suppression = true;
-    auto audioSource = this->peerConnectionFactory->CreateAudioSource(options);
-    return this->peerConnectionFactory->CreateAudioTrack("taoyao-audio", audioSource.get());
+    this->audioTrackSource = this->peerConnectionFactory->CreateAudioSource(options);
+    return this->peerConnectionFactory->CreateAudioTrack("taoyao-audio", audioTrackSource.get());
 }
 
 rtc::scoped_refptr<webrtc::VideoTrackInterface> acgist::MediaManager::getVideoTrack() {
-//     webrtc::VideoTrackSourceInterface videoSource;
-//     this->peerConnectionFactory->CreateVideoTrack("taoyao-video", videoSource);
-    return nullptr;
+    this->videoTrackSource = new rtc::RefCountedObject<acgist::TaoyaoVideoTrackSource>();
+    return this->peerConnectionFactory->CreateVideoTrack("taoyao-video", this->videoTrackSource);
 }

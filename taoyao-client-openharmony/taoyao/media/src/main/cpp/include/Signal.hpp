@@ -7,7 +7,6 @@
 #ifndef TAOYAO_SIGNAL_HPP
 #define TAOYAO_SIGNAL_HPP
 
-#include <bits/alltypes.h>
 #include <string>
 
 #include <json.hpp>

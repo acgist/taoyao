@@ -13,15 +13,15 @@
       {
         "name": "default",
         "material": {
-          "signAlg" : "SHA256withECDSA",
-          "keyAlias": "debugKey",
-          "profile"      : "C:/Users/acgis/.ohos/config/openharmony/default_taoyao_RrmPaKOZ5zMCU4QlpK1kz_6UoyvfsA4RcQxqexSUJ_8=.p7b",
-          "certpath"     : "C:/Users/acgis/.ohos/config/openharmony/default_taoyao_RrmPaKOZ5zMCU4QlpK1kz_6UoyvfsA4RcQxqexSUJ_8=.cer",
-          "storeFile"    : "C:/Users/acgis/.ohos/config/openharmony/default_taoyao_RrmPaKOZ5zMCU4QlpK1kz_6UoyvfsA4RcQxqexSUJ_8=.p12",
-          "keyPassword"  : "0000001B8701B2982D8D56F7049724D2E89B72966750D8E2D94B37DDF1538D9D16EB00C8D4DA39EE4C0FC7",
-          "storePassword": "0000001B64642A0B174393A9875F6FCDE476F4BA4682F1EF92210832926366EA9E075136DCBB6361C9D4DD"
+          "keyAlias" : "debugKey",
+          "signAlg"  : "SHA256withECDSA",
+          "profile"  : "C:/Users/acgis/.ohos/config/openharmony/default_taoyao_RrmPaKOZ5zMCU4QlpK1kz_6UoyvfsA4RcQxqexSUJ_8=.p7b",
+          "certpath" : "C:/Users/acgis/.ohos/config/openharmony/default_taoyao_RrmPaKOZ5zMCU4QlpK1kz_6UoyvfsA4RcQxqexSUJ_8=.cer",
+          "storeFile": "C:/Users/acgis/.ohos/config/openharmony/default_taoyao_RrmPaKOZ5zMCU4QlpK1kz_6UoyvfsA4RcQxqexSUJ_8=.p12",
+          "keyPassword"  : "0000001BD55750CF879F40EE4EA1B96386BD83692A36E1776974D52D7439FEEEFCB8D2EC5C798FC7C815AE",
+          "storePassword": "0000001B2AC157AB2A1227E77D5E4925A0B59DE84E94B4D146D9C4DA5EAB030537941F0436A3C3E9F26424"
         }
-      }
+      },
     ],
   },
   "modules": [

@@ -9,13 +9,16 @@
 #include <multimedia/player_framework/native_avcodec_base.h>
 #include <multimedia/player_framework/native_avcapability.h>
 
+#include "api/video_codecs/video_encoder.h"
+#include "api/video_codecs/video_decoder.h"
+
 // 编码回调
 static void OnError(OH_AVCodec* codec, int32_t errorCode, void* userData);
 static void OnStreamChanged(OH_AVCodec* codec, OH_AVFormat* format, void* userData);
 static void OnNeedInputBuffer(OH_AVCodec* codec, uint32_t index, OH_AVBuffer* buffer, void* userData);
 static void OnNewOutputBuffer(OH_AVCodec* codec, uint32_t index, OH_AVBuffer* buffer, void* userData);
     
-acgist::VideoEncoder::VideoEncoder() {
+acgist::TaoyaoVideoEncoder::TaoyaoVideoEncoder() {
     OH_AVCapability* capability = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_VIDEO_AVC, true);
     const char* codecName = OH_AVCapability_GetName(capability);
     this->avCodec = OH_VideoEncoder_CreateByName(codecName);
@@ -29,7 +32,7 @@ acgist::VideoEncoder::VideoEncoder() {
     this->initFormatConfig(format);
     ret = OH_VideoEncoder_Configure(this->avCodec, format);
     OH_AVFormat_Destroy(format);
-    OH_LOG_INFO(LOG_APP, "配置编码参数：%o %d %d %f %ld", ret, acgist::width, acgist::height, acgist::frameRate, acgist::bitrate);
+    OH_LOG_INFO(LOG_APP, "配置编码参数：%o %d %d %f %lld", ret, acgist::width, acgist::height, acgist::frameRate, acgist::bitrate);
     // 准备就绪
     ret = OH_VideoEncoder_Prepare(this->avCodec);
     OH_LOG_INFO(LOG_APP, "视频编码准备就绪：%o", ret);
@@ -38,7 +41,7 @@ acgist::VideoEncoder::VideoEncoder() {
     OH_LOG_INFO(LOG_APP, "配置视频窗口：%o", ret);
 }
 
-acgist::VideoEncoder::~VideoEncoder() {
+acgist::TaoyaoVideoEncoder::~TaoyaoVideoEncoder() {
     if(this->avCodec != nullptr) {
         OH_AVErrCode ret = OH_VideoEncoder_Destroy(this->avCodec);
         this->avCodec = nullptr;
@@ -51,7 +54,7 @@ acgist::VideoEncoder::~VideoEncoder() {
     }
 }
 
-void acgist::VideoEncoder::initFormatConfig(OH_AVFormat* format) {
+void acgist::TaoyaoVideoEncoder::initFormatConfig(OH_AVFormat* format) {
     // https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/avcodec/video-encoding.md
     // 配置视频宽度
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_WIDTH, acgist::width);
@@ -81,21 +84,21 @@ void acgist::VideoEncoder::initFormatConfig(OH_AVFormat* format) {
     OH_AVFormat_SetIntValue(format, OH_MD_KEY_QUALITY, 0);
 }
 
-void acgist::VideoEncoder::restart() {
+void acgist::TaoyaoVideoEncoder::restart() {
     OH_AVErrCode ret = OH_VideoEncoder_Flush(this->avCodec);
     OH_LOG_INFO(LOG_APP, "清空编码队列：%o", ret);
     ret = OH_VideoEncoder_Start(this->avCodec);
     OH_LOG_INFO(LOG_APP, "开始视频编码：%o", ret);
 }
 
-void acgist::VideoEncoder::reset(OH_AVFormat* format) {
+void acgist::TaoyaoVideoEncoder::reset(OH_AVFormat* format) {
     OH_AVErrCode ret = OH_VideoEncoder_Reset(this->avCodec);
     OH_LOG_INFO(LOG_APP, "重置视频编码：%o", ret);
     ret = OH_VideoEncoder_Configure(this->avCodec, format);
     OH_LOG_INFO(LOG_APP, "配置视频编码：%o", ret);
 }
 
-void acgist::VideoEncoder::resetIntConfig(const char* key, int32_t value) {
+void acgist::TaoyaoVideoEncoder::resetIntConfig(const char* key, int32_t value) {
     OH_AVFormat* format = OH_AVFormat_Create();
     OH_AVFormat_SetIntValue(format, key, value);
     OH_AVErrCode ret = OH_VideoEncoder_SetParameter(this->avCodec, format);
@@ -103,15 +106,15 @@ void acgist::VideoEncoder::resetIntConfig(const char* key, int32_t value) {
     OH_AVFormat_Destroy(format);
 }
 
-void acgist::VideoEncoder::resetLongConfig(const char* key, int64_t value) {
+void acgist::TaoyaoVideoEncoder::resetLongConfig(const char* key, int64_t value) {
     OH_AVFormat* format = OH_AVFormat_Create();
     OH_AVFormat_SetLongValue(format, key, value);
     OH_AVErrCode ret = OH_VideoEncoder_SetParameter(this->avCodec, format);
-    OH_LOG_INFO(LOG_APP, "动态配置视频编码：%o %s %ld", ret, key, value);
+    OH_LOG_INFO(LOG_APP, "动态配置视频编码：%o %s %lld", ret, key, value);
     OH_AVFormat_Destroy(format);
 }
 
-void acgist::VideoEncoder::resetDoubleConfig(const char* key, double value) {
+void acgist::TaoyaoVideoEncoder::resetDoubleConfig(const char* key, double value) {
     OH_AVFormat* format = OH_AVFormat_Create();
     OH_AVFormat_SetDoubleValue(format, key, value);
     OH_AVErrCode ret = OH_VideoEncoder_SetParameter(this->avCodec, format);
@@ -119,18 +122,39 @@ void acgist::VideoEncoder::resetDoubleConfig(const char* key, double value) {
     OH_AVFormat_Destroy(format);
 }
 
-bool acgist::VideoEncoder::start() {
+bool acgist::TaoyaoVideoEncoder::start() {
     OH_AVErrCode ret = OH_VideoEncoder_Start(this->avCodec);
     OH_LOG_INFO(LOG_APP, "开始视频编码：%o", ret);
     return ret == OH_AVErrCode::AV_ERR_OK;
 }
 
-bool acgist::VideoEncoder::stop() {
+bool acgist::TaoyaoVideoEncoder::stop() {
     OH_AVErrCode ret = OH_VideoEncoder_NotifyEndOfStream(this->avCodec);
     OH_LOG_INFO(LOG_APP, "通知视频编码结束：%o", ret);
     ret = OH_VideoEncoder_Stop(this->avCodec);
     OH_LOG_INFO(LOG_APP, "结束视频编码：%o", ret);
     return ret == OH_AVErrCode::AV_ERR_OK;
+}
+
+int32_t acgist::TaoyaoVideoEncoder::Release() {
+    return 0;
+}
+
+int32_t acgist::TaoyaoVideoEncoder::RegisterEncodeCompleteCallback(webrtc::EncodedImageCallback* callback) {
+    return 0;
+}
+
+void acgist::TaoyaoVideoEncoder::SetRates(const webrtc::VideoEncoder::RateControlParameters& parameters) {
+}
+
+webrtc::VideoEncoder::EncoderInfo acgist::TaoyaoVideoEncoder::GetEncoderInfo() const {
+    webrtc::VideoEncoder::EncoderInfo info;
+    // TODO
+    return info;
+}
+
+int32_t acgist::TaoyaoVideoEncoder::Encode(const webrtc::VideoFrame& frame, const std::vector<webrtc::VideoFrameType>* frame_types) {
+    return 0;
 }
 
 static void OnError(OH_AVCodec* codec, int32_t errorCode, void* userData) {

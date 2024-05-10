@@ -5,16 +5,12 @@
  */
 
 import hilog from "@ohos.hilog";
+import { BusinessError } from '@ohos.base';
 import webSocket from "@ohos.net.webSocket";
 
 import { setting } from "./Setting";
 
 import taoyaoModule from "libtaoyao.so";
-
-interface BusinessError<T = void> extends Error {
-  code : number;
-  data?: T;
-}
 
 class TaoyaoSignal {
 
@@ -40,7 +36,7 @@ class TaoyaoSignal {
   }
 
   shutdown() {
-    taoyaoModule.shutdown("{}");
+    taoyaoModule.shutdown(JSON.stringify(setting.signal));
   }
 
   /**
@@ -48,36 +44,40 @@ class TaoyaoSignal {
    */
   connect() {
     if(this.socket) {
-      hilog.info(0x0000, "TaoyaoSignal", "信令以及连接关闭旧的连接：%s", setting.signalAddress);
+      hilog.info(0x0000, "TaoyaoSignal", "信令已经连接关闭旧的连接：%{public}s", setting.signalAddress);
       this.socket.close();
     }
     this.connected = false;
     this.socket = webSocket.createWebSocket();
     this.socket.on("open", (err: BusinessError, value: Object) => {
-      hilog.info(0x0000, "TaoyaoSignal", "打开信令：%s", setting.signalAddress, value, err);
+      hilog.info(0x0000, "TaoyaoSignal", "打开信令：%{public}s %{public}s %{public}s", setting.signalAddress, JSON.stringify(value), JSON.stringify(err));
       this.register();
       this.connected = true;
     });
     this.socket.on("message", (err: BusinessError, value: string | ArrayBuffer) => {
       const message = value?.toString();
-      hilog.debug(0x0000, "TaoyaoSignal", "信令消息：%s", message, err);
+      hilog.debug(0x0000, "TaoyaoSignal", "信令消息：%{public}s %{public}s", message, JSON.stringify(err));
       try {
         this.onMessage(message);
       } catch (error) {
-        hilog.error(0x0000, "TaoyaoSignal", "处理信令消息异常：%s", message, error);
+        hilog.error(0x0000, "TaoyaoSignal", "处理信令消息异常：%{public}s %{public}s", message, JSON.stringify(error));
       }
     });
     this.socket.on("close", (err: BusinessError, value: Object) => {
-      hilog.error(0x0000, "TaoyaoSignal", "关闭信令：%s", setting.signalAddress, value, err);
+      hilog.error(0x0000, "TaoyaoSignal", "关闭信令：%{public}s %{public}s %{public}s", setting.signalAddress, JSON.stringify(value), JSON.stringify(err));
       this.reconnect();
     });
     this.socket.on("error", (err: BusinessError) => {
-      hilog.error(0x0000, "TaoyaoSignal", "信令异常：%s", setting.signalAddress, err);
+      hilog.error(0x0000, "TaoyaoSignal", "信令异常：%{public}s %{public}s", setting.signalAddress, JSON.stringify(err));
       this.reconnect();
     });
-    hilog.info(0x0000, "TaoyaoSignal", "连接信令：%s", setting.signalAddress);
-    this.socket.connect(setting.signalAddress, (err: BusinessError, value: boolean) => {
-      hilog.info(0x0000, "TaoyaoSignal", "信令连接成功：%s", setting.signalAddress, value, err);
+    // 配置CA证书
+    const options: webSocket.WebSocketRequestOptions = {
+      caPath: setting.caPath
+    };
+    hilog.info(0x0000, "TaoyaoSignal", "连接信令：%{public}s %{public}s", setting.signalAddress, setting.caPath);
+    this.socket.connect(setting.signalAddress, options, (err: BusinessError, value: boolean) => {
+      hilog.info(0x0000, "TaoyaoSignal", "信令连接：%{public}s %{public}s %{public}s", setting.signalAddress, JSON.stringify(value), JSON.stringify(err));
     });
   };
 
@@ -88,7 +88,7 @@ class TaoyaoSignal {
     if(this.closed) {
       // 已经关闭忽略重连
     } else {
-      hilog.info(0x0000, "TaoyaoSignal", "重连信令连接：%s", setting.signalAddress);
+      hilog.info(0x0000, "TaoyaoSignal", "重连信令连接：%{public}s", setting.signalAddress);
       setTimeout((): void => this.connect(), 5000);
     }
   }
@@ -97,7 +97,7 @@ class TaoyaoSignal {
    * 关闭信令
    */
   close() {
-    hilog.info(0x0000, "TaoyaoSignal", "关闭信令：%s", setting.signalAddress);
+    hilog.info(0x0000, "TaoyaoSignal", "关闭信令：%{public}s", setting.signalAddress);
     this.closed    = true;
     this.connected = false;
     if(this.socket) {
@@ -121,7 +121,7 @@ class TaoyaoSignal {
     const body  = response.body as Record<string, Object>;
     const index = body.index    as number;
     this.clientIndex = index;
-    hilog.info(0x0000, "TaoyaoSignal", "信令注册成功：%d", index);
+    hilog.info(0x0000, "TaoyaoSignal", "信令注册成功：%{public}d", index);
     this.heartbeat();
   }
 
@@ -176,11 +176,12 @@ class TaoyaoSignal {
       "header": header,
       "body"  : body
     };
+    const json = JSON.stringify(message);
     try {
-      hilog.debug(0x0000, "TaoyaoSignal", "发送消息：%o", message);
-      this.socket?.send(JSON.stringify(message));
+      hilog.debug(0x0000, "TaoyaoSignal", "发送消息：%{public}s", json);
+      this.socket?.send(json);
     } catch (error) {
-      hilog.error(0x0000, "TaoyaoSignal", "发送消息异常：%o", message, error);
+      hilog.error(0x0000, "TaoyaoSignal", "发送消息异常：%{public}s %{public}s", json, JSON.stringify(error));
     }
   }
 
@@ -218,11 +219,12 @@ class TaoyaoSignal {
         return true;
       });
       // 发送消息
+      const json = JSON.stringify(message);
       try {
-        hilog.debug(0x0000, "TaoyaoSignal", "发送请求：%o", message);
-        this.socket?.send(JSON.stringify(message));
+        hilog.debug(0x0000, "TaoyaoSignal", "发送请求：%{public}s", json);
+        this.socket?.send(json);
       } catch (error) {
-        hilog.error(0x0000, "TaoyaoSignal", "发送消息异常：%o", message, error);
+        hilog.error(0x0000, "TaoyaoSignal", "发送消息异常：%{public}s %{public}s", json, JSON.stringify(error));
         reject(error);
       }
     });
@@ -239,7 +241,7 @@ class TaoyaoSignal {
     const id    : number = header.id     as number;
     const signal: string = header.signal as string;
     if (this.callbackMapping.has(id)) {
-      hilog.debug(0x0000, "TaoyaoSignal", "处理同步消息：%s", message);
+      hilog.debug(0x0000, "TaoyaoSignal", "处理同步消息：%{public}s", message);
       try {
         const callback = this.callbackMapping.get(id) as Function;
         if(callback(json)) {
@@ -292,10 +294,10 @@ class TaoyaoSignal {
         break;
       default:
         ret = -1;
-        hilog.warn(0x0000, "TaoyaoSignal", "没有适配信令：%s", signal);
+        hilog.warn(0x0000, "TaoyaoSignal", "没有适配信令：%{public}s", signal);
         break;
     }
-    hilog.debug(0x0000, "TaoyaoSignal", "处理异步消息：%d %s", ret, message);
+    hilog.debug(0x0000, "TaoyaoSignal", "处理异步消息：%{public}d %{public}s", ret, message);
   }
 
   /**

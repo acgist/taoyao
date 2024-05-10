@@ -4,12 +4,17 @@
     "externalNativeOptions": {
       "path": "./src/main/cpp/CMakeLists.txt",
       "cppFlags"  : "",
-      "arguments" : "",
+      "arguments" : "                     \
+        -DMEDIASOUPCLIENT_LOG_DEV=OFF     \
+        -DMEDIASOUPCLIENT_LOG_TRACE=OFF   \
+        -DMEDIASOUPCLIENT_BUILD_TESTS=OFF \
+      ",
       // 不要自作多情添加一些配置🤡🤡🤡🤡
       // "cppFlags"  : "-D_LIBCPP_STD_VER=17",
       // "arguments" : "-DOHOS_STL=c++_static",
       // "arguments" : "-DOHOS_STL=c++_shared",
-      "abiFilters": [ "arm64-v8a" ]
+//       "abiFilters": [ "arm64-v8a" ]
+      "abiFilters": [ "armeabi-v7a" ]
     }
   },
   "targets": [

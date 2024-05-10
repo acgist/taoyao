@@ -1,8 +1,6 @@
 /**
  * 采集器
  * 
- * TODO: 释放资源判断空指针
- * 
  * @author acgist
  * 
  * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/camera/camera-overview.md
@@ -19,6 +17,7 @@
 #ifndef TAOYAO_CAPTURER_HPP
 #define TAOYAO_CAPTURER_HPP
 
+// OpenGL ES || VULKAN
 #define __VULKAN__ true
 #ifndef __VULKAN__
 #define __OPENGL__ true
@@ -31,6 +30,7 @@
 #include <GLES3/gl32.h>
 
 #include "./Signal.hpp"
+#include "./WebRTC.hpp"
 
 #include <vulkan/vulkan.h>
 
@@ -43,6 +43,7 @@
 #include <ohcamera/capture_session.h>
 
 #include "api/media_stream_track.h"
+#include "api/media_stream_interface.h"
 
 #include <ohaudio/native_audiocapturer.h>
 #include <ohaudio/native_audiostreambuilder.h>
@@ -52,27 +53,22 @@ namespace acgist {
 /**
  * 采集器
  * 
- * @tparam Sink 输出管道
+ * @tparam Source 输出管道
  */
-template <typename Sink>
+template <typename Source>
 class Capturer {
     
 protected:
     bool running = false;
     
 public:
-    // id = rtc::scoped_refptr
-    std::map<std::string, Sink*> map;
+    Source* source;
 
 public:
     Capturer();
     virtual ~Capturer();
     
 public:
-    // 添加管道
-    virtual bool add(const std::string& id, Sink* sink);
-    // 删除管道
-    virtual bool remove(const std::string& id);
     // 开始采集
     virtual bool start() = 0;
     // 结束采集
@@ -80,42 +76,19 @@ public:
     
 };
 
-template <typename Sink>
-acgist::Capturer<Sink>::Capturer() {}
+template <typename Source>
+acgist::Capturer<Source>::Capturer() {}
 
-template <typename Sink>
-acgist::Capturer<Sink>::~Capturer() {
-    for (auto iterator = this->map.begin(); iterator != this->map.end(); ++iterator) {
-        // TODO：释放
-//        delete iterator->second;
-//        iterator->second = nullptr;
-    }
-    this->map.clear();
-}
-
-template <typename Sink>
-bool acgist::Capturer<Sink>::add(const std::string& id, Sink* sink) {
-    this->map.insert({ id, sink });
-    return true;
-}
-
-template <typename Sink>
-bool acgist::Capturer<Sink>::remove(const std::string& id) {
-    auto iterator = this->map.find(id);
-    if (iterator == this->map.end()) {
-        return false;
-    }
+template <typename Source>
+acgist::Capturer<Source>::~Capturer() {
     // TODO：释放
-//    delete iterator->second;
-//    iterator->second = nullptr;
-    this->map.erase(iterator);
-    return true;
+    // delete this->source;
 }
 
 /**
  * 音频采集器
  */
-class AudioCapturer: public Capturer<webrtc::AudioTrackSinkInterface> {
+class AudioCapturer: public Capturer<acgist::TaoyaoAudioTrackSource> {
 
 public:
     // 音频构造器
@@ -136,7 +109,7 @@ public:
 /**
  * 视频采集器
  */
-class VideoCapturer: public Capturer<rtc::VideoSinkInterface<webrtc::VideoFrame>> {
+class VideoCapturer: public Capturer<acgist::TaoyaoVideoTrackSource> {
     
 public:
     // ================ Vulkan ================

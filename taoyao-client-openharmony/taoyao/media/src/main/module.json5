@@ -64,12 +64,6 @@
           "when": "always"
         }
       },
-      {
-        "name": "ohos.permission.MEDIA_LOCATION",
-        "usedScene": {
-          "when": "always"
-        }
-      }
     ]
   }
 }

@@ -3,7 +3,7 @@
 ## 支持版本
 
 * SDK 11
-* WebRTC m114
+* WebRTC m120
 * libmediasoupclient m120
 
 ## C++终端
@@ -25,12 +25,16 @@
 ## 鸿蒙编译
 
 ```
-# WebRTC版本：m114
+# WebRTC版本：m120
 # libmediasoupclient版本：m120
 
-gn gen ./out/ohos_webrtc --args='target_os="ohos" target_cpu="arm64" is_clang=true is_debug=false use_rtti=true rtc_use_h264=true use_custom_libcxx=false rtc_include_tests=false is_component_build=false treat_warnings_as_errors=false rtc_build_examples=false libyuv_include_tests=false rtc_use_dummy_audio_file_devices=true ohos_sdk_native_root="/data/dev/ohos-sdk/linux/native"'
+# armeabi-v7a
+gn gen ./out/armeabi-v7a --args='target_os="ohos" target_cpu="arm" is_clang=true is_debug=false use_rtti=true rtc_use_h264=true rtc_use_h265=true rtc_libvpx_build_vp9=true is_component_build=false rtc_include_tests=false libyuv_include_tests=false rtc_build_examples=false treat_warnings_as_errors=false ohos_sdk_native_root="/data/dev/ohos-sdk/linux/native"'
+ninja -C ./out/armeabi-v7a -j 32
 
-ninja -C ./out/ohos_webrtc -j 32
+# arm64-v8a
+gn gen ./out/arm64-v8a --args='target_os="ohos" target_cpu="arm64" is_clang=true is_debug=false use_rtti=true rtc_use_h264=true rtc_use_h265=true rtc_libvpx_build_vp9=true is_component_build=false rtc_include_tests=false libyuv_include_tests=false rtc_build_examples=false treat_warnings_as_errors=false ohos_sdk_native_root="/data/dev/ohos-sdk/linux/native"'
+ninja -C ./out/arm64-v8a -j 32
 ```
 
 ## openharmony-sig/ohos_webrtc
