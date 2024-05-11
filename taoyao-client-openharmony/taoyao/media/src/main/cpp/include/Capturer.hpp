@@ -89,8 +89,11 @@ acgist::Capturer<Source>::Capturer() {}
 
 template <typename Source>
 acgist::Capturer<Source>::~Capturer() {
-    // TODO：释放
-    // delete this->source;
+    if(this->source != nullptr) {
+        this->source->Release();
+        // delete this->source;
+        this->source = nullptr;
+    }
 }
 
 /**

@@ -26,15 +26,13 @@ public:
     // 媒体管理
     acgist::MediaManager* mediaManager = nullptr;
     // 音频轨道
-    webrtc::AudioTrackInterface* audioTrack = nullptr;
+    rtc::scoped_refptr<webrtc::AudioTrackInterface> audioTrack = nullptr;
     // 视频轨道
-    webrtc::VideoTrackInterface* videoTrack = nullptr;
+    rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack = nullptr;
 
 public:
     Client(acgist::MediaManager* mediaManager);
     virtual ~Client();
-    
-public:
     
 };
 
@@ -42,6 +40,10 @@ public:
  * 房间终端
  */
 class RoomClient : public Client {
+    
+public:
+    // 房间ID
+    std::string roomId;
     
 public:
     RoomClient(acgist::MediaManager* mediaManager);
@@ -58,9 +60,7 @@ class LocalClient : public RoomClient {
 
 public:
     LocalClient(acgist::MediaManager* mediaManager);
-    virtual ~LocalClient();
-
-public:
+    virtual ~LocalClient() override;
     
 };
 
