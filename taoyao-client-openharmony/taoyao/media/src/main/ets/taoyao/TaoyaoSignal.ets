@@ -32,10 +32,12 @@ class TaoyaoSignal {
   clientIndex: number = 99999;
 
   init() {
-    taoyaoModule.init(JSON.stringify(setting.signal), signal.nativePush, signal.nativeRequest);
+    hilog.info(0x0000, "TaoyaoSignal", "加载系统");
+    taoyaoModule.init(JSON.stringify(setting.signal), this.nativePush, this.nativeRequest);
   }
 
   shutdown() {
+    hilog.info(0x0000, "TaoyaoSignal", "卸载系统");
     taoyaoModule.shutdown(JSON.stringify(setting.signal));
   }
 
@@ -43,9 +45,13 @@ class TaoyaoSignal {
    * 连接信令
    */
   connect() {
+    if(this.connected) {
+      return;
+    }
     if(this.socket) {
       hilog.info(0x0000, "TaoyaoSignal", "信令已经连接关闭旧的连接：%{public}s", setting.signalAddress);
       this.socket.close();
+      this.socket = null;
     }
     this.connected = false;
     this.socket = webSocket.createWebSocket();
@@ -65,17 +71,21 @@ class TaoyaoSignal {
     });
     this.socket.on("close", (err: BusinessError, value: Object) => {
       hilog.error(0x0000, "TaoyaoSignal", "关闭信令：%{public}s %{public}s %{public}s", setting.signalAddress, JSON.stringify(value), JSON.stringify(err));
+      this.connected = false;
       this.reconnect();
     });
     this.socket.on("error", (err: BusinessError) => {
       hilog.error(0x0000, "TaoyaoSignal", "信令异常：%{public}s %{public}s", setting.signalAddress, JSON.stringify(err));
+      this.connected = false;
       this.reconnect();
     });
     // 配置CA证书
+    const caPath = getContext(this).filesDir + setting.caPath;
+    hilog.info(0x0000, "TaoyaoSignal", "配置证书：%{public}s", caPath);
     const options: webSocket.WebSocketRequestOptions = {
-      caPath: setting.caPath
+      caPath: caPath
     };
-    hilog.info(0x0000, "TaoyaoSignal", "连接信令：%{public}s %{public}s", setting.signalAddress, setting.caPath);
+    hilog.info(0x0000, "TaoyaoSignal", "连接信令：%{public}s", setting.signalAddress);
     this.socket.connect(setting.signalAddress, options, (err: BusinessError, value: boolean) => {
       hilog.info(0x0000, "TaoyaoSignal", "信令连接：%{public}s %{public}s %{public}s", setting.signalAddress, JSON.stringify(value), JSON.stringify(err));
     });
@@ -102,6 +112,11 @@ class TaoyaoSignal {
     this.connected = false;
     if(this.socket) {
       this.socket.close();
+      this.socket = null;
+    }
+    if(this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = 0;
     }
   }
 
@@ -328,9 +343,6 @@ class TaoyaoSignal {
 }
 
 const signal = new TaoyaoSignal();
-
-// 加载系统
-taoyaoModule.init(JSON.stringify(setting.signal), signal.nativePush, signal.nativeRequest);
 
 export {
   signal

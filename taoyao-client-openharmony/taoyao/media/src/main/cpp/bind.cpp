@@ -40,9 +40,10 @@ static std::mutex taoyaoMutex;
     napi_value args[size] = { nullptr };                                     \
     napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);              \
     size_t length;                                                           \
-    char chars[2048];                                                        \
+    char chars[2048] = { 0 };                                                \
     napi_get_value_string_utf8(env, args[0], chars, sizeof(chars), &length); \
-    nlohmann::json json = nlohmann::json::parse(chars);                      \
+    OH_LOG_INFO(LOG_APP, "解析JSON：%s", chars);                              \
+    nlohmann::json json = nlohmann::json::parse(chars, chars + length);      \
     nlohmann::json body = json["body"];
 #endif
 
@@ -163,15 +164,15 @@ static napi_value init(napi_env env, napi_callback_info info) {
     napi_create_reference(env, args[1], 1, &acgist::pushRef);
     napi_create_reference(env, args[2], 1, &acgist::requestRef);
     printSupportCodec();
-    acgist::clientId = json["clientId"];
-    acgist::name     = json["name"];
-    OH_LOG_INFO(LOG_APP, "加载libtaoyao");
-    std::string version = mediasoupclient::Version();
-    OH_LOG_INFO(LOG_APP, "加载MediasoupClient：%s", version.data());
-    mediasoupclient::Initialize();
-    OH_LOG_INFO(LOG_APP, "加载媒体功能");
-    mediaManager = new MediaManager();
-    mediaManager->init();
+//     acgist::clientId = json["clientId"];
+//     acgist::name     = json["name"];
+//     OH_LOG_INFO(LOG_APP, "加载libtaoyao");
+//     std::string version = mediasoupclient::Version();
+//     OH_LOG_INFO(LOG_APP, "加载MediasoupClient：%s", version.data());
+//     mediasoupclient::Initialize();
+//     OH_LOG_INFO(LOG_APP, "加载媒体功能");
+//     mediaManager = new MediaManager();
+//     mediaManager->init();
     napi_create_int32(env, 0, &ret);
     return ret;
 }
@@ -465,7 +466,7 @@ static napi_value Init(napi_env env, napi_value exports) {
         { "mediaProducerPause",  nullptr, acgist::mediaProducerPause,  nullptr, nullptr, nullptr, napi_default, nullptr },
         { "mediaProducerResume", nullptr, acgist::mediaProducerResume, nullptr, nullptr, nullptr, napi_default, nullptr },
     };
-    napi_define_properties(env, exports, sizeof(desc) / sizeof(napi_property_descriptor), desc);
+    napi_define_properties(env, exports, sizeof(desc) / sizeof(desc[0]), desc);
     return exports;
 }
 EXTERN_C_END
