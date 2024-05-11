@@ -25,6 +25,7 @@ namespace acgist {
 class Player {
     
 protected:
+    // 是否运行
     bool running = false;
     
 public:

@@ -25,7 +25,7 @@ acgist::AudioCapturer::AudioCapturer() {
     OH_AudioStreamBuilder_SetLatencyMode(this->builder,  OH_AudioStream_LatencyMode::AUDIOSTREAM_LATENCY_MODE_NORMAL);
     OH_AudioStreamBuilder_SetSampleFormat(this->builder, OH_AudioStream_SampleFormat::AUDIOSTREAM_SAMPLE_S16LE);
     OH_LOG_DEBUG(LOG_APP, "配置音频采集参数：%d %d", acgist::samplingRate, acgist::channelCount);
-    // 设置采集回调
+    // 设置音频采集回调
     OH_AudioCapturer_Callbacks callbacks;
     callbacks.OH_AudioCapturer_OnError          = OnError;
     callbacks.OH_AudioCapturer_OnReadData       = OnReadData;

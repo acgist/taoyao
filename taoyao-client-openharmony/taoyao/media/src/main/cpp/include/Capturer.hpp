@@ -106,7 +106,7 @@ public:
 
 public:
     AudioCapturer();
-    virtual ~AudioCapturer();
+    virtual ~AudioCapturer() override;
     
 public:
     virtual bool start() override;
@@ -161,7 +161,7 @@ public:
 
 public:
     VideoCapturer();
-    virtual ~VideoCapturer();
+    virtual ~VideoCapturer() override;
     
 public:
     void initVulkan();
