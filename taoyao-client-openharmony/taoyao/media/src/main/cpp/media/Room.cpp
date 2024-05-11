@@ -4,7 +4,7 @@
 
 #include "hilog/log.h"
 
-static std::mutex roomMutex;
+static std::recursive_mutex roomMutex;
 
 acgist::Room::Room(const std::string& roomId, acgist::MediaManager* mediaManager) : roomId(roomId), mediaManager(mediaManager) {
     this->device = new mediasoupclient::Device();
@@ -243,7 +243,7 @@ int acgist::Room::close() {
 }
 
 int acgist::Room::closeClient() {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     OH_LOG_INFO(LOG_APP, "关闭本地终端：%s", this->roomId.data());
     if(this->client != nullptr) {
         delete this->client;
@@ -253,7 +253,7 @@ int acgist::Room::closeClient() {
 }
 
 int acgist::Room::closeClients() {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     OH_LOG_INFO(LOG_APP, "关闭远程终端：%s", this->roomId.data());
     for (auto iterator = this->clients.begin(); iterator != this->clients.end(); ++iterator) {
         if (iterator->second == nullptr) {
@@ -268,7 +268,7 @@ int acgist::Room::closeClients() {
 }
 
 int acgist::Room::closeAudioProducer() {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     OH_LOG_INFO(LOG_APP, "关闭音频生产者：%s", this->roomId.data());
     if (this->audioProducer != nullptr) {
         this->audioProducer->Close();
@@ -277,7 +277,7 @@ int acgist::Room::closeAudioProducer() {
 }
 
 int acgist::Room::closeVideoProducer() {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     OH_LOG_INFO(LOG_APP, "关闭视频生产者：%s", this->roomId.data());
     if (this->videoProducer != nullptr) {
         this->videoProducer->Close();
@@ -286,7 +286,7 @@ int acgist::Room::closeVideoProducer() {
 }
 
 int acgist::Room::closeTransport() {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     OH_LOG_INFO(LOG_APP, "关闭通道：%s", this->roomId.data());
     if (this->sendTransport != nullptr) {
         this->sendTransport->Close();
@@ -298,7 +298,7 @@ int acgist::Room::closeTransport() {
 }
 
 int acgist::Room::newRemoteClient(const std::string& clientId, const std::string& name) {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     auto oldClient = this->clients.find(clientId);
     if(oldClient != this->clients.end()) {
         OH_LOG_INFO(LOG_APP, "已经存在远程终端：%s", clientId.data());
@@ -315,7 +315,7 @@ int acgist::Room::newRemoteClient(const std::string& clientId, const std::string
 }
 
 int acgist::Room::closeRemoteClient(const std::string& clientId) {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     auto client = this->clients.find(clientId);
     if(client == this->clients.end()) {
         OH_LOG_INFO(LOG_APP, "远程终端已经删除：%s", clientId.data());
@@ -330,7 +330,7 @@ int acgist::Room::closeRemoteClient(const std::string& clientId) {
 }
 
 int acgist::Room::newConsumer(nlohmann::json& body) {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     mediasoupclient::Consumer* consumer = this->recvTransport->Consume(
         this->consumerListener,
         body["consumerId"],
@@ -359,7 +359,7 @@ int acgist::Room::newConsumer(nlohmann::json& body) {
 }
 
 int acgist::Room::closeConsumer(const std::string& consumerId) {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     auto clientId = this->consumerIdClientId.find(consumerId);
     if(clientId == this->consumerIdClientId.end()) {
         OH_LOG_INFO(LOG_APP, "关闭消费者无效：%s", consumerId.data());
@@ -375,7 +375,7 @@ int acgist::Room::closeConsumer(const std::string& consumerId) {
 }
 
 int acgist::Room::pauseConsumer(const std::string& consumerId) {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     auto clientId = this->consumerIdClientId.find(consumerId);
     if(clientId == this->consumerIdClientId.end()) {
         OH_LOG_INFO(LOG_APP, "暂停消费者无效：%s", consumerId.data());
@@ -391,7 +391,7 @@ int acgist::Room::pauseConsumer(const std::string& consumerId) {
 }
 
 int acgist::Room::resumeConsumer(const std::string& consumerId) {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     auto clientId = this->consumerIdClientId.find(consumerId);
     if(clientId == this->consumerIdClientId.end()) {
         OH_LOG_INFO(LOG_APP, "恢复消费者无效：%s", consumerId.data());
@@ -407,7 +407,7 @@ int acgist::Room::resumeConsumer(const std::string& consumerId) {
 }
 
 int acgist::Room::closeProducer(const std::string& producerId) {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     if(this->audioProducer != nullptr && this->audioProducer->GetId() == producerId) {
         OH_LOG_INFO(LOG_APP, "关闭音频生产者：%s", producerId.data());
         this->audioProducer->Close();
@@ -429,7 +429,7 @@ int acgist::Room::closeProducer(const std::string& producerId) {
 }
 
 int acgist::Room::pauseProducer(const std::string& producerId) {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     if(this->audioProducer != nullptr && this->audioProducer->GetId() == producerId) {
         OH_LOG_INFO(LOG_APP, "暂停音频生产者：%s", producerId.data());
         this->audioProducer->Pause();
@@ -443,7 +443,7 @@ int acgist::Room::pauseProducer(const std::string& producerId) {
 }
 
 int acgist::Room::resumeProducer(const std::string& producerId) {
-    std::lock_guard<std::mutex> lockRoom(roomMutex);
+    std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     if(this->audioProducer != nullptr && this->audioProducer->GetId() == producerId) {
         OH_LOG_INFO(LOG_APP, "恢复音频生产者：%s", producerId.data());
         this->audioProducer->Resume();

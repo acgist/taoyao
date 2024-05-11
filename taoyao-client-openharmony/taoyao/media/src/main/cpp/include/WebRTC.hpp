@@ -43,10 +43,18 @@ namespace acgist {
 
 /**
  * 音频轨道来源
+ * 
+ * TODO: 媒体转发
  */
-class TaoyaoAudioTrackSource : public webrtc::AudioTrackSinkInterface {
+class TaoyaoAudioTrackSource : public webrtc::AudioTrackSinkInterface, public webrtc::Notifier<webrtc::AudioSourceInterface> {
 
 public:
+    TaoyaoAudioTrackSource();
+    virtual ~TaoyaoAudioTrackSource();
+    
+public:
+    virtual webrtc::MediaSourceInterface::SourceState state() const override;
+    virtual bool remote() const override;
     virtual void OnData(const void* audio_data, int bits_per_sample, int sample_rate, size_t number_of_channels, size_t number_of_frames) override;
 
 };
@@ -55,7 +63,7 @@ public:
  * 视频管道
  */
 class VideoTrackSinkInterface {
-
+    
 public:
     virtual void OnData(const webrtc::VideoFrame& videoFrame) = 0;
 
@@ -85,10 +93,16 @@ public:
 class TaoyaoVideoEncoder : public webrtc::VideoEncoder {
     
 public:
+    // 是否运行
+    bool running = false;
     // 视频编码器
     OH_AVCodec* avCodec = nullptr;
-    // 视频窗口
-    OHNativeWindow* nativeWindow = nullptr;
+    // 缓冲数据索引
+    uint32_t index      = 0;
+    // 缓冲数据
+    OH_AVBuffer* buffer = nullptr;
+    // 编码回调
+    webrtc::EncodedImageCallback* encodedImageCallback = nullptr;
     
 public:
     TaoyaoVideoEncoder();
@@ -115,7 +129,7 @@ public:
     virtual int32_t RegisterEncodeCompleteCallback(webrtc::EncodedImageCallback* callback) override;
     virtual void SetRates(const webrtc::VideoEncoder::RateControlParameters& parameters) override;
     virtual webrtc::VideoEncoder::EncoderInfo GetEncoderInfo() const override;
-    virtual int32_t Encode(const webrtc::VideoFrame& frame, const std::vector<webrtc::VideoFrameType>* frame_types) override;
+    virtual int32_t Encode(const webrtc::VideoFrame& videoFrame, const std::vector<webrtc::VideoFrameType>* frame_types) override;
     
 };
 

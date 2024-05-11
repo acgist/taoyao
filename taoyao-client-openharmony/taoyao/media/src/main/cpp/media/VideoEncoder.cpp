@@ -36,9 +36,6 @@ acgist::TaoyaoVideoEncoder::TaoyaoVideoEncoder() {
     // 准备就绪
     ret = OH_VideoEncoder_Prepare(this->avCodec);
     OH_LOG_INFO(LOG_APP, "视频编码准备就绪：%o", ret);
-    // 配置surface
-    ret = OH_VideoEncoder_GetSurface(this->avCodec, &this->nativeWindow);
-    OH_LOG_INFO(LOG_APP, "配置视频窗口：%o", ret);
 }
 
 acgist::TaoyaoVideoEncoder::~TaoyaoVideoEncoder() {
@@ -46,11 +43,6 @@ acgist::TaoyaoVideoEncoder::~TaoyaoVideoEncoder() {
         OH_AVErrCode ret = OH_VideoEncoder_Destroy(this->avCodec);
         this->avCodec = nullptr;
         OH_LOG_INFO(LOG_APP, "释放视频编码器：%o", ret);
-    }
-    if(this->nativeWindow != nullptr) {
-        OH_NativeWindow_DestroyNativeWindow(this->nativeWindow);
-        this->nativeWindow = nullptr;
-        OH_LOG_INFO(LOG_APP, "释放视频窗口");
     }
 }
 
@@ -123,28 +115,40 @@ void acgist::TaoyaoVideoEncoder::resetDoubleConfig(const char* key, double value
 }
 
 bool acgist::TaoyaoVideoEncoder::start() {
+    if(this->running) {
+        return true;
+    }
+    this->running = true;
     OH_AVErrCode ret = OH_VideoEncoder_Start(this->avCodec);
     OH_LOG_INFO(LOG_APP, "开始视频编码：%o", ret);
     return ret == OH_AVErrCode::AV_ERR_OK;
 }
 
 bool acgist::TaoyaoVideoEncoder::stop() {
-    OH_AVErrCode ret = OH_VideoEncoder_NotifyEndOfStream(this->avCodec);
-    OH_LOG_INFO(LOG_APP, "通知视频编码结束：%o", ret);
-    ret = OH_VideoEncoder_Stop(this->avCodec);
+    if(!this->running) {
+        return true;
+    }
+    this->running = false;
+    // Surface模式
+    // OH_AVErrCode ret = OH_VideoEncoder_NotifyEndOfStream(this->avCodec);
+    // OH_LOG_INFO(LOG_APP, "通知视频编码结束：%o", ret);
+    OH_AVErrCode ret = OH_VideoEncoder_Stop(this->avCodec);
     OH_LOG_INFO(LOG_APP, "结束视频编码：%o", ret);
     return ret == OH_AVErrCode::AV_ERR_OK;
 }
 
 int32_t acgist::TaoyaoVideoEncoder::Release() {
+    // TODO: 释放资源
     return 0;
 }
 
 int32_t acgist::TaoyaoVideoEncoder::RegisterEncodeCompleteCallback(webrtc::EncodedImageCallback* callback) {
+    this->encodedImageCallback = callback;
     return 0;
 }
 
 void acgist::TaoyaoVideoEncoder::SetRates(const webrtc::VideoEncoder::RateControlParameters& parameters) {
+    // TODO: 动态调整编码
 }
 
 webrtc::VideoEncoder::EncoderInfo acgist::TaoyaoVideoEncoder::GetEncoderInfo() const {
@@ -153,7 +157,16 @@ webrtc::VideoEncoder::EncoderInfo acgist::TaoyaoVideoEncoder::GetEncoderInfo() c
     return info;
 }
 
-int32_t acgist::TaoyaoVideoEncoder::Encode(const webrtc::VideoFrame& frame, const std::vector<webrtc::VideoFrameType>* frame_types) {
+int32_t acgist::TaoyaoVideoEncoder::Encode(const webrtc::VideoFrame& videoFrame, const std::vector<webrtc::VideoFrameType>* frame_types) {
+//     frameSize = videoFrame.width * height * 3 / 2
+    // 配置buffer info信息
+    OH_AVCodecBufferAttr info;
+    info.size   = 0; // TODO
+    info.offset = 0;
+    info.pts    = 0;
+    info.flags  = 0; // TODO frame_types
+    OH_AVErrCode ret = OH_AVBuffer_SetBufferAttr(this->buffer, &info);
+    ret = OH_VideoEncoder_PushInputBuffer(this->avCodec, index);
     return 0;
 }
 
@@ -166,14 +179,38 @@ static void OnStreamChanged(OH_AVCodec* codec, OH_AVFormat* format, void* userDa
 }
 
 static void OnNeedInputBuffer(OH_AVCodec* codec, uint32_t index, OH_AVBuffer* buffer, void* userData) {
-    // 忽略
+    if(userData == nullptr) {
+        OH_VideoEncoder_PushInputBuffer(codec, index);
+        return;
+    }
+    acgist::TaoyaoVideoEncoder* videoEncoder = (acgist::TaoyaoVideoEncoder*) userData;
+    if(videoEncoder->running) {
+        videoEncoder->index  = index;
+        videoEncoder->buffer = buffer;
+    } else {
+        // 写入结束
+        OH_AVCodecBufferAttr info;
+        info.size   = 0;
+        info.offset = 0;
+        info.pts    = 0;
+        info.flags  = AVCODEC_BUFFER_FLAGS_EOS;
+        OH_AVErrCode ret = OH_AVBuffer_SetBufferAttr(buffer, &info);
+        ret = OH_VideoEncoder_PushInputBuffer(codec, index);
+        OH_LOG_INFO(LOG_APP, "通知视频编码结束：%o", ret);
+    }
 }
 
 static void OnNewOutputBuffer(OH_AVCodec* codec, uint32_t index, OH_AVBuffer* buffer, void* userData) {
+    if(userData == nullptr) {
+        OH_VideoEncoder_FreeOutputBuffer(codec, index);
+        return;
+    }
+    acgist::TaoyaoVideoEncoder* videoEncoder = (acgist::TaoyaoVideoEncoder*) userData;
     // TODO: 全局是否性能更好
     OH_AVCodecBufferAttr info;
     OH_AVErrCode ret = OH_AVBuffer_GetBufferAttr(buffer, &info);
     char* data = reinterpret_cast<char*>(OH_AVBuffer_GetAddr(buffer));
+//     videoEncoder->encodedImageCallback
     // TODO: 继续处理
     ret = OH_VideoEncoder_FreeOutputBuffer(codec, index);
 }

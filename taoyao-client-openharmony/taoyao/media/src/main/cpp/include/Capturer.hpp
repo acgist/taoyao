@@ -1,6 +1,8 @@
 /**
  * 采集器
  * 
+ * 音频默认使用OHOS实现：modules/audio_device/ohos/audio_device_template.h
+ * 
  * @author acgist
  * 
  * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/camera/camera-overview.md
@@ -18,10 +20,15 @@
 #define TAOYAO_CAPTURER_HPP
 
 // OpenGL ES || VULKAN
-#define __VULKAN__ true
-#ifndef __VULKAN__
-#define __OPENGL__ true
+#define __TAOYAO_VULKAN__ true
+#ifndef __TAOYAO_VULKAN__
+#define __TAOYAO_OPENGL__ true
 #endif
+
+// 本地音频采集
+#define __TAOYAO_AUDIO_LOCAL__ false
+// 本地视频采集
+#define __TAOYAO_VIDEO_LOCAL__ true
 
 #include <map>
 
@@ -59,6 +66,7 @@ template <typename Source>
 class Capturer {
     
 protected:
+    // 是否运行
     bool running = false;
     
 public:

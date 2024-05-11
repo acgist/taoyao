@@ -23,7 +23,7 @@ import java.util.concurrent.TimeUnit;
  * WebRtcAudioTrack#AudioTrackThread  ：远程音频
  * WebRtcAudioRecord#AudioRecordThread：本地音频
  *
- * AudioFormat.ENCODING_PCM_16BIT = 2KB
+ * AudioFormat.ENCODING_PCM_16BIT = 2Byte
  *
  * PCM时间计算：1_000_000 microseconds / 48000 hz / 2 bytes
  *

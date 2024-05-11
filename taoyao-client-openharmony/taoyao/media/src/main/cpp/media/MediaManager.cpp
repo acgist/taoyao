@@ -14,7 +14,7 @@
 #include <api/video_codecs/builtin_video_decoder_factory.h>
 #include <api/video_codecs/builtin_video_encoder_factory.h>
 
-static std::mutex mediaMutex;
+static std::recursive_mutex mediaMutex;
 
 acgist::MediaManager::MediaManager() {
 }
@@ -81,19 +81,20 @@ bool acgist::MediaManager::releasePeerConnectionFactory() {
 
 int acgist::MediaManager::newLocalClient() {
     {
-        std::lock_guard<std::mutex> mediaLock(mediaMutex);
+        std::lock_guard<std::recursive_mutex> mediaLock(mediaMutex);
         this->localClientRef++;
         if(this->localClientRef > 0) {
             this->newPeerConnectionFactory();
             this->startCapture();
         }
     }
+    OH_LOG_WARN(LOG_APP, "打开本地终端：%d", this->localClientRef);
     return this->localClientRef;
 }
 
 int acgist::MediaManager::releaseLocalClient() {
     {
-        std::lock_guard<std::mutex> mediaLock(mediaMutex);
+        std::lock_guard<std::recursive_mutex> mediaLock(mediaMutex);
         this->localClientRef--;
         if(this->localClientRef <= 0) {
             if(this->localClientRef < 0) {
@@ -104,6 +105,7 @@ int acgist::MediaManager::releaseLocalClient() {
             }
         }
     }
+    OH_LOG_WARN(LOG_APP, "关闭本地终端：%d", this->localClientRef);
     return this->localClientRef;
 }
 
@@ -114,20 +116,42 @@ bool acgist::MediaManager::startCapture() {
 }
 
 bool acgist::MediaManager::startAudioCapture() {
-    if(this->audioCapturer != nullptr) {
-        return true;
-    }
-    this->audioCapturer = new acgist::AudioCapturer();
-    this->audioCapturer->start();
+    #if __TAOYAO_AUDIO_LOCAL__
+        if (this->audioCapturer == nullptr) {
+            OH_LOG_WARN(LOG_APP, "开始音频采集");
+            this->audioCapturer = new acgist::AudioCapturer();
+            this->audioCapturer->start();
+        }
+        if(this->audioTrackSource == nullptr) {
+            OH_LOG_WARN(LOG_APP, "设置音频来源");
+            this->audioTrackSource = new rtc::RefCountedObject<acgist::TaoyaoAudioTrackSource>();
+            this->audioCapturer->source = this->audioTrackSource;
+        }
+    #else
+        if(this->audioTrackSource == nullptr) {
+            OH_LOG_WARN(LOG_APP, "设置音频来源");
+            cricket::AudioOptions options;
+            options.highpass_filter   = true;
+            options.auto_gain_control = true;
+            options.echo_cancellation = true;
+            options.noise_suppression = true;
+            this->audioTrackSource = this->peerConnectionFactory->CreateAudioSource(options);
+        }
+    #endif
     return true;
 }
 
 bool acgist::MediaManager::startVideoCapture() {
-    if(this->videoCapturer != nullptr) {
-        return true;
+    if(this->videoCapturer == nullptr) {
+        OH_LOG_WARN(LOG_APP, "开始视频采集");
+        this->videoCapturer = new acgist::VideoCapturer();
+        this->videoCapturer->start();
     }
-    this->videoCapturer = new acgist::VideoCapturer();
-    this->videoCapturer->start();
+    if(this->videoTrackSource == nullptr) {
+        OH_LOG_WARN(LOG_APP, "设置视频来源");
+        this->videoTrackSource = new rtc::RefCountedObject<acgist::TaoyaoVideoTrackSource>();
+        this->videoCapturer->source = this->videoTrackSource;
+    }
     return true;
 }
 
@@ -138,36 +162,54 @@ bool acgist::MediaManager::stopCapture() {
 }
 
 bool acgist::MediaManager::stopAudioCapture() {
-    if(this->audioCapturer == nullptr) {
-        return true;
+    #if __TAOYAO_AUDIO_LOCAL__
+    if(this->audioCapturer != nullptr) {
+        OH_LOG_WARN(LOG_APP, "停止音频采集");
+        this->audioCapturer->stop();
+        delete this->audioCapturer;
+        this->audioCapturer = nullptr;
     }
-    this->audioCapturer->stop();
-    delete this->audioCapturer;
-    this->audioCapturer = nullptr;
+    if(this->audioTrackSource != nullptr) {
+        OH_LOG_WARN(LOG_APP, "释放音频来源");
+        this->audioTrackSource->Release();
+        // delete this->AudioTrackSource;
+        this->audioTrackSource = nullptr;
+    }
+    #else
+        if(this->audioTrackSource != nullptr) {
+            OH_LOG_WARN(LOG_APP, "释放音频来源");
+            this->audioTrackSource->Release();
+            // delete this->audioTrackSource;
+            this->audioTrackSource = nullptr;
+        }
+    #endif
     return true;
 }
 
 bool acgist::MediaManager::stopVideoCapture() {
-    if(this->videoCapturer == nullptr) {
-        return true;
+    if(this->videoCapturer != nullptr) {
+        OH_LOG_WARN(LOG_APP, "停止视频采集");
+        this->videoCapturer->stop();
+        delete this->videoCapturer;
+        this->videoCapturer = nullptr;
     }
-    this->videoCapturer->stop();
-    delete this->videoCapturer;
-    this->videoCapturer = nullptr;
+    if(this->videoTrackSource != nullptr) {
+        OH_LOG_WARN(LOG_APP, "释放视频来源");
+        this->videoTrackSource->Release();
+        // delete this->videoTrackSource;
+        this->videoTrackSource = nullptr;
+    }
     return true;
 }
 
 rtc::scoped_refptr<webrtc::AudioTrackInterface> acgist::MediaManager::getAudioTrack() {
-    cricket::AudioOptions options;
-    options.highpass_filter   = true;
-    options.auto_gain_control = true;
-    options.echo_cancellation = true;
-    options.noise_suppression = true;
-    this->audioTrackSource = this->peerConnectionFactory->CreateAudioSource(options);
-    return this->peerConnectionFactory->CreateAudioTrack("taoyao-audio", audioTrackSource.get());
+    #if __TAOYAO_AUDIO_LOCAL__
+    return this->peerConnectionFactory->CreateAudioTrack("taoyao-audio", this->audioTrackSource);
+    #else
+    return this->peerConnectionFactory->CreateAudioTrack("taoyao-audio", this->audioTrackSource.get());
+    #endif
 }
 
 rtc::scoped_refptr<webrtc::VideoTrackInterface> acgist::MediaManager::getVideoTrack() {
-    this->videoTrackSource = new rtc::RefCountedObject<acgist::TaoyaoVideoTrackSource>();
     return this->peerConnectionFactory->CreateVideoTrack("taoyao-video", this->videoTrackSource);
 }

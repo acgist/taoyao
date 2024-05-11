@@ -25,8 +25,8 @@
 #include <multimedia/player_framework/native_avcapability.h>
 #include <multimedia/player_framework/native_avcodec_base.h>
 
-static std::mutex roomMutex;
-static std::mutex taoyaoMutex;
+static std::recursive_mutex roomMutex;
+static std::recursive_mutex taoyaoMutex;
 
 #ifndef TAOYAO_JSON_SIZE
 #define TAOYAO_JSON_SIZE 2048
@@ -74,11 +74,11 @@ static std::string clientId = "";
 // 终端名称
 static std::string name     = "";
 // ETS环境
-static napi_env env = nullptr;
+static napi_env env    = nullptr;
 // 是否加载
 static bool initTaoyao = false;
 // PUSH方法引用
-static napi_ref pushRef = nullptr;
+static napi_ref pushRef    = nullptr;
 // REQUEST方法引用
 static napi_ref requestRef = nullptr;
 // 媒体功能
@@ -153,7 +153,7 @@ std::string request(const std::string& signal, const std::string& body, uint64_t
 static napi_value init(napi_env env, napi_callback_info info) {
     TAOYAO_JSON_BODY(3);
     {
-        std::lock_guard<std::mutex> taoyaoLock(taoyaoMutex);
+        std::lock_guard<std::recursive_mutex> taoyaoLock(taoyaoMutex);
         if(initTaoyao) {
             napi_create_int32(env, -1, &ret);
             OH_LOG_WARN(LOG_APP, "libtaoyao已经加载");
@@ -183,8 +183,8 @@ static napi_value init(napi_env env, napi_callback_info info) {
 static napi_value shutdown(napi_env env, napi_callback_info info) {
     napi_value ret;
     {
-        std::lock_guard<std::mutex> taoyaoLock(taoyaoMutex);
-        if(!initTaoyao) {
+        std::lock_guard<std::recursive_mutex> taoyaoLock(taoyaoMutex);
+        if (!initTaoyao) {
             napi_create_int32(env, -1, &ret);
             OH_LOG_INFO(LOG_APP, "libtaoyao已经卸载");
             return ret;
@@ -221,7 +221,7 @@ static napi_value shutdown(napi_env env, napi_callback_info info) {
 static napi_value roomClose(napi_env env, napi_callback_info info) {
     TAOYAO_JSON_BODY(1);
     {
-        std::lock_guard<std::mutex> roomLock(roomMutex);
+        std::lock_guard<std::recursive_mutex> roomLock(roomMutex);
         std::string roomId = body["roomId"];
         auto iterator = acgist::roomMap.find(roomId);
         if(iterator == acgist::roomMap.end()) {
@@ -285,7 +285,7 @@ static napi_value roomExpel(napi_env env, napi_callback_info info) {
 static napi_value roomInvite(napi_env env, napi_callback_info info) {
     TAOYAO_JSON_BODY(1);
     {
-        std::lock_guard<std::mutex> roomLock(roomMutex);
+        std::lock_guard<std::recursive_mutex> roomLock(roomMutex);
         // TODO: 试试引用
         std::string roomId   = body["roomId"];
         std::string password = body["password"];

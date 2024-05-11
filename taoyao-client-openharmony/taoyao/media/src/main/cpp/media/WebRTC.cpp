@@ -16,8 +16,22 @@
 
 static const std::string h264ProfileLevelId = "42e01f";
 
+acgist::TaoyaoAudioTrackSource::TaoyaoAudioTrackSource() {
+}
+
+acgist::TaoyaoAudioTrackSource::~TaoyaoAudioTrackSource() {
+}
+
+webrtc::MediaSourceInterface::SourceState acgist::TaoyaoAudioTrackSource::state() const {
+    return webrtc::MediaSourceInterface::SourceState::kLive;
+}
+
+bool acgist::TaoyaoAudioTrackSource::remote() const {
+    return false;
+}
+
 void acgist::TaoyaoAudioTrackSource::OnData(const void* audio_data, int bits_per_sample, int sample_rate, size_t number_of_channels, size_t number_of_frames) {
-    // TODO: 数据转发
+    // TODO: 转发媒体
 }
 
 acgist::TaoyaoVideoTrackSource::TaoyaoVideoTrackSource() {
@@ -74,20 +88,18 @@ std::vector<webrtc::SdpVideoFormat> acgist::TaoyaoVideoEncoderFactory::GetSuppor
 std::unique_ptr<webrtc::VideoEncoder> acgist::TaoyaoVideoEncoderFactory::CreateVideoEncoder(const webrtc::SdpVideoFormat& format) {
     OH_LOG_DEBUG(LOG_APP, "返回WebRTC编码器：%s", format.name.data());
     // 硬编
-    // TODO: 大小写
-    if (std::strcmp(format.name.data(), "H264") == 0) {
-        // return std::unique_ptr<webrtc::VideoEncoder>(new acgist::TaoyaoVideoEncoder());
+    if (absl::EqualsIgnoreCase(format.name.data(), "H264") == 0) {
+        return std::unique_ptr<webrtc::VideoEncoder>(new acgist::TaoyaoVideoEncoder());
     }
     // 软便
-    // TODO: 大小写
-    if (std::strcmp(format.name.data(), cricket::kVp8CodecName) == 0) {
+    if (absl::EqualsIgnoreCase(format.name.data(), cricket::kVp8CodecName) == 0) {
         return webrtc::VP8Encoder::Create();
     }
-    if (std::strcmp(format.name.data(), cricket::kVp9CodecName) == 0) {
+    if (absl::EqualsIgnoreCase(format.name.data(), cricket::kVp9CodecName) == 0) {
         // return webrtc::VP9Encoder::Create();
         return webrtc::VP9Encoder::Create(cricket::CreateVideoCodec(format));
     }
-    if (std::strcmp(format.name.data(), cricket::kH264CodecName) == 0) {
+    if (absl::EqualsIgnoreCase(format.name.data(), cricket::kH264CodecName) == 0) {
         // return webrtc::H264Encoder::Create();
         return webrtc::H264Encoder::Create(cricket::CreateVideoCodec(format));
     }
@@ -122,12 +134,10 @@ std::vector<webrtc::SdpVideoFormat> acgist::TaoyaoVideoDecoderFactory::GetSuppor
 std::unique_ptr<webrtc::VideoDecoder> acgist::TaoyaoVideoDecoderFactory::CreateVideoDecoder(const webrtc::SdpVideoFormat& format) {
     OH_LOG_DEBUG(LOG_APP, "返回WebRTC解码器：%s", format.name.data());
     // 硬解
-    // TODO: 大小写
     if (absl::EqualsIgnoreCase(format.name.data(), "H264") == 0) {
-        // return std::unique_ptr<webrtc::VideoDecoder>(new acgist::TaoyaoVideoDecoder());
+        return std::unique_ptr<webrtc::VideoDecoder>(new acgist::TaoyaoVideoDecoder());
     }
     // 软解
-    // TODO: 大小写
     if (absl::EqualsIgnoreCase(format.name.data(), cricket::kVp8CodecName) == 0) {
         return webrtc::VP8Decoder::Create();
     }

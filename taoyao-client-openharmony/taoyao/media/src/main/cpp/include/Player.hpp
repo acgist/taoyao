@@ -41,8 +41,10 @@ public:
 
 /**
  * 音频播放器
+ * 
+ * 默认交给音频设备播放
  */
-class AudioPlayer: public Player {
+class AudioPlayer : public Player {
 
 public:
     // 音频构造器
@@ -52,7 +54,7 @@ public:
 
 public:
     AudioPlayer();
-    virtual ~AudioPlayer();
+    virtual ~AudioPlayer() override;
 
 public:
     virtual bool start() override;
@@ -63,13 +65,13 @@ public:
 /**
  * 视频播放器
  * 
- * TODO: 实现留给有缘人了~.~!
+ * TODO: 如果需要自行实现
  */
-class VideoPlayer: public Player {
+class VideoPlayer : public Player {
 
 public:
     VideoPlayer();
-    virtual ~VideoPlayer();
+    virtual ~VideoPlayer() override;
 
 public:
     virtual bool start() override;

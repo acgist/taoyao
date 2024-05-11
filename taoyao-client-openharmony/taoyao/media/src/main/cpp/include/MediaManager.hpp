@@ -28,7 +28,11 @@ public:
 
 public:
     int localClientRef = 0;
+    #if __TAOYAO_AUDIO_LOCAL__
+    acgist::TaoyaoAudioTrackSource* audioTrackSource = nullptr;
+    #else
     rtc::scoped_refptr<webrtc::AudioSourceInterface> audioTrackSource = nullptr;
+    #endif
     acgist::TaoyaoVideoTrackSource* videoTrackSource = nullptr;
     acgist::AudioCapturer* audioCapturer = nullptr;
     acgist::VideoCapturer* videoCapturer = nullptr;
