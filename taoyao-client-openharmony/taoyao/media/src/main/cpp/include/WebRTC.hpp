@@ -44,7 +44,7 @@ namespace acgist {
 /**
  * 音频轨道来源
  * 
- * TODO: 媒体转发
+ * TODO: 如果需要自行实现
  */
 class TaoyaoAudioTrackSource : public webrtc::AudioTrackSinkInterface, public webrtc::Notifier<webrtc::AudioSourceInterface> {
 
@@ -135,6 +135,8 @@ public:
 
 /**
  * 视频解码器
+ * 
+ * TODO: 如果需要自行实现
  */
 class TaoyaoVideoDecoder : public webrtc::VideoDecoder {
     
@@ -143,7 +145,9 @@ public:
     virtual ~TaoyaoVideoDecoder() override;
     
 public:
+    // 开始解码
     virtual bool start();
+    // 停止解码
     virtual bool stop();
     virtual int32_t Release() override;
     virtual int32_t RegisterDecodeCompleteCallback(webrtc::DecodedImageCallback* callback) override;
@@ -152,6 +156,9 @@ public:
     
 };
 
+/**
+ * 视频编码工厂
+ */
 class TaoyaoVideoEncoderFactory : public webrtc::VideoEncoderFactory {
     
 public:
@@ -164,6 +171,9 @@ public:
     
 };
 
+/**
+ * 视频解码工厂
+ */
 class TaoyaoVideoDecoderFactory : public webrtc::VideoDecoderFactory {
     
 public:

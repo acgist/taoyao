@@ -426,7 +426,7 @@ int acgist::Room::closeConsumer(const std::string& consumerId) {
         OH_LOG_INFO(LOG_APP, "关闭消费者无效：%s %s", consumerId.data(), clientId->second.data());
         return -2;
     }
-    OH_LOG_INFO(LOG_APP, "关闭消费者：%s %s", consumerId.data(), client->second.data());
+    OH_LOG_INFO(LOG_APP, "关闭消费者：%s %s", consumerId.data(), clientId->second.data());
     client->second->closeConsumer(consumerId);
     return 0;
 }
@@ -443,7 +443,7 @@ int acgist::Room::pauseConsumer(const std::string& consumerId) {
         OH_LOG_INFO(LOG_APP, "暂停消费者无效：%s %s", consumerId.data(), clientId->second.data());
         return -2;
     }
-    OH_LOG_INFO(LOG_APP, "暂停消费者：%s %s", consumerId.data(), client->second.data());
+    OH_LOG_INFO(LOG_APP, "暂停消费者：%s %s", consumerId.data(), clientId->second.data());
     client->second->pauseConsumer(consumerId);
     return 0;
 }
@@ -460,7 +460,7 @@ int acgist::Room::resumeConsumer(const std::string& consumerId) {
         OH_LOG_INFO(LOG_APP, "恢复消费者无效：%s %s", consumerId.data(), clientId->second.data());
         return -2;
     }
-    OH_LOG_INFO(LOG_APP, "恢复消费者：%s %s", consumerId.data(), client->second.data());
+    OH_LOG_INFO(LOG_APP, "恢复消费者：%s %s", consumerId.data(), clientId->second.data());
     client->second->resumeConsumer(consumerId);
     return 0;
 }

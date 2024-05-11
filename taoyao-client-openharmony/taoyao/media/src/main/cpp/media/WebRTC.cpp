@@ -31,7 +31,6 @@ bool acgist::TaoyaoAudioTrackSource::remote() const {
 }
 
 void acgist::TaoyaoAudioTrackSource::OnData(const void* audio_data, int bits_per_sample, int sample_rate, size_t number_of_channels, size_t number_of_frames) {
-    // TODO: 转发媒体
 }
 
 acgist::TaoyaoVideoTrackSource::TaoyaoVideoTrackSource() {
@@ -57,7 +56,7 @@ absl::optional<bool> acgist::TaoyaoVideoTrackSource::needs_denoising() const {
 }
 
 void acgist::TaoyaoVideoTrackSource::OnData(const webrtc::VideoFrame& videoFrame) {
-    // TODO
+    this->OnFrame(videoFrame);
 }
 
 acgist::TaoyaoVideoEncoderFactory::TaoyaoVideoEncoderFactory() {
@@ -86,7 +85,7 @@ std::vector<webrtc::SdpVideoFormat> acgist::TaoyaoVideoEncoderFactory::GetSuppor
 }
 
 std::unique_ptr<webrtc::VideoEncoder> acgist::TaoyaoVideoEncoderFactory::CreateVideoEncoder(const webrtc::SdpVideoFormat& format) {
-    OH_LOG_DEBUG(LOG_APP, "返回WebRTC编码器：%s", format.name.data());
+    OH_LOG_DEBUG(LOG_APP, "创建WebRTC编码器：%s", format.name.data());
     // 硬编
     if (absl::EqualsIgnoreCase(format.name.data(), "H264") == 0) {
         return std::unique_ptr<webrtc::VideoEncoder>(new acgist::TaoyaoVideoEncoder());
@@ -132,7 +131,7 @@ std::vector<webrtc::SdpVideoFormat> acgist::TaoyaoVideoDecoderFactory::GetSuppor
 }
 
 std::unique_ptr<webrtc::VideoDecoder> acgist::TaoyaoVideoDecoderFactory::CreateVideoDecoder(const webrtc::SdpVideoFormat& format) {
-    OH_LOG_DEBUG(LOG_APP, "返回WebRTC解码器：%s", format.name.data());
+    OH_LOG_DEBUG(LOG_APP, "创建WebRTC解码器：%s", format.name.data());
     // 硬解
     if (absl::EqualsIgnoreCase(format.name.data(), "H264") == 0) {
         return std::unique_ptr<webrtc::VideoDecoder>(new acgist::TaoyaoVideoDecoder());

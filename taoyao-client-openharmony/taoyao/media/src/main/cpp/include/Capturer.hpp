@@ -124,17 +124,22 @@ class VideoCapturer: public Capturer<acgist::TaoyaoVideoTrackSource> {
     
 public:
     // ================ Vulkan ================
+    // VK实例
     VkInstance vkInstance = VK_NULL_HANDLE;
+    // VK Surface
     VkSurfaceKHR vkSurfaceKHR = VK_NULL_HANDLE;
+    // VK应用
     VkApplicationInfo vkApplicationInfo = {};
+    // VK实例配置
     VkInstanceCreateInfo vkInstanceCreateInfo = {};
+    // VK Surface配置
     VkSurfaceCreateInfoOHOS vkSurfaceCreateInfoOHOS = {};
     // ================ OpenGL ES ================
-    // SurfaceId
+    // OpenGL ES SurfaceId
     uint64_t surfaceId = 0;
-    // OpenGL纹理指针
+    // OpenGL ES纹理指针
     GLuint textureId = 0;
-    // OpenGL纹理数量
+    // OpenGL ES纹理数量
     GLsizei textureSize = 1;
     // EGL显示设备
     EGLDisplay eglDisplay = EGL_NO_DISPLAY;
@@ -167,9 +172,13 @@ public:
     virtual ~VideoCapturer() override;
     
 public:
+    // 加载VK
     void initVulkan();
+    // 释放VK
     void releaseVulkan();
+    // 加载OpenGL ES
     void initOpenGLES();
+    // 释放OpenGL ES
     void releaseOpenGLES();
     virtual bool start() override;
     virtual bool stop()  override;
