@@ -26,66 +26,21 @@ class Room;
 class SendListener : public mediasoupclient::SendTransport::Listener {
 
 public:
-    /**
-     * 房间指针
-     */
+    // 房间指针
     Room* room;
 
 public:
-    /**
-     * 发送通道监听器
-     *
-     * @param room 房间指针
-     */
     explicit SendListener(Room* room);
-    /**
-     * 析构函数
-     */
-    virtual ~SendListener();
+    virtual ~SendListener()/*  override */;
 
 public:
-    /**
-     * 连接通道
-     *
-     * @param transport      通道指针
-     * @param dtlsParameters DTLS参数
-     *
-     * @return future
-     */
+    // 连接通道
     std::future<void> OnConnect(mediasoupclient::Transport* transport, const nlohmann::json& dtlsParameters) override;
-
-    /**
-     * 通道状态改变
-     *
-     * @param transport       通道指针
-     * @param connectionState 当前状态
-     */
+    // 通道状态改变
     void OnConnectionStateChange(mediasoupclient::Transport* transport, const std::string& connectionState) override;
-
-    /**
-     * 通道生产媒体
-     *
-     * @param transport     通道指针
-     * @param kind          媒体类型
-     * @param rtpParameters RTP参数
-     * @param appData       应用数据
-     *
-     * @return 生产者ID
-     */
+    // 通道生产媒体
     std::future<std::string> OnProduce(mediasoupclient::SendTransport* transport, const std::string& kind, nlohmann::json rtpParameters, const nlohmann::json& appData) override;
-
-    /**
-     * 通道生产数据
-     * 注意：需要自己实现
-     *
-     * @param transport            通道指针
-     * @param sctpStreamParameters SCTP参数
-     * @param label                标记
-     * @param protocol             协议
-     * @param appData              应用数据
-     *
-     * @return 生产者ID
-     */
+    // 通道生产数据
     std::future<std::string> OnProduceData(mediasoupclient::SendTransport* transport, const nlohmann::json& sctpStreamParameters, const std::string& label, const std::string& protocol, const nlohmann::json& appData) override;
 
 };
@@ -96,39 +51,17 @@ public:
 class RecvListener : public mediasoupclient::RecvTransport::Listener {
 
 public:
-    /**
-     * 房间指针
-     */
+    // 房间指针
     Room* room;
 
 public:
-    /**
-     * 接收通道监听器
-     *
-     * @param room 房间指针
-     */
     explicit RecvListener(Room* room);
-    /**
-     * 析构函数
-     */
-    virtual ~RecvListener();
+    virtual ~RecvListener()/*  override */;
 
-    /**
-     * 连接通道
-     *
-     * @param transport      通道指针
-     * @param dtlsParameters DTLS参数
-     *
-     * @return future
-     */
+public:
+    // 连接通道
     std::future<void> OnConnect(mediasoupclient::Transport* transport, const nlohmann::json& dtlsParameters) override;
-
-    /**
-     * 通道状态改变
-     *
-     * @param transport       通道指针
-     * @param connectionState 通道状态
-     */
+    // 通道状态改变
     void OnConnectionStateChange(mediasoupclient::Transport* transport, const std::string& connectionState) override;
 
 };
@@ -139,28 +72,15 @@ public:
 class ProducerListener : public mediasoupclient::Producer::Listener {
 
 public:
-    /**
-     * 房间指针
-     */
+    // 房间指针
     Room* room;
 
 public:
-    /**
-     * 生产者监听器
-     *
-     * @param room 房间指针
-     */
     explicit ProducerListener(Room* room);
-    /**
-     * 析构函数
-     */
-    virtual ~ProducerListener();
+    virtual ~ProducerListener()/*  override */;
 
-    /**
-     * 通道关闭
-     *
-     * @param producer 生产者
-     */
+public:
+    // 通道关闭
     void OnTransportClose(mediasoupclient::Producer* producer) override;
 
 };
@@ -171,28 +91,15 @@ public:
 class ConsumerListener : public mediasoupclient::Consumer::Listener {
 
 public:
-    /**
-     * 房间指针
-     */
+    // 房间指针
     Room* room;
 
 public:
-    /**
-     * 消费者监听器
-     *
-     * @param room 房间指针
-     */
     explicit ConsumerListener(Room* room);
-    /**
-     * 析构函数
-     */
-    virtual ~ConsumerListener();
+    virtual ~ConsumerListener()/*  override */;
 
-    /**
-     * 通道关闭
-     *
-     * @param consumer 消费者
-     */
+public:
+    // 通道关闭
     void OnTransportClose(mediasoupclient::Consumer* consumer) override;
 
 };
@@ -202,6 +109,12 @@ public:
  */
 class Room {
     
+private:
+    // 是否进入
+    bool enterd = false;
+    // 是否关闭
+    bool closed = false;
+
 public:
     // 生产消息：没有实现
     bool dataProduce  = false;
@@ -219,12 +132,12 @@ public:
     acgist::MediaManager* mediaManager = nullptr;
     // 本地终端
     acgist::LocalClient* client = nullptr;
-    // ID映射：consumerId = clientId
+    // 消费者ID和终端ID映射：consumerId = clientId
     std::map<std::string, std::string> consumerIdClientId;
     // 远程终端：clientId = RemoteClient
     std::map<std::string, acgist::RemoteClient*> clients;
     // WebRTC配置
-    webrtc::PeerConnectionInterface::RTCConfiguration rtcConfiguration;
+    webrtc::PeerConnectionInterface::RTCConfiguration* rtcConfiguration;
     // 房间Device
     mediasoupclient::Device* device = nullptr;
     // 发送通道
@@ -243,29 +156,15 @@ public:
     mediasoupclient::Producer::Listener* producerListener = nullptr;
     // 消费者监听器
     mediasoupclient::Consumer::Listener* consumerListener = nullptr;
-    // 本地音频
-    rtc::scoped_refptr<webrtc::AudioTrackInterface> audioTrack = nullptr;
-    // 本地视频
-    rtc::scoped_refptr<webrtc::VideoTrackInterface> videoTrack = nullptr;
 
 public:
     Room(const std::string& roomId, acgist::MediaManager* mediaManager);
     virtual ~Room();
     
 public:
-    /**
-     * 进入房间
-     * 
-     * @param password 密码
-     * 
-     * @return 状态
-     */
+    // 进入房间
     int enter(const std::string& password);
-    /**
-     * 生成媒体
-     * 
-     * @return 状态
-     */
+    // 生成媒体
     int produceMedia();
     // 创建发送通道
     int createSendTransport();

@@ -68,11 +68,9 @@ double frameRate = 30.0;
 int32_t samplingRate  = 48'000;
 int32_t channelCount  = 2;
 int32_t bitsPerSample = 16;
+std::string clientId  = "";
+std::string name      = "";
 
-// 终端ID
-static std::string clientId = "";
-// 终端名称
-static std::string name     = "";
 // ETS环境
 static napi_env env    = nullptr;
 // 是否加载

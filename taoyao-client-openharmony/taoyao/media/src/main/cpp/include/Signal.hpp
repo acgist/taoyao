@@ -29,6 +29,10 @@ extern int32_t samplingRate;
 extern int32_t channelCount;
 // 采样位数
 extern int32_t bitsPerSample;
+// 终端ID
+extern std::string clientId;
+// 终端名称
+extern std::string name;
 
 /**
  * 发送消息
