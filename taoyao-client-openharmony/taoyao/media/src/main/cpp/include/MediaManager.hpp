@@ -20,6 +20,9 @@
 
 namespace acgist {
 
+/**
+ * 媒体管理器
+ */
 class MediaManager {
 
 public:
@@ -27,24 +30,34 @@ public:
     virtual ~MediaManager();
 
 public:
+    // 本地终端数量
     int localClientRef = 0;
     #if __TAOYAO_AUDIO_LOCAL__
+    // 音频来源：本地创建
     acgist::TaoyaoAudioTrackSource* audioTrackSource = nullptr;
     #else
+    // 音频来源：设备管理
     rtc::scoped_refptr<webrtc::AudioSourceInterface> audioTrackSource = nullptr;
     #endif
+    // 视频来源
     acgist::TaoyaoVideoTrackSource* videoTrackSource = nullptr;
+    // 音频采集
     acgist::AudioCapturer* audioCapturer = nullptr;
+    // 视频采集
     acgist::VideoCapturer* videoCapturer = nullptr;
+    // 网络线程
     std::unique_ptr<rtc::Thread> networkThread   = nullptr;
+    // 信令线程
     std::unique_ptr<rtc::Thread> signalingThread = nullptr;
+    // 工作线程
     std::unique_ptr<rtc::Thread> workerThread    = nullptr;
+    // 连接工厂
     rtc::scoped_refptr<webrtc::PeerConnectionFactoryInterface> peerConnectionFactory = nullptr;
 
 protected:
-    // 加载PC工厂
+    // 加载连接工厂
     bool newPeerConnectionFactory();
-    // 释放PC工厂
+    // 释放连接工厂
     bool releasePeerConnectionFactory();
     // 开始采集
     bool startCapture();
@@ -60,8 +73,6 @@ protected:
     bool stopVideoCapture();
 
 public:
-    // 加载媒体
-    bool init();
     // 新增本地终端
     int newLocalClient();
     // 释放本地终端

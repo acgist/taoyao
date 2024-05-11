@@ -164,15 +164,14 @@ static napi_value init(napi_env env, napi_callback_info info) {
     napi_create_reference(env, args[1], 1, &acgist::pushRef);
     napi_create_reference(env, args[2], 1, &acgist::requestRef);
     printSupportCodec();
-//     acgist::clientId = json["clientId"];
-//     acgist::name     = json["name"];
-//     OH_LOG_INFO(LOG_APP, "加载libtaoyao");
-//     std::string version = mediasoupclient::Version();
-//     OH_LOG_INFO(LOG_APP, "加载MediasoupClient：%s", version.data());
-//     mediasoupclient::Initialize();
-//     OH_LOG_INFO(LOG_APP, "加载媒体功能");
-//     mediaManager = new MediaManager();
-//     mediaManager->init();
+    acgist::clientId = json["clientId"];
+    acgist::name     = json["name"];
+    OH_LOG_INFO(LOG_APP, "加载libtaoyao");
+    std::string version = mediasoupclient::Version();
+    OH_LOG_INFO(LOG_APP, "加载MediasoupClient：%s", version.data());
+    mediasoupclient::Initialize();
+    OH_LOG_INFO(LOG_APP, "加载媒体功能");
+    mediaManager = new MediaManager();
     napi_create_int32(env, 0, &ret);
     return ret;
 }

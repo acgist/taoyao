@@ -20,11 +20,6 @@ acgist::MediaManager::MediaManager() {
 }
 
 acgist::MediaManager::~MediaManager() {
-    // TODO：验证是否需要释放线程和工厂
-}
-
-bool acgist::MediaManager::init() {
-    return true;
 }
 
 bool acgist::MediaManager::newPeerConnectionFactory() {
@@ -33,22 +28,30 @@ bool acgist::MediaManager::newPeerConnectionFactory() {
     }
     OH_LOG_INFO(LOG_APP, "加载PeerConnectionFactory");
     this->networkThread   = rtc::Thread::CreateWithSocketServer();
-    this->signalingThread = rtc::Thread::Create();
     this->workerThread    = rtc::Thread::Create();
+    this->signalingThread = rtc::Thread::Create();
     this->networkThread->SetName("network_thread", nullptr);
-    this->signalingThread->SetName("signaling_thread", nullptr);
     this->workerThread->SetName("worker_thread", nullptr);
-    if (!this->networkThread->Start() || !this->signalingThread->Start() || !this->workerThread->Start()) {
+    this->signalingThread->SetName("signaling_thread", nullptr);
+    if (
+        !this->networkThread->Start()   ||
+        !this->signalingThread->Start() ||
+        !this->workerThread->Start()
+    ) {
         OH_LOG_WARN(LOG_APP, "WebRTC线程启动失败");
-        // TODO: 释放线程
+        this->networkThread   = nullptr;
+        this->workerThread    = nullptr;
+        this->signalingThread = nullptr;
         return false;
     }
     this->peerConnectionFactory = webrtc::CreatePeerConnectionFactory(
+        // 网络线程
         this->networkThread.get(),
+        // 工作线程：可以使用信令线程
         this->workerThread.get(),
-        // this->signalingThread.get(),
+        // 信令线程
         this->signalingThread.get(),
-        // 音频设备
+        // 音频设备：为空自动创建
         nullptr,
         // 音频编码
         webrtc::CreateBuiltinAudioEncoderFactory(),
@@ -58,12 +61,12 @@ bool acgist::MediaManager::newPeerConnectionFactory() {
         webrtc::CreateBuiltinVideoEncoderFactory(),
         // 视频解码
         webrtc::CreateBuiltinVideoDecoderFactory(),
-        // 混音
+        // 混音处理
         nullptr,
         // 音频处理
         nullptr
     );
-    return this->peerConnectionFactory != nullptr;
+    return true;
 }
 
 bool acgist::MediaManager::releasePeerConnectionFactory() {
@@ -71,11 +74,9 @@ bool acgist::MediaManager::releasePeerConnectionFactory() {
         return true;
     }
     OH_LOG_INFO(LOG_APP, "释放PeerConnectionFactory");
-    if(this->peerConnectionFactory != nullptr) {
-        this->peerConnectionFactory->Release();
-        // delete this->peerConnectionFactory;
-        this->peerConnectionFactory = nullptr;
-    }
+    this->peerConnectionFactory->Release();
+    // delete this->peerConnectionFactory;
+    this->peerConnectionFactory = nullptr;
     return true;
 }
 
@@ -83,12 +84,10 @@ int acgist::MediaManager::newLocalClient() {
     {
         std::lock_guard<std::recursive_mutex> mediaLock(mediaMutex);
         this->localClientRef++;
-        if(this->localClientRef > 0) {
-            this->newPeerConnectionFactory();
-            this->startCapture();
-        }
+        this->newPeerConnectionFactory();
+        this->startCapture();
     }
-    OH_LOG_WARN(LOG_APP, "打开本地终端：%d", this->localClientRef);
+    OH_LOG_INFO(LOG_APP, "打开本地终端：%d", this->localClientRef);
     return this->localClientRef;
 }
 
@@ -105,7 +104,7 @@ int acgist::MediaManager::releaseLocalClient() {
             }
         }
     }
-    OH_LOG_WARN(LOG_APP, "关闭本地终端：%d", this->localClientRef);
+    OH_LOG_INFO(LOG_APP, "关闭本地终端：%d", this->localClientRef);
     return this->localClientRef;
 }
 
@@ -118,18 +117,18 @@ bool acgist::MediaManager::startCapture() {
 bool acgist::MediaManager::startAudioCapture() {
     #if __TAOYAO_AUDIO_LOCAL__
         if (this->audioCapturer == nullptr) {
-            OH_LOG_WARN(LOG_APP, "开始音频采集");
+            OH_LOG_INFO(LOG_APP, "开始音频采集");
             this->audioCapturer = new acgist::AudioCapturer();
             this->audioCapturer->start();
         }
         if(this->audioTrackSource == nullptr) {
-            OH_LOG_WARN(LOG_APP, "设置音频来源");
+            OH_LOG_INFO(LOG_APP, "设置音频来源");
             this->audioTrackSource = new rtc::RefCountedObject<acgist::TaoyaoAudioTrackSource>();
             this->audioCapturer->source = this->audioTrackSource;
         }
     #else
         if(this->audioTrackSource == nullptr) {
-            OH_LOG_WARN(LOG_APP, "设置音频来源");
+            OH_LOG_INFO(LOG_APP, "设置音频来源");
             cricket::AudioOptions options;
             options.highpass_filter   = true;
             options.auto_gain_control = true;
@@ -143,12 +142,12 @@ bool acgist::MediaManager::startAudioCapture() {
 
 bool acgist::MediaManager::startVideoCapture() {
     if(this->videoCapturer == nullptr) {
-        OH_LOG_WARN(LOG_APP, "开始视频采集");
+        OH_LOG_INFO(LOG_APP, "开始视频采集");
         this->videoCapturer = new acgist::VideoCapturer();
         this->videoCapturer->start();
     }
     if(this->videoTrackSource == nullptr) {
-        OH_LOG_WARN(LOG_APP, "设置视频来源");
+        OH_LOG_INFO(LOG_APP, "设置视频来源");
         this->videoTrackSource = new rtc::RefCountedObject<acgist::TaoyaoVideoTrackSource>();
         this->videoCapturer->source = this->videoTrackSource;
     }
@@ -163,21 +162,21 @@ bool acgist::MediaManager::stopCapture() {
 
 bool acgist::MediaManager::stopAudioCapture() {
     #if __TAOYAO_AUDIO_LOCAL__
-    if(this->audioCapturer != nullptr) {
-        OH_LOG_WARN(LOG_APP, "停止音频采集");
-        this->audioCapturer->stop();
-        delete this->audioCapturer;
-        this->audioCapturer = nullptr;
-    }
-    if(this->audioTrackSource != nullptr) {
-        OH_LOG_WARN(LOG_APP, "释放音频来源");
-        this->audioTrackSource->Release();
-        // delete this->AudioTrackSource;
-        this->audioTrackSource = nullptr;
-    }
+        if(this->audioCapturer != nullptr) {
+            OH_LOG_INFO(LOG_APP, "停止音频采集");
+            this->audioCapturer->stop();
+            delete this->audioCapturer;
+            this->audioCapturer = nullptr;
+        }
+        if(this->audioTrackSource != nullptr) {
+            OH_LOG_INFO(LOG_APP, "释放音频来源");
+            this->audioTrackSource->Release();
+            // delete this->AudioTrackSource;
+            this->audioTrackSource = nullptr;
+        }
     #else
         if(this->audioTrackSource != nullptr) {
-            OH_LOG_WARN(LOG_APP, "释放音频来源");
+            OH_LOG_INFO(LOG_APP, "释放音频来源");
             this->audioTrackSource->Release();
             // delete this->audioTrackSource;
             this->audioTrackSource = nullptr;
@@ -188,13 +187,13 @@ bool acgist::MediaManager::stopAudioCapture() {
 
 bool acgist::MediaManager::stopVideoCapture() {
     if(this->videoCapturer != nullptr) {
-        OH_LOG_WARN(LOG_APP, "停止视频采集");
+        OH_LOG_INFO(LOG_APP, "停止视频采集");
         this->videoCapturer->stop();
         delete this->videoCapturer;
         this->videoCapturer = nullptr;
     }
     if(this->videoTrackSource != nullptr) {
-        OH_LOG_WARN(LOG_APP, "释放视频来源");
+        OH_LOG_INFO(LOG_APP, "释放视频来源");
         this->videoTrackSource->Release();
         // delete this->videoTrackSource;
         this->videoTrackSource = nullptr;
