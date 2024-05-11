@@ -47,7 +47,7 @@ public:
     
 public:
     RoomClient(acgist::MediaManager* mediaManager);
-    virtual ~RoomClient();
+    virtual ~RoomClient() override;
     
 public:
     
@@ -75,7 +75,7 @@ public:
 
 public:
     RemoteClient(acgist::MediaManager* mediaManager);
-    virtual ~RemoteClient();
+    virtual ~RemoteClient() override;
 
 public:
     // 添加消费者
