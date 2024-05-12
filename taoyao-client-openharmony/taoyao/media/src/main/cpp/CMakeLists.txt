@@ -57,10 +57,8 @@ target_include_directories(
 
 target_link_libraries(
     ${PROJECT_NAME} PUBLIC
-    # NAPI
-    libace_napi.z.so
-    # LOG
-    libhilog_ndk.z.so
+    # libuv
+    libuv.so
     # EGL
     libEGL.so
     # OpenGL ES
@@ -71,6 +69,10 @@ target_link_libraries(
     libohaudio.so
     # 相机
     libohcamera.so
+    # NAPI
+    libace_napi.z.so
+    # LOG
+    libhilog_ndk.z.so
     # 图片
     libnative_image.so
     # NativeBuffer

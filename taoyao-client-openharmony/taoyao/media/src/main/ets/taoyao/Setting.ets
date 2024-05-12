@@ -5,34 +5,37 @@
  */
 
 import fs from '@ohos.file.fs';
-import resourceManager from '@ohos.resourceManager';
 
-class Signal {
+class Config {
 
   // 终端名称
-  name      : string = "鸿蒙";
+  name       : string = "鸿蒙";
   // 终端ID
-  clientId  : string = "harmony";
+  clientId   : string = "harmony";
   // 终端类型
-  clientType: string = "MOBILE";
+  clientType : string = "MOBILE";
   // 信令账号
-  username  : string = "taoyao";
+  username   : string = "taoyao";
   // 信令密码
-  password  : string = "taoyao";
+  password   : string = "taoyao";
+  // 当前终端索引
+  clientIndex: number = 99999;
 
 };
 
 class Setting {
 
+  // 信令配置
+  config : Config = new Config();
+  // CA证书
+  caPath : string = "/cacert.pem";
+  // 信令版本
+  version: string = "1.0.0";
   // 信令地址
   // signalAddress: string = "wss://192.168.8.57:8888/websocket.signal";
   signalAddress: string = "wss://192.168.1.100:8888/websocket.signal";
-  // 信令版本
-  version: string = "1.0.0";
-  // 信令配置
-  signal : Signal = new Signal();
-  // CA证书
-  caPath : string = "/cacert.pem";
+  // 启动自动加载系统
+  initOnLoad   : boolean = true;
 
 };
 

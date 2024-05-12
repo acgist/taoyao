@@ -21,6 +21,8 @@ extern uint32_t width;
 extern uint32_t height;
 // 视频码率
 extern uint64_t bitrate;
+// 关键帧的频率
+extern uint32_t iFrameInterval;
 // 视频帧率
 extern double frameRate;
 // 采样率

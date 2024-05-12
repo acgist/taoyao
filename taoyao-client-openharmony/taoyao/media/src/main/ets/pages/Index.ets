@@ -1,4 +1,4 @@
-import { signal } from "../taoyao/TaoyaoSignal";
+import { taoyaoSignal } from "../taoyao/TaoyaoSignal";
 
 import { setting } from "../taoyao/Setting";
 
@@ -13,7 +13,7 @@ struct Index {
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
-            signal.connect();
+            taoyaoSignal.connect();
           });
       }
       .width("100%")
@@ -23,7 +23,7 @@ struct Index {
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
-            signal.close();
+            taoyaoSignal.close();
           });
       }
       .width("100%")
@@ -33,7 +33,7 @@ struct Index {
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
-            signal.init();
+            taoyaoSignal.init();
           });
       }
       .width("100%")
@@ -43,7 +43,7 @@ struct Index {
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
-            signal.shutdown();
+            taoyaoSignal.shutdown();
           });
       }
       .width("100%")

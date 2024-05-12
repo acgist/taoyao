@@ -24,21 +24,28 @@ class TaoyaoSignal {
   heartbeatTimer: number = 0;
   // 同步请求
   callbackMapping = new Map<number, Function>();
-  // 当前消息索引
-  index      : number = 0;
+  // 当前消息索引：0-666
+  index   : number = 0;
+  // 最小消息索引
+  minIndex: number = 0;
   // 最大消息索引
-  maxIndex   : number = 999;
-  // 当前终端索引
-  clientIndex: number = 99999;
+  maxIndex: number = 666;
 
+  /**
+   * 加载系统
+   * 建议注册成功以后加载
+   */
   init() {
     hilog.info(0x0000, "TaoyaoSignal", "加载系统");
-    taoyaoModule.init(JSON.stringify(setting.signal), this.nativePush, this.nativeRequest);
+    taoyaoModule.init(JSON.stringify(setting.config), this.nativePush, this.nativeRequest);
   }
 
+  /**
+   * 卸载系统
+   */
   shutdown() {
     hilog.info(0x0000, "TaoyaoSignal", "卸载系统");
-    taoyaoModule.shutdown(JSON.stringify(setting.signal));
+    taoyaoModule.shutdown(JSON.stringify(setting.config));
   }
 
   /**
@@ -125,19 +132,22 @@ class TaoyaoSignal {
    */
   async register() {
     const response: Record<string, Object> = await this.request("client::register", {
-      "name"      : setting.signal.name,
-      "clientId"  : setting.signal.clientId,
-      "clientType": setting.signal.clientType,
-      "username"  : setting.signal.username,
-      "password"  : setting.signal.password,
+      "name"      : setting.config.name,
+      "clientId"  : setting.config.clientId,
+      "clientType": setting.config.clientType,
+      "username"  : setting.config.username,
+      "password"  : setting.config.password,
       "battery"   : 100,
       "charging"  : true
     });
     const body  = response.body as Record<string, Object>;
     const index = body.index    as number;
-    this.clientIndex = index;
+    setting.config.clientIndex = index;
     hilog.info(0x0000, "TaoyaoSignal", "信令注册成功：%{public}d", index);
     this.heartbeat();
+    if(setting.initOnLoad) {
+      taoyaoSignal.init();
+    }
   }
 
   /**
@@ -160,15 +170,15 @@ class TaoyaoSignal {
    */
   buildId(): number {
     if (++this.index > this.maxIndex) {
-      this.index = 0;
+      this.index = this.minIndex;
     }
     const date = new Date();
     return (
-      100000000000000 * date.getDate()    +
-      1000000000000   * date.getHours()   +
-      10000000000     * date.getMinutes() +
-      100000000       * date.getSeconds() +
-      1000            * this.clientIndex  +
+      100000000000000 * date.getDate()             +
+      1000000000000   * date.getHours()            +
+      10000000000     * date.getMinutes()          +
+      100000000       * date.getSeconds()          +
+      1000            * setting.config.clientIndex +
       this.index
     );
   }
@@ -323,7 +333,7 @@ class TaoyaoSignal {
    * @param id     ID
    */
   nativePush(signal: string, body: string, id: number = 0) {
-    this.push(signal, JSON.parse(body), id);
+    taoyaoSignal.push(signal, JSON.parse(body), id);
   }
 
   /**
@@ -332,18 +342,21 @@ class TaoyaoSignal {
    * @param signal 信令
    * @param body   主体
    * @param id     ID
-   *
-   * @returns  响应
    */
-  async nativeRequest(signal: string, body: string, id: number = 0): Promise<string> {
-    const response = await this.request(signal, JSON.parse(body), id);
-    return JSON.stringify(response);
+  nativeRequest(signal: string, body: string, id: number = 0) {
+    taoyaoSignal.request(signal, JSON.parse(body), id).then(response => {
+      taoyaoModule.callback(JSON.stringify(response));
+    });
   }
 
 }
 
-const signal = new TaoyaoSignal();
+const taoyaoSignal = new TaoyaoSignal();
+
+if(setting.initOnLoad) {
+  taoyaoSignal.connect();
+}
 
 export {
-  signal
+  taoyaoSignal
 }

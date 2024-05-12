@@ -11,6 +11,8 @@
 
 #include "../include/Capturer.hpp"
 
+#include <mutex>
+
 #include "hilog/log.h"
 
 #include "rtc_base/time_utils.h"
@@ -20,6 +22,8 @@
 
 #include <ohcamera/camera_manager.h>
 #include <ohcamera/capture_session.h>
+
+static std::recursive_mutex videoMutex;
 
 // 采集回调
 static void onError(Camera_VideoOutput* videoOutput, Camera_ErrorCode errorCode);
@@ -33,14 +37,19 @@ static void onFrame(void* context);
 static bool CheckEglExtension(const char* extensions, const char* extension);
 
 acgist::VideoCapturer::VideoCapturer() {
+    #if __TAOYAO_VULKAN__
+    initVulkan();
+    #endif
+    #if __TAOYAO_OPENGL__
     initOpenGLES();
+    #endif
     Camera_ErrorCode ret = OH_Camera_GetCameraManager(&this->cameraManager);
-    OH_LOG_INFO(LOG_APP, "获取摄像头管理器：%o", ret);
+    OH_LOG_INFO(LOG_APP, "配置摄像头管理器：%o", ret);
     ret = OH_CameraManager_GetSupportedCameras(this->cameraManager, &this->cameraDevice, &this->cameraSize);
     OH_LOG_INFO(LOG_APP, "获取摄像头设备列表：%o %d", ret, this->cameraSize);
     ret = OH_CameraManager_GetSupportedCameraOutputCapability(this->cameraManager, &this->cameraDevice[this->cameraIndex], &this->cameraOutputCapability);
     OH_LOG_INFO(LOG_APP, "获取摄像头输出功能：%o %d %d", ret, this->cameraIndex, this->cameraOutputCapability->videoProfilesSize);
-    // 注册相机状态回调
+    // 注册相机状态回调：可以取消注册
     // OH_CameraManager_RegisterCallback(this->cameraManager, CameraManager_Callbacks* callback);
 //    char surfaceId[OH_XCOMPONENT_ID_LEN_MAX + 1] = {};
 //    uint64_t idSize = OH_XCOMPONENT_ID_LEN_MAX + 1;
@@ -55,7 +64,12 @@ acgist::VideoCapturer::VideoCapturer() {
 }
 
 acgist::VideoCapturer::~VideoCapturer() {
+    #if __TAOYAO_VULKAN__
+    releaseVulkan();
+    #endif
+    #if __TAOYAO_OPENGL__
     releaseOpenGLES();
+    #endif
     Camera_ErrorCode ret = OH_CaptureSession_Release(this->cameraCaptureSession);
     this->cameraCaptureSession = nullptr;
     OH_LOG_INFO(LOG_APP, "释放摄像头视频会话：%o", ret);
@@ -74,6 +88,7 @@ acgist::VideoCapturer::~VideoCapturer() {
 }
 
 bool acgist::VideoCapturer::start() {
+    std::lock_guard<std::recursive_mutex> videoLock(videoMutex);
     if (this->running) {
         return true;
     }
@@ -90,6 +105,7 @@ bool acgist::VideoCapturer::start() {
     callbacks.onError      = onError;
     callbacks.onFrameEnd   = onFrameEnd;
     callbacks.onFrameStart = onFrameStart;
+    // ：可以取消注册
     ret = OH_VideoOutput_RegisterCallback(this->cameraVideoOutput, &callbacks);
     OH_LOG_INFO(LOG_APP, "视频捕获回调：%o", ret);
     OH_NativeImage_AttachContext(this->nativeImage, this->textureId);
@@ -97,6 +113,7 @@ bool acgist::VideoCapturer::start() {
 }
 
 bool acgist::VideoCapturer::stop() {
+    std::lock_guard<std::recursive_mutex> videoLock(videoMutex);
     if (!this->running) {
         return true;
     }
@@ -247,7 +264,7 @@ void acgist::VideoCapturer::releaseOpenGLES() {
 }
 
 static void onError(Camera_VideoOutput* videoOutput, Camera_ErrorCode errorCode) {
-    OH_LOG_WARN(LOG_APP, "视频捕获数据帧失败：%d", errorCode);
+    OH_LOG_ERROR(LOG_APP, "视频捕获数据帧失败：%d", errorCode);
 }
 
 static void onFrameEnd(Camera_VideoOutput* videoOutput, int32_t frameCount) {

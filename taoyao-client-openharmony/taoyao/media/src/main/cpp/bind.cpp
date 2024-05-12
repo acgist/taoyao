@@ -6,11 +6,19 @@
  * @author acgist
  * 
  * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/reference/native-lib/napi.md
+ * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/napi/use-napi-thread-safety.md
+ * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/performance/native-threads-call-js.md
+ * https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/performance/develop-Native-modules-using-NAPI-safely-and-efficiently.md
  */
 
 #include <map>
 #include <mutex>
 #include <string>
+#include <future>
+#include <thread>
+#include <chrono>
+
+#include <uv.h>
 
 #include <hilog/log.h>
 
@@ -42,20 +50,25 @@ static std::recursive_mutex taoyaoMutex;
     size_t length;                                                           \
     char chars[2048] = { 0 };                                                \
     napi_get_value_string_utf8(env, args[0], chars, sizeof(chars), &length); \
-    OH_LOG_INFO(LOG_APP, "解析JSON：%s", chars);                              \
+    if(length <= 0) {                                                        \
+    OH_LOG_WARN(LOG_APP, "TAOYAO ERROR JSON: %{public}s", chars);            \
+        napi_create_int32(env, -1, &ret);                                    \
+        return ret;                                                          \
+    }                                                                        \
+    OH_LOG_DEBUG(LOG_APP, "TAOYAO JSON: %{public}s", chars);                 \
     nlohmann::json json = nlohmann::json::parse(chars, chars + length);      \
     nlohmann::json body = json["body"];
 #endif
 
 // 房间检查
 #ifndef TAOYAO_ROOM_CHECK
-#define TAOYAO_ROOM_CHECK(action)                                      \
-    std::string roomId = body["roomId"];                               \
-    auto room = acgist::roomMap.find(roomId);                          \
-    if(room == acgist::roomMap.end()) {                                \
-        OH_LOG_WARN(LOG_APP, "房间无效：%s %s", #action, roomId.data()); \
-        napi_create_int32(env, -1, &ret);                              \
-        return ret;                                                    \
+#define TAOYAO_ROOM_CHECK(action)                                                                    \
+    std::string roomId = body["roomId"];                                                             \
+    auto room = acgist::roomMap.find(roomId);                                                        \
+    if(room == acgist::roomMap.end()) {                                                              \
+        OH_LOG_WARN(LOG_APP, "TAOYAO ERROR ROOM ID: %{public}s %{public}s", #action, roomId.data()); \
+        napi_create_int32(env, -1, &ret);                                                            \
+        return ret;                                                                                  \
     }
 #endif
 
@@ -64,6 +77,7 @@ namespace acgist {
 uint32_t width   = 720;
 uint32_t height  = 480;
 uint64_t bitrate = 3'000'000L;
+uint32_t iFrameInterval = 5'000;
 double frameRate = 30.0;
 int32_t samplingRate  = 48'000;
 int32_t channelCount  = 2;
@@ -71,18 +85,30 @@ int32_t bitsPerSample = 16;
 std::string clientId  = "";
 std::string name      = "";
 
+// 索引：667-999
+static uint32_t index       = 667;
+// 最小索引
+static uint32_t minIndex    = 667;
+// 最大索引
+static uint32_t maxIndex    = 999;
+// 终端索引
+static uint32_t clientIndex = 99999;
 // ETS环境
 static napi_env env    = nullptr;
 // 是否加载
 static bool initTaoyao = false;
-// PUSH方法引用
+// push方法引用
 static napi_ref pushRef    = nullptr;
-// REQUEST方法引用
+// request方法引用
 static napi_ref requestRef = nullptr;
+// request线程安全方法
+static napi_threadsafe_function requestFunction = nullptr;
 // 媒体功能
 static acgist::MediaManager* mediaManager = nullptr;
 // 房间管理
 static std::map<std::string, acgist::Room*> roomMap;
+// 异步回调
+static std::map<uint64_t, std::promise<std::string>*> promiseMap;
 
 /**
  * 支持的编解码
@@ -91,58 +117,135 @@ static void printSupportCodec() {
     // TODO: 验证是否需要释放
     OH_AVCapability* format = nullptr;
     format = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_AUDIO_OPUS, true);
-    OH_LOG_INFO(LOG_APP, "是否支持OPUS硬件解码：%o", OH_AVCapability_IsHardware(format));
+    OH_LOG_INFO(LOG_APP, "是否支持OPUS硬件解码：%{public}o", OH_AVCapability_IsHardware(format));
     format = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_AUDIO_OPUS, false);
-    OH_LOG_INFO(LOG_APP, "是否支持OPUS硬件解码：%o", OH_AVCapability_IsHardware(format));
+    OH_LOG_INFO(LOG_APP, "是否支持OPUS硬件解码：%{public}o", OH_AVCapability_IsHardware(format));
     format = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_AUDIO_G711MU, true);
-    OH_LOG_INFO(LOG_APP, "是否支持PCMU硬件编码：%o", OH_AVCapability_IsHardware(format));
+    OH_LOG_INFO(LOG_APP, "是否支持PCMU硬件编码：%{public}o", OH_AVCapability_IsHardware(format));
     format = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_AUDIO_G711MU, false);
-    OH_LOG_INFO(LOG_APP, "是否支持PCMU硬件解码：%o", OH_AVCapability_IsHardware(format));
+    OH_LOG_INFO(LOG_APP, "是否支持PCMU硬件解码：%{public}o", OH_AVCapability_IsHardware(format));
     format = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_VIDEO_AVC, true);
-    OH_LOG_INFO(LOG_APP, "是否支持H264硬件编码：%o", OH_AVCapability_IsHardware(format));
+    OH_LOG_INFO(LOG_APP, "是否支持H264硬件编码：%{public}o", OH_AVCapability_IsHardware(format));
     format = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_VIDEO_AVC, false);
-    OH_LOG_INFO(LOG_APP, "是否支持H264硬件解码：%o", OH_AVCapability_IsHardware(format));
+    OH_LOG_INFO(LOG_APP, "是否支持H264硬件解码：%{public}o", OH_AVCapability_IsHardware(format));
     format = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_VIDEO_HEVC, true);
-    OH_LOG_INFO(LOG_APP, "是否支持H265硬件编码：%o", OH_AVCapability_IsHardware(format));
+    OH_LOG_INFO(LOG_APP, "是否支持H265硬件编码：%{public}o", OH_AVCapability_IsHardware(format));
     format = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_VIDEO_HEVC, false);
-    OH_LOG_INFO(LOG_APP, "是否支持H265硬件解码：%o", OH_AVCapability_IsHardware(format));
+    OH_LOG_INFO(LOG_APP, "是否支持H265硬件解码：%{public}o", OH_AVCapability_IsHardware(format));
+}
+
+struct Message {
+    uint64_t    id;
+    std::string signal;
+    std::string body;
+};
+
+static void pushCallback(uv_work_t* work) {
+    // 不能调用ETS函数
+}
+
+static void afterPushCallback(uv_work_t* work, int status) {
+    Message* message = (Message*) work->data;
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(acgist::env, &scope);
+    if(scope == nullptr) {
+        delete message;
+        delete work;
+        return;
+    };
+    // 开始执行ETS函数
+    napi_value ret;
+    napi_value callback = nullptr;
+    napi_get_reference_value(acgist::env, acgist::pushRef, &callback);
+    napi_value data[3];
+    napi_create_string_utf8(acgist::env, message->signal.data(), NAPI_AUTO_LENGTH, &data[0]);
+    napi_create_string_utf8(acgist::env, message->body.data(), NAPI_AUTO_LENGTH, &data[1]);
+    napi_create_int64(acgist::env, message->id, &data[2]);
+    napi_call_function(acgist::env, nullptr, callback, 3, data, &ret);
+    napi_get_undefined(acgist::env, &ret);
+    // 释放资源
+    napi_close_handle_scope(acgist::env, scope);
+    delete message;
+    delete work;
 }
 
 /**
  * 发送消息
  */
 void push(const std::string& signal, const std::string& body, uint64_t id) {
-    // TODO: 验证是否需要释放
+    uv_loop_s* loop = nullptr;
+    napi_get_uv_event_loop(acgist::env, &loop);
+    uv_work_t* work = new uv_work_t{};
+    work->data = new Message{ id, signal, body };
+    uv_queue_work(loop, work, pushCallback, afterPushCallback);
+}
+
+static void requestCallback(uv_work_t* work) {
+    // 不能调用ETS函数
+}
+
+static void afterRequestCallback(uv_work_t* work, int status) {
+    Message* message = (Message*) work->data;
+    napi_handle_scope scope = nullptr;
+    napi_open_handle_scope(acgist::env, &scope);
+    if(scope == nullptr) {
+        delete message;
+        delete work;
+        return;
+    };
+    // 开始执行ETS函数
     napi_value ret;
     napi_value callback = nullptr;
-    napi_get_reference_value(env, acgist::pushRef, &callback);
+    napi_get_reference_value(env, acgist::requestRef, &callback);
     napi_value data[3];
-    napi_create_string_utf8(acgist::env, signal.data(), NAPI_AUTO_LENGTH, &data[0]);
-    napi_create_string_utf8(acgist::env, body.data(), NAPI_AUTO_LENGTH, &data[1]);
-    napi_create_int64(acgist::env, id, &data[2]);
+    napi_create_string_utf8(acgist::env, message->signal.data(), NAPI_AUTO_LENGTH, &data[0]);
+    napi_create_string_utf8(acgist::env, message->body.data(), NAPI_AUTO_LENGTH, &data[1]);
+    napi_create_int64(acgist::env, message->id, &data[2]);
     napi_call_function(acgist::env, nullptr, callback, 3, data, &ret);
     napi_get_undefined(acgist::env, &ret);
+    // 释放资源
+    napi_close_handle_scope(acgist::env, scope);
+    delete message;
+    delete work;
 }
 
 /**
  * 发送请求
  */
 std::string request(const std::string& signal, const std::string& body, uint64_t id) {
-    napi_value ret;
-    napi_value callback = nullptr;
-    napi_get_reference_value(env, acgist::requestRef, &callback);
-    napi_value data[3];
-    napi_create_string_utf8(acgist::env, signal.data(), NAPI_AUTO_LENGTH, &data[0]);
-    napi_create_string_utf8(acgist::env, body.data(), NAPI_AUTO_LENGTH, &data[1]);
-    napi_create_int64(acgist::env, id, &data[2]);
-    napi_call_function(acgist::env, nullptr, callback, 3, data, &ret);
-    char chars[TAOYAO_JSON_SIZE];
-    size_t length;
-    napi_get_value_string_utf8(env, ret, chars, sizeof(chars), &length);
-    // TODO: promise
-    // napi_create_promise
-    // napi_resolve_deferred
-    return chars;
+    uv_loop_s* loop = nullptr;
+    napi_get_uv_event_loop(acgist::env, &loop);
+    uv_work_t* work = new uv_work_t{};
+    if(id <= 0L) {
+        if (++acgist::index > acgist::maxIndex) {
+          acgist::index = acgist::minIndex;
+        }
+        auto now         = std::chrono::system_clock::now();
+        std::time_t time = std::chrono::system_clock::to_time_t(now);
+        std::tm*    tm   = std::localtime(&time);
+        id =
+            100000000000000L * tm->tm_mday          +
+            1000000000000    * tm->tm_hour          +
+            10000000000      * tm->tm_min           +
+            100000000        * tm->tm_sec           +
+            1000             * acgist::clientIndex  +
+            acgist::index;
+    }
+    std::promise<std::string>* promise = new std::promise<std::string>{};
+    acgist::promiseMap.insert({ id, promise });
+    work->data = new Message{ id, signal, body };
+    uv_queue_work(loop, work, requestCallback, afterRequestCallback);
+    std::future<std::string> future = promise->get_future();
+    if(future.wait_for(std::chrono::seconds(5)) == std::future_status::timeout) {
+        OH_LOG_WARN(LOG_APP, "请求超时：%{public}s %{public}s", signal.data(), body.data());
+        acgist::promiseMap.erase(id);
+        delete promise;
+        return "{}";
+    } else {
+        acgist::promiseMap.erase(id);
+        delete promise;
+        return future.get();
+    }
 }
 
 /**
@@ -162,11 +265,12 @@ static napi_value init(napi_env env, napi_callback_info info) {
     napi_create_reference(env, args[1], 1, &acgist::pushRef);
     napi_create_reference(env, args[2], 1, &acgist::requestRef);
     printSupportCodec();
-    acgist::clientId = json["clientId"];
-    acgist::name     = json["name"];
+    acgist::clientId    = json["clientId"];
+    acgist::name        = json["name"];
+    acgist::clientIndex = json["clientIndex"];
     OH_LOG_INFO(LOG_APP, "加载libtaoyao");
     std::string version = mediasoupclient::Version();
-    OH_LOG_INFO(LOG_APP, "加载MediasoupClient：%s", version.data());
+    OH_LOG_INFO(LOG_APP, "加载MediasoupClient：%{public}s", version.data());
     mediasoupclient::Initialize();
     OH_LOG_INFO(LOG_APP, "加载媒体功能");
     mediaManager = new MediaManager();
@@ -209,6 +313,23 @@ static napi_value shutdown(napi_env env, napi_callback_info info) {
     env = nullptr;
     // 返回结果
     napi_create_int32(env, 0, &ret);
+    return ret;
+}
+
+/**
+ * Promise回调
+ */
+static napi_value callback(napi_env env, napi_callback_info info) {
+    TAOYAO_JSON_BODY(1);
+    nlohmann::json header = json["header"];
+    uint64_t id = header["id"];
+    auto promise = acgist::promiseMap.find(id);
+    if(promise == acgist::promiseMap.end()) {
+        napi_create_int32(env, -1, &ret);
+    } else {
+        napi_create_int32(env, 0, &ret);
+        promise->second->set_value(chars);
+    }
     return ret;
 }
 
@@ -448,6 +569,7 @@ static napi_value Init(napi_env env, napi_value exports) {
     acgist::env = env;
     napi_property_descriptor desc[] = {
         { "init",                nullptr, acgist::init,                nullptr, nullptr, nullptr, napi_default, nullptr },
+        { "callback",            nullptr, acgist::callback,            nullptr, nullptr, nullptr, napi_default, nullptr },
         { "shutdown",            nullptr, acgist::shutdown,            nullptr, nullptr, nullptr, napi_default, nullptr },
         { "roomClose",           nullptr, acgist::roomClose,           nullptr, nullptr, nullptr, napi_default, nullptr },
         { "roomEnter",           nullptr, acgist::roomEnter,           nullptr, nullptr, nullptr, napi_default, nullptr },

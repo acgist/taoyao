@@ -20,10 +20,8 @@
 #define TAOYAO_CAPTURER_HPP
 
 // OpenGL ES || VULKAN
-#define __TAOYAO_VULKAN__ true
-#ifndef __TAOYAO_VULKAN__
+#define __TAOYAO_VULKAN__ false
 #define __TAOYAO_OPENGL__ true
-#endif
 
 // 本地音频采集
 #define __TAOYAO_AUDIO_LOCAL__ false

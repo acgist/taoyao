@@ -98,7 +98,7 @@ public:
     // 视频编码器
     OH_AVCodec* avCodec = nullptr;
     // 缓冲数据索引
-    uint32_t index      = 0;
+    uint32_t index = 0;
     // 缓冲数据
     OH_AVBuffer* buffer = nullptr;
     // 编码回调
@@ -108,12 +108,14 @@ public:
     TaoyaoVideoEncoder();
     virtual ~TaoyaoVideoEncoder() override;
     
-public:
+protected:
     // 初始配置
     void initFormatConfig(OH_AVFormat* format);
+
+public:
     // 重新开始
     void restart();
-    // 动态配置
+    // 动态配置：format自己释放
     void reset(OH_AVFormat* format);
     // 动态配置
     void resetIntConfig(const char* key, int32_t value);
@@ -140,6 +142,10 @@ public:
  */
 class TaoyaoVideoDecoder : public webrtc::VideoDecoder {
     
+public:
+    // 是否运行
+    bool running = false;
+
 public:
     TaoyaoVideoDecoder();
     virtual ~TaoyaoVideoDecoder() override;

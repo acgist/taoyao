@@ -1,9 +1,10 @@
 export const init: (
   json   : string,
   push   : (signal: string, body: string, id: number) => void,
-  request: (signal: string, body: string, id: number) => Promise<string>
+  request: (signal: string, body: string, id: number) => void
 ) => number;
 export const shutdown  : (json: string) => number;
+export const callback  : (json: string) => number;
 export const roomClose : (json: string) => number;
 export const roomEnter : (json: string) => number;
 export const roomExpel : (json: string) => number;

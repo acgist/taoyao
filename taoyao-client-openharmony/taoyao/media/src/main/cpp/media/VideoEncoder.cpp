@@ -1,6 +1,8 @@
 #include "../include/WebRTC.hpp"
 
-#include "hilog/log.h"
+#include <mutex>
+
+#include <hilog/log.h>
 
 #include <native_window/external_window.h>
 #include <multimedia/player_framework/native_avbuffer.h>
@@ -12,6 +14,8 @@
 #include "api/video_codecs/video_encoder.h"
 #include "api/video_codecs/video_decoder.h"
 
+static std::recursive_mutex videoMutex;
+
 // 编码回调
 static void OnError(OH_AVCodec* codec, int32_t errorCode, void* userData);
 static void OnStreamChanged(OH_AVCodec* codec, OH_AVFormat* format, void* userData);
@@ -22,18 +26,18 @@ acgist::TaoyaoVideoEncoder::TaoyaoVideoEncoder() {
     OH_AVCapability* capability = OH_AVCodec_GetCapability(OH_AVCODEC_MIMETYPE_VIDEO_AVC, true);
     const char* codecName = OH_AVCapability_GetName(capability);
     this->avCodec = OH_VideoEncoder_CreateByName(codecName);
-    OH_LOG_INFO(LOG_APP, "视频编码格式：%s", codecName);
-    // 注册回调
+    OH_LOG_INFO(LOG_APP, "配置视频编码格式：%s", codecName);
+    // 注册视频编码回调
     OH_AVCodecCallback callback = { &OnError, &OnStreamChanged, &OnNeedInputBuffer, &OnNewOutputBuffer };
     OH_AVErrCode ret = OH_VideoEncoder_RegisterCallback(this->avCodec, callback, this);
-    OH_LOG_INFO(LOG_APP, "注册编码回调：%o", ret);
-    // 配置编码参数
+    OH_LOG_INFO(LOG_APP, "注册视频编码回调：%o", ret);
+    // 配置视频编码参数
     OH_AVFormat* format = OH_AVFormat_Create();
     this->initFormatConfig(format);
     ret = OH_VideoEncoder_Configure(this->avCodec, format);
     OH_AVFormat_Destroy(format);
-    OH_LOG_INFO(LOG_APP, "配置编码参数：%o %d %d %f %lld", ret, acgist::width, acgist::height, acgist::frameRate, acgist::bitrate);
-    // 准备就绪
+    OH_LOG_INFO(LOG_APP, "配置视频编码参数：%o %d %d %f %d %lld", ret, acgist::width, acgist::height, acgist::frameRate, acgist::iFrameInterval, acgist::bitrate);
+    // 视频编码准备就绪
     ret = OH_VideoEncoder_Prepare(this->avCodec);
     OH_LOG_INFO(LOG_APP, "视频编码准备就绪：%o", ret);
 }
@@ -48,42 +52,31 @@ acgist::TaoyaoVideoEncoder::~TaoyaoVideoEncoder() {
 
 void acgist::TaoyaoVideoEncoder::initFormatConfig(OH_AVFormat* format) {
     // https://docs.openharmony.cn/pages/v4.1/zh-cn/application-dev/media/avcodec/video-encoding.md
-    // 配置视频宽度
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_WIDTH, acgist::width);
-    // 配置视频高度
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_HEIGHT, acgist::height);
-    // 配置视频比特率
-    OH_AVFormat_SetLongValue(format, OH_MD_KEY_BITRATE, acgist::bitrate);
-    // 配置视频帧率
-    OH_AVFormat_SetDoubleValue(format, OH_MD_KEY_FRAME_RATE, acgist::frameRate);
-    // 配置视频颜色格式
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_PIXEL_FORMAT, AV_PIXEL_FORMAT_YUVI420);
-    // 配置视频YUV值范围标志
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_RANGE_FLAG, false);
-    // 配置视频原色
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_COLOR_PRIMARIES, static_cast<int32_t>(OH_ColorPrimary::COLOR_PRIMARY_BT709));
-    // 配置传输特性
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_TRANSFER_CHARACTERISTICS, static_cast<int32_t>(OH_TransferCharacteristic::TRANSFER_CHARACTERISTIC_BT709));
-    // 配置最大矩阵系数
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_MATRIX_COEFFICIENTS, static_cast<int32_t>(OH_MatrixCoefficient::MATRIX_COEFFICIENT_IDENTITY));
-    // 配置关键帧的间隔（单位为：毫秒）
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_I_FRAME_INTERVAL, 5000);
-    // 配置编码Profile
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_PROFILE, static_cast<int32_t>(OH_AVCProfile::AVC_PROFILE_BASELINE));
-    // 配置编码比特率模式
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_VIDEO_ENCODE_BITRATE_MODE, static_cast<int32_t>(OH_VideoEncodeBitrateMode::CBR));
-    // 配置所需的编码质量：只有在恒定质量模式下配置的编码器才支持此配置
-    OH_AVFormat_SetIntValue(format, OH_MD_KEY_QUALITY, 0);
+    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_WIDTH,                     acgist::width);
+    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_HEIGHT,                    acgist::height);
+    OH_AVFormat_SetLongValue(format,   OH_MD_KEY_BITRATE,                   acgist::bitrate);
+    OH_AVFormat_SetDoubleValue(format, OH_MD_KEY_FRAME_RATE,                acgist::frameRate);
+    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_I_FRAME_INTERVAL,          acgist::iFrameInterval);
+    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_QUALITY,                   0);
+    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_RANGE_FLAG,                false);
+    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_PIXEL_FORMAT,              AV_PIXEL_FORMAT_YUVI420);
+    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_PROFILE,                   static_cast<int32_t>(OH_AVCProfile::AVC_PROFILE_BASELINE));
+    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_COLOR_PRIMARIES,           static_cast<int32_t>(OH_ColorPrimary::COLOR_PRIMARY_BT709));
+    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_MATRIX_COEFFICIENTS,       static_cast<int32_t>(OH_MatrixCoefficient::MATRIX_COEFFICIENT_IDENTITY));
+    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_TRANSFER_CHARACTERISTICS,  static_cast<int32_t>(OH_TransferCharacteristic::TRANSFER_CHARACTERISTIC_BT709));
+    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_VIDEO_ENCODE_BITRATE_MODE, static_cast<int32_t>(OH_VideoEncodeBitrateMode::CBR));
 }
 
 void acgist::TaoyaoVideoEncoder::restart() {
+    std::lock_guard<std::recursive_mutex> videoLock(videoMutex);
     OH_AVErrCode ret = OH_VideoEncoder_Flush(this->avCodec);
-    OH_LOG_INFO(LOG_APP, "清空编码队列：%o", ret);
+    OH_LOG_INFO(LOG_APP, "清空视频编码队列：%o", ret);
     ret = OH_VideoEncoder_Start(this->avCodec);
     OH_LOG_INFO(LOG_APP, "开始视频编码：%o", ret);
 }
 
 void acgist::TaoyaoVideoEncoder::reset(OH_AVFormat* format) {
+    std::lock_guard<std::recursive_mutex> videoLock(videoMutex);
     OH_AVErrCode ret = OH_VideoEncoder_Reset(this->avCodec);
     OH_LOG_INFO(LOG_APP, "重置视频编码：%o", ret);
     ret = OH_VideoEncoder_Configure(this->avCodec, format);
@@ -91,6 +84,7 @@ void acgist::TaoyaoVideoEncoder::reset(OH_AVFormat* format) {
 }
 
 void acgist::TaoyaoVideoEncoder::resetIntConfig(const char* key, int32_t value) {
+    std::lock_guard<std::recursive_mutex> videoLock(videoMutex);
     OH_AVFormat* format = OH_AVFormat_Create();
     OH_AVFormat_SetIntValue(format, key, value);
     OH_AVErrCode ret = OH_VideoEncoder_SetParameter(this->avCodec, format);
@@ -99,6 +93,7 @@ void acgist::TaoyaoVideoEncoder::resetIntConfig(const char* key, int32_t value) 
 }
 
 void acgist::TaoyaoVideoEncoder::resetLongConfig(const char* key, int64_t value) {
+    std::lock_guard<std::recursive_mutex> videoLock(videoMutex);
     OH_AVFormat* format = OH_AVFormat_Create();
     OH_AVFormat_SetLongValue(format, key, value);
     OH_AVErrCode ret = OH_VideoEncoder_SetParameter(this->avCodec, format);
@@ -107,6 +102,7 @@ void acgist::TaoyaoVideoEncoder::resetLongConfig(const char* key, int64_t value)
 }
 
 void acgist::TaoyaoVideoEncoder::resetDoubleConfig(const char* key, double value) {
+    std::lock_guard<std::recursive_mutex> videoLock(videoMutex);
     OH_AVFormat* format = OH_AVFormat_Create();
     OH_AVFormat_SetDoubleValue(format, key, value);
     OH_AVErrCode ret = OH_VideoEncoder_SetParameter(this->avCodec, format);
@@ -115,6 +111,7 @@ void acgist::TaoyaoVideoEncoder::resetDoubleConfig(const char* key, double value
 }
 
 bool acgist::TaoyaoVideoEncoder::start() {
+    std::lock_guard<std::recursive_mutex> videoLock(videoMutex);
     if(this->running) {
         return true;
     }
@@ -125,20 +122,23 @@ bool acgist::TaoyaoVideoEncoder::start() {
 }
 
 bool acgist::TaoyaoVideoEncoder::stop() {
+    std::lock_guard<std::recursive_mutex> videoLock(videoMutex);
     if(!this->running) {
         return true;
     }
     this->running = false;
+    // Buffer模式
+    OH_AVErrCode ret = OH_VideoEncoder_Stop(this->avCodec);
+    OH_LOG_INFO(LOG_APP, "结束视频编码：%o", ret);
     // Surface模式
     // OH_AVErrCode ret = OH_VideoEncoder_NotifyEndOfStream(this->avCodec);
     // OH_LOG_INFO(LOG_APP, "通知视频编码结束：%o", ret);
-    OH_AVErrCode ret = OH_VideoEncoder_Stop(this->avCodec);
-    OH_LOG_INFO(LOG_APP, "结束视频编码：%o", ret);
     return ret == OH_AVErrCode::AV_ERR_OK;
 }
 
 int32_t acgist::TaoyaoVideoEncoder::Release() {
-    // TODO: 释放资源
+    // TODO: 释放
+    delete this;
     return 0;
 }
 
@@ -158,20 +158,19 @@ webrtc::VideoEncoder::EncoderInfo acgist::TaoyaoVideoEncoder::GetEncoderInfo() c
 }
 
 int32_t acgist::TaoyaoVideoEncoder::Encode(const webrtc::VideoFrame& videoFrame, const std::vector<webrtc::VideoFrameType>* frame_types) {
-//     frameSize = videoFrame.width * height * 3 / 2
-    // 配置buffer info信息
     OH_AVCodecBufferAttr info;
-    info.size   = 0; // TODO
+    info.size   = videoFrame.width() * videoFrame.height() * 3 / 2;
     info.offset = 0;
     info.pts    = 0;
-    info.flags  = 0; // TODO frame_types
+    info.flags  = 0;
+    // TODO: videoFrame.video_frame_buffer->
     OH_AVErrCode ret = OH_AVBuffer_SetBufferAttr(this->buffer, &info);
     ret = OH_VideoEncoder_PushInputBuffer(this->avCodec, index);
     return 0;
 }
 
 static void OnError(OH_AVCodec* codec, int32_t errorCode, void* userData) {
-    OH_LOG_WARN(LOG_APP, "视频编码发送错误：%d", errorCode);
+    OH_LOG_ERROR(LOG_APP, "视频编码发送错误：%d", errorCode);
 }
 
 static void OnStreamChanged(OH_AVCodec* codec, OH_AVFormat* format, void* userData) {
@@ -210,6 +209,11 @@ static void OnNewOutputBuffer(OH_AVCodec* codec, uint32_t index, OH_AVBuffer* bu
     OH_AVCodecBufferAttr info;
     OH_AVErrCode ret = OH_AVBuffer_GetBufferAttr(buffer, &info);
     char* data = reinterpret_cast<char*>(OH_AVBuffer_GetAddr(buffer));
+    //     webrtc::VideoFrameType flags =
+    //     info.flags == AVCODEC_BUFFER_FLAGS_SYNC_FRAME       ? webrtc::VideoFrameType::kVideoFrameKey   :
+    //     info.flags == AVCODEC_BUFFER_FLAGS_INCOMPLETE_FRAME ? webrtc::VideoFrameType::kVideoFrameDelta :
+    //     webrtc::VideoFrameType::kEmptyFrame;
+    // frame_types->push_back(std::move(flags));
 //     videoEncoder->encodedImageCallback
     // TODO: 继续处理
     ret = OH_VideoEncoder_FreeOutputBuffer(codec, index);

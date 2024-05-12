@@ -1,7 +1,3 @@
-/**
- * 音频采集不用实现（系统已经实现）
- * 这里只是用来学习使用
- */
 #include "../include/Capturer.hpp"
 
 #include <mutex>
