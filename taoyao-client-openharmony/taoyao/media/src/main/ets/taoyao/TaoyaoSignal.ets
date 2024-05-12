@@ -92,7 +92,7 @@ class TaoyaoSignal {
       this.reconnect();
     });
     // 配置CA证书
-    const caPath = getContext(this).filesDir + setting.caPath;
+    const caPath = getContext(this).cacheDir + setting.caPath;
     hilog.info(0x0000, "TaoyaoSignal", "配置证书：%{public}s", caPath);
     const options: webSocket.WebSocketRequestOptions = {
       caPath: caPath
@@ -293,19 +293,19 @@ class TaoyaoSignal {
     let ret: number = 0;
     switch (signal) {
       case "room::close":
-        ret = taoyaoModule.roomClose(message);
+        // ret = taoyaoModule.roomClose(message);
         break;
       case "room::enter":
-        ret = taoyaoModule.roomEnter(message);
+        // ret = taoyaoModule.roomEnter(message);
         break;
       case "room::expel":
-        ret = taoyaoModule.roomExpel(message);
+        // ret = taoyaoModule.roomExpel(message);
         break;
       case "room::invite":
         ret = taoyaoModule.roomInvite(message);
         break;
       case "room::leave":
-        ret = taoyaoModule.roomLeave(message);
+        // ret = taoyaoModule.roomLeave(message);
         break;
       case "room::client::list":
         // ret = taoyaoModule.roomClientList(message);
@@ -314,22 +314,22 @@ class TaoyaoSignal {
         // ret = taoyaoModule.mediaConsume(message);
         break;
       case "media::consumer::close":
-        ret = taoyaoModule.mediaConsumerClose(message);
+        // ret = taoyaoModule.mediaConsumerClose(message);
         break;
       case "media::consumer::pause":
-        ret = taoyaoModule.mediaConsumerPause(message);
+        // ret = taoyaoModule.mediaConsumerPause(message);
         break;
       case "media::consumer::resume":
-        ret = taoyaoModule.mediaConsumerResume(message);
+        // ret = taoyaoModule.mediaConsumerResume(message);
         break;
       case "media::producer::close":
-        ret = taoyaoModule.mediaProducerClose(message);
+        // ret = taoyaoModule.mediaProducerClose(message);
         break;
       case "media::producer::pause":
-        ret = taoyaoModule.mediaProducerPause(message);
+        // ret = taoyaoModule.mediaProducerPause(message);
         break;
       case "media::producer::resume":
-        ret = taoyaoModule.mediaProducerResume(message);
+        // ret = taoyaoModule.mediaProducerResume(message);
         break;
       default:
         ret = -1;

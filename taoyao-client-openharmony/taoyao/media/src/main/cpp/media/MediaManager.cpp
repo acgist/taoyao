@@ -47,11 +47,11 @@ bool acgist::MediaManager::newPeerConnectionFactory() {
     this->peerConnectionFactory = webrtc::CreatePeerConnectionFactory(
         // 网络线程
         this->networkThread.get(),
-        // 工作线程：可以使用信令线程
+        // 工作线程
         this->workerThread.get(),
         // 信令线程
         this->signalingThread.get(),
-        // 音频设备：为空自动创建
+        // 音频设备
         nullptr,
         // 音频编码
         webrtc::CreateBuiltinAudioEncoderFactory(),

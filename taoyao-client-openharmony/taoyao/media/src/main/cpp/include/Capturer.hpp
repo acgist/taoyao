@@ -24,7 +24,7 @@
 #define __TAOYAO_OPENGL__ true
 
 // 本地音频采集
-#define __TAOYAO_AUDIO_LOCAL__ false
+#define __TAOYAO_AUDIO_LOCAL__ true
 // 本地视频采集
 #define __TAOYAO_VIDEO_LOCAL__ true
 

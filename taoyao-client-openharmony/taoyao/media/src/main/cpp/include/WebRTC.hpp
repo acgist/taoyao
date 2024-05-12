@@ -49,6 +49,9 @@ namespace acgist {
 class TaoyaoAudioTrackSource : public webrtc::AudioTrackSinkInterface, public webrtc::Notifier<webrtc::AudioSourceInterface> {
 
 public:
+    std::vector<webrtc::AudioTrackSinkInterface*> vector;
+
+public:
     TaoyaoAudioTrackSource();
     virtual ~TaoyaoAudioTrackSource();
     
@@ -56,6 +59,8 @@ public:
     virtual webrtc::MediaSourceInterface::SourceState state() const override;
     virtual bool remote() const override;
     virtual void OnData(const void* audio_data, int bits_per_sample, int sample_rate, size_t number_of_channels, size_t number_of_frames) override;
+    virtual void AddSink(webrtc::AudioTrackSinkInterface* sink) override;
+    virtual void RemoveSink(webrtc::AudioTrackSinkInterface* sink) override;
 
 };
 

@@ -243,9 +243,11 @@ nlohmann::json request(const std::string& signal, const std::string& body, uint6
         delete promise;
         return nlohmann::json{};
     } else {
+        OH_LOG_DEBUG(LOG_APP, "请求响应：%{public}lld", id);
         acgist::promiseMap.erase(id);
         delete promise;
-        return std::move(future.get());
+        return future.get();
+//      return std::move(future.get());
     }
 }
 
@@ -453,11 +455,7 @@ static napi_value roomInvite(napi_env env, napi_callback_info info) {
             int result = asyncExecute([room, roomId, password]() {
                 int code = room->enter(password);
                 if(code == acgist::SUCCESS_CODE) {
-                    try {
-                        room->produceMedia();
-                    } catch(const std::exception& e) {
-                        OH_LOG_ERROR(LOG_APP, "进入房间异常：%{public}s %{public}s", roomId.data(), e.what());
-                    }
+                    room->produceMedia();
                 } else {
                     acgist::roomMap.erase(roomId);
                     delete room;

@@ -1,10 +1,39 @@
 import { taoyaoSignal } from "../taoyao/TaoyaoSignal";
 
+import fs from '@ohos.file.fs';
+import { BusinessError } from "@ohos.base";
+import common from "@ohos.app.ability.common";
+import abilityAccessCtrl, { Permissions } from "@ohos.abilityAccessCtrl";
+
 import { setting } from "../taoyao/Setting";
+
+const permissions: Array<Permissions> = [
+  "ohos.permission.CAMERA",
+  "ohos.permission.MICROPHONE",
+  "ohos.permission.READ_MEDIA",
+  "ohos.permission.WRITE_MEDIA",
+];
+
+function reqPermissionsFromUser(permissions: Array<Permissions>, context: common.UIAbilityContext) {
+  abilityAccessCtrl.createAtManager().requestPermissionsFromUser(context, permissions).then((data) => {
+    // 拷贝证书
+    const caPath = context.filesDir + setting.caPath;
+    const caFile = fs.createRandomAccessFileSync(caPath, fs.OpenMode.CREATE | fs.OpenMode.READ_WRITE);
+    const caText = context.resourceManager.getRawFileContentSync("cacert.pem").buffer;
+    caFile.writeSync(caText);
+    caFile.close();
+  }).catch((err: BusinessError) => {
+  });
+}
 
 @Entry
 @Component
 struct Index {
+
+  aboutToAppear() {
+    const context = getContext(this) as common.UIAbilityContext;
+    reqPermissionsFromUser(permissions, context);
+  }
 
   build() {
     Column() {

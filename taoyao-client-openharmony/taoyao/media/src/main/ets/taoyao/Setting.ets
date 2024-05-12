@@ -4,8 +4,6 @@
  * @author acgist
  */
 
-import fs from '@ohos.file.fs';
-
 class Config {
 
   // 终端名称
@@ -40,13 +38,6 @@ class Setting {
 };
 
 const setting = new Setting();
-
-// 拷贝证书
-const caPath = getContext(this).filesDir + setting.caPath;
-const caFile = fs.createRandomAccessFileSync(caPath, fs.OpenMode.CREATE | fs.OpenMode.READ_WRITE);
-const caText = getContext(this).resourceManager.getRawFileContentSync("cacert.pem").buffer;
-caFile.writeSync(caText);
-caFile.close();
 
 export {
   setting

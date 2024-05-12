@@ -6,6 +6,8 @@
 #include "hilog/log.h"
 
 static std::recursive_mutex roomMutex;
+static std::recursive_mutex mediaMutex;
+static std::recursive_mutex clientMutex;
 
 acgist::Room::Room(const std::string& roomId, acgist::MediaManager* mediaManager) : roomId(roomId), mediaManager(mediaManager) {
     this->device = new mediasoupclient::Device();
@@ -121,6 +123,7 @@ int acgist::Room::produceMedia() {
     if(this->videoProduce) {
 //        this->produceVideo();
     }
+    return 0;
 }
 
 int acgist::Room::createSendTransport() {
