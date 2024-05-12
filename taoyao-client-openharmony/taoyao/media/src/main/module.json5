@@ -36,30 +36,35 @@
     "requestPermissions": [
       {
         "name": "ohos.permission.CAMERA",
+        "reason": "$string:app_name",
         "usedScene": {
-          "when": "always"
+          "when": "inuse"
         }
       },
       {
         "name": "ohos.permission.INTERNET",
+        "reason": "$string:app_name",
         "usedScene": {
           "when": "always"
         }
       },
       {
         "name": "ohos.permission.MICROPHONE",
+        "reason": "$string:app_name",
         "usedScene": {
-          "when": "always"
+          "when": "inuse"
         }
       },
       {
         "name": "ohos.permission.READ_MEDIA",
+        "reason": "$string:app_name",
         "usedScene": {
           "when": "always"
         }
       },
       {
         "name": "ohos.permission.WRITE_MEDIA",
+        "reason": "$string:app_name",
         "usedScene": {
           "when": "always"
         }

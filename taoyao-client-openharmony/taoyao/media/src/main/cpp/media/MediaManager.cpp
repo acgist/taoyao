@@ -110,7 +110,7 @@ int acgist::MediaManager::releaseLocalClient() {
 
 bool acgist::MediaManager::startCapture() {
     this->startAudioCapture();
-    this->startVideoCapture();
+//    this->startVideoCapture();
     return true;
 }
 

@@ -1,10 +1,13 @@
 /**
  * 信令
  *
+ * 线程模型设计真的是个小丑🤡🤡🤡🤡
+ *
  * @author acgist
  */
 
 import hilog from "@ohos.hilog";
+import List from '@ohos.util.List';
 import { BusinessError } from '@ohos.base';
 import webSocket from "@ohos.net.webSocket";
 
@@ -22,6 +25,8 @@ class TaoyaoSignal {
   connected: boolean = false;
   // 心跳定时
   heartbeatTimer: number = 0;
+  // 本地回调
+  nativeCallback  = new List<number>();
   // 同步请求
   callbackMapping = new Map<number, Function>();
   // 当前消息索引：0-666
@@ -265,8 +270,17 @@ class TaoyaoSignal {
     const header: Record<string, Object> = json.header as Record<string, Object>;
     const id    : number = header.id     as number;
     const signal: string = header.signal as string;
+    if(this.nativeCallback.has(id)) {
+      hilog.debug(0x0000, "TaoyaoSignal", "处理同步消息(NAPI)：%{public}s", message);
+      try {
+        taoyaoModule.callback(message);
+      } finally {
+        this.nativeCallback.remove(id);
+      }
+      return;
+    }
     if (this.callbackMapping.has(id)) {
-      hilog.debug(0x0000, "TaoyaoSignal", "处理同步消息：%{public}s", message);
+      hilog.debug(0x0000, "TaoyaoSignal", "处理同步消息(ETS)：%{public}s", message);
       try {
         const callback = this.callbackMapping.get(id) as Function;
         if(callback(json)) {
@@ -294,10 +308,10 @@ class TaoyaoSignal {
         ret = taoyaoModule.roomLeave(message);
         break;
       case "room::client::list":
-        ret = taoyaoModule.roomClientList(message);
+        // ret = taoyaoModule.roomClientList(message);
         break;
       case "media::consume":
-        ret = taoyaoModule.mediaConsume(message);
+        // ret = taoyaoModule.mediaConsume(message);
         break;
       case "media::consumer::close":
         ret = taoyaoModule.mediaConsumerClose(message);
@@ -344,9 +358,11 @@ class TaoyaoSignal {
    * @param id     ID
    */
   nativeRequest(signal: string, body: string, id: number = 0) {
-    taoyaoSignal.request(signal, JSON.parse(body), id).then(response => {
-      taoyaoModule.callback(JSON.stringify(response));
-    });
+    taoyaoSignal.nativeCallback.add(id);
+    taoyaoSignal.push(signal, JSON.parse(body), id);
+    setTimeout(() => {
+      taoyaoSignal.nativeCallback.remove(id);
+    }, 5000);
   }
 
 }

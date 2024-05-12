@@ -13,7 +13,7 @@ static int32_t OnStreamEvent(OH_AudioCapturer* capturer, void* userData, OH_Audi
 static int32_t OnInterruptEvent(OH_AudioCapturer* capturer, void* userData, OH_AudioInterrupt_ForceType type, OH_AudioInterrupt_Hint hint);
 
 acgist::AudioCapturer::AudioCapturer() {
-    OH_AudioStream_Result ret = OH_AudioStreamBuilder_Create(&this->builder, AUDIOSTREAM_TYPE_RENDERER);
+    OH_AudioStream_Result ret = OH_AudioStreamBuilder_Create(&this->builder, AUDIOSTREAM_TYPE_CAPTURER);
     OH_LOG_INFO(LOG_APP, "配置音频构造器：%o", ret);
     // 配置音频采集参数
     OH_AudioStreamBuilder_SetSamplingRate(this->builder, acgist::samplingRate);

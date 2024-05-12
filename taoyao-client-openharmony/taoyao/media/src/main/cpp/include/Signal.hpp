@@ -54,7 +54,7 @@ extern void push(const std::string& signal, const std::string& body, uint64_t id
  * 
  * @return 响应
  */
-extern std::string request(const std::string& signal, const std::string& body, uint64_t id = 0L);
+extern nlohmann::json request(const std::string& signal, const std::string& body, uint64_t id = 0L);
 
 }
 

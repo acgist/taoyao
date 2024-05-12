@@ -1,6 +1,7 @@
 #include "../include/Room.hpp"
 
 #include <mutex>
+#include <thread>
 
 #include "hilog/log.h"
 
@@ -65,7 +66,7 @@ int acgist::Room::enter(const std::string& password) {
     }
     this->enterd = true;
     if (this->device->IsLoaded()) {
-        OH_LOG_WARN(LOG_APP, "Device配置已经加载：%s", this->roomId.data());
+        OH_LOG_WARN(LOG_APP, "Device配置已经加载：%{public}s", this->roomId.data());
         return -1;
     }
     // 本地终端
@@ -80,30 +81,34 @@ int acgist::Room::enter(const std::string& password) {
     nlohmann::json requestBody = {
         { "roomId", this->roomId }
     };
-    std::string response = acgist::request("media::router::rtp::capabilities", requestBody.dump());
-    nlohmann::json json = nlohmann::json::parse(response);
+    nlohmann::json json = acgist::request("media::router::rtp::capabilities", requestBody.dump());
+    if(json.find("body") == json.end()) {
+        OH_LOG_WARN(LOG_APP, "进入房间失败：%{public}s", this->roomId.data());
+        return -1;
+    }
     nlohmann::json responseBody = json["body"];
     nlohmann::json rtpCapabilities = responseBody["rtpCapabilities"];
     // 加载设备
+    OH_LOG_INFO(LOG_APP, "加载设备：%{public}s", this->roomId.data());
     mediasoupclient::PeerConnection::Options options;
     options.config  = *this->rtcConfiguration;
     options.factory = this->mediaManager->peerConnectionFactory.get();
     this->device->Load(rtpCapabilities, &options);
     // 进入房间
+    OH_LOG_INFO(LOG_APP, "进入房间：%{public}s", this->roomId.data());
     requestBody = {
-        { "roomId",   this->roomId },
-        { "password", password     },
+        { "roomId",           this->roomId                        },
+        { "password",         password                            },
         { "rtpCapabilities",  this->device->GetRtpCapabilities()  },
         { "sctpCapabilities", this->device->GetSctpCapabilities() }
     };
-    response = acgist::request("room::enter", requestBody.dump());
-    OH_LOG_INFO(LOG_APP, "进入房间：%s", this->roomId.data());
+    acgist::request("room::enter", requestBody.dump());
     return 0;
 }
 
 int acgist::Room::produceMedia() {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
-    OH_LOG_INFO(LOG_APP, "生成媒体：%s", this->roomId.data());
+    OH_LOG_INFO(LOG_APP, "生成媒体：%{public}s", this->roomId.data());
     if(this->audioProduce || this->videoProduce) {
         this->createSendTransport();
     }
@@ -114,17 +119,16 @@ int acgist::Room::produceMedia() {
         this->produceAudio();
     }
     if(this->videoProduce) {
-        this->produceVideo();
+//        this->produceVideo();
     }
 }
 
 int acgist::Room::createSendTransport() {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     if(this->sendTransport != nullptr) {
-        OH_LOG_INFO(LOG_APP, "发送通道已经存在：%s", this->roomId.data());
+        OH_LOG_INFO(LOG_APP, "发送通道已经存在：%{public}s", this->roomId.data());
         return -1;
     }
-    OH_LOG_INFO(LOG_APP, "创建发送通道：%s", this->roomId.data());
     nlohmann::json requestBody = {
         { "roomId",           this->roomId     },
         { "forceTcp",         false            },
@@ -132,8 +136,12 @@ int acgist::Room::createSendTransport() {
         { "consuming",        false            },
     //  { "sctpCapabilities", sctpCapabilities },
     };
-    std::string response = acgist::request("media::transport::webrtc::create", requestBody.dump());
-    nlohmann::json json = nlohmann::json::parse(response);
+    nlohmann::json json = acgist::request("media::transport::webrtc::create", requestBody.dump());
+    if(json.find("body") == json.end()) {
+        OH_LOG_WARN(LOG_APP, "创建发送通道失败：%{public}s", this->roomId.data());
+        return -1;
+    }
+    OH_LOG_INFO(LOG_APP, "创建发送通道：%{public}s", this->roomId.data());
     nlohmann::json responseBody = json["body"];
     mediasoupclient::PeerConnection::Options options;
     options.config  = *this->rtcConfiguration;
@@ -153,10 +161,9 @@ int acgist::Room::createSendTransport() {
 int acgist::Room::createRecvTransport() {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     if(this->recvTransport != nullptr) {
-        OH_LOG_INFO(LOG_APP, "接收通道已经存在：%s", this->roomId.data());
+        OH_LOG_INFO(LOG_APP, "接收通道已经存在：%{public}s", this->roomId.data());
         return -1;
     }
-    OH_LOG_INFO(LOG_APP, "创建接收通道：%s", this->roomId.data());
     nlohmann::json requestBody = {
         { "roomId",           this->roomId     },
         { "forceTcp",         false            },
@@ -164,19 +171,23 @@ int acgist::Room::createRecvTransport() {
         { "consuming",        true             },
     //  { "sctpCapabilities", sctpCapabilities },
     };
-    std::string response = acgist::request("media::transport::webrtc::create", requestBody.dump());
-    nlohmann::json json = nlohmann::json::parse(response);
+    nlohmann::json json = acgist::request("media::transport::webrtc::create", requestBody.dump());
+    if(json.find("body") == json.end()) {
+        OH_LOG_WARN(LOG_APP, "创建接收通道失败：%{public}s", this->roomId.data());
+        return -1;
+    }
+    OH_LOG_INFO(LOG_APP, "创建接收通道：%{public}s", this->roomId.data());
     nlohmann::json responseBody = json["body"];
     mediasoupclient::PeerConnection::Options options;
     options.config      = *this->rtcConfiguration;
     options.factory     = this->mediaManager->peerConnectionFactory.get();
     this->recvTransport = this->device->CreateRecvTransport(
         this->recvListener,
-        json["transportId"],
-        json["iceParameters"],
-        json["iceCandidates"],
-        json["dtlsParameters"],
-        json["sctpParameters"],
+        responseBody["transportId"],
+        responseBody["iceParameters"],
+        responseBody["iceCandidates"],
+        responseBody["dtlsParameters"],
+        responseBody["sctpParameters"],
         &options
     );
     return 0;
@@ -185,15 +196,15 @@ int acgist::Room::createRecvTransport() {
 int acgist::Room::produceAudio() {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     if(this->audioProducer != nullptr) {
-        OH_LOG_INFO(LOG_APP, "音频媒体已经生产：%s", this->roomId.data());
+        OH_LOG_INFO(LOG_APP, "音频媒体已经生产：%{public}s", this->roomId.data());
         return -1;
     }
-    if(!this->device->CanProduce("audio") || this->audioProducer == nullptr) {
-        OH_LOG_INFO(LOG_APP, "不能生产音频媒体：%s", this->roomId.data());
+    if(!this->device->CanProduce("audio")) {
+        OH_LOG_INFO(LOG_APP, "不能生产音频媒体：%{public}s", this->roomId.data());
         return -1;
     }
     if(this->client->audioTrack->state() == webrtc::MediaStreamTrackInterface::TrackState::kEnded) {
-        OH_LOG_INFO(LOG_APP, "音频媒体状态错误：%s", this->roomId.data());
+        OH_LOG_INFO(LOG_APP, "音频媒体状态错误：%{public}s", this->roomId.data());
         return -2;
     }
     OH_LOG_INFO(LOG_APP, "生产音频媒体：%s", this->roomId.data());
@@ -217,7 +228,7 @@ int acgist::Room::produceVideo() {
         OH_LOG_INFO(LOG_APP, "视频媒体已经生产：%s", this->roomId.data());
         return -1;
     }
-    if(!this->device->CanProduce("video") || this->videoProducer == nullptr) {
+    if(!this->device->CanProduce("video")) {
         OH_LOG_INFO(LOG_APP, "不能生产视频媒体：%s", this->roomId.data());
         return -1;
     }
@@ -543,12 +554,16 @@ std::future<std::string> acgist::SendListener::OnProduce(mediasoupclient::SendTr
         { "transportId",   transport->GetId() },
         { "rtpParameters", rtpParameters      },
     };
-    std::string response = acgist::request("media::produce", requestBody.dump());
-    nlohmann::json json = nlohmann::json::parse(response);
-    nlohmann::json responseBody = json["body"];
-    std::string producerId = responseBody["producerId"];
     std::promise<std::string> promise;
-    promise.set_value(producerId);
+    nlohmann::json json = acgist::request("media::produce", requestBody.dump());
+    if(json.find("body") == json.end()) {
+        OH_LOG_WARN(LOG_APP, "生产媒体失败：%{public}s", this->room->roomId.data());
+        promise.set_value("");
+    } else {
+        nlohmann::json responseBody = json["body"];
+        std::string producerId = responseBody["producerId"];
+        promise.set_value(producerId);
+    }
     return promise.get_future();
 }
 

@@ -17,6 +17,7 @@
 #include <future>
 #include <thread>
 #include <chrono>
+#include <functional>
 
 #include <uv.h>
 
@@ -42,21 +43,23 @@ static std::recursive_mutex taoyaoMutex;
 
 // 读取JSON
 #ifndef TAOYAO_JSON_BODY
-#define TAOYAO_JSON_BODY(size)                                               \
-    napi_value ret;                                                          \
-    size_t argc = size;                                                      \
-    napi_value args[size] = { nullptr };                                     \
-    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);              \
-    size_t length;                                                           \
-    char chars[2048] = { 0 };                                                \
-    napi_get_value_string_utf8(env, args[0], chars, sizeof(chars), &length); \
-    if(length <= 0) {                                                        \
-    OH_LOG_WARN(LOG_APP, "TAOYAO ERROR JSON: %{public}s", chars);            \
-        napi_create_int32(env, -1, &ret);                                    \
-        return ret;                                                          \
-    }                                                                        \
-    OH_LOG_DEBUG(LOG_APP, "TAOYAO JSON: %{public}s", chars);                 \
-    nlohmann::json json = nlohmann::json::parse(chars, chars + length);      \
+#define TAOYAO_JSON_BODY(size)                                                           \
+    napi_value ret;                                                                      \
+    size_t argc = size;                                                                  \
+    napi_value args[size] = { nullptr };                                                 \
+    napi_get_cb_info(env, info, &argc, args, nullptr, nullptr);                          \
+    size_t length;                                                                       \
+    char* chars = new char[16 * 1024] { 0 };                                             \
+    napi_get_value_string_utf8(env, args[0], chars, 16 * 1024, &length);                 \
+    if(length <= 0) {                                                                    \
+        OH_LOG_WARN(LOG_APP, "TAOYAO ERROR JSON: %{public}d %{public}s", length, chars); \
+        napi_create_int32(env, -1, &ret);                                                \
+        delete[] chars;                                                                  \
+        return ret;                                                                      \
+    }                                                                                    \
+    OH_LOG_DEBUG(LOG_APP, "TAOYAO JSON: %{public}d %{public}s", length, chars);          \
+    nlohmann::json json = nlohmann::json::parse(chars, chars + length);                  \
+    delete[] chars;                                                                      \
     nlohmann::json body = json["body"];
 #endif
 
@@ -108,7 +111,7 @@ static acgist::MediaManager* mediaManager = nullptr;
 // 房间管理
 static std::map<std::string, acgist::Room*> roomMap;
 // 异步回调
-static std::map<uint64_t, std::promise<std::string>*> promiseMap;
+static std::map<uint64_t, std::promise<nlohmann::json>*> promiseMap;
 
 /**
  * 支持的编解码
@@ -141,7 +144,6 @@ struct Message {
 };
 
 static void pushCallback(uv_work_t* work) {
-    // 不能调用ETS函数
 }
 
 static void afterPushCallback(uv_work_t* work, int status) {
@@ -181,7 +183,6 @@ void push(const std::string& signal, const std::string& body, uint64_t id) {
 }
 
 static void requestCallback(uv_work_t* work) {
-    // 不能调用ETS函数
 }
 
 static void afterRequestCallback(uv_work_t* work, int status) {
@@ -212,7 +213,7 @@ static void afterRequestCallback(uv_work_t* work, int status) {
 /**
  * 发送请求
  */
-std::string request(const std::string& signal, const std::string& body, uint64_t id) {
+nlohmann::json request(const std::string& signal, const std::string& body, uint64_t id) {
     uv_loop_s* loop = nullptr;
     napi_get_uv_event_loop(acgist::env, &loop);
     uv_work_t* work = new uv_work_t{};
@@ -231,21 +232,54 @@ std::string request(const std::string& signal, const std::string& body, uint64_t
             1000             * acgist::clientIndex  +
             acgist::index;
     }
-    std::promise<std::string>* promise = new std::promise<std::string>{};
+    std::promise<nlohmann::json>* promise = new std::promise<nlohmann::json>{};
     acgist::promiseMap.insert({ id, promise });
     work->data = new Message{ id, signal, body };
     uv_queue_work(loop, work, requestCallback, afterRequestCallback);
-    std::future<std::string> future = promise->get_future();
+    std::future<nlohmann::json> future = promise->get_future();
     if(future.wait_for(std::chrono::seconds(5)) == std::future_status::timeout) {
         OH_LOG_WARN(LOG_APP, "请求超时：%{public}s %{public}s", signal.data(), body.data());
         acgist::promiseMap.erase(id);
         delete promise;
-        return "{}";
+        return nlohmann::json{};
     } else {
         acgist::promiseMap.erase(id);
         delete promise;
-        return future.get();
+        return std::move(future.get());
     }
+}
+
+struct Adync {
+    std::function<void()>* function;
+};
+
+static void asyncCallback(uv_work_t* work) {
+    Adync* async = (Adync*) work->data;
+    (*async->function)();
+    delete async;
+}
+
+static void afterAsyncCallback(uv_work_t* work, int status) {
+    delete work;
+}
+
+/**
+ * 异步执行
+ * 注意：此处不能使用promise-future等待
+ * 
+ * @param function 方法
+ * 
+ * @return 结果
+ */
+static int asyncExecute(std::function<void()> function) {
+//    uv_loop_s* loop = nullptr;
+//    napi_get_uv_event_loop(acgist::env, &loop);
+//    uv_work_t* work = new uv_work_t{};
+//    work->data = new Adync { &function };
+//    uv_queue_work(loop, work, asyncCallback, afterAsyncCallback);
+    std::thread thread(function);
+    thread.detach();
+    return 0;
 }
 
 /**
@@ -326,9 +360,11 @@ static napi_value callback(napi_env env, napi_callback_info info) {
     auto promise = acgist::promiseMap.find(id);
     if(promise == acgist::promiseMap.end()) {
         napi_create_int32(env, -1, &ret);
+        OH_LOG_DEBUG(LOG_APP, "Promise回调无效：%{public}lld", id);
     } else {
         napi_create_int32(env, 0, &ret);
-        promise->second->set_value(chars);
+        promise->second->set_value(std::move(json));
+        OH_LOG_DEBUG(LOG_APP, "Promise回调成功：%{public}lld", id);
     }
     return ret;
 }
@@ -404,20 +440,29 @@ static napi_value roomInvite(napi_env env, napi_callback_info info) {
     TAOYAO_JSON_BODY(1);
     {
         std::lock_guard<std::recursive_mutex> roomLock(roomMutex);
-        // TODO: 试试引用
-        std::string roomId   = body["roomId"];
-        std::string password = body["password"];
+        std::string roomId = body["roomId"];
+        std::string password;
+        if(body.find("password") != body.end()) {
+            password = body["password"];
+        }
         auto oldRoom = acgist::roomMap.find(roomId);
         if(oldRoom == acgist::roomMap.end()) {
-            OH_LOG_INFO(LOG_APP, "进入房间：%s", roomId.data());
+            OH_LOG_INFO(LOG_APP, "进入房间：%{public}s", roomId.data());
             auto room = new acgist::Room(roomId, mediaManager);
-            int result = room->enter(password);
-            if(result == acgist::SUCCESS_CODE) {
-                acgist::roomMap.insert({ roomId, room });
-                room->produceMedia();
-            } else {
-                delete room;
-            }
+            acgist::roomMap.insert({ roomId, room });
+            int result = asyncExecute([room, roomId, password]() {
+                int code = room->enter(password);
+                if(code == acgist::SUCCESS_CODE) {
+                    try {
+                        room->produceMedia();
+                    } catch(const std::exception& e) {
+                        OH_LOG_ERROR(LOG_APP, "进入房间异常：%{public}s %{public}s", roomId.data(), e.what());
+                    }
+                } else {
+                    acgist::roomMap.erase(roomId);
+                    delete room;
+                }
+            });
             napi_create_int32(env, result, &ret);
         } else {
             OH_LOG_INFO(LOG_APP, "已经进入房间：%s", roomId.data());
