@@ -30,6 +30,7 @@ add_subdirectory("./deps/libmediasoupclient")
 add_library(
     ${PROJECT_NAME} SHARED
     bind.cpp
+    media/Signal.cpp
     media/WebRTC.cpp
     media/Room.cpp
     media/Client.cpp
@@ -69,6 +70,8 @@ target_link_libraries(
     libohaudio.so
     # 相机
     libohcamera.so
+    # ACE
+    libace_ndk.z.so
     # NAPI
     libace_napi.z.so
     # LOG

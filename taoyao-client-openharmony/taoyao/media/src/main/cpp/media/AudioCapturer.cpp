@@ -14,13 +14,13 @@ static int32_t OnInterruptEvent(OH_AudioCapturer* capturer, void* userData, OH_A
 
 acgist::AudioCapturer::AudioCapturer() {
     OH_AudioStream_Result ret = OH_AudioStreamBuilder_Create(&this->builder, AUDIOSTREAM_TYPE_CAPTURER);
-    OH_LOG_INFO(LOG_APP, "配置音频构造器：%o", ret);
+    TAOYAO_AUDIO_RET_LOG("配置音频构造器：%{public}d", ret);
     // 配置音频采集参数
     OH_AudioStreamBuilder_SetSamplingRate(this->builder, acgist::samplingRate);
     OH_AudioStreamBuilder_SetChannelCount(this->builder, acgist::channelCount);
     OH_AudioStreamBuilder_SetLatencyMode(this->builder,  OH_AudioStream_LatencyMode::AUDIOSTREAM_LATENCY_MODE_NORMAL);
     OH_AudioStreamBuilder_SetSampleFormat(this->builder, OH_AudioStream_SampleFormat::AUDIOSTREAM_SAMPLE_S16LE);
-    OH_LOG_DEBUG(LOG_APP, "配置音频采集参数：%d %d", acgist::samplingRate, acgist::channelCount);
+    OH_LOG_DEBUG(LOG_APP, "配置音频采集参数：%{public}d %{public}d", acgist::samplingRate, acgist::channelCount);
     // 设置音频采集回调
     OH_AudioCapturer_Callbacks callbacks;
     callbacks.OH_AudioCapturer_OnError          = OnError;
@@ -28,7 +28,7 @@ acgist::AudioCapturer::AudioCapturer() {
     callbacks.OH_AudioCapturer_OnStreamEvent    = OnStreamEvent;
     callbacks.OH_AudioCapturer_OnInterruptEvent = OnInterruptEvent;
     ret = OH_AudioStreamBuilder_SetCapturerCallback(this->builder, callbacks, this);
-    OH_LOG_DEBUG(LOG_APP, "设置音频采集回调：%o", ret);
+    TAOYAO_AUDIO_RET_LOG("设置音频采集回调：%{public}d", ret);
 }
 
 acgist::AudioCapturer::~AudioCapturer() {
@@ -36,7 +36,7 @@ acgist::AudioCapturer::~AudioCapturer() {
     if(this->builder != nullptr) {
         OH_AudioStream_Result ret = OH_AudioStreamBuilder_Destroy(this->builder);
         this->builder = nullptr;
-        OH_LOG_INFO(LOG_APP, "释放音频构造器：%o", ret);
+        TAOYAO_AUDIO_RET_LOG("释放音频构造器：%{public}d", ret);
     }
 }
 
@@ -48,10 +48,10 @@ bool acgist::AudioCapturer::start() {
     this->running = true;
     // 配置音频采集器
     OH_AudioStream_Result ret = OH_AudioStreamBuilder_GenerateCapturer(this->builder, &this->audioCapturer);
-    OH_LOG_DEBUG(LOG_APP, "配置音频采集器：%o", ret);
+    TAOYAO_AUDIO_RET_LOG("配置音频采集器：%{public}d", ret);
     // 开始音频采集
     ret = OH_AudioCapturer_Start(this->audioCapturer);
-    OH_LOG_DEBUG(LOG_APP, "开始音频采集：%o", ret);
+    TAOYAO_AUDIO_RET_LOG("开始音频采集：%{public}d", ret);
     return ret == OH_AudioStream_Result::AUDIOSTREAM_SUCCESS;
 }
 
@@ -63,11 +63,11 @@ bool acgist::AudioCapturer::stop() {
     this->running = false;
     // 停止音频采集
     OH_AudioStream_Result ret = OH_AudioCapturer_Stop(this->audioCapturer);
-    OH_LOG_DEBUG(LOG_APP, "停止音频采集：%o", ret);
+    TAOYAO_AUDIO_RET_LOG("停止音频采集：%{public}d", ret);
     // 释放音频采集器
     ret = OH_AudioCapturer_Release(this->audioCapturer);
     this->audioCapturer = nullptr;
-    OH_LOG_DEBUG(LOG_APP, "释放音频采集器：%o", ret);
+    TAOYAO_AUDIO_RET_LOG("释放音频采集器：%{public}d", ret);
     return ret == OH_AudioStream_Result::AUDIOSTREAM_SUCCESS;
 }
 
@@ -77,6 +77,7 @@ static int32_t OnError(OH_AudioCapturer* capturer, void* userData, OH_AudioStrea
 }
 
 static int32_t OnReadData(OH_AudioCapturer* capturer, void* userData, void* buffer, int32_t length) {
+    // OH_LOG_ERROR(LOG_APP, "音频数据采集回调：%{public}d", length);
     if(userData == nullptr) {
         return -1;
     }

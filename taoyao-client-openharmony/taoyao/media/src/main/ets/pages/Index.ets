@@ -9,6 +9,7 @@ import { setting } from "../taoyao/Setting";
 
 const permissions: Array<Permissions> = [
   "ohos.permission.CAMERA",
+  "ohos.permission.INTERNET",
   "ohos.permission.MICROPHONE",
   "ohos.permission.READ_MEDIA",
   "ohos.permission.WRITE_MEDIA",
@@ -22,6 +23,10 @@ function reqPermissionsFromUser(permissions: Array<Permissions>, context: common
     const caText = context.resourceManager.getRawFileContentSync("cacert.pem").buffer;
     caFile.writeSync(caText);
     caFile.close();
+    // 自动连接信令
+    if(setting.initOnLoad) {
+      taoyaoSignal.connect();
+    }
   }).catch((err: BusinessError) => {
   });
 }

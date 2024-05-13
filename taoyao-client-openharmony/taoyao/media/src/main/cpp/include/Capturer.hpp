@@ -44,6 +44,7 @@
 #include <native_window/external_window.h>
 
 #include <ohcamera/camera.h>
+#include "ohcamera/camera_input.h"
 #include <ohcamera/video_output.h>
 #include <ohcamera/capture_session.h>
 
@@ -154,6 +155,8 @@ public:
     uint32_t cameraSize = 0;
     // 摄像头索引
     uint32_t cameraIndex = 0;
+    // 摄像头输入
+    Camera_Input* cameraInput = nullptr;
     // 摄像头设备列表
     Camera_Device* cameraDevice = nullptr;
     // 摄像头管理器

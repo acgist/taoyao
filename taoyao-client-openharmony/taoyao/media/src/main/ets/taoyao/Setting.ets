@@ -30,8 +30,8 @@ class Setting {
   // 信令版本
   version: string = "1.0.0";
   // 信令地址
-  // signalAddress: string = "wss://192.168.8.57:8888/websocket.signal";
-  signalAddress: string = "wss://192.168.1.100:8888/websocket.signal";
+  signalAddress: string = "wss://192.168.8.239:8888/websocket.signal";
+  // signalAddress: string = "wss://192.168.1.100:8888/websocket.signal";
   // 启动自动加载系统
   initOnLoad   : boolean = true;
 

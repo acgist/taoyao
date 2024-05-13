@@ -7,6 +7,33 @@
 #ifndef TAOYAO_SIGNAL_HPP
 #define TAOYAO_SIGNAL_HPP
 
+#ifndef TAOYAO_AUDIO_RET_LOG
+#define TAOYAO_AUDIO_RET_LOG(format, ret, ...)          \
+if(ret == OH_AudioStream_Result::AUDIOSTREAM_SUCCESS) { \
+    OH_LOG_INFO(LOG_APP, format, ret, ##__VA_ARGS__);   \
+} else {                                                \
+    OH_LOG_ERROR(LOG_APP, format, ret, ##__VA_ARGS__);  \
+}
+#endif
+
+#ifndef TAOYAO_VIDEO_RET_LOG
+#define TAOYAO_VIDEO_RET_LOG(format, ret, ...)         \
+if(ret == Camera_ErrorCode::CAMERA_OK) {               \
+    OH_LOG_INFO(LOG_APP, format, ret, ##__VA_ARGS__);  \
+} else {                                               \
+    OH_LOG_ERROR(LOG_APP, format, ret, ##__VA_ARGS__); \
+}
+#endif
+
+#ifndef TAOYAO_OPENGL_RET_LOG
+#define TAOYAO_OPENGL_RET_LOG(format, ret, ...)        \
+if(ret) {                                              \
+    OH_LOG_INFO(LOG_APP, format, ret, ##__VA_ARGS__);  \
+} else {                                               \
+    OH_LOG_ERROR(LOG_APP, format, ret, ##__VA_ARGS__); \
+}
+#endif
+
 #include <string>
 
 #include <json.hpp>

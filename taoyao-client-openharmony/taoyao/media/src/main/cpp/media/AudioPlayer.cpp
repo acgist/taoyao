@@ -14,7 +14,7 @@ static int32_t OnInterruptEvent(OH_AudioRenderer* renderer, void* userData, OH_A
 
 acgist::AudioPlayer::AudioPlayer() {
     OH_AudioStream_Result ret = OH_AudioStreamBuilder_Create(&this->builder, AUDIOSTREAM_TYPE_RENDERER);
-    OH_LOG_INFO(LOG_APP, "配置音频构造器：%o", ret);
+    TAOYAO_AUDIO_RET_LOG("配置音频构造器：%{public}d", ret);
     // 配置音频播放参数
     OH_AudioStreamBuilder_SetSamplingRate(this->builder, acgist::samplingRate);
     OH_AudioStreamBuilder_SetChannelCount(this->builder, acgist::channelCount);
@@ -29,7 +29,7 @@ acgist::AudioPlayer::AudioPlayer() {
     callbacks.OH_AudioRenderer_OnStreamEvent    = OnStreamEvent;
     callbacks.OH_AudioRenderer_OnInterruptEvent = OnInterruptEvent;
     ret = OH_AudioStreamBuilder_SetRendererCallback(this->builder, callbacks, this);
-    OH_LOG_DEBUG(LOG_APP, "设置音频播放回调：%o", ret);
+    TAOYAO_AUDIO_RET_LOG("设置音频播放回调：%{public}d", ret);
 }
 
 acgist::AudioPlayer::~AudioPlayer() {
@@ -37,7 +37,7 @@ acgist::AudioPlayer::~AudioPlayer() {
     if(this->builder != nullptr) {
         OH_AudioStream_Result ret = OH_AudioStreamBuilder_Destroy(this->builder);
         this->builder = nullptr;
-        OH_LOG_INFO(LOG_APP, "释放音频构造器：%o", ret);
+        TAOYAO_AUDIO_RET_LOG("释放音频构造器：%{public}d", ret);
     }
 }
 
@@ -49,10 +49,10 @@ bool acgist::AudioPlayer::start() {
     this->running = true;
     // 配置音频播放器
     OH_AudioStream_Result ret = OH_AudioStreamBuilder_GenerateRenderer(this->builder, &this->audioRenderer);
-    OH_LOG_DEBUG(LOG_APP, "配置音频播放器：%o", ret);
+    TAOYAO_AUDIO_RET_LOG("配置音频播放器：%{public}d", ret);
     // 开始音频播放
     ret = OH_AudioRenderer_Start(this->audioRenderer);
-    OH_LOG_DEBUG(LOG_APP, "开始音频播放：%o", ret);
+    TAOYAO_AUDIO_RET_LOG("开始音频播放：%{public}d", ret);
     return ret == OH_AudioStream_Result::AUDIOSTREAM_SUCCESS;
 }
 
@@ -64,11 +64,11 @@ bool acgist::AudioPlayer::stop() {
     this->running = false;
     // 停止音频播放
     OH_AudioStream_Result ret = OH_AudioRenderer_Stop(this->audioRenderer);
-    OH_LOG_DEBUG(LOG_APP, "停止音频播放：%o", ret);
+    TAOYAO_AUDIO_RET_LOG("停止音频播放：%{public}d", ret);
     // 释放音频播放器
     ret = OH_AudioRenderer_Release(this->audioRenderer);
     this->audioRenderer = nullptr;
-    OH_LOG_DEBUG(LOG_APP, "释放音频播放器：%o", ret);
+    TAOYAO_AUDIO_RET_LOG("释放音频播放器：%{public}d", ret);
     return ret == OH_AudioStream_Result::AUDIOSTREAM_SUCCESS;
 }
 

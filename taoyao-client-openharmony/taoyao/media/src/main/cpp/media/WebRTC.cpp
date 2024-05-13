@@ -31,7 +31,7 @@ bool acgist::TaoyaoAudioTrackSource::remote() const {
 }
 
 void acgist::TaoyaoAudioTrackSource::OnData(const void* audio_data, int bits_per_sample, int sample_rate, size_t number_of_channels, size_t number_of_frames) {
-    OH_LOG_DEBUG(LOG_APP, "音频数据：%{public}d %{public}d %{public}d %{public}d", bits_per_sample, sample_rate, number_of_channels, number_of_frames);
+    // OH_LOG_DEBUG(LOG_APP, "音频数据：%{public}d %{public}d %{public}d %{public}d", bits_per_sample, sample_rate, number_of_channels, number_of_frames);
     for(auto iterator = this->vector.begin(); iterator != this->vector.end(); ++iterator) {
         (*iterator)->OnData(audio_data, bits_per_sample, sample_rate, number_of_channels, number_of_frames);
     }
@@ -39,7 +39,7 @@ void acgist::TaoyaoAudioTrackSource::OnData(const void* audio_data, int bits_per
 
 void acgist::TaoyaoAudioTrackSource::AddSink(webrtc::AudioTrackSinkInterface* sink) {
     OH_LOG_DEBUG(LOG_APP, "添加本地音频管道");
-//    this->vector.push_back(sink);
+    this->vector.push_back(sink);
 }
 
 void acgist::TaoyaoAudioTrackSource::RemoveSink(webrtc::AudioTrackSinkInterface* sink) {
@@ -70,6 +70,7 @@ absl::optional<bool> acgist::TaoyaoVideoTrackSource::needs_denoising() const {
 }
 
 void acgist::TaoyaoVideoTrackSource::OnData(const webrtc::VideoFrame& videoFrame) {
+    OH_LOG_DEBUG(LOG_APP, "视频数据：%{public}d %{public}d", videoFrame.width(), videoFrame.height());
     this->OnFrame(videoFrame);
 }
 

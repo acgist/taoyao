@@ -92,7 +92,7 @@ class TaoyaoSignal {
       this.reconnect();
     });
     // 配置CA证书
-    const caPath = getContext(this).cacheDir + setting.caPath;
+    const caPath = getContext(this).filesDir + setting.caPath;
     hilog.info(0x0000, "TaoyaoSignal", "配置证书：%{public}s", caPath);
     const options: webSocket.WebSocketRequestOptions = {
       caPath: caPath
@@ -150,6 +150,7 @@ class TaoyaoSignal {
     setting.config.clientIndex = index;
     hilog.info(0x0000, "TaoyaoSignal", "信令注册成功：%{public}d", index);
     this.heartbeat();
+    // 自动加载媒体
     if(setting.initOnLoad) {
       taoyaoSignal.init();
     }
@@ -368,10 +369,6 @@ class TaoyaoSignal {
 }
 
 const taoyaoSignal = new TaoyaoSignal();
-
-if(setting.initOnLoad) {
-  taoyaoSignal.connect();
-}
 
 export {
   taoyaoSignal
