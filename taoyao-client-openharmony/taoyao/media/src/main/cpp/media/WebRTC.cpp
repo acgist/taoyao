@@ -31,7 +31,7 @@ bool acgist::TaoyaoAudioTrackSource::remote() const {
 }
 
 void acgist::TaoyaoAudioTrackSource::OnData(const void* audio_data, int bits_per_sample, int sample_rate, size_t number_of_channels, size_t number_of_frames) {
-    // OH_LOG_DEBUG(LOG_APP, "音频数据：%{public}d %{public}d %{public}d %{public}d", bits_per_sample, sample_rate, number_of_channels, number_of_frames);
+    OH_LOG_DEBUG(LOG_APP, "音频数据：%{public}d %{public}d %{public}d %{public}d", bits_per_sample, sample_rate, number_of_channels, number_of_frames);
     for(auto iterator = this->vector.begin(); iterator != this->vector.end(); ++iterator) {
         (*iterator)->OnData(audio_data, bits_per_sample, sample_rate, number_of_channels, number_of_frames);
     }

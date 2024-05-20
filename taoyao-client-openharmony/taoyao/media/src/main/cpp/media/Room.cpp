@@ -118,10 +118,10 @@ int acgist::Room::produceMedia() {
         this->createRecvTransport();
     }
     if(this->audioProduce) {
-        // this->produceAudio();
+        this->produceAudio();
     }
     if(this->videoProduce) {
-        this->produceVideo();
+        // this->produceVideo();
     }
     return 0;
 }
@@ -532,7 +532,7 @@ acgist::SendListener::~SendListener() {
 }
 
 std::future<void> acgist::SendListener::OnConnect(mediasoupclient::Transport* transport, const nlohmann::json& dtlsParameters) {
-    OH_LOG_INFO(LOG_APP, "连接发送通道：%s - %s", this->room->roomId.data(), transport->GetId().data());
+    OH_LOG_INFO(LOG_APP, "连接发送通道：%{public}s - %{public}s", this->room->roomId.data(), transport->GetId().data());
     nlohmann::json requestBody = {
         { "roomId",           this->room->roomId },
         { "transportId",      transport->GetId() },
@@ -545,12 +545,12 @@ std::future<void> acgist::SendListener::OnConnect(mediasoupclient::Transport* tr
 }
 
 void acgist::SendListener::OnConnectionStateChange(mediasoupclient::Transport* transport, const std::string& connectionState) {
-    OH_LOG_INFO(LOG_APP, "发送通道状态改变：%s - %s - %s", this->room->roomId.data(), transport->GetId().data(), connectionState.data());
+    OH_LOG_INFO(LOG_APP, "发送通道状态改变：%{public}s - %{public}s - %{public}s", this->room->roomId.data(), transport->GetId().data(), connectionState.data());
     // TODO: 自行实现异常逻辑
 }
 
 std::future<std::string> acgist::SendListener::OnProduce(mediasoupclient::SendTransport* transport, const std::string& kind, nlohmann::json rtpParameters, const nlohmann::json& appData) {
-    OH_LOG_INFO(LOG_APP, "生产媒体：%s - %s - %s", this->room->roomId.data(), transport->GetId().data(), kind.data());
+    OH_LOG_INFO(LOG_APP, "生产媒体：%{public}s - %{public}s - %{public}s", this->room->roomId.data(), transport->GetId().data(), kind.data());
     nlohmann::json requestBody = {
         { "kind",          kind               },
         { "roomId",        this->room->roomId },

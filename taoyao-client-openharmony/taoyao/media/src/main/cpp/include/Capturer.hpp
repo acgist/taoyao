@@ -19,10 +19,6 @@
 #ifndef TAOYAO_CAPTURER_HPP
 #define TAOYAO_CAPTURER_HPP
 
-// OpenGL ES || VULKAN
-#define __TAOYAO_VULKAN__ false
-#define __TAOYAO_OPENGL__ true
-
 // 本地音频采集
 #define __TAOYAO_AUDIO_LOCAL__ true
 // 本地视频采集
@@ -32,12 +28,11 @@
 
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+#include <EGL/eglplatform.h>
 #include <GLES3/gl32.h>
 
 #include "./Signal.hpp"
 #include "./WebRTC.hpp"
-
-#include <vulkan/vulkan.h>
 
 #include <native_image/native_image.h>
 #include <native_buffer/native_buffer.h>
@@ -122,17 +117,6 @@ public:
 class VideoCapturer: public Capturer<acgist::TaoyaoVideoTrackSource> {
     
 public:
-    // ================ Vulkan ================
-    // VK实例
-    VkInstance vkInstance = VK_NULL_HANDLE;
-    // VK Surface
-    VkSurfaceKHR vkSurfaceKHR = VK_NULL_HANDLE;
-    // VK应用
-    VkApplicationInfo vkApplicationInfo = {};
-    // VK实例配置
-    VkInstanceCreateInfo vkInstanceCreateInfo = {};
-    // VK Surface配置
-    VkSurfaceCreateInfoOHOS vkSurfaceCreateInfoOHOS = {};
     // ================ OpenGL ES ================
     // OpenGL ES SurfaceId
     uint64_t surfaceId = 0;
@@ -147,36 +131,32 @@ public:
     // EGL Surface
     EGLSurface eglSurface = EGL_NO_SURFACE;
     // ================ Camera ================
+    // 相机设备数量
+    uint32_t cameraSize = 0;
+    // 相机索引
+    uint32_t cameraIndex = 0;
     // NativeImage
     OH_NativeImage* nativeImage = nullptr;
-    // OHNativeWindow
-    OHNativeWindow* nativeWindow = nullptr;
-    // 摄像头设备数量
-    uint32_t cameraSize = 0;
-    // 摄像头索引
-    uint32_t cameraIndex = 0;
-    // 摄像头输入
+    // 相机输入
     Camera_Input* cameraInput = nullptr;
-    // 摄像头设备列表
+    // 相机设备列表
     Camera_Device* cameraDevice = nullptr;
-    // 摄像头管理器
+    // 相机管理
     Camera_Manager* cameraManager = nullptr;
-    // 摄像头视频输出
+    // 相机视频输出
     Camera_VideoOutput* cameraVideoOutput = nullptr;
-    // 摄像头视频会话
+    // 相机预览输出
+    Camera_PreviewOutput* cameraPreviewOutput = nullptr;
+    // 相机视频会话
     Camera_CaptureSession* cameraCaptureSession = nullptr;
-    // 摄像头输出能力
-    Camera_OutputCapability *cameraOutputCapability = nullptr;
+    // 相机输出能力
+    Camera_OutputCapability* cameraOutputCapability = nullptr;
 
 public:
     VideoCapturer();
     virtual ~VideoCapturer() override;
     
 public:
-    // 加载VK
-    void initVulkan();
-    // 释放VK
-    void releaseVulkan();
     // 加载OpenGL ES
     void initOpenGLES();
     // 释放OpenGL ES

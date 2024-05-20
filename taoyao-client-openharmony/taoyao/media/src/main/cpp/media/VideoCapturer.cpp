@@ -35,10 +35,25 @@
 
 static std::recursive_mutex videoMutex;
 
-// 采集回调
-static void onError(Camera_VideoOutput* videoOutput, Camera_ErrorCode errorCode);
-static void onFrameEnd(Camera_VideoOutput* videoOutput, int32_t frameCount);
-static void onFrameStart(Camera_VideoOutput* videoOutput);
+// 相机回调
+static void onCameraStatus(Camera_Manager* cameraManager, Camera_StatusInfo* status);
+
+// 相机输入回调
+static void onInputOnError(const Camera_Input* cameraInput, Camera_ErrorCode errorCode);
+
+// 预览采集回调
+static void onPreviewError(Camera_PreviewOutput* previewOutput, Camera_ErrorCode errorCode);
+static void onPreviewFrameEnd(Camera_PreviewOutput* previewOutput, int32_t frameCount);
+static void onPreviewFrameStart(Camera_PreviewOutput* previewOutput);
+
+// 视频采集回调
+static void onVideoError(Camera_VideoOutput* videoOutput, Camera_ErrorCode errorCode);
+static void onVideoFrameEnd(Camera_VideoOutput* videoOutput, int32_t frameCount);
+static void onVideoFrameStart(Camera_VideoOutput* videoOutput);
+
+// 相机会话回调
+static void onSessionError(Camera_CaptureSession* session, Camera_ErrorCode errorCode);
+static void onSessionFocusStateChange(Camera_CaptureSession* session, Camera_FocusState focusState);
 
 // 数据回调
 static void onFrame(void* context);
@@ -47,58 +62,90 @@ static void onFrame(void* context);
 static bool CheckEglExtension(const char* extensions, const char* extension);
 
 acgist::VideoCapturer::VideoCapturer() {
-    #if __TAOYAO_VULKAN__
-    initVulkan();
-    #endif
-    #if __TAOYAO_OPENGL__
     initOpenGLES();
-    #endif
     Camera_ErrorCode ret = OH_Camera_GetCameraManager(&this->cameraManager);
-    TAOYAO_VIDEO_RET_LOG("配置摄像头管理器：%{public}d", ret);
+    TAOYAO_VIDEO_RET_LOG("配置相机管理：%{public}d", ret);
+    CameraManager_Callbacks cameraManager_Callbacks = { onCameraStatus };
+    ret = OH_CameraManager_RegisterCallback(this->cameraManager, &cameraManager_Callbacks);
+    TAOYAO_VIDEO_RET_LOG("注册相机管理回调：%{public}d", ret);
     ret = OH_CameraManager_GetSupportedCameras(this->cameraManager, &this->cameraDevice, &this->cameraSize);
-    TAOYAO_VIDEO_RET_LOG("摄像头设备列表数量：%{public}d %{public}d", ret, this->cameraSize);
-    ret = OH_CameraManager_CreateCameraInput(this->cameraManager, &this->cameraDevice[this->cameraIndex], &this->cameraInput);
-    TAOYAO_VIDEO_RET_LOG("配置摄像头输入：%{public}d %{public}d", ret, this->cameraIndex);
-    ret = OH_CameraInput_Open(cameraInput);
-    TAOYAO_VIDEO_RET_LOG("打开摄像头：%{public}d", ret);
+    TAOYAO_VIDEO_RET_LOG("相机设备列表：%{public}d %{public}d", ret, this->cameraSize);
+    for (int index = 0; index < this->cameraSize; ++index) {
+       OH_LOG_DEBUG(LOG_APP, "相机cameraId       = %{public}s", this->cameraDevice[index].cameraId);
+       OH_LOG_DEBUG(LOG_APP, "相机cameraPosition = %{public}d", this->cameraDevice[index].cameraPosition);
+       OH_LOG_DEBUG(LOG_APP, "相机cameraType     = %{public}d", this->cameraDevice[index].cameraType);
+       OH_LOG_DEBUG(LOG_APP, "相机connectionType = %{public}d", this->cameraDevice[index].connectionType);
+    }
     ret = OH_CameraManager_GetSupportedCameraOutputCapability(this->cameraManager, &this->cameraDevice[this->cameraIndex], &this->cameraOutputCapability);
-    TAOYAO_VIDEO_RET_LOG("摄像头输出功能：%{public}d %{public}d %{public}d", ret, this->cameraIndex, this->cameraOutputCapability->videoProfilesSize);
-    // 注册相机状态回调：可以取消注册
-    // OH_CameraManager_RegisterCallback(this->cameraManager, CameraManager_Callbacks* callback);
-    ret = OH_CameraManager_CreateVideoOutput(this->cameraManager, this->cameraOutputCapability->videoProfiles[0], std::to_string(this->surfaceId).data(), &this->cameraVideoOutput);
-    TAOYAO_VIDEO_RET_LOG("创建摄像头视频输出：%{public}d %{public}lld %{public}s", ret, this->surfaceId, std::to_string(this->surfaceId).data());
+    TAOYAO_VIDEO_RET_LOG("相机输出能力：%{public}d %{public}d %{public}d %{public}d", ret, this->cameraIndex, this->cameraOutputCapability->previewProfilesSize, this->cameraOutputCapability->videoProfilesSize);
+    ret = OH_CameraManager_CreateCameraInput(this->cameraManager, &this->cameraDevice[this->cameraIndex], &this->cameraInput);
+    TAOYAO_VIDEO_RET_LOG("配置相机输入：%{public}d %{public}d", ret, this->cameraIndex);
+    CameraInput_Callbacks cameraInput_Callbacks = { onInputOnError };
+    ret = OH_CameraInput_RegisterCallback(this->cameraInput, &cameraInput_Callbacks);
+    TAOYAO_VIDEO_RET_LOG("注册相机输入回调：%{public}d %{public}d", ret, this->cameraIndex);
+//    auto& previewProfile = this->cameraOutputCapability->previewProfiles[0];
+//    previewProfile->format = CAMERA_FORMAT_YUV_420_SP;
+    ret = OH_CameraManager_CreatePreviewOutput(this->cameraManager, this->cameraOutputCapability->previewProfiles[0], std::to_string(this->surfaceId).data(), &this->cameraPreviewOutput);
+    TAOYAO_VIDEO_RET_LOG("创建相机预览输出：%{public}d %{public}lld %{public}s", ret, this->surfaceId, std::to_string(this->surfaceId).data());
+    PreviewOutput_Callbacks previewOutput_Callbacks = { onPreviewFrameStart, onPreviewFrameEnd, onPreviewError };
+    ret = OH_PreviewOutput_RegisterCallback(this->cameraPreviewOutput, &previewOutput_Callbacks);
+    TAOYAO_VIDEO_RET_LOG("注册相机预览输出回调：%{public}d", ret);
+//    auto& videoProfile = this->cameraOutputCapability->videoProfiles[0];
+//    videoProfile->format = CAMERA_FORMAT_YUV_420_SP;
+//    OH_LOG_DEBUG(LOG_APP, "相机视频配置：%{public}d %{public}d %{public}d %{public}d %{public}d", videoProfile->format, videoProfile->size.width, videoProfile->size.height, videoProfile->range.min, videoProfile->range.max);
+//    ret = OH_CameraManager_CreateVideoOutput(this->cameraManager, this->cameraOutputCapability->videoProfiles[0], std::to_string(this->surfaceId).data(), &this->cameraVideoOutput);
+//    TAOYAO_VIDEO_RET_LOG("创建相机视频输出：%{public}d %{public}lld %{public}s", ret, this->surfaceId, std::to_string(this->surfaceId).data());
+//    VideoOutput_Callbacks videoOutput_Callbacks = { onVideoFrameStart, onVideoFrameEnd, onVideoError };
+//    ret = OH_VideoOutput_RegisterCallback(this->cameraVideoOutput, &videoOutput_Callbacks);
+    TAOYAO_VIDEO_RET_LOG("注册相机视频输出回调：%{public}d", ret);
     ret = OH_CameraManager_CreateCaptureSession(this->cameraManager, &this->cameraCaptureSession);
-    TAOYAO_VIDEO_RET_LOG("创建摄像头视频会话：%{public}d", ret);
+    TAOYAO_VIDEO_RET_LOG("创建相机视频会话：%{public}d", ret);
+    CaptureSession_Callbacks captureSession_Callbacks = { onSessionFocusStateChange, onSessionError };
+    OH_CaptureSession_RegisterCallback(this->cameraCaptureSession, &captureSession_Callbacks);
+    TAOYAO_VIDEO_RET_LOG("注册相机视频会话：%{public}d", ret);
     // 设置相机：闪光、变焦、质量、高宽、补光、防抖
     // 设置缩放比例
     // OH_CaptureSession_SetZoomRatio(this->cameraCaptureSession, 0.5F);
 }
 
 acgist::VideoCapturer::~VideoCapturer() {
-    #if __TAOYAO_VULKAN__
-    releaseVulkan();
-    #endif
-    #if __TAOYAO_OPENGL__
     releaseOpenGLES();
-    #endif
-    Camera_ErrorCode ret = OH_CaptureSession_Release(this->cameraCaptureSession);
+    CaptureSession_Callbacks captureSession_Callbacks = { onSessionFocusStateChange, onSessionError };
+    Camera_ErrorCode ret = OH_CaptureSession_UnregisterCallback(this->cameraCaptureSession, &captureSession_Callbacks);
+    TAOYAO_VIDEO_RET_LOG("取消相机视频会话：%{public}d", ret);
+    ret = OH_CaptureSession_Release(this->cameraCaptureSession);
     this->cameraCaptureSession = nullptr;
-    TAOYAO_VIDEO_RET_LOG("释放摄像头视频会话：%{public}o", ret);
+    TAOYAO_VIDEO_RET_LOG("释放相机视频会话：%{public}d", ret);
+    PreviewOutput_Callbacks previewOutput_Callbacks = { onPreviewFrameStart, onPreviewFrameEnd, onPreviewError };
+    ret = OH_PreviewOutput_UnregisterCallback(this->cameraPreviewOutput, &previewOutput_Callbacks);
+    TAOYAO_VIDEO_RET_LOG("取消相机预览输出回调：%{public}d", ret);
+    ret = OH_PreviewOutput_Release(this->cameraPreviewOutput);
+    this->cameraPreviewOutput = nullptr;
+    TAOYAO_VIDEO_RET_LOG("释放相机预览输出：%{public}d", ret);
+    VideoOutput_Callbacks videoOutput_Callbacks = { onVideoFrameStart, onVideoFrameEnd, onVideoError };
+    ret = OH_VideoOutput_UnregisterCallback(this->cameraVideoOutput, &videoOutput_Callbacks);
+    TAOYAO_VIDEO_RET_LOG("取消相机视频输出回调：%{public}d", ret);
     ret = OH_VideoOutput_Release(this->cameraVideoOutput);
     this->cameraVideoOutput = nullptr;
+    TAOYAO_VIDEO_RET_LOG("释放相机视频输出：%{public}d", ret);
+    CameraInput_Callbacks cameraInput_Callbacks = { onInputOnError };
+    ret = OH_CameraInput_UnregisterCallback(this->cameraInput, &cameraInput_Callbacks);
+    TAOYAO_VIDEO_RET_LOG("取消相机输入回调：%{public}d", ret);
     ret = OH_CameraInput_Release(this->cameraInput);
     this->cameraInput = nullptr;
-    TAOYAO_VIDEO_RET_LOG("释放摄像头：%{public}o", ret);
-    TAOYAO_VIDEO_RET_LOG("释放摄像头视频输出：%{public}o", ret);
+    TAOYAO_VIDEO_RET_LOG("释放相机输入：%{public}d", ret);
     ret = OH_CameraManager_DeleteSupportedCameraOutputCapability(this->cameraManager, this->cameraOutputCapability);
     this->cameraOutputCapability = nullptr;
-    TAOYAO_VIDEO_RET_LOG("释放摄像头输出能力：%{public}d", ret);
+    TAOYAO_VIDEO_RET_LOG("释放相机输出能力：%{public}d", ret);
     ret = OH_CameraManager_DeleteSupportedCameras(this->cameraManager, this->cameraDevice, this->cameraSize);
     this->cameraDevice = nullptr;
-    TAOYAO_VIDEO_RET_LOG("释放摄像头设备列表：%{public}d", ret);
+    TAOYAO_VIDEO_RET_LOG("释放相机设备列表：%{public}d", ret);
+    CameraManager_Callbacks cameraManager_Callbacks = { onCameraStatus };
+    ret = OH_CameraManager_UnregisterCallback(this->cameraManager, &cameraManager_Callbacks);
+    TAOYAO_VIDEO_RET_LOG("取消相机管理回调：%{public}d", ret);
     ret = OH_Camera_DeleteCameraManager(this->cameraManager);
     this->cameraManager = nullptr;
-    TAOYAO_VIDEO_RET_LOG("释放摄像头管理器：%{public}d", ret);
+    TAOYAO_VIDEO_RET_LOG("释放相机管理：%{public}d", ret);
 }
 
 bool acgist::VideoCapturer::start() {
@@ -107,26 +154,25 @@ bool acgist::VideoCapturer::start() {
         return true;
     }
     this->running = true;
+    Camera_ErrorCode ret = OH_CameraInput_Open(this->cameraInput);
+    TAOYAO_VIDEO_RET_LOG("打开相机输入：%{public}d", ret);
     OH_NativeImage_AttachContext(this->nativeImage, this->textureId);
-    Camera_ErrorCode ret = OH_CaptureSession_BeginConfig(this->cameraCaptureSession);
-    TAOYAO_VIDEO_RET_LOG("开始配置视频会话：%{public}o", ret);
+    ret = OH_CaptureSession_BeginConfig(this->cameraCaptureSession);
+    TAOYAO_VIDEO_RET_LOG("开始配置视频会话：%{public}d", ret);
     ret = OH_CaptureSession_AddInput(this->cameraCaptureSession, this->cameraInput);
-    TAOYAO_VIDEO_RET_LOG("视频输入绑定会话：%{public}d", ret);
-    ret = OH_CaptureSession_AddVideoOutput(this->cameraCaptureSession, this->cameraVideoOutput);
-    TAOYAO_VIDEO_RET_LOG("视频捕获绑定会话：%{public}d", ret);
+    TAOYAO_VIDEO_RET_LOG("绑定视频输入会话：%{public}d", ret);
+    ret = OH_CaptureSession_AddPreviewOutput(cameraCaptureSession, this->cameraPreviewOutput);
+    TAOYAO_VIDEO_RET_LOG("绑定相机预览输出会话：%{public}d", ret);
+//    ret = OH_CaptureSession_AddVideoOutput(this->cameraCaptureSession, this->cameraVideoOutput);
+//    TAOYAO_VIDEO_RET_LOG("绑定相机视频输出会话：%{public}d", ret);
     ret = OH_CaptureSession_CommitConfig(this->cameraCaptureSession);
-    TAOYAO_VIDEO_RET_LOG("结束配置视频会话：%{public}o", ret);
+    TAOYAO_VIDEO_RET_LOG("开始相机视频会话：%{public}d", ret);
     ret = OH_CaptureSession_Start(this->cameraCaptureSession);
-    TAOYAO_VIDEO_RET_LOG("开始视频会话：%{public}d", ret);
+    TAOYAO_VIDEO_RET_LOG("开始相机视频输出：%{public}d", ret);
+//    ret = OH_PreviewOutput_Start(this->cameraPreviewOutput);
+//    TAOYAO_VIDEO_RET_LOG("开始相机预览输出：%{public}d", ret);
     ret = OH_VideoOutput_Start(this->cameraVideoOutput);
-    TAOYAO_VIDEO_RET_LOG("开始视频捕获：%{public}d", ret);
-    VideoOutput_Callbacks callbacks;
-    callbacks.onError      = onError;
-    callbacks.onFrameEnd   = onFrameEnd;
-    callbacks.onFrameStart = onFrameStart;
-    // 可以取消注册
-    ret = OH_VideoOutput_RegisterCallback(this->cameraVideoOutput, &callbacks);
-    TAOYAO_VIDEO_RET_LOG("视频捕获回调：%{public}d", ret);
+    TAOYAO_VIDEO_RET_LOG("结束配置视频会话：%{public}d", ret);
     return ret = Camera_ErrorCode::CAMERA_OK;
 }
 
@@ -137,62 +183,25 @@ bool acgist::VideoCapturer::stop() {
     }
     this->running = false;
     Camera_ErrorCode ret = OH_CaptureSession_BeginConfig(this->cameraCaptureSession);
-    TAOYAO_VIDEO_RET_LOG("开始配置视频会话：%{public}o", ret);
+    TAOYAO_VIDEO_RET_LOG("开始配置视频会话：%{public}d", ret);
     ret = OH_CaptureSession_RemoveInput(this->cameraCaptureSession, this->cameraInput);
-    TAOYAO_VIDEO_RET_LOG("视频输入取消绑定会话：%{public}o", ret);
+    TAOYAO_VIDEO_RET_LOG("取消绑定视频输入会话：%{public}d", ret);
+    ret = OH_CaptureSession_RemovePreviewOutput(this->cameraCaptureSession, this->cameraPreviewOutput);
+    TAOYAO_VIDEO_RET_LOG("绑定相机预览输出会话：%{public}d", ret);
     ret = OH_CaptureSession_RemoveVideoOutput(this->cameraCaptureSession, this->cameraVideoOutput);
-    TAOYAO_VIDEO_RET_LOG("视频捕获取消绑定会话：%{public}o", ret);
+    TAOYAO_VIDEO_RET_LOG("绑定相机视频输出会话：%{public}d", ret);
     ret = OH_CaptureSession_CommitConfig(this->cameraCaptureSession);
-    TAOYAO_VIDEO_RET_LOG("结束配置视频会话：%{public}o", ret);
+    TAOYAO_VIDEO_RET_LOG("结束配置视频会话：%{public}d", ret);
     ret = OH_CaptureSession_Stop(this->cameraCaptureSession);
-    TAOYAO_VIDEO_RET_LOG("结束视频会话：%{public}o", ret);
+    TAOYAO_VIDEO_RET_LOG("结束视频会话：%{public}d", ret);
+    ret = OH_PreviewOutput_Stop(this->cameraPreviewOutput);
+    TAOYAO_VIDEO_RET_LOG("结束相机预览输出：%{public}d", ret);
     ret = OH_VideoOutput_Stop(this->cameraVideoOutput);
-    // OH_VideoOutput_UnregisterCallback(this->cameraVideoOutput, callback);
-    TAOYAO_VIDEO_RET_LOG("结束视频捕获：%{public}o", ret);
+    TAOYAO_VIDEO_RET_LOG("结束相机视频输出：%{public}d", ret);
     ret = OH_CameraInput_Close(this->cameraInput);
-    TAOYAO_VIDEO_RET_LOG("关闭摄像头：%{public}o", ret);
+    TAOYAO_VIDEO_RET_LOG("关闭相机输入：%{public}d", ret);
     OH_NativeImage_DetachContext(this->nativeImage);
     return ret = Camera_ErrorCode::CAMERA_OK;
-}
-
-void acgist::VideoCapturer::initVulkan() {
-    // vkApplicationInfo
-    this->vkApplicationInfo.sType            = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    this->vkApplicationInfo.apiVersion       = VK_API_VERSION_1_3;
-    this->vkApplicationInfo.pEngineName      = "vulkan-taoyao";
-    this->vkApplicationInfo.pApplicationName = "vulkan-taoyao";
-    OH_LOG_INFO(LOG_APP, "配置vkApplicationInfo");
-    // vkInstanceCreateInfo
-    this->vkInstanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-    this->vkInstanceCreateInfo.pNext = NULL;
-    this->vkInstanceCreateInfo.pApplicationInfo = &this->vkApplicationInfo;
-    OH_LOG_INFO(LOG_APP, "配置vkInstanceCreateInfo");
-    // vkInstanceCreateInfo
-    std::vector<const char*> instanceExtensions = {
-        VK_KHR_SURFACE_EXTENSION_NAME,
-        VK_OHOS_SURFACE_EXTENSION_NAME
-    };
-    vkInstanceCreateInfo.enabledExtensionCount   = static_cast<uint32_t>(instanceExtensions.size());
-    vkInstanceCreateInfo.ppEnabledExtensionNames = instanceExtensions.data();
-    OH_LOG_INFO(LOG_APP, "配置vkInstanceCreateInfo");
-    VkResult ret = vkCreateInstance(&this->vkInstanceCreateInfo, nullptr, &this->vkInstance);
-    OH_LOG_INFO(LOG_APP, "加载vkInstance：%d", ret);
-    this->vkSurfaceCreateInfoOHOS.sType  = VK_STRUCTURE_TYPE_SURFACE_CREATE_INFO_OHOS;
-    this->vkSurfaceCreateInfoOHOS.window = this->nativeWindow;
-    OH_LOG_INFO(LOG_APP, "配置vkSurfaceCreateInfoOHOS");
-    ret = vkCreateSurfaceOHOS(this->vkInstance, &this->vkSurfaceCreateInfoOHOS, nullptr, &this->vkSurfaceKHR);
-    OH_LOG_INFO(LOG_APP, "加载vkSurfaceKHR：%d", ret);
-}
-
-void acgist::VideoCapturer::releaseVulkan() {
-    if(this->vkSurfaceKHR != VK_NULL_HANDLE) {
-        vkDestroySurfaceKHR(this->vkInstance, this->vkSurfaceKHR, nullptr);
-        this->vkSurfaceKHR = VK_NULL_HANDLE;
-    }
-    if(this->vkInstance != VK_NULL_HANDLE) {
-        vkDestroyInstance(this->vkInstance, nullptr);
-        this->vkInstance = VK_NULL_HANDLE;
-    }
 }
 
 void acgist::VideoCapturer::initOpenGLES() {
@@ -220,14 +229,13 @@ void acgist::VideoCapturer::initOpenGLES() {
     EGLint count;
     EGLConfig config;
     EGLint config_attribs[] = {
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
+//        EGL_SURFACE_TYPE,    EGL_PIXMAP_BIT,
         EGL_SURFACE_TYPE,    EGL_PBUFFER_BIT,
         EGL_RED_SIZE,        8,
         EGL_GREEN_SIZE,      8,
         EGL_BLUE_SIZE,       8,
         EGL_ALPHA_SIZE,      8,
-        EGL_DEPTH_SIZE,      0,
-        EGL_STENCIL_SIZE,    0,
         EGL_NONE
     };
     EGLint context_attribs[] = {
@@ -249,16 +257,13 @@ void acgist::VideoCapturer::initOpenGLES() {
         this->eglContext = eglCreateContext(this->eglDisplay, config, EGL_NO_CONTEXT, context_attribs);
     }
     const EGLint surfaceAttr[] = {
-        EGL_WIDTH, 512,
-        EGL_HEIGHT, 512,
+        EGL_WIDTH,  1980,
+        EGL_HEIGHT, 1080,
         EGL_LARGEST_PBUFFER, EGL_TRUE,
         EGL_NONE
     };
-        // TODO: 验证强转
-    this->eglSurface = eglCreatePbufferSurface(this->eglDisplay, config, surfaceAttr);
     
-//    this->eglSurface = eglCreateWindowSurface(this->eglDisplay, config, (EGLNativeWindowType) this->nativeWindow, context_attribs);
-
+    this->eglSurface = eglCreatePbufferSurface(this->eglDisplay, config, surfaceAttr);
     
     eglMakeCurrent(this->eglDisplay, this->eglSurface, this->eglSurface, this->eglContext);
     
@@ -266,13 +271,6 @@ void acgist::VideoCapturer::initOpenGLES() {
     glGenTextures(this->textureSize, &this->textureId);
     this->nativeImage = OH_NativeImage_Create(this->textureId, GL_TEXTURE_2D);
     OH_LOG_INFO(LOG_APP, "创建NativeImage：%{public}d", this->textureId);
-    // TODO: 验证是否需要window
-//    this->nativeWindow = OH_NativeImage_AcquireNativeWindow(this->nativeImage);
-//    OH_LOG_INFO(LOG_APP, "视频采集Window：%{public}d", this->nativeWindow);
-    // this->eglSurface = eglCreatePlatformWindowSurface(this->eglDisplay, config, this->nativeWindow, context_attribs);
-//    OH_NativeWindow_NativeWindowHandleOpt(this->nativeWindow, SET_BUFFER_GEOMETRY, acgist::width, acgist::height);
-    // OH_NativeWindow_NativeWindowHandleOpt(this->nativeWindow, SET_TIMEOUT, 10'000);
-    // OH_NativeWindow_NativeWindowHandleOpt(this->nativeWindow, GET_TIMEOUT, 10'000);
     OH_OnFrameAvailableListener listener = { this, onFrame };
     OH_NativeImage_SetOnFrameAvailableListener(this->nativeImage, listener);
     
@@ -300,27 +298,148 @@ void acgist::VideoCapturer::releaseOpenGLES() {
         this->nativeImage = nullptr;
         OH_LOG_INFO(LOG_APP, "销毁nativeImage");
     }
-    if(this->nativeWindow != nullptr) {
-        OH_NativeWindow_DestroyNativeWindow(this->nativeWindow);
-        this->nativeWindow = nullptr;
-        OH_LOG_INFO(LOG_APP, "销毁nativeWindow");
-    }
 }
 
-static void onError(Camera_VideoOutput* videoOutput, Camera_ErrorCode errorCode) {
+static void onCameraStatus(Camera_Manager* cameraManager, Camera_StatusInfo* status) {
+   OH_LOG_INFO(LOG_APP, "相机状态变化：%{public}d", status->status);
+}
+
+static void onInputOnError(const Camera_Input* cameraInput, Camera_ErrorCode errorCode) {
+   OH_LOG_ERROR(LOG_APP, "相机输入错误：%{public}d", errorCode);
+}
+
+static void onVideoError(Camera_VideoOutput* videoOutput, Camera_ErrorCode errorCode) {
     OH_LOG_ERROR(LOG_APP, "视频捕获数据帧失败：%d", errorCode);
 }
 
-static void onFrameEnd(Camera_VideoOutput* videoOutput, int32_t frameCount) {
+static void onVideoFrameEnd(Camera_VideoOutput* videoOutput, int32_t frameCount) {
     OH_LOG_DEBUG(LOG_APP, "结束视频捕获数据帧");
 }
 
-static void onFrameStart(Camera_VideoOutput* videoOutput) {
+static void onVideoFrameStart(Camera_VideoOutput* videoOutput) {
     OH_LOG_DEBUG(LOG_APP, "开始视频捕获数据帧");
 }
 
+static void onPreviewError(Camera_PreviewOutput* previewOutput, Camera_ErrorCode errorCode) {
+    OH_LOG_ERROR(LOG_APP, "预览捕获数据帧失败：%d", errorCode);
+}
+
+static void onPreviewFrameEnd(Camera_PreviewOutput* previewOutput, int32_t frameCount) {
+    OH_LOG_DEBUG(LOG_APP, "结束预览捕获数据帧");
+}
+
+static void onPreviewFrameStart(Camera_PreviewOutput* previewOutput) {
+    OH_LOG_DEBUG(LOG_APP, "开始预览捕获数据帧");
+}
+
+static void onSessionError(Camera_CaptureSession* session, Camera_ErrorCode errorCode) {
+    OH_LOG_ERROR(LOG_APP, "打开相机会话失败：%{public}o", errorCode);
+}
+
+static void onSessionFocusStateChange(Camera_CaptureSession* session, Camera_FocusState focusState) {
+    OH_LOG_DEBUG(LOG_APP, "相机会话焦点改变：%{public}o", focusState);
+}
+
 static void onFrame(void* context) {
-    OH_LOG_ERROR(LOG_APP, "视频数据采集回调：%{public}d", 1);
+    OH_LOG_DEBUG(LOG_APP, "视频帧数据采集回调：%{public}d", 1);
+    acgist::VideoCapturer* videoCapturer = (acgist::VideoCapturer*) context;
+//    OH_NativeImage_UpdateSurfaceImage(videoCapturer->nativeImage);
+    // 更新内容到OpenGL纹理。
+uint32_t ret = OH_NativeImage_UpdateSurfaceImage(videoCapturer->nativeImage);
+if (ret != 0) {
+}
+// 获取最近调用OH_NativeImage_UpdateSurfaceImage的纹理图像的时间戳和变化矩阵。
+int64_t timeStamp = OH_NativeImage_GetTimestamp(videoCapturer->nativeImage);
+float matrix[16];
+ret = OH_NativeImage_GetTransformMatrix(videoCapturer->nativeImage, matrix);
+if (ret != 0) {
+}
+
+// 对update绑定到对应textureId的纹理做对应的opengl后处理后，将纹理上屏
+EGLBoolean eglRet = eglSwapBuffers(videoCapturer->eglDisplay, videoCapturer->eglSurface);
+if (eglRet == EGL_FALSE) {
+}
+//HWTEST_F(NativeImageTest, OHNativeImageSetOnFrameAvailableListener001, Function | MediumTest | Level1)
+//{
+//    if (image == nullptr) {
+//        image = OH_NativeImage_Create(textureId, GL_TEXTURE_2D);
+//        ASSERT_NE(image, nullptr);
+//    }
+//
+//    if (nativeWindow == nullptr) {
+//        nativeWindow = OH_NativeImage_AcquireNativeWindow(image);
+//        ASSERT_NE(nativeWindow, nullptr);
+//    }
+//
+//    OH_OnFrameAvailableListener listener;
+//    listener.context = this;
+//    listener.onFrameAvailable = NativeImageTest::OnFrameAvailable;
+//    int32_t ret = OH_NativeImage_SetOnFrameAvailableListener(image, listener);
+//    ASSERT_EQ(ret, GSERROR_OK);
+//
+//    NativeWindowBuffer* nativeWindowBuffer = nullptr;
+//    int fenceFd = -1;
+//    ret = OH_NativeWindow_NativeWindowRequestBuffer(nativeWindow, &nativeWindowBuffer, &fenceFd);
+//    ASSERT_EQ(ret, GSERROR_OK);
+//
+//    struct Region *region = new Region();
+//    struct Region::Rect *rect = new Region::Rect();
+//    rect->x = 0x100;
+//    rect->y = 0x100;
+//    rect->w = 0x100;
+//    rect->h = 0x100;
+//    region->rects = rect;
+//    ret = OH_NativeWindow_NativeWindowFlushBuffer(nativeWindow, nativeWindowBuffer, fenceFd, *region);
+//    ASSERT_EQ(ret, GSERROR_OK);
+//    delete region;
+//
+//    ret = OH_NativeImage_UpdateSurfaceImage(image);
+//    ASSERT_EQ(ret, SURFACE_ERROR_OK);
+//}
+//    OHNativeWindow* nativeWindow = OH_NativeImage_AcquireNativeWindow(videoCapturer->nativeImage);
+//    int code = SET_BUFFER_GEOMETRY;
+//    int32_t width = 800;
+//    int32_t height = 600;
+//    int32_t ret = OH_NativeWindow_NativeWindowHandleOpt(nativeWindow, code, width, height);
+//    OHNativeWindowBuffer *buffer = nullptr;
+//    int fenceFd;
+//    // 通过 OH_NativeWindow_NativeWindowRequestBuffer 获取 OHNativeWindowBuffer 实例
+//    OH_NativeWindow_NativeWindowRequestBuffer(nativeWindow, &buffer, &fenceFd);
+//    BufferHandle *handle = OH_NativeWindow_GetBufferHandleFromNative(buffer);
+//    // 设置刷新区域，如果Region中的Rect为nullptr,或者rectNumber为0，则认为NativeWindowBuffer全部有内容更改。
+//Region region{nullptr, 0};
+//// 通过OH_NativeWindow_NativeWindowFlushBuffer 提交给消费者使用，例如：显示在屏幕上。
+//OH_NativeWindow_NativeWindowFlushBuffer(nativeWindow, buffer, fenceFd, region);
+//    // 更新内容到OpenGL纹理。
+// ret = OH_NativeImage_UpdateSurfaceImage(videoCapturer->nativeImage);
+//if (ret != 0) {
+//}
+//// 获取最近调用OH_NativeImage_UpdateSurfaceImage的纹理图像的时间戳和变化矩阵。
+//int64_t timeStamp = OH_NativeImage_GetTimestamp(videoCapturer->nativeImage);
+//float matrix[16];
+//ret = OH_NativeImage_GetTransformMatrix(videoCapturer->nativeImage, matrix);
+//if (ret != 0) {
+//}
+//
+//// 对update绑定到对应textureId的纹理做对应的opengl后处理后，将纹理上屏
+//EGLBoolean eglRet = eglSwapBuffers(videoCapturer->eglDisplay, videoCapturer->eglSurface);
+//if (eglRet == EGL_FALSE) {
+//}
+
+//    eglMakeCurrent(videoCapturer->eglDisplay, videoCapturer->eglSurface, videoCapturer->eglSurface, videoCapturer->eglContext);
+//    OH_NativeImage_UpdateSurfaceImage(videoCapturer->nativeImage);
+//    OH_NativeImage_GetTimestamp(videoCapturer->nativeImage);
+//    float matrix[16];
+//    OH_NativeImage_GetTransformMatrix(videoCapturer->nativeImage, matrix);
+//    eglSwapBuffers(videoCapturer->eglDisplay, videoCapturer->eglSurface);
+//    char* chars = new char[1024];
+//    eglQueryNativePixmapNV(videoCapturer->eglDisplay, videoCapturer->eglSurface, &pixmap);
+//    EGLBoolean ret = eglCopyBuffers(videoCapturer->eglDisplay, videoCapturer->eglSurface, (EGLNativePixmapType) chars);
+//    char buffer[1024];
+//    glReadPixels(0, 0, 10, 10, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+//    OH_LOG_DEBUG(LOG_APP, "视频帧数据采集回调读取：%{public}d", ret);
+//    glFlush();
+//    glFinish();
 //    // TODO: 解析
 //    rtc::scoped_refptr<webrtc::I420Buffer> videoFrameBuffer =
 //        webrtc::I420Buffer::Copy(width, height, (uint8_t *)data, 0, (uint8_t *)data, 0, (uint8_t *)data, 0);

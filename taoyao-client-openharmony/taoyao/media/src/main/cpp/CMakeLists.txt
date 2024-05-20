@@ -21,7 +21,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fno-rtti -std=c++17 -O3
 set(LIBWEBRTC_BINARY_PATH  "${CMAKE_CURRENT_SOURCE_DIR}/deps/webrtc/lib/${OHOS_ARCH}/")
 set(LIBWEBRTC_INCLUDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/webrtc/src/")
 
-ADD_DEFINITIONS(-DNDEBUG)
+#ADD_DEFINITIONS(-DNDEBUG)
 ADD_DEFINITIONS(-DLOG_TAG="libtaoyao")
 ADD_DEFINITIONS(-DVK_USE_PLATFORM_OHOS=1)
 
@@ -64,14 +64,10 @@ target_link_libraries(
     libEGL.so
     # OpenGL ES
     libGLESv3.so
-    # Vulkan
-    libvulkan.so
     # 音频
     libohaudio.so
     # 相机
     libohcamera.so
-    # ACE
-    libace_ndk.z.so
     # NAPI
     libace_napi.z.so
     # LOG

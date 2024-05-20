@@ -87,7 +87,7 @@ int acgist::MediaManager::newLocalClient() {
         this->newPeerConnectionFactory();
         this->startCapture();
     }
-    OH_LOG_INFO(LOG_APP, "打开本地终端：%d", this->localClientRef);
+    OH_LOG_INFO(LOG_APP, "打开本地终端：%{public}d", this->localClientRef);
     return this->localClientRef;
 }
 
@@ -109,8 +109,8 @@ int acgist::MediaManager::releaseLocalClient() {
 }
 
 bool acgist::MediaManager::startCapture() {
-    // this->startAudioCapture();
-    this->startVideoCapture();
+    this->startAudioCapture();
+    // this->startVideoCapture();
     return true;
 }
 
