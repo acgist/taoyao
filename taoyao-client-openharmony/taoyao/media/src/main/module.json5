@@ -38,36 +38,46 @@
         "name": "ohos.permission.CAMERA",
         "reason": "$string:app_name",
         "usedScene": {
-          "when": "inuse"
+          "when": "inuse",
+          "abilities": [ "EntryAbility" ]
         }
       },
       {
         "name": "ohos.permission.INTERNET",
         "reason": "$string:app_name",
-        "usedScene": {
-          "when": "always"
-        }
       },
       {
         "name": "ohos.permission.MICROPHONE",
         "reason": "$string:app_name",
         "usedScene": {
-          "when": "inuse"
+          "when": "inuse",
+          "abilities": [ "EntryAbility" ]
         }
       },
       {
         "name": "ohos.permission.READ_MEDIA",
         "reason": "$string:app_name",
         "usedScene": {
-          "when": "always"
+          "when": "always",
+          "abilities": [ "EntryAbility" ]
         }
       },
       {
         "name": "ohos.permission.WRITE_MEDIA",
         "reason": "$string:app_name",
         "usedScene": {
-          "when": "always"
+          "when": "always",
+          "abilities": [ "EntryAbility" ]
         }
+      },
+      // 🤡🤡🤡🤡
+      {
+        "name": "ohos.permission.CAPTURE_SCREEN",
+        "reason": "$string:app_name",
+      },
+      {
+        "name": "ohos.permission.CAPTURE_VOICE_DOWNLINK_AUDIO",
+        "reason": "$string:app_name",
       },
     ]
   }

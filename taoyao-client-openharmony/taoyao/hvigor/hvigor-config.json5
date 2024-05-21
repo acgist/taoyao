@@ -4,11 +4,6 @@
     "@ohos/hvigor-ohos-plugin": "3.2.4"
   },
   "execution": {
-    // "daemon"     : true,
-    // "analyze"    : "default",
-    // "parallel"   : true,
-    // "typeCheck"  : false,
-    // "incremental": true,
   },
   "logging": {
     "level": "debug"

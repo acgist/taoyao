@@ -109,8 +109,8 @@ int acgist::MediaManager::releaseLocalClient() {
 }
 
 bool acgist::MediaManager::startCapture() {
-    this->startAudioCapture();
-    // this->startVideoCapture();
+    // this->startAudioCapture();
+    this->startVideoCapture();
     return true;
 }
 
@@ -130,10 +130,10 @@ bool acgist::MediaManager::startAudioCapture() {
         if(this->audioTrackSource == nullptr) {
             OH_LOG_INFO(LOG_APP, "设置音频来源");
             cricket::AudioOptions options;
-            options.highpass_filter   = true;
-            options.auto_gain_control = true;
-            options.echo_cancellation = true;
-            options.noise_suppression = true;
+//            options.highpass_filter   = true;
+//            options.auto_gain_control = true;
+//            options.echo_cancellation = true;
+//            options.noise_suppression = true;
             this->audioTrackSource = this->peerConnectionFactory->CreateAudioSource(options);
         }
     #endif
@@ -143,7 +143,14 @@ bool acgist::MediaManager::startAudioCapture() {
 bool acgist::MediaManager::startVideoCapture() {
     if(this->videoCapturer == nullptr) {
         OH_LOG_INFO(LOG_APP, "开始视频采集");
-        this->videoCapturer = new acgist::VideoCapturer();
+        #if TAOYAO_VIDEO_SOURCE_SCREEN
+        OH_LOG_INFO(LOG_APP, "开始屏幕采集");
+        this->videoCapturer = new acgist::ScreenCapturer();
+        #endif
+        #if TAOYAO_VIDEO_SOURCE_CAMERA
+        OH_LOG_INFO(LOG_APP, "开始相机采集");
+        this->videoCapturer = new acgist::CameraCapturer();
+        #endif
         this->videoCapturer->start();
     }
     if(this->videoTrackSource == nullptr) {

@@ -13,6 +13,8 @@ const permissions: Array<Permissions> = [
   "ohos.permission.MICROPHONE",
   "ohos.permission.READ_MEDIA",
   "ohos.permission.WRITE_MEDIA",
+  "ohos.permission.CAPTURE_SCREEN",
+  "ohos.permission.CAPTURE_VOICE_DOWNLINK_AUDIO",
 ];
 
 function reqPermissionsFromUser(permissions: Array<Permissions>, context: common.UIAbilityContext) {

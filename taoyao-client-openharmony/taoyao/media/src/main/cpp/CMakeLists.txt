@@ -38,14 +38,15 @@ add_library(
     media/LocalClient.cpp
     media/RemoteClient.cpp
     media/MediaManager.cpp
+    media/VideoDecoder.cpp
+    media/VideoEncoder.cpp
     media/Player.cpp
     media/AudioPlayer.cpp
     media/VideoPlayer.cpp
-    media/VideoDecoder.cpp
     media/Capturer.cpp
-    media/VideoEncoder.cpp
     media/AudioCapturer.cpp
-    media/VideoCapturer.cpp
+    media/CameraCapturer.cpp
+    media/ScreenCapturer.cpp
 )
 
 target_include_directories(
@@ -83,6 +84,8 @@ target_link_libraries(
     libnative_media_venc.so
     libnative_media_core.so
     libnative_media_codecbase.so
+    # 屏幕录制
+    libnative_avscreen_capture.so
     # libmediasoupclient
     mediasoupclient
 )

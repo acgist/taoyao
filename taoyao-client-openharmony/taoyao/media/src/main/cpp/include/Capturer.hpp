@@ -20,7 +20,7 @@
 #define TAOYAO_CAPTURER_HPP
 
 // 本地音频采集
-#define __TAOYAO_AUDIO_LOCAL__ true
+#define __TAOYAO_AUDIO_LOCAL__ false
 // 本地视频采集
 #define __TAOYAO_VIDEO_LOCAL__ true
 
@@ -48,6 +48,10 @@
 
 #include <ohaudio/native_audiocapturer.h>
 #include <ohaudio/native_audiostreambuilder.h>
+
+#include <multimedia/player_framework/native_avscreen_capture.h>
+#include <multimedia/player_framework/native_avscreen_capture_base.h>
+#include <multimedia/player_framework/native_avscreen_capture_errors.h>
 
 namespace acgist {
 
@@ -114,7 +118,22 @@ public:
 /**
  * 视频采集器
  */
-class VideoCapturer: public Capturer<acgist::TaoyaoVideoTrackSource> {
+class VideoCapturer : public Capturer<acgist::TaoyaoVideoTrackSource> {
+    
+public:
+    VideoCapturer() {};
+    virtual ~VideoCapturer() override {};
+    
+public:
+    virtual bool start() override = 0;
+    virtual bool stop()  override = 0;
+    
+};
+
+/**
+ * 相机采集器
+ */
+class CameraCapturer : public VideoCapturer {
     
 public:
     // ================ OpenGL ES ================
@@ -153,14 +172,32 @@ public:
     Camera_OutputCapability* cameraOutputCapability = nullptr;
 
 public:
-    VideoCapturer();
-    virtual ~VideoCapturer() override;
+    CameraCapturer();
+    virtual ~CameraCapturer() override;
     
 public:
     // 加载OpenGL ES
     void initOpenGLES();
     // 释放OpenGL ES
     void releaseOpenGLES();
+    virtual bool start() override;
+    virtual bool stop()  override;
+    
+};
+
+/**
+ * 屏幕采集器
+ */
+class ScreenCapturer : public VideoCapturer {
+    
+public:
+    OH_AVScreenCapture* avScreenCapture = nullptr;
+    
+public:
+    ScreenCapturer();
+    virtual ~ScreenCapturer() override;
+    
+public:
     virtual bool start() override;
     virtual bool stop()  override;
     

@@ -76,12 +76,6 @@ static int32_t OnError(OH_AudioCapturer* capturer, void* userData, OH_AudioStrea
     return 0;
 }
 
-#include <fstream>
-#include <iostream>
-    
-    // TODO: 删除
-    static std::ofstream outfile("/data/storage/el2/base/haps/media/files/audio.pcm");
-
 static int32_t OnReadData(OH_AudioCapturer* capturer, void* userData, void* buffer, int32_t length) {
     OH_LOG_DEBUG(LOG_APP, "音频帧数据采集回调：%{public}d", length);
     if(userData == nullptr) {
@@ -96,7 +90,6 @@ static int32_t OnReadData(OH_AudioCapturer* capturer, void* userData, void* buff
     // 字节数量 * 8 / 位深 / 通道数量
     size_t number_of_frames = length / 2;
     // size_t number_of_frames = length * 8 / 16 / 2;
-    outfile.write((char*) buffer, length);
     audioCapturer->source->OnData((uint16_t*) buffer, acgist::bitsPerSample, acgist::samplingRate, acgist::channelCount, number_of_frames);
     return 0;
 }

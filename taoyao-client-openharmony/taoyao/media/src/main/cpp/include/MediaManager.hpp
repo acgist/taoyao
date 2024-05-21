@@ -18,6 +18,9 @@
 
 #include "api/peer_connection_interface.h"
 
+#define TAOYAO_VIDEO_SOURCE_SCREEN true
+#define TAOYAO_VIDEO_SOURCE_CAMERA false
+
 namespace acgist {
 
 /**

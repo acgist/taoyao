@@ -61,7 +61,7 @@ static void onFrame(void* context);
 // 检查EGL扩展
 static bool CheckEglExtension(const char* extensions, const char* extension);
 
-acgist::VideoCapturer::VideoCapturer() {
+acgist::CameraCapturer::CameraCapturer() {
     initOpenGLES();
     Camera_ErrorCode ret = OH_Camera_GetCameraManager(&this->cameraManager);
     TAOYAO_VIDEO_RET_LOG("配置相机管理：%{public}d", ret);
@@ -108,7 +108,7 @@ acgist::VideoCapturer::VideoCapturer() {
     // OH_CaptureSession_SetZoomRatio(this->cameraCaptureSession, 0.5F);
 }
 
-acgist::VideoCapturer::~VideoCapturer() {
+acgist::CameraCapturer::~CameraCapturer() {
     releaseOpenGLES();
     CaptureSession_Callbacks captureSession_Callbacks = { onSessionFocusStateChange, onSessionError };
     Camera_ErrorCode ret = OH_CaptureSession_UnregisterCallback(this->cameraCaptureSession, &captureSession_Callbacks);
@@ -148,7 +148,7 @@ acgist::VideoCapturer::~VideoCapturer() {
     TAOYAO_VIDEO_RET_LOG("释放相机管理：%{public}d", ret);
 }
 
-bool acgist::VideoCapturer::start() {
+bool acgist::CameraCapturer::start() {
     std::lock_guard<std::recursive_mutex> videoLock(videoMutex);
     if (this->running) {
         return true;
@@ -176,7 +176,7 @@ bool acgist::VideoCapturer::start() {
     return ret = Camera_ErrorCode::CAMERA_OK;
 }
 
-bool acgist::VideoCapturer::stop() {
+bool acgist::CameraCapturer::stop() {
     std::lock_guard<std::recursive_mutex> videoLock(videoMutex);
     if (!this->running) {
         return true;
@@ -204,7 +204,7 @@ bool acgist::VideoCapturer::stop() {
     return ret = Camera_ErrorCode::CAMERA_OK;
 }
 
-void acgist::VideoCapturer::initOpenGLES() {
+void acgist::CameraCapturer::initOpenGLES() {
     // EGL
     static const char* EGL_EXT_PLATFORM_WAYLAND     = "EGL_EXT_platform_wayland";
     static const char* EGL_KHR_PLATFORM_WAYLAND     = "EGL_KHR_platform_wayland";
@@ -257,13 +257,15 @@ void acgist::VideoCapturer::initOpenGLES() {
         this->eglContext = eglCreateContext(this->eglDisplay, config, EGL_NO_CONTEXT, context_attribs);
     }
     const EGLint surfaceAttr[] = {
-        EGL_WIDTH,  1980,
-        EGL_HEIGHT, 1080,
+//        EGL_WIDTH,  acgist::width,
+//        EGL_HEIGHT, acgist::height,
         EGL_LARGEST_PBUFFER, EGL_TRUE,
         EGL_NONE
     };
     
     this->eglSurface = eglCreatePbufferSurface(this->eglDisplay, config, surfaceAttr);
+    
+    // OH_NativeWindow_CreateNativeWindow(this->eglSurface);
     
     eglMakeCurrent(this->eglDisplay, this->eglSurface, this->eglSurface, this->eglContext);
     
@@ -278,7 +280,7 @@ void acgist::VideoCapturer::initOpenGLES() {
     OH_LOG_INFO(LOG_APP, "视频采集SurfaceId：%{public}lld", this->surfaceId);
 }
 
-void acgist::VideoCapturer::releaseOpenGLES() {
+void acgist::CameraCapturer::releaseOpenGLES() {
     if(this->textureId != 0) {
         glDeleteTextures(this->textureSize, &this->textureId);
         this->textureId = 0;
@@ -342,21 +344,20 @@ static void onSessionFocusStateChange(Camera_CaptureSession* session, Camera_Foc
 
 static void onFrame(void* context) {
     OH_LOG_DEBUG(LOG_APP, "视频帧数据采集回调：%{public}d", 1);
-    acgist::VideoCapturer* videoCapturer = (acgist::VideoCapturer*) context;
-//    OH_NativeImage_UpdateSurfaceImage(videoCapturer->nativeImage);
+    acgist::CameraCapturer* cameraCapturer = (acgist::CameraCapturer*) context;
+//    OH_NativeImage_UpdateSurfaceImage(cameraCapturer->nativeImage);
     // 更新内容到OpenGL纹理。
-uint32_t ret = OH_NativeImage_UpdateSurfaceImage(videoCapturer->nativeImage);
+uint32_t ret = OH_NativeImage_UpdateSurfaceImage(cameraCapturer->nativeImage);
 if (ret != 0) {
 }
 // 获取最近调用OH_NativeImage_UpdateSurfaceImage的纹理图像的时间戳和变化矩阵。
-int64_t timeStamp = OH_NativeImage_GetTimestamp(videoCapturer->nativeImage);
+int64_t timeStamp = OH_NativeImage_GetTimestamp(cameraCapturer->nativeImage);
 float matrix[16];
-ret = OH_NativeImage_GetTransformMatrix(videoCapturer->nativeImage, matrix);
+ret = OH_NativeImage_GetTransformMatrix(cameraCapturer->nativeImage, matrix);
 if (ret != 0) {
 }
-
 // 对update绑定到对应textureId的纹理做对应的opengl后处理后，将纹理上屏
-EGLBoolean eglRet = eglSwapBuffers(videoCapturer->eglDisplay, videoCapturer->eglSurface);
+EGLBoolean eglRet = eglSwapBuffers(cameraCapturer->eglDisplay, cameraCapturer->eglSurface);
 if (eglRet == EGL_FALSE) {
 }
 //HWTEST_F(NativeImageTest, OHNativeImageSetOnFrameAvailableListener001, Function | MediumTest | Level1)
@@ -396,7 +397,7 @@ if (eglRet == EGL_FALSE) {
 //    ret = OH_NativeImage_UpdateSurfaceImage(image);
 //    ASSERT_EQ(ret, SURFACE_ERROR_OK);
 //}
-//    OHNativeWindow* nativeWindow = OH_NativeImage_AcquireNativeWindow(videoCapturer->nativeImage);
+//    OHNativeWindow* nativeWindow = OH_NativeImage_AcquireNativeWindow(cameraCapturer->nativeImage);
 //    int code = SET_BUFFER_GEOMETRY;
 //    int32_t width = 800;
 //    int32_t height = 600;
@@ -411,30 +412,30 @@ if (eglRet == EGL_FALSE) {
 //// 通过OH_NativeWindow_NativeWindowFlushBuffer 提交给消费者使用，例如：显示在屏幕上。
 //OH_NativeWindow_NativeWindowFlushBuffer(nativeWindow, buffer, fenceFd, region);
 //    // 更新内容到OpenGL纹理。
-// ret = OH_NativeImage_UpdateSurfaceImage(videoCapturer->nativeImage);
+// ret = OH_NativeImage_UpdateSurfaceImage(cameraCapturer->nativeImage);
 //if (ret != 0) {
 //}
 //// 获取最近调用OH_NativeImage_UpdateSurfaceImage的纹理图像的时间戳和变化矩阵。
-//int64_t timeStamp = OH_NativeImage_GetTimestamp(videoCapturer->nativeImage);
+//int64_t timeStamp = OH_NativeImage_GetTimestamp(cameraCapturer->nativeImage);
 //float matrix[16];
-//ret = OH_NativeImage_GetTransformMatrix(videoCapturer->nativeImage, matrix);
+//ret = OH_NativeImage_GetTransformMatrix(cameraCapturer->nativeImage, matrix);
 //if (ret != 0) {
 //}
 //
 //// 对update绑定到对应textureId的纹理做对应的opengl后处理后，将纹理上屏
-//EGLBoolean eglRet = eglSwapBuffers(videoCapturer->eglDisplay, videoCapturer->eglSurface);
+//EGLBoolean eglRet = eglSwapBuffers(cameraCapturer->eglDisplay, cameraCapturer->eglSurface);
 //if (eglRet == EGL_FALSE) {
 //}
 
-//    eglMakeCurrent(videoCapturer->eglDisplay, videoCapturer->eglSurface, videoCapturer->eglSurface, videoCapturer->eglContext);
-//    OH_NativeImage_UpdateSurfaceImage(videoCapturer->nativeImage);
-//    OH_NativeImage_GetTimestamp(videoCapturer->nativeImage);
+//    eglMakeCurrent(cameraCapturer->eglDisplay, cameraCapturer->eglSurface, cameraCapturer->eglSurface, cameraCapturer->eglContext);
+//    OH_NativeImage_UpdateSurfaceImage(cameraCapturer->nativeImage);
+//    OH_NativeImage_GetTimestamp(cameraCapturer->nativeImage);
 //    float matrix[16];
-//    OH_NativeImage_GetTransformMatrix(videoCapturer->nativeImage, matrix);
-//    eglSwapBuffers(videoCapturer->eglDisplay, videoCapturer->eglSurface);
+//    OH_NativeImage_GetTransformMatrix(cameraCapturer->nativeImage, matrix);
+//    eglSwapBuffers(cameraCapturer->eglDisplay, cameraCapturer->eglSurface);
 //    char* chars = new char[1024];
-//    eglQueryNativePixmapNV(videoCapturer->eglDisplay, videoCapturer->eglSurface, &pixmap);
-//    EGLBoolean ret = eglCopyBuffers(videoCapturer->eglDisplay, videoCapturer->eglSurface, (EGLNativePixmapType) chars);
+//    eglQueryNativePixmapNV(cameraCapturer->eglDisplay, cameraCapturer->eglSurface, &pixmap);
+//    EGLBoolean ret = eglCopyBuffers(cameraCapturer->eglDisplay, cameraCapturer->eglSurface, (EGLNativePixmapType) chars);
 //    char buffer[1024];
 //    glReadPixels(0, 0, 10, 10, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
 //    OH_LOG_DEBUG(LOG_APP, "视频帧数据采集回调读取：%{public}d", ret);
@@ -447,7 +448,7 @@ if (eglRet == EGL_FALSE) {
 //    webrtc::VideoFrame::Builder builder;
 //    webrtc::VideoFrame videoFrame =
 //        builder.set_timestamp_ms(rtc::TimeMillis()).set_video_frame_buffer(videoFrameBuffer).build();
-//    for (auto iterator = videoCapturer->map.begin(); iterator != videoCapturer->map.end(); ++iterator) {
+//    for (auto iterator = cameraCapturer->map.begin(); iterator != cameraCapturer->map.end(); ++iterator) {
 //        iterator->second->OnFrame(videoFrame);
 //    }
 //    // TODO: 释放webrtc

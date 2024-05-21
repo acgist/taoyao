@@ -118,10 +118,10 @@ int acgist::Room::produceMedia() {
         this->createRecvTransport();
     }
     if(this->audioProduce) {
-        this->produceAudio();
+        // this->produceAudio();
     }
     if(this->videoProduce) {
-        // this->produceVideo();
+        this->produceVideo();
     }
     return 0;
 }
