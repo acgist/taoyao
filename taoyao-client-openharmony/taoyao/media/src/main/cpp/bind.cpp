@@ -85,16 +85,14 @@ static uint32_t minIndex    = 667;
 static uint32_t maxIndex    = 999;
 // 终端索引
 static uint32_t clientIndex = 99999;
-// ETS环境
-static napi_env env    = nullptr;
 // 是否加载
 static bool initTaoyao = false;
 // push方法引用
-static napi_ref pushRef    = nullptr;
+static napi_ref pushRef = nullptr;
 // request方法引用
 static napi_ref requestRef = nullptr;
-// request线程安全方法
-static napi_threadsafe_function requestFunction = nullptr;
+// 图片收集引用
+static napi_ref imageReceiverRef = nullptr;
 // 媒体功能
 static acgist::MediaManager* mediaManager = nullptr;
 // 房间管理
@@ -277,7 +275,7 @@ static int asyncExecute(std::function<void()> function) {
  * 加载系统
  */
 static napi_value init(napi_env env, napi_callback_info info) {
-    TAOYAO_JSON_BODY(3);
+    TAOYAO_JSON_BODY(4);
     {
         std::lock_guard<std::recursive_mutex> taoyaoLock(taoyaoMutex);
         if(initTaoyao) {
@@ -289,11 +287,17 @@ static napi_value init(napi_env env, napi_callback_info info) {
     }
     napi_create_reference(env, args[1], 1, &acgist::pushRef);
     napi_create_reference(env, args[2], 1, &acgist::requestRef);
+    napi_create_reference(env, args[3], 1 ,&acgist::imageReceiverRef);
+    napi_value imageReceiver;
+    napi_get_reference_value(env, acgist::imageReceiverRef, &imageReceiver);
+    acgist::imageReceiverNative = OH_Image_Receiver_InitImageReceiverNative(env, imageReceiver);
+    OH_LOG_INFO(LOG_APP, "配置图片接收：%{public}lld %{public}lld", imageReceiver, acgist::imageReceiverNative);
     printSupportCodec();
     acgist::clientId    = json["clientId"];
     acgist::name        = json["name"];
+    acgist::surfaceId   = json["surfaceId"];
     acgist::clientIndex = json["clientIndex"];
-    OH_LOG_INFO(LOG_APP, "加载libtaoyao");
+    OH_LOG_INFO(LOG_APP, "加载libtaoyao：%{public}s %{public}s", acgist::clientId.data(), acgist::surfaceId.data());
     std::string version = mediasoupclient::Version();
     OH_LOG_INFO(LOG_APP, "加载MediasoupClient：%{public}s", version.data());
     mediasoupclient::Initialize();
@@ -332,8 +336,22 @@ static napi_value shutdown(napi_env env, napi_callback_info info) {
     OH_LOG_INFO(LOG_APP, "释放mediasoupclient");
     mediasoupclient::Cleanup();
     OH_LOG_INFO(LOG_APP, "释放全局变量");
-    napi_delete_reference(env, acgist::pushRef);
-    napi_delete_reference(env, acgist::requestRef);
+    if(acgist::pushRef != nullptr) {
+        napi_delete_reference(env, acgist::pushRef);
+        acgist::pushRef = nullptr;
+    }
+    if(acgist::requestRef != nullptr) {
+        napi_delete_reference(env, acgist::requestRef);
+        acgist::requestRef = nullptr;
+    }
+    if(acgist::imageReceiverRef != nullptr) {
+        napi_delete_reference(env, acgist::imageReceiverRef);
+        acgist::imageReceiverRef = nullptr;
+    }
+    if(acgist::imageReceiverNative != nullptr) {
+        delete acgist::imageReceiverNative;
+        acgist::imageReceiverNative = nullptr;
+    }
     // 置空即可
     env = nullptr;
     // 返回结果

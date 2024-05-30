@@ -23,9 +23,10 @@ acgist::AudioCapturer::AudioCapturer() {
     // 配置音频采集参数
     OH_AudioStreamBuilder_SetSamplingRate(this->builder, acgist::samplingRate);
     OH_AudioStreamBuilder_SetChannelCount(this->builder, acgist::channelCount);
+    // OH_AudioStreamBuilder_SetLatencyMode(this->builder,  OH_AudioStream_LatencyMode::AUDIOSTREAM_LATENCY_MODE_FAST);
     OH_AudioStreamBuilder_SetLatencyMode(this->builder,  OH_AudioStream_LatencyMode::AUDIOSTREAM_LATENCY_MODE_NORMAL);
     OH_AudioStreamBuilder_SetSampleFormat(this->builder, OH_AudioStream_SampleFormat::AUDIOSTREAM_SAMPLE_S16LE);
-    // OH_AudioStreamBuilder_SetRendererInfo(this->builder, OH_AudioStream_Usage::AUDIOSTREAM_USAGE_VOICE_COMMUNICATION);
+    // OH_AudioStreamBuilder_SetCapturerInfo(this->builder, OH_AudioStream_SourceType::AUDIOSTREAM_SOURCE_TYPE_MIC);
     OH_LOG_DEBUG(LOG_APP, "配置音频采集参数：%{public}d %{public}d", acgist::samplingRate, acgist::channelCount);
     // 设置音频采集回调
     OH_AudioCapturer_Callbacks callbacks;
@@ -96,7 +97,7 @@ static int32_t OnReadData(OH_AudioCapturer* capturer, void* userData, void* buff
     // 字节数量 * 8 / 位深 / 通道数量
     size_t number_of_frames = length / 2;
     // size_t number_of_frames = length * 8 / 16 / 2;
-    audioCapturer->source->OnData((uint16_t*) buffer, acgist::bitsPerSample, acgist::samplingRate, acgist::channelCount, number_of_frames);
+//    audioCapturer->source->OnData((uint16_t*) buffer, acgist::bitsPerSample, acgist::samplingRate, acgist::channelCount, number_of_frames);
     return 0;
 }
 

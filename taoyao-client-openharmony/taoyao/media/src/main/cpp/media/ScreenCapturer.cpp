@@ -13,7 +13,7 @@ static void OnError(OH_AVScreenCapture* capture, int32_t errorCode) {
 }
 
 static void OnAudioBufferAvailable(OH_AVScreenCapture* capture, bool isReady, OH_AudioCaptureSourceType type) {
-    // OH_LOG_DEBUG(LOG_APP, "屏幕采集音频数据帧");
+    // OH_LOG_DEBUG(LOG_APP, "屏幕采集音频数据帧：%{public}d", isReady);
     if (isReady) {
         OH_AudioBuffer* buffer = new OH_AudioBuffer;
         int32_t ret = OH_AVScreenCapture_AcquireAudioBuffer(capture, &buffer, type);
@@ -22,12 +22,12 @@ static void OnAudioBufferAvailable(OH_AVScreenCapture* capture, bool isReady, OH
         (void) buffer->timestamp;
         delete buffer;
         buffer = nullptr;
-        OH_AVScreenCapture_ReleaseAudioBuffer(capture, type);
     }
+    OH_AVScreenCapture_ReleaseAudioBuffer(capture, type);
 }
 
 static void OnVideoBufferAvailable(OH_AVScreenCapture* capture, bool isReady) {
-    OH_LOG_DEBUG(LOG_APP, "屏幕采集视频数据帧");
+    OH_LOG_DEBUG(LOG_APP, "屏幕采集视频数据帧：%{public}d", isReady);
     if (isReady) {
         int32_t fence     = 0;
         int64_t timestamp = 0;
@@ -60,10 +60,9 @@ static void OnVideoBufferAvailable(OH_AVScreenCapture* capture, bool isReady) {
 //                                     .set_timestamp_ms(rtc::TimeMillis())
 //                                     .set_rotation(webrtc::kVideoRotation_90)
 //                                     .build();
-        
         OH_NativeBuffer_Unmap(buffer);
-        OH_AVScreenCapture_ReleaseVideoBuffer(capture);
     }
+    OH_AVScreenCapture_ReleaseVideoBuffer(capture);
 }
 
 acgist::ScreenCapturer::ScreenCapturer() {

@@ -60,10 +60,6 @@ target_link_libraries(
     ${PROJECT_NAME} PUBLIC
     # libuv
     libuv.so
-    # EGL
-    libEGL.so
-    # OpenGL ES
-    libGLESv3.so
     # 音频
     libohaudio.so
     # 相机
@@ -73,15 +69,16 @@ target_link_libraries(
     # LOG
     libhilog_ndk.z.so
     # 图片
+    libimage_ndk.z.so
+    libimage_receiver_ndk.z.so
+    # 本地
     libnative_image.so
-    # NativeBuffer
     libnative_buffer.so
-    # NativeWindow
     libnative_window.so
     # 编码解码
     libnative_media_aenc.so
-    libnative_media_venc.so
     libnative_media_core.so
+    libnative_media_venc.so
     libnative_media_codecbase.so
     # 屏幕录制
     libnative_avscreen_capture.so

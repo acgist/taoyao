@@ -23,9 +23,9 @@
 // 本地视频采集
 #define TAOYAO_VIDEO_LOCAL true
 // 视频来源屏幕
-#define TAOYAO_VIDEO_SOURCE_SCREEN false
+#define TAOYAO_VIDEO_SOURCE_SCREEN true
 // 视频来源相机
-#define TAOYAO_VIDEO_SOURCE_CAMERA true
+#define TAOYAO_VIDEO_SOURCE_CAMERA false
 
 namespace acgist {
 

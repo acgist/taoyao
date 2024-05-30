@@ -18,6 +18,8 @@ class Config {
   password   : string = "taoyao";
   // 当前终端索引
   clientIndex: number = 99999;
+  // SurfaceId
+  surfaceId  : string = "";
 
 };
 

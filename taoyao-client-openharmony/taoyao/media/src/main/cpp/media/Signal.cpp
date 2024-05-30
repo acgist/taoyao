@@ -12,5 +12,8 @@ int32_t channelCount  = 2;
 int32_t bitsPerSample = 16;
 std::string clientId  = "";
 std::string name      = "";
+std::string surfaceId = "";
+napi_env env = nullptr;
+ImageReceiverNative* imageReceiverNative = nullptr;
 
 }

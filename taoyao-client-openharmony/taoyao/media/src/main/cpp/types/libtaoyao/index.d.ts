@@ -1,7 +1,10 @@
+import image from "@ohos.multimedia.image";
+
 export const init: (
-  json   : string,
-  push   : (signal: string, body: string, id: number) => void,
-  request: (signal: string, body: string, id: number) => void
+  json         : string,
+  push         : (signal: string, body: string, id: number) => void,
+  request      : (signal: string, body: string, id: number) => void,
+  imageReceiver: image.ImageReceiver,
 ) => number;
 export const shutdown  : (json: string) => number;
 export const callback  : (json: string) => number;

@@ -1,7 +1,6 @@
 import { taoyaoSignal } from "../taoyao/TaoyaoSignal";
 
 import fs from '@ohos.file.fs';
-import image from "@ohos.multimedia.image";
 import { BusinessError } from "@ohos.base";
 import common from "@ohos.app.ability.common";
 import abilityAccessCtrl, { Permissions } from "@ohos.abilityAccessCtrl";
@@ -46,46 +45,60 @@ struct Index {
   build() {
     Column() {
       Column() {
+        XComponent({
+          id         : taoyaoSignal.xComponentController.getXComponentSurfaceId(),
+          type       : "surface",
+          controller : taoyaoSignal.xComponentController,
+          libraryname: "libtaoyao",
+        })
+        .onLoad(() => {
+          taoyaoSignal.xComponentController.setXComponentSurfaceSize({ surfaceWidth: 640, surfaceHeight: 480 });
+        })
+        .width(640)
+        .height(480);
+      }
+      .width(640)
+      .height(480);
+      Column() {
         Button("连接信令")
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .onClick(() => {
-            taoyaoSignal.connect();
-          });
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+        .onClick(() => {
+          taoyaoSignal.connect();
+        });
       }
       .width("100%")
-      .height("20%");
+      .height("64");
       Column() {
         Button("断开信令")
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .onClick(() => {
-            taoyaoSignal.close();
-          });
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+        .onClick(() => {
+          taoyaoSignal.close();
+        });
       }
       .width("100%")
-      .height("20%");
+      .height("64");
       Column() {
         Button("加载系统")
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .onClick(() => {
-            // const imageReceiver = image.createImageReceiver({ width: 640, height: 480 }, image.ImageFormat.JPEG, 8);
-            taoyaoSignal.init();
-          });
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+        .onClick(() => {
+          taoyaoSignal.init();
+        });
       }
       .width("100%")
-      .height("20%");
+      .height("64");
       Column() {
         Button("卸载系统")
-          .fontSize(20)
-          .fontWeight(FontWeight.Bold)
-          .onClick(() => {
-            taoyaoSignal.shutdown();
-          });
+        .fontSize(16)
+        .fontWeight(FontWeight.Bold)
+        .onClick(() => {
+          taoyaoSignal.shutdown();
+        });
       }
       .width("100%")
-      .height("20%");
+      .height("64");
       Column() {
         Text(
           `
@@ -93,10 +106,10 @@ struct Index {
           信令地址：${setting.signalAddress}
           `
         )
-        .fontSize(20)
+        .fontSize(10)
       }
       .width("100%")
-      .height("20%");
+      .height("40");
     }
     .height("100%");
   }

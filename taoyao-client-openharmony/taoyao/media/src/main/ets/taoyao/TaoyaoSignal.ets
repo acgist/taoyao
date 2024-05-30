@@ -8,6 +8,7 @@
 
 import hilog from "@ohos.hilog";
 import List from '@ohos.util.List';
+import image from "@ohos.multimedia.image";
 import { BusinessError } from '@ohos.base';
 import webSocket from "@ohos.net.webSocket";
 
@@ -35,6 +36,10 @@ class TaoyaoSignal {
   minIndex: number = 0;
   // 最大消息索引
   maxIndex: number = 666;
+  // 图片接收
+  imageReceiver: image.ImageReceiver = image.createImageReceiver({ width: 640, height: 480 }, image.ImageFormat.JPEG, 2);
+  // 视频预览
+  xComponentController: XComponentController = new XComponentController;
 
   /**
    * 加载系统
@@ -42,7 +47,8 @@ class TaoyaoSignal {
    */
   init() {
     hilog.info(0x0000, "TaoyaoSignal", "加载系统");
-    taoyaoModule.init(JSON.stringify(setting.config), this.nativePush, this.nativeRequest);
+    setting.config.surfaceId = this.xComponentController.getXComponentSurfaceId();
+    taoyaoModule.init(JSON.stringify(setting.config), this.nativePush, this.nativeRequest, this.imageReceiver);
   }
 
   /**

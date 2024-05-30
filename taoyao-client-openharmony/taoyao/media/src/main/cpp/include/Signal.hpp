@@ -7,6 +7,10 @@
 #ifndef TAOYAO_SIGNAL_HPP
 #define TAOYAO_SIGNAL_HPP
 
+#include <napi/native_api.h>
+
+#include <multimedia/image_framework/image_receiver_mdk.h>
+
 #ifndef TAOYAO_AUDIO_RET_LOG
 #define TAOYAO_AUDIO_RET_LOG(format, ret, ...)          \
 if(ret == OH_AudioStream_Result::AUDIOSTREAM_SUCCESS) { \
@@ -62,6 +66,12 @@ extern int32_t bitsPerSample;
 extern std::string clientId;
 // 终端名称
 extern std::string name;
+// 预览句柄
+extern std::string surfaceId;
+// 环境
+extern napi_env env;
+// 图片接收
+extern ImageReceiverNative* imageReceiverNative;
 
 /**
  * 发送消息

@@ -21,22 +21,17 @@
 
 #include <map>
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <EGL/eglplatform.h>
-#include <GLES3/gl32.h>
-
 #include "./Signal.hpp"
 #include "./WebRTC.hpp"
-
-#include <native_image/native_image.h>
-#include <native_buffer/native_buffer.h>
-#include <native_window/external_window.h>
 
 #include <ohcamera/camera.h>
 #include "ohcamera/camera_input.h"
 #include <ohcamera/video_output.h>
 #include <ohcamera/capture_session.h>
+
+#include <native_image/native_image.h>
+#include <native_buffer/native_buffer.h>
+#include <native_window/external_window.h>
 
 #include "api/media_stream_track.h"
 #include "api/media_stream_interface.h"
@@ -131,26 +126,11 @@ public:
 class CameraCapturer : public VideoCapturer {
     
 public:
-    // ================ OpenGL ES ================
-    // OpenGL ES SurfaceId
-    uint64_t surfaceId = 0;
-    // OpenGL ES纹理指针
-    GLuint textureId = 0;
-    // OpenGL ES纹理数量
-    GLsizei textureSize = 1;
-    // EGL显示设备
-    EGLDisplay eglDisplay = EGL_NO_DISPLAY;
-    // EGL上下文
-    EGLContext eglContext = EGL_NO_CONTEXT;
-    // EGL Surface
-    EGLSurface eglSurface = EGL_NO_SURFACE;
     // ================ Camera ================
     // 相机设备数量
     uint32_t cameraSize = 0;
     // 相机索引
     uint32_t cameraIndex = 0;
-    // NativeImage
-    OH_NativeImage* nativeImage = nullptr;
     // 相机输入
     Camera_Input* cameraInput = nullptr;
     // 相机设备列表
@@ -171,10 +151,6 @@ public:
     virtual ~CameraCapturer() override;
     
 public:
-    // 加载OpenGL ES
-    void initOpenGLES();
-    // 释放OpenGL ES
-    void releaseOpenGLES();
     virtual bool start() override;
     virtual bool stop()  override;
     
