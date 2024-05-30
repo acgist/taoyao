@@ -23,7 +23,6 @@ set(LIBWEBRTC_INCLUDE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/deps/webrtc/src/")
 
 #ADD_DEFINITIONS(-DNDEBUG)
 ADD_DEFINITIONS(-DLOG_TAG="libtaoyao")
-ADD_DEFINITIONS(-DVK_USE_PLATFORM_OHOS=1)
 
 add_subdirectory("./deps/libmediasoupclient")
 

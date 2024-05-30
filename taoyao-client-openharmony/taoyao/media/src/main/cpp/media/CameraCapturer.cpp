@@ -453,6 +453,25 @@ if (eglRet == EGL_FALSE) {
 //    }
 //    // TODO: 释放webrtc
 //    videoFrameBuffer->Release();
+    
+//      height = (height > 0) ? height : -height; // abs
+//  width = stride;
+//  size_t size = stride * height + stride * height / 2;
+//  if (bufferSize < size) {
+//    return false;
+//  }
+//
+//  rtc::scoped_refptr<webrtc::I420Buffer> i420_buffer = webrtc::I420Buffer::Create(width, height);
+//  libyuv::NV21ToI420(buffer, width, buffer + width * height, width, i420_buffer.get()->MutableDataY(),
+//                     i420_buffer.get()->StrideY(), i420_buffer.get()->MutableDataU(), i420_buffer.get()->StrideU(),
+//                     i420_buffer.get()->MutableDataV(), i420_buffer.get()->StrideV(), width, height);
+//
+//  webrtc::VideoFrame video_frame = webrtc::VideoFrame::Builder()
+//                                     .set_video_frame_buffer(i420_buffer)
+//                                     .set_timestamp_rtp(0)
+//                                     .set_timestamp_ms(rtc::TimeMillis())
+//                                     .set_rotation(webrtc::kVideoRotation_90)
+//                                     .build();
 }
 
 static bool CheckEglExtension(const char* extensions, const char* extension) {

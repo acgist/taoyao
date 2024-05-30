@@ -1,3 +1,8 @@
+/**
+ * https://gitee.com/openharmony/multimedia_audio_framework/blob/master/services/audio_service/client/src/fast_audio_stream.cpp
+ * https://gitee.com/openharmony/multimedia_audio_framework/blob/master/frameworks/js/napi/audiocapturer/napi_audio_capturer.cpp
+ * https://gitee.com/openharmony/multimedia_audio_framework/blob/master/services/audio_service/client/src/audio_manager_proxy.cpp
+ */
 #include "../include/Capturer.hpp"
 
 #include <mutex>
@@ -20,6 +25,7 @@ acgist::AudioCapturer::AudioCapturer() {
     OH_AudioStreamBuilder_SetChannelCount(this->builder, acgist::channelCount);
     OH_AudioStreamBuilder_SetLatencyMode(this->builder,  OH_AudioStream_LatencyMode::AUDIOSTREAM_LATENCY_MODE_NORMAL);
     OH_AudioStreamBuilder_SetSampleFormat(this->builder, OH_AudioStream_SampleFormat::AUDIOSTREAM_SAMPLE_S16LE);
+    // OH_AudioStreamBuilder_SetRendererInfo(this->builder, OH_AudioStream_Usage::AUDIOSTREAM_USAGE_VOICE_COMMUNICATION);
     OH_LOG_DEBUG(LOG_APP, "配置音频采集参数：%{public}d %{public}d", acgist::samplingRate, acgist::channelCount);
     // 设置音频采集回调
     OH_AudioCapturer_Callbacks callbacks;

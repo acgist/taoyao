@@ -1,6 +1,7 @@
 import { taoyaoSignal } from "../taoyao/TaoyaoSignal";
 
 import fs from '@ohos.file.fs';
+import image from "@ohos.multimedia.image";
 import { BusinessError } from "@ohos.base";
 import common from "@ohos.app.ability.common";
 import abilityAccessCtrl, { Permissions } from "@ohos.abilityAccessCtrl";
@@ -69,6 +70,7 @@ struct Index {
           .fontSize(20)
           .fontWeight(FontWeight.Bold)
           .onClick(() => {
+            // const imageReceiver = image.createImageReceiver({ width: 640, height: 480 }, image.ImageFormat.JPEG, 8);
             taoyaoSignal.init();
           });
       }

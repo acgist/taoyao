@@ -118,7 +118,7 @@ int acgist::Room::produceMedia() {
         this->createRecvTransport();
     }
     if(this->audioProduce) {
-        // this->produceAudio();
+        this->produceAudio();
     }
     if(this->videoProduce) {
         this->produceVideo();
@@ -210,7 +210,7 @@ int acgist::Room::produceAudio() {
         OH_LOG_INFO(LOG_APP, "音频媒体状态错误：%{public}s", this->roomId.data());
         return -2;
     }
-    OH_LOG_INFO(LOG_APP, "生产音频媒体：%s", this->roomId.data());
+    OH_LOG_INFO(LOG_APP, "生产音频媒体：%{public}s", this->roomId.data());
     nlohmann::json codecOptions = {
         { "opusStereo", true },
         { "opusDtx",    true }
@@ -228,18 +228,18 @@ int acgist::Room::produceAudio() {
 int acgist::Room::produceVideo() {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     if(this->videoProducer != nullptr) {
-        OH_LOG_INFO(LOG_APP, "视频媒体已经生产：%s", this->roomId.data());
+        OH_LOG_INFO(LOG_APP, "视频媒体已经生产：%{public}s", this->roomId.data());
         return -1;
     }
     if(!this->device->CanProduce("video")) {
-        OH_LOG_INFO(LOG_APP, "不能生产视频媒体：%s", this->roomId.data());
+        OH_LOG_INFO(LOG_APP, "不能生产视频媒体：%{public}s", this->roomId.data());
         return -1;
     }
     if(this->client->videoTrack->state() == webrtc::MediaStreamTrackInterface::TrackState::kEnded) {
-        OH_LOG_INFO(LOG_APP, "视频媒体状态错误：%s", this->roomId.data());
+        OH_LOG_INFO(LOG_APP, "视频媒体状态错误：%{public}s", this->roomId.data());
         return -2;
     }
-    OH_LOG_INFO(LOG_APP, "生产视频媒体：%s", this->roomId.data());
+    OH_LOG_INFO(LOG_APP, "生产视频媒体：%{public}s", this->roomId.data());
     nlohmann::json codecOptions = {
         // x-google-start-bitrate
         { "videoGoogleStartBitrate", 1200 },
@@ -278,7 +278,7 @@ int acgist::Room::close() {
         return 0;
     }
     this->closed = true;
-    OH_LOG_INFO(LOG_APP, "关闭房间：%s", this->roomId.data());
+    OH_LOG_INFO(LOG_APP, "关闭房间：%{public}s", this->roomId.data());
     this->closeClient();
     this->closeClients();
     this->closeAudioProducer();
@@ -289,7 +289,7 @@ int acgist::Room::close() {
 
 int acgist::Room::closeClient() {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
-    OH_LOG_INFO(LOG_APP, "关闭本地终端：%s", this->roomId.data());
+    OH_LOG_INFO(LOG_APP, "关闭本地终端：%{public}s", this->roomId.data());
     if(this->client != nullptr) {
         delete this->client;
         this->client = nullptr;
@@ -299,12 +299,12 @@ int acgist::Room::closeClient() {
 
 int acgist::Room::closeClients() {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
-    OH_LOG_INFO(LOG_APP, "关闭远程终端：%s", this->roomId.data());
+    OH_LOG_INFO(LOG_APP, "关闭远程终端：%{public}s", this->roomId.data());
     for (auto iterator = this->clients.begin(); iterator != this->clients.end(); ++iterator) {
         if (iterator->second == nullptr) {
             continue;
         }
-        OH_LOG_INFO(LOG_APP, "关闭消费者：%s", iterator->first.data());
+        OH_LOG_INFO(LOG_APP, "关闭消费者：%{public}s", iterator->first.data());
         delete iterator->second;
         iterator->second = nullptr;
     }
@@ -315,7 +315,7 @@ int acgist::Room::closeClients() {
 
 int acgist::Room::closeAudioProducer() {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
-    OH_LOG_INFO(LOG_APP, "关闭音频生产者：%s", this->roomId.data());
+    OH_LOG_INFO(LOG_APP, "关闭音频生产者：%{public}s", this->roomId.data());
     if (this->audioProducer != nullptr) {
         this->audioProducer->Close();
         delete this->audioProducer;
@@ -326,7 +326,7 @@ int acgist::Room::closeAudioProducer() {
 
 int acgist::Room::closeVideoProducer() {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
-    OH_LOG_INFO(LOG_APP, "关闭视频生产者：%s", this->roomId.data());
+    OH_LOG_INFO(LOG_APP, "关闭视频生产者：%{public}s", this->roomId.data());
     if (this->videoProducer != nullptr) {
         this->videoProducer->Close();
         delete this->videoProducer;
@@ -337,7 +337,7 @@ int acgist::Room::closeVideoProducer() {
 
 int acgist::Room::closeTransport() {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
-    OH_LOG_INFO(LOG_APP, "关闭通道：%s", this->roomId.data());
+    OH_LOG_INFO(LOG_APP, "关闭通道：%{public}s", this->roomId.data());
     if (this->sendTransport != nullptr) {
         this->sendTransport->Close();
         delete this->sendTransport;
@@ -367,13 +367,13 @@ int acgist::Room::newRemoteClient(const std::string& clientId, const std::string
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     auto oldClient = this->clients.find(clientId);
     if(oldClient != this->clients.end()) {
-        OH_LOG_INFO(LOG_APP, "已经存在远程终端：%s", clientId.data());
+        OH_LOG_INFO(LOG_APP, "已经存在远程终端：%{public}s", clientId.data());
         delete oldClient->second;
         oldClient->second = nullptr;
         this->clients.erase(oldClient);
         removeConsumerIdByClientId(clientId, this->consumerIdClientId);
     }
-    OH_LOG_INFO(LOG_APP, "新增远程终端：%s", clientId.data());
+    OH_LOG_INFO(LOG_APP, "新增远程终端：%{public}s", clientId.data());
     acgist::RemoteClient* client = new acgist::RemoteClient(this->mediaManager);
     client->clientId = clientId;
     client->name     = name;
@@ -386,10 +386,10 @@ int acgist::Room::closeRemoteClient(const std::string& clientId) {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     auto client = this->clients.find(clientId);
     if(client == this->clients.end()) {
-        OH_LOG_INFO(LOG_APP, "远程终端已经删除：%s", clientId.data());
+        OH_LOG_INFO(LOG_APP, "远程终端已经删除：%{public}s", clientId.data());
         return -1;
     }
-    OH_LOG_INFO(LOG_APP, "删除远程终端：%s", clientId.data());
+    OH_LOG_INFO(LOG_APP, "删除远程终端：%{public}s", clientId.data());
     delete client->second;
     client->second = nullptr;
     this->clients.erase(client);
@@ -409,7 +409,7 @@ int acgist::Room::newConsumer(nlohmann::json& body) {
     std::string kind       = body["kind"];
     std::string sourceId   = body["sourceId"];
     std::string consumerId = body["consumerId"];
-    OH_LOG_INFO(LOG_APP, "新增媒体消费：%s %s %s", kind.data(), sourceId.data(), consumerId.data());
+    OH_LOG_INFO(LOG_APP, "新增媒体消费：%{public}s %{public}s %{public}s", kind.data(), sourceId.data(), consumerId.data());
     auto oldClient = this->clients.find(sourceId);
     acgist::RemoteClient* client = nullptr;
     if(oldClient == this->clients.end()) {
@@ -431,16 +431,16 @@ int acgist::Room::closeConsumer(const std::string& consumerId) {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     auto clientId = this->consumerIdClientId.find(consumerId);
     if(clientId == this->consumerIdClientId.end()) {
-        OH_LOG_INFO(LOG_APP, "关闭消费者无效：%s", consumerId.data());
+        OH_LOG_INFO(LOG_APP, "关闭消费者无效：%{public}s", consumerId.data());
         return -1;
     }
     this->consumerIdClientId.erase(clientId);
     auto client = this->clients.find(clientId->second);
     if(client == this->clients.end()) {
-        OH_LOG_INFO(LOG_APP, "关闭消费者无效：%s %s", consumerId.data(), clientId->second.data());
+        OH_LOG_INFO(LOG_APP, "关闭消费者无效：%{public}s %{public}s", consumerId.data(), clientId->second.data());
         return -2;
     }
-    OH_LOG_INFO(LOG_APP, "关闭消费者：%s %s", consumerId.data(), clientId->second.data());
+    OH_LOG_INFO(LOG_APP, "关闭消费者：%{public}s %{public}s", consumerId.data(), clientId->second.data());
     client->second->closeConsumer(consumerId);
     return 0;
 }
@@ -449,15 +449,15 @@ int acgist::Room::pauseConsumer(const std::string& consumerId) {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     auto clientId = this->consumerIdClientId.find(consumerId);
     if(clientId == this->consumerIdClientId.end()) {
-        OH_LOG_INFO(LOG_APP, "暂停消费者无效：%s", consumerId.data());
+        OH_LOG_INFO(LOG_APP, "暂停消费者无效：%{public}s", consumerId.data());
         return -1;
     }
     auto client = this->clients.find(clientId->second);
     if(client == this->clients.end()) {
-        OH_LOG_INFO(LOG_APP, "暂停消费者无效：%s %s", consumerId.data(), clientId->second.data());
+        OH_LOG_INFO(LOG_APP, "暂停消费者无效：%{public}s %{public}s", consumerId.data(), clientId->second.data());
         return -2;
     }
-    OH_LOG_INFO(LOG_APP, "暂停消费者：%s %s", consumerId.data(), clientId->second.data());
+    OH_LOG_INFO(LOG_APP, "暂停消费者：%{public}s %{public}s", consumerId.data(), clientId->second.data());
     client->second->pauseConsumer(consumerId);
     return 0;
 }
@@ -466,15 +466,15 @@ int acgist::Room::resumeConsumer(const std::string& consumerId) {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     auto clientId = this->consumerIdClientId.find(consumerId);
     if(clientId == this->consumerIdClientId.end()) {
-        OH_LOG_INFO(LOG_APP, "恢复消费者无效：%s", consumerId.data());
+        OH_LOG_INFO(LOG_APP, "恢复消费者无效：%{public}s", consumerId.data());
         return -1;
     }
     auto client = this->clients.find(clientId->second);
     if(client == this->clients.end()) {
-        OH_LOG_INFO(LOG_APP, "恢复消费者无效：%s %s", consumerId.data(), clientId->second.data());
+        OH_LOG_INFO(LOG_APP, "恢复消费者无效：%{public}s %{public}s", consumerId.data(), clientId->second.data());
         return -2;
     }
-    OH_LOG_INFO(LOG_APP, "恢复消费者：%s %s", consumerId.data(), clientId->second.data());
+    OH_LOG_INFO(LOG_APP, "恢复消费者：%{public}s %{public}s", consumerId.data(), clientId->second.data());
     client->second->resumeConsumer(consumerId);
     return 0;
 }
@@ -482,12 +482,12 @@ int acgist::Room::resumeConsumer(const std::string& consumerId) {
 int acgist::Room::closeProducer(const std::string& producerId) {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     if(this->audioProducer != nullptr && this->audioProducer->GetId() == producerId) {
-        OH_LOG_INFO(LOG_APP, "关闭音频生产者：%s", producerId.data());
+        OH_LOG_INFO(LOG_APP, "关闭音频生产者：%{public}s", producerId.data());
         this->audioProducer->Close();
         delete this->audioProducer;
         this->audioProducer = nullptr;
     } else if(this->videoProducer != nullptr && this->videoProducer->GetId() == producerId) {
-        OH_LOG_INFO(LOG_APP, "关闭视频生产者：%s", producerId.data());
+        OH_LOG_INFO(LOG_APP, "关闭视频生产者：%{public}s", producerId.data());
         this->videoProducer->Close();
         delete this->videoProducer;
         this->videoProducer = nullptr;
@@ -500,10 +500,10 @@ int acgist::Room::closeProducer(const std::string& producerId) {
 int acgist::Room::pauseProducer(const std::string& producerId) {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     if(this->audioProducer != nullptr && this->audioProducer->GetId() == producerId) {
-        OH_LOG_INFO(LOG_APP, "暂停音频生产者：%s", producerId.data());
+        OH_LOG_INFO(LOG_APP, "暂停音频生产者：%{public}s", producerId.data());
         this->audioProducer->Pause();
     } else if(this->videoProducer != nullptr && this->videoProducer->GetId() == producerId) {
-        OH_LOG_INFO(LOG_APP, "暂停视频生产者：%s", producerId.data());
+        OH_LOG_INFO(LOG_APP, "暂停视频生产者：%{public}s", producerId.data());
         this->videoProducer->Pause();
     } else {
         return -1;
@@ -514,10 +514,10 @@ int acgist::Room::pauseProducer(const std::string& producerId) {
 int acgist::Room::resumeProducer(const std::string& producerId) {
     std::lock_guard<std::recursive_mutex> lockRoom(roomMutex);
     if(this->audioProducer != nullptr && this->audioProducer->GetId() == producerId) {
-        OH_LOG_INFO(LOG_APP, "恢复音频生产者：%s", producerId.data());
+        OH_LOG_INFO(LOG_APP, "恢复音频生产者：%{public}s", producerId.data());
         this->audioProducer->Resume();
     } else if(this->videoProducer != nullptr && this->videoProducer->GetId() == producerId) {
-        OH_LOG_INFO(LOG_APP, "恢复视频生产者：%s", producerId.data());
+        OH_LOG_INFO(LOG_APP, "恢复视频生产者：%{public}s", producerId.data());
         this->videoProducer->Resume();
     } else {
         return -1;
@@ -571,7 +571,7 @@ std::future<std::string> acgist::SendListener::OnProduce(mediasoupclient::SendTr
 }
 
 std::future<std::string> acgist::SendListener::OnProduceData(mediasoupclient::SendTransport* transport, const nlohmann::json& sctpStreamParameters, const std::string& label, const std::string& protocol, const nlohmann::json& appData) {
-    OH_LOG_INFO(LOG_APP, "生产数据：%s - %s - %s - %s", this->room->roomId.data(), transport->GetId().data(), label.data(), protocol.data());
+    OH_LOG_INFO(LOG_APP, "生产数据：%{public}s - %{public}s - %{public}s - %{public}s", this->room->roomId.data(), transport->GetId().data(), label.data(), protocol.data());
     // TODO: 自行实现实现逻辑
     std::promise<std::string> promise;
     // promise.set_value(producerId);
@@ -585,7 +585,7 @@ acgist::RecvListener::~RecvListener() {
 }
 
 std::future<void> acgist::RecvListener::OnConnect(mediasoupclient::Transport* transport, const nlohmann::json& dtlsParameters) {
-    OH_LOG_INFO(LOG_APP, "连接接收通道：%s - %s", this->room->roomId.data(), transport->GetId().data());
+    OH_LOG_INFO(LOG_APP, "连接接收通道：%{public}s - %{public}s", this->room->roomId.data(), transport->GetId().data());
     nlohmann::json requestBody = {
         { "roomId",           this->room->roomId },
         { "transportId",      transport->GetId() },
@@ -598,7 +598,7 @@ std::future<void> acgist::RecvListener::OnConnect(mediasoupclient::Transport* tr
 }
 
 void acgist::RecvListener::OnConnectionStateChange(mediasoupclient::Transport* transport, const std::string& connectionState) {
-    OH_LOG_INFO(LOG_APP, "接收通道状态改变：%s - %s - %s", this->room->roomId.data(), transport->GetId().data(), connectionState.data());
+    OH_LOG_INFO(LOG_APP, "接收通道状态改变：%{public}s - %{public}s - %{public}s", this->room->roomId.data(), transport->GetId().data(), connectionState.data());
     // TODO: 自行实现异常逻辑
 }
 
@@ -609,7 +609,7 @@ acgist::ProducerListener::~ProducerListener() {
 }
 
 void acgist::ProducerListener::OnTransportClose(mediasoupclient::Producer* producer) {
-    OH_LOG_INFO(LOG_APP, "生产者通道关闭：%s - %s", this->room->roomId.data(), producer->GetId().data());
+    OH_LOG_INFO(LOG_APP, "生产者通道关闭：%{public}s - %{public}s", this->room->roomId.data(), producer->GetId().data());
     producer->Close();
     // TODO: 自行实现异常逻辑
 }
@@ -621,7 +621,7 @@ acgist::ConsumerListener::~ConsumerListener() {
 }
 
 void acgist::ConsumerListener::OnTransportClose(mediasoupclient::Consumer* consumer) {
-    OH_LOG_INFO(LOG_APP, "消费者通道关闭：%s - %s", this->room->roomId.data(), consumer->GetId().data());
+    OH_LOG_INFO(LOG_APP, "消费者通道关闭：%{public}s - %{public}s", this->room->roomId.data(), consumer->GetId().data());
     consumer->Close();
     // TODO: 自行实现异常逻辑
 }

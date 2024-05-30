@@ -19,11 +19,6 @@
 #ifndef TAOYAO_CAPTURER_HPP
 #define TAOYAO_CAPTURER_HPP
 
-// 本地音频采集
-#define __TAOYAO_AUDIO_LOCAL__ false
-// 本地视频采集
-#define __TAOYAO_VIDEO_LOCAL__ true
-
 #include <map>
 
 #include <EGL/egl.h>

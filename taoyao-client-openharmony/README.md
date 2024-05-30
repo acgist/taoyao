@@ -47,3 +47,15 @@ ninja -C ./out/arm64-v8a -j 32
 * https://gitee.com/openharmony-tpc
 * https://gitee.com/openharmony-tpc/chromium_third_party_webrtc
 * https://gitee.com/openharmony-tpc/chromium_third_party_ohos_prebuilts
+
+## 参考项目
+
+* https://gitee.com/han_jin_fei/oh_web-rtc
+
+## 源码修改
+
+```
+vim modules/audio_device/audio_device_impl.cc
+vim modules/audio_device/ohos/ohaudio_recorder_wrapper.cc
+OH_AudioStreamBuilder_SetLatencyMode(builder, AUDIOSTREAM_LATENCY_MODE_NORMAL);
+```

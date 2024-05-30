@@ -59,7 +59,7 @@ void acgist::TaoyaoVideoEncoder::initFormatConfig(OH_AVFormat* format) {
     OH_AVFormat_SetIntValue(format,    OH_MD_KEY_I_FRAME_INTERVAL,          acgist::iFrameInterval);
     OH_AVFormat_SetIntValue(format,    OH_MD_KEY_QUALITY,                   0);
     OH_AVFormat_SetIntValue(format,    OH_MD_KEY_RANGE_FLAG,                false);
-    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_PIXEL_FORMAT,              AV_PIXEL_FORMAT_YUVI420);
+    OH_AVFormat_SetIntValue(format,    OH_MD_KEY_PIXEL_FORMAT,              AV_PIXEL_FORMAT_YUVI420); // AV_PIXEL_FORMAT_NV21
     OH_AVFormat_SetIntValue(format,    OH_MD_KEY_PROFILE,                   static_cast<int32_t>(OH_AVCProfile::AVC_PROFILE_BASELINE));
     OH_AVFormat_SetIntValue(format,    OH_MD_KEY_COLOR_PRIMARIES,           static_cast<int32_t>(OH_ColorPrimary::COLOR_PRIMARY_BT709));
     OH_AVFormat_SetIntValue(format,    OH_MD_KEY_MATRIX_COEFFICIENTS,       static_cast<int32_t>(OH_MatrixCoefficient::MATRIX_COEFFICIENT_IDENTITY));

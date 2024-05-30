@@ -34,9 +34,9 @@ bool acgist::MediaManager::newPeerConnectionFactory() {
     this->workerThread->SetName("worker_thread", nullptr);
     this->signalingThread->SetName("signaling_thread", nullptr);
     if (
-        !this->networkThread->Start()   ||
-        !this->signalingThread->Start() ||
-        !this->workerThread->Start()
+        !this->networkThread->Start() ||
+        !this->workerThread->Start()  ||
+        !this->signalingThread->Start()
     ) {
         OH_LOG_WARN(LOG_APP, "WebRTC线程启动失败");
         this->networkThread   = nullptr;
@@ -44,6 +44,18 @@ bool acgist::MediaManager::newPeerConnectionFactory() {
         this->signalingThread = nullptr;
         return false;
     }
+    // std::make_unique<webrtc::VideoEncoderFactoryTemplate<
+    //     webrtc::LibvpxVp8EncoderTemplateAdapter,
+    //     webrtc::LibvpxVp9EncoderTemplateAdapter,
+    //     webrtc::OpenH264EncoderTemplateAdapter,
+    //     webrtc::LibaomAv1EncoderTemplateAdapter
+    // >>()
+    // std::make_unique<webrtc::VideoDecoderFactoryTemplate<
+    //     webrtc::LibvpxVp8DecoderTemplateAdapter,
+    //     webrtc::LibvpxVp9DecoderTemplateAdapter,
+    //     webrtc::OpenH264DecoderTemplateAdapter,
+    //     webrtc::Dav1dDecoderTemplateAdapter
+    // >>()
     this->peerConnectionFactory = webrtc::CreatePeerConnectionFactory(
         // 网络线程
         this->networkThread.get(),
@@ -109,33 +121,33 @@ int acgist::MediaManager::releaseLocalClient() {
 }
 
 bool acgist::MediaManager::startCapture() {
-    // this->startAudioCapture();
+    this->startAudioCapture();
     this->startVideoCapture();
     return true;
 }
 
 bool acgist::MediaManager::startAudioCapture() {
-    #if __TAOYAO_AUDIO_LOCAL__
-        if (this->audioCapturer == nullptr) {
-            OH_LOG_INFO(LOG_APP, "开始音频采集");
-            this->audioCapturer = new acgist::AudioCapturer();
-            this->audioCapturer->start();
-        }
-        if(this->audioTrackSource == nullptr) {
-            OH_LOG_INFO(LOG_APP, "设置音频来源");
-            this->audioTrackSource = new rtc::RefCountedObject<acgist::TaoyaoAudioTrackSource>();
-            this->audioCapturer->source = this->audioTrackSource;
-        }
+    #if TAOYAO_AUDIO_LOCAL
+    if (this->audioCapturer == nullptr) {
+        OH_LOG_INFO(LOG_APP, "开始音频采集");
+        this->audioCapturer = new acgist::AudioCapturer();
+        this->audioCapturer->start();
+    }
+    if(this->audioTrackSource == nullptr) {
+        OH_LOG_INFO(LOG_APP, "设置音频来源");
+        this->audioTrackSource = new rtc::RefCountedObject<acgist::TaoyaoAudioTrackSource>();
+        this->audioCapturer->source = this->audioTrackSource;
+    }
     #else
-        if(this->audioTrackSource == nullptr) {
-            OH_LOG_INFO(LOG_APP, "设置音频来源");
-            cricket::AudioOptions options;
-//            options.highpass_filter   = true;
-//            options.auto_gain_control = true;
-//            options.echo_cancellation = true;
-//            options.noise_suppression = true;
-            this->audioTrackSource = this->peerConnectionFactory->CreateAudioSource(options);
-        }
+    if(this->audioTrackSource == nullptr) {
+        OH_LOG_INFO(LOG_APP, "设置音频来源");
+        cricket::AudioOptions options;
+//      options.highpass_filter   = true;
+//      options.auto_gain_control = true;
+//      options.echo_cancellation = true;
+//      options.noise_suppression = true;
+        this->audioTrackSource = this->peerConnectionFactory->CreateAudioSource(options);
+    }
     #endif
     return true;
 }
@@ -168,26 +180,26 @@ bool acgist::MediaManager::stopCapture() {
 }
 
 bool acgist::MediaManager::stopAudioCapture() {
-    #if __TAOYAO_AUDIO_LOCAL__
-        if(this->audioCapturer != nullptr) {
-            OH_LOG_INFO(LOG_APP, "停止音频采集");
-            this->audioCapturer->stop();
-            delete this->audioCapturer;
-            this->audioCapturer = nullptr;
-        }
-        if(this->audioTrackSource != nullptr) {
-            OH_LOG_INFO(LOG_APP, "释放音频来源");
-            this->audioTrackSource->Release();
-            // delete this->AudioTrackSource;
-            this->audioTrackSource = nullptr;
-        }
+    #if TAOYAO_AUDIO_LOCAL
+    if(this->audioCapturer != nullptr) {
+        OH_LOG_INFO(LOG_APP, "停止音频采集");
+        this->audioCapturer->stop();
+        delete this->audioCapturer;
+        this->audioCapturer = nullptr;
+    }
+    if(this->audioTrackSource != nullptr) {
+        OH_LOG_INFO(LOG_APP, "释放音频来源");
+        this->audioTrackSource->Release();
+        // delete this->AudioTrackSource;
+        this->audioTrackSource = nullptr;
+    }
     #else
-        if(this->audioTrackSource != nullptr) {
-            OH_LOG_INFO(LOG_APP, "释放音频来源");
-            this->audioTrackSource->Release();
-            // delete this->audioTrackSource;
-            this->audioTrackSource = nullptr;
-        }
+    if(this->audioTrackSource != nullptr) {
+        OH_LOG_INFO(LOG_APP, "释放音频来源");
+        this->audioTrackSource->Release();
+        // delete this->audioTrackSource;
+        this->audioTrackSource = nullptr;
+    }
     #endif
     return true;
 }
@@ -209,10 +221,10 @@ bool acgist::MediaManager::stopVideoCapture() {
 }
 
 rtc::scoped_refptr<webrtc::AudioTrackInterface> acgist::MediaManager::getAudioTrack() {
-    #if __TAOYAO_AUDIO_LOCAL__
-    return this->peerConnectionFactory->CreateAudioTrack("taoyao-audio", this->audioTrackSource);
+    #if TAOYAO_AUDIO_LOCAL
+    return this->peerConnectionFactory->CreateAudioTrack("audio_label", this->audioTrackSource);
     #else
-    return this->peerConnectionFactory->CreateAudioTrack("taoyao-audio", this->audioTrackSource.get());
+    return this->peerConnectionFactory->CreateAudioTrack("audio_label", this->audioTrackSource.get());
     #endif
 }
 

@@ -18,8 +18,14 @@
 
 #include "api/peer_connection_interface.h"
 
-#define TAOYAO_VIDEO_SOURCE_SCREEN true
-#define TAOYAO_VIDEO_SOURCE_CAMERA false
+// 本地音频采集
+#define TAOYAO_AUDIO_LOCAL false
+// 本地视频采集
+#define TAOYAO_VIDEO_LOCAL true
+// 视频来源屏幕
+#define TAOYAO_VIDEO_SOURCE_SCREEN false
+// 视频来源相机
+#define TAOYAO_VIDEO_SOURCE_CAMERA true
 
 namespace acgist {
 
