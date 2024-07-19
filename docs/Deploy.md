@@ -435,6 +435,8 @@ ffmpeg -decoders
 ffmpeg -encoders
 ```
 
+> --enable-dct --enable-rdft --enable-decoder=mp3
+
 ## 安装Nginx
 
 ```
