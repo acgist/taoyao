@@ -3,6 +3,8 @@
 .gradle
 
 media/deps/webrtc
+media/deps/rnnoise/src
+media/deps/rnnoise/include
 media/deps/libmediasoupclient
 
 local.properties
