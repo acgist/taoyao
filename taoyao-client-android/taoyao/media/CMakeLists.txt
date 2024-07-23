@@ -2,20 +2,14 @@ cmake_minimum_required(VERSION 3.22.1)
 
 project(taoyao VERSION 1.0.0 LANGUAGES C CXX)
 
-# Debug | Release
-#-DCMAKE_BUILD_TYPE=Debug
-#set(CMAKE_BUILD_TYPE Debug)
-
 # C编译选项
 set(CMAKE_C_STANDARD 17)
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -std=c17 -O3")
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -std=c17 -O0 -g")
+set(CMAKE_C_FLAGS_DEBUG   "${CMAKE_C_FLAGS_DEBUG}   -std=c17 -O0 -g")
 set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -std=c17 -O3")
 
 # C++编译选项
 set(CMAKE_CXX_STANDARD 17)
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -O3")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -std=c++17 -O0 -g")
+set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -std=c++17 -O0 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -std=c++17 -O3")
 
 set(
@@ -25,12 +19,9 @@ set(
 
 set(
     SOURCE_FILES
-    ${SOURCE_DIR}/include/Log.hpp
-    ${SOURCE_DIR}/include/MediaManager.hpp
-    ${SOURCE_DIR}/include/Room.hpp
-    ${SOURCE_DIR}/include/RouterCallback.hpp
-    ${SOURCE_DIR}/webrtc/MediaManager.cpp
     ${SOURCE_DIR}/webrtc/Room.cpp
+    ${SOURCE_DIR}/webrtc/Rnnoise.cpp
+    ${SOURCE_DIR}/webrtc/MediaManager.cpp
     ${SOURCE_DIR}/webrtc/RouterCallback.cpp
 )
 
@@ -50,6 +41,7 @@ endif ()
 
 add_library(${PROJECT_NAME} SHARED ${SOURCE_FILES})
 
+add_subdirectory("deps/rnnoise")
 add_subdirectory("deps/libmediasoupclient")
 
 set_source_files_properties(
@@ -59,6 +51,7 @@ set_source_files_properties(
 target_include_directories(
     ${PROJECT_NAME} PUBLIC
     "${SOURCE_DIR}/include"
+    "${PROJECT_SOURCE_DIR}/deps/rnnoise/include"
     "${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/include"
     "${PROJECT_SOURCE_DIR}/deps/libmediasoupclient/deps/libsdptransform/include"
 )
@@ -67,6 +60,7 @@ target_link_libraries(
     ${PROJECT_NAME} PUBLIC
     log
     android
+    rnnoise
     OpenSLES
     mediasoupclient
 )

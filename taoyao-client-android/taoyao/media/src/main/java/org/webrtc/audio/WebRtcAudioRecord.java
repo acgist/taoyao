@@ -24,6 +24,8 @@ import android.os.Process;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
+import com.acgist.taoyao.media.audio.RnnoiseProcesser;
+
 import org.webrtc.CalledByNative;
 import org.webrtc.Logging;
 import org.webrtc.ThreadUtils;
@@ -108,6 +110,7 @@ class WebRtcAudioRecord {
   private @Nullable SamplesReadyCallback audioSamplesReadyCallback;
   private final boolean isAcousticEchoCancelerSupported;
   private final boolean isNoiseSuppressorSupported;
+  private RnnoiseProcesser rnnoiseProcesser;
 
   /**
    * 设置录音工具
@@ -159,6 +162,8 @@ class WebRtcAudioRecord {
           if (microphoneMute) {
             byteBuffer.clear();
             byteBuffer.put(emptyBytes);
+          } else {
+            WebRtcAudioRecord.this.rnnoiseProcesser.rnnoise(byteBuffer.arrayOffset(), byteBuffer.capacity(), byteBuffer.array());
           }
           // It's possible we've been shut down during the read, and stopRecording() tried and
           // failed to join this thread. To be a bit safer, try to avoid calling any native methods
@@ -196,6 +201,7 @@ class WebRtcAudioRecord {
       try {
         if (audioRecord != null) {
           audioRecord.stop();
+          WebRtcAudioRecord.this.rnnoiseProcesser.release();
           doAudioRecordStateCallback(AUDIO_RECORD_STOP);
         }
       } catch (IllegalStateException e) {
@@ -408,6 +414,8 @@ class WebRtcAudioRecord {
       }
     }
     try {
+      this.rnnoiseProcesser = new RnnoiseProcesser();
+      this.rnnoiseProcesser.init();
       audioRecord.startRecording();
     } catch (IllegalStateException e) {
       reportWebRtcAudioRecordStartError(AudioRecordStartErrorCode.AUDIO_RECORD_START_EXCEPTION,
