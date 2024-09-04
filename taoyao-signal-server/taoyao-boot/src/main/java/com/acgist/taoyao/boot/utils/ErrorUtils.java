@@ -213,6 +213,9 @@ public final class ErrorUtils {
      * @see DefaultHandlerExceptionResolver
      */
     public static final MessageCode messageCode(int status, Throwable globalThrowable, Throwable rootThrowable) {
+        if(rootThrowable == null || globalThrowable == null) {
+            return MessageCode.CODE_9999;
+        }
         final Class<?> rootClazz   = rootThrowable.getClass();
         final Class<?> globalClazz = globalThrowable.getClass();
         return CODE_MAPPING.entrySet().stream()
