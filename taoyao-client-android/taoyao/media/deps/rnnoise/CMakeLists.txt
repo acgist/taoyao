@@ -19,7 +19,6 @@ set(
     src/nnet_default.c
     src/rnnoise_tables.c
     src/rnnoise_data.c
-#   src/rnnoise_data_little.c
     src/parse_lpcnet_weights.c
 )
 
