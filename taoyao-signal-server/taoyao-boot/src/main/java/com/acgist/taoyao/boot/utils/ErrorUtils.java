@@ -102,11 +102,14 @@ public final class ErrorUtils {
             final MessageCode messageCode = messageCodeException.getMessageCode();
             status  = messageCode.getStatus();
             message = Message.fail(messageCode, messageCodeException.getMessage());
-        } else if(rootError instanceof Throwable throwable) {
+        } else if(
+            rootError   instanceof Throwable rootThrowable &&
+            globalError instanceof Throwable globalThrowable
+        ) {
             // 未知异常：异常转换
-            final MessageCode messageCode = ErrorUtils.messageCode(status, throwable);
+            final MessageCode messageCode = ErrorUtils.messageCode(status, globalThrowable, rootThrowable);
             status  = messageCode.getStatus();
-            message = Message.fail(messageCode, ErrorUtils.message(messageCode, throwable));
+            message = Message.fail(messageCode, ErrorUtils.message(messageCode, rootThrowable));
         } else {
             // 没有异常
             final MessageCode messageCode = MessageCode.of(status);
@@ -193,20 +196,32 @@ public final class ErrorUtils {
     }
     
     /**
-     * @param status    原始状态编码
-     * @param throwable 异常
+     * @see #messageCode(int, Throwable, Throwable)
+     */
+    public static final MessageCode messageCode(int status, Throwable throwable) {
+        return ErrorUtils.messageCode(status, throwable, throwable);
+    }
+    
+    /**
+     * @param status          原始状态
+     * @param globalThrowable 外层异常
+     * @param rootThrowable   原始异常
      * 
-     * @return 状态编码
+     * @return 响应状态
      * 
      * @see ResponseEntityExceptionHandler
      * @see DefaultHandlerExceptionResolver
      */
-    public static final MessageCode messageCode(int status, Throwable throwable) {
-        final Class<?> clazz = throwable.getClass();
+    public static final MessageCode messageCode(int status, Throwable globalThrowable, Throwable rootThrowable) {
+        final Class<?> rootClazz   = rootThrowable.getClass();
+        final Class<?> globalClazz = globalThrowable.getClass();
         return CODE_MAPPING.entrySet().stream()
             .filter(entry -> {
                 final Class<?> mappingClazz = entry.getKey();
-                return mappingClazz.equals(clazz) || mappingClazz.isAssignableFrom(clazz);
+                return mappingClazz.equals(globalClazz)           ||
+                       mappingClazz.isAssignableFrom(globalClazz) ||
+                       mappingClazz.equals(rootClazz)             ||
+                       mappingClazz.isAssignableFrom(rootClazz);
             })
             .map(Map.Entry::getValue)
             .findFirst()
@@ -271,7 +286,7 @@ public final class ErrorUtils {
             if(cause instanceof MessageCodeException) {
                 return cause;
             }
-        } while(cause != null && (cause = cause.getCause()) != null);
+        } while(cause != null && cause.getCause() != null && (cause = cause.getCause()) != null);
         // 返回原始异常
         return t;
     }
