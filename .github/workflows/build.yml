@@ -88,6 +88,7 @@ jobs:
         with:
           repository: versatica/libmediasoupclient
           path: ./taoyao-client-android/taoyao/media/deps/libmediasoupclient
+          ref: '97c42457b6a73a3eeef45dc37f1c90bb7d28cdff'
       - name: Set up JDK
         uses: actions/setup-java@v1
         with:
