@@ -1,14 +1,12 @@
 [submodule "taoyao-client-media/mediasoup"]
 	path = taoyao-client-media/mediasoup
-	url = https://gitee.com/acgist/mediasoup.git
+	url = https://github.com/versatica/mediasoup.git
 [submodule "taoyao-client-web/mediasoup-client"]
 	path = taoyao-client-web/mediasoup-client
-	url = https://gitee.com/acgist/mediasoup-client.git
+	url = https://github.com/versatica/mediasoup-client.git
 [submodule "taoyao-client-android/libmediasoupclient"]
 	path = taoyao-client-android/libmediasoupclient
-	url = https://gitee.com/acgist/libmediasoupclient.git
+	url = https://github.com/versatica/libmediasoupclient.git
 [submodule "taoyao-client-openharmony/libmediasoupclient"]
-
 	path = taoyao-client-openharmony/libmediasoupclient
-
-	url = https://gitee.com/acgist/libmediasoupclient.git
+	url = https://github.com/versatica/libmediasoupclient.git
