@@ -86,7 +86,7 @@ jobs:
       - name: Checkout libmediasoupclient
         uses: actions/checkout@v3
         with:
-          repository: acgist/libmediasoupclient
+          repository: versatica/libmediasoupclient
           path: ./taoyao-client-android/taoyao/media/deps/libmediasoupclient
       - name: Set up JDK
         uses: actions/setup-java@v1
