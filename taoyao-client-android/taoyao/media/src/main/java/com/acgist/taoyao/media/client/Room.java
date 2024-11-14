@@ -207,6 +207,7 @@ public class Room extends CloseableClient implements RouterCallback {
                 iceServers = new ArrayList<>();
             }
             this.rtcConfiguration = new PeerConnection.RTCConfiguration(iceServers);
+//          this.rtcConfiguration.enableCpuOveruseDetection = true;
             // 开始协商
             return this.taoyao.requestFuture(
                 this.taoyao.buildMessage("media::router::rtp::capabilities", "roomId", this.roomId),
@@ -288,7 +289,7 @@ public class Room extends CloseableClient implements RouterCallback {
                 "forceTcp", false,
                 "producing", false,
                 "consuming", true,
-                "sctpCapabilities", this.dataProduce ? this.sctpCapabilities : null
+                "sctpCapabilities", this.dataConsume ? this.sctpCapabilities : null
             ),
             response -> {
                 this.nativeCreateRecvTransport(this.nativeRoomPointer, JSONUtils.toJSON(response.body()));
@@ -380,6 +381,19 @@ public class Room extends CloseableClient implements RouterCallback {
             this.nativeMediaConsumerClose(this.nativeRoomPointer, consumerId);
         });
         remoteClient.close();
+    }
+
+    /**
+     * 动态设置帧率码率
+     *
+     * HardwareVideoEncoder#updateBitrate()
+     *
+     * @param maxFramerate 最大帧率
+     * @param minBitrate   最小码率
+     * @param maxBitrate   最大码率
+     */
+    public void setBitrate(int maxFramerate, int minBitrate, int maxBitrate) {
+        this.nativeSetBitrate(this.nativeRoomPointer, maxFramerate, minBitrate, maxBitrate);
     }
 
     @Override
@@ -772,5 +786,15 @@ public class Room extends CloseableClient implements RouterCallback {
      * @param consumerId        消费者ID
      */
     private native void nativeMediaConsumerClose(long nativeRoomPointer, String consumerId);
+
+    /**
+     * Mediasoup设置码率
+     *
+     * @param nativeRoomPointer 房间指针
+     * @param maxFramerate      最大帧率
+     * @param minBitrate        最小码率
+     * @param maxBitrate        最大码率
+     */
+    private native void nativeSetBitrate(long nativeRoomPointer, int maxFramerate, int minBitrate, int maxBitrate);
 
 }

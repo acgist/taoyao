@@ -10,14 +10,14 @@ Maven   >= 3.8.0
 CMake   >= 3.26.0
 NodeJS  >= v18.16.0
 Python  >= 3.8.0 with PIP
-ffmpeg  >= 4.3.0
-gcc/g++ >= 10.2.0
+FFmpeg  >= 4.3.0
+GCC/G++ >= 10.2.0
 Android >= 9.0
 ```
 
 ## Debian
 
-`CentOS 7`实在是太旧了，软件更新非常麻烦，所以直接使用`Debian`作为测试，系统配置全部使用`root`用户。
+`CentOS 7`实在是太旧了，软件更新非常麻烦，所以直接使用`Debian`作为测试。
 
 ### 系统参数
 
@@ -66,6 +66,7 @@ set nocompatible
 vi /etc/network/interfaces
 
 ---
+auto enp0s3
 iface enp0s3 inet static
 address 192.168.1.110
 gateway 192.168.1.1
@@ -80,6 +81,17 @@ ifup enp0s3
 ### 设置国内镜像
 
 ```
+# DNS
+sudo vim /etc/systemd/resolved.conf
+
+---
+DNS=233.5.5.5 233.6.6.6 114.114.114.114 8.8.8.8
+---
+
+sudo systemctl restart systemd-resolved
+sudo systemctl enable systemd-resolved
+sudo ln -sf /run/systemd/resolve/resolv.conf /etc/resolv.conf
+
 # 配置
 vi /etc/apt/sources.list
 
@@ -96,6 +108,7 @@ deb-src https://mirrors.aliyun.com/debian/ bullseye-backports main non-free cont
 
 # 更新系统
 apt update
+apt upgrade
 ```
 
 ### 安装依赖
@@ -177,7 +190,7 @@ sudo apt install git
 git --version
 ```
 
-## 安装gcc/g++
+## 安装GCC/G++
 
 ```
 # 安装
@@ -335,7 +348,7 @@ trusted-host = mirrors.aliyun.com
 pip config list
 ```
 
-## 安装ffmpeg
+## 安装FFmpeg
 
 ```
 mkdir -p /data/dev/ffmpeg ; cd $_
@@ -395,17 +408,26 @@ wget http://www.ffmpeg.org/releases/ffmpeg-5.1.3.tar.xz
 tar -Jxvf ffmpeg-5.1.3.tar.xz
 cd ffmpeg-5.1.3/
 PKG_CONFIG_PATH="/usr/local/lib/pkgconfig/"
-./configure \
---enable-static \
---enable-shared \
---enable-gpl \
---enable-libvpx \
+./configure      \
+--enable-static  \
+--enable-shared  \
+--enable-gpl     \
+--enable-libvpx  \
 --enable-libopus \
 --enable-libx264 \
 --enable-libx265 \
 --enable-encoder=libvpx_vp8 --enable-decoder=vp8 --enable-parser=vp8 \
 --enable-encoder=libvpx_vp9 --enable-decoder=vp9 --enable-parser=vp9
 make && sudo make install
+
+# 链接文件
+vim /etc/ld.so.conf
+
+---
+/usr/local/lib/
+---
+
+ldconfig
 
 # 验证
 ffmpeg -version
@@ -488,7 +510,7 @@ pm2 start|stop|restart taoyao-client-media
 
 > 下载依赖建议备份方便再次编译使用
 
-### Mediasoup单独编译
+### Mediasoup单独编译（旧版）
 
 编译媒体服务时会自动编译`mediasoup`所以忽略单独编译
 
@@ -500,6 +522,16 @@ make
 
 # 清理结果
 make clean
+```
+
+### Mediasoup单独编译（新版）
+
+* 需要`python3`和`pip3`
+* 源码[mediasoup-3.13.16.zip](https://pan.baidu.com/s/1E_DXv32D9ODyj5J-o-ji_g?pwd=hudc)（包含依赖）
+
+```
+npm install
+node npm-scripts.mjs worker:build
 ```
 
 ## 安装Web终端
@@ -625,7 +657,7 @@ openssl pkcs12 -export -clcerts -in server.crt -inkey server.key -out server.p12
 # 设置密码：-deststorepass 123456
 ```
 
-## gcc/g++路径配置
+## GCC/G++路径配置
 
 ```
 # 安装路径
@@ -645,11 +677,11 @@ openssl pkcs12 -export -clcerts -in server.crt -inkey server.key -out server.p12
 ## 清理源码
 
 ```
-sudo rm -rf \
-/data/dev/cmake \
+sudo rm -rf      \
+/data/dev/cmake  \
 /data/dev/ffmpeg \
 /data/dev/python \
-/data/dev/maven/apache-maven-3.8.8-bin.tar.gz \
+/data/dev/maven/apache-maven-3.8.8-bin.tar.gz   \
 /data/dev/nodejs/node-v18.16.0-linux-x64.tar.xz \
 /data/dev/java/openjdk-17.0.2_linux-x64_bin.tar.gz
 ```

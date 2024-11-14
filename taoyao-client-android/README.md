@@ -37,6 +37,12 @@
 * WebRtcAudioRecord
 * WebRtcAudioTrack
 
+## 动态修改码率
+
+```
+HardwareVideoEncoder#updateBitrate
+```
+
 ## 学习资料
 
 * https://developer.android.google.cn/docs?hl=zh-cn

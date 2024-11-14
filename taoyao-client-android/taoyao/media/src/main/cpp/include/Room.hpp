@@ -175,6 +175,14 @@ namespace acgist {
          * @param env JNIEnv
          */
         void closeRoom(JNIEnv* env);
+        /**
+         * 设置码率
+         *
+         * @param maxFramerate 最大帧率
+         * @param minBitrate   最小码率
+         * @param maxBitrate   最大码率
+         */
+        void setBitrate(int maxFramerate, int minBitrate, int maxBitrate);
     };
 
 }

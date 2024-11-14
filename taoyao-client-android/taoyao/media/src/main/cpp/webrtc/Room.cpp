@@ -342,6 +342,8 @@ namespace acgist {
         }
         this->factory          = factory;
         this->rtcConfiguration = new webrtc::PeerConnectionInterface::RTCConfiguration(rtcConfiguration);
+//      this->rtcConfiguration->set_cpu_adaptation(false);
+//      this->rtcConfiguration->set_experiment_cpu_load_estimator(false);
         mediasoupclient::PeerConnection::Options options;
         options.config      = rtcConfiguration;
         options.factory     = factory;
@@ -418,7 +420,7 @@ namespace acgist {
         nlohmann::json codecOptions =
             {
                 // x-google-start-bitrate
-                { "videoGoogleStartBitrate", 400  },
+                { "videoGoogleStartBitrate", 1200 },
                 // x-google-min-bitrate
                 { "videoGoogleMinBitrate",   800  },
                 // x-google-max-bitrate
@@ -550,6 +552,53 @@ namespace acgist {
             this->recvTransport->Close();
         }
         this->closeRoomCallback(env);
+    }
+
+    void Room::setBitrate(int maxFramerate, int minBitrate, int maxBitrate) {
+//        if(
+//            this->sendTransport                      == nullptr ||
+//            this->sendTransport->sendHandler         == nullptr ||
+//            this->sendTransport->sendHandler->pc     == nullptr ||
+//            this->sendTransport->sendHandler->pc->pc == nullptr
+//        ) {
+//            return;
+//        }
+//        webrtc::BitrateSettings settings;
+//        settings.min_bitrate_bps = minBitrate;
+//        settings.max_bitrate_bps = maxBitrate;
+//        settings.start_bitrate_bps = minBitrate;
+//        this->sendTransport->sendHandler->pc->pc->SetBitrate(settings);
+        webrtc::RtpSenderInterface* rtpSender;
+        if(
+            this->videoProducer == nullptr ||
+            (rtpSender = this->videoProducer->GetRtpSender()) == nullptr
+        ) {
+            return;
+        }
+        webrtc::RtpParameters rtpParameters = rtpSender->GetParameters();
+        auto& encodings = rtpParameters.encodings;
+        for(
+            auto iterator = encodings.begin();
+            iterator != encodings.end();
+            ++iterator
+        ) {
+            if(maxFramerate > 0) {
+                LOG_I("当前最大帧率：%d - %d", maxFramerate, iterator->max_framerate);
+                iterator->max_framerate = maxFramerate;
+            }
+            if(minBitrate > 0) {
+                LOG_I("当前最小码率：%d - %d", minBitrate, iterator->min_bitrate_bps);
+                iterator->min_bitrate_bps = minBitrate;
+            }
+            if(maxBitrate > 0) {
+                LOG_I("当前最大码率：%d - %d", maxBitrate, iterator->max_bitrate_bps);
+                iterator->max_bitrate_bps = maxBitrate;
+            }
+//            iterator->bitrate_priority = 4.0;
+//            iterator->network_priority = webrtc::Priority::kHigh;
+//            iterator->scale_resolution_down_by = 2;
+        }
+        rtpSender->SetParameters(rtpParameters);
     }
 
     extern "C" JNIEXPORT jlong JNICALL
@@ -725,6 +774,15 @@ namespace acgist {
         room->mediaConsumerClose(env, consumerId);
         env->DeleteLocalRef(jConsumerId);
         env->ReleaseStringUTFChars(jConsumerId, consumerId);
+    }
+
+    extern "C" JNIEXPORT void JNICALL
+    Java_com_acgist_taoyao_media_client_Room_nativeSetBitrate(JNIEnv* env, jobject me, jlong nativeRoomPointer, jint maxFramerate, jint minBitrate, jint maxBitrate) {
+        Room* room = (Room*) nativeRoomPointer;
+        if(room == nullptr) {
+            return;
+        }
+        room->setBitrate(maxFramerate, minBitrate, maxBitrate);
     }
 
 }
