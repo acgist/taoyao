@@ -26,6 +26,8 @@
 mkdir -p /data
 cd /data
 git clone https://chromium.googlesource.com/chromium/tools/depot_tools.git
+# vpython
+# git checkout chrome/4147
 
 # 下载源码
 mkdir -p /data/webrtc
