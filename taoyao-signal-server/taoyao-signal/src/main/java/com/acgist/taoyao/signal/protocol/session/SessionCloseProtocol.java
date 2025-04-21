@@ -3,6 +3,7 @@ package com.acgist.taoyao.signal.protocol.session;
 import java.util.Map;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNull;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
@@ -40,7 +41,7 @@ public class SessionCloseProtocol extends ProtocolSessionAdapter implements Appl
     }
     
     @Override
-    public void onApplicationEvent(SessionCloseEvent event) {
+    public void onApplicationEvent(@NonNull SessionCloseEvent event) {
         final Session session = event.getSession();
         session.push(this.build(Map.of(
             Constant.SESSION_ID,

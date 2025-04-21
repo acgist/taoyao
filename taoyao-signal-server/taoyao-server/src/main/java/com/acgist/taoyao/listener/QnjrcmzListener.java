@@ -2,6 +2,7 @@ package com.acgist.taoyao.listener;
 
 import org.springframework.boot.context.event.ApplicationStartingEvent;
 import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNull;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,7 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 public class QnjrcmzListener implements ApplicationListener<ApplicationStartingEvent> {
 
     @Override
-    public void onApplicationEvent(ApplicationStartingEvent event) {
+    public void onApplicationEvent(@NonNull ApplicationStartingEvent event) {
         synchronized (QnjrcmzListener.class) {
             log.debug("配置忽略证书域名校验");
             // 配置JDK HTTPClient域名校验问题

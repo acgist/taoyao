@@ -3,6 +3,7 @@ package com.acgist.taoyao.signal.protocol.room;
 import java.util.Map;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNull;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
@@ -37,7 +38,7 @@ public class RoomCloseProtocol extends ProtocolRoomAdapter implements Applicatio
     }
     
     @Override
-    public void onApplicationEvent(RoomCloseEvent event) {
+    public void onApplicationEvent(@NonNull RoomCloseEvent event) {
         final Room room = event.getRoom();
         final Client mediaClient = room.getMediaClient();
         mediaClient.push(this.build(Map.of(

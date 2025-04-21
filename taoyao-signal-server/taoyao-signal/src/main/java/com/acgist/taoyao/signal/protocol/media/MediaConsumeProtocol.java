@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
@@ -72,7 +73,7 @@ public class MediaConsumeProtocol extends ProtocolRoomAdapter implements Applica
     
     @Async
     @Override
-    public void onApplicationEvent(MediaConsumeEvent event) {
+    public void onApplicationEvent(@NonNull MediaConsumeEvent event) {
         final Room room = event.getRoom();
         if(event.getProducer() != null) {
             // 生产媒体：其他终端消费

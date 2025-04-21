@@ -3,6 +3,7 @@ package com.acgist.taoyao.signal.protocol.media;
 import java.util.Map;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNull;
 
 import com.acgist.taoyao.boot.annotation.Description;
 import com.acgist.taoyao.boot.annotation.Protocol;
@@ -43,7 +44,7 @@ public class MediaProducerPauseProtocol extends ProtocolRoomAdapter implements A
     }
     
     @Override
-    public void onApplicationEvent(MediaProducerPauseEvent event) {
+    public void onApplicationEvent(@NonNull MediaProducerPauseEvent event) {
         final Room room = event.getRoom();
         final Client mediaClient = event.getMediaClient();
         final Map<String, Object> body = Map.of(

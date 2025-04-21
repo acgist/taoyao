@@ -6,6 +6,7 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.lang.NonNull;
 import org.springframework.util.AntPathMatcher;
 
 import com.acgist.taoyao.boot.config.SecurityProperties;
@@ -63,7 +64,7 @@ public class SecurityInterceptor extends InterceptorAdapter {
     }
     
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         if(this.permit(request) || this.authorization(request)) {
             return true;
         }

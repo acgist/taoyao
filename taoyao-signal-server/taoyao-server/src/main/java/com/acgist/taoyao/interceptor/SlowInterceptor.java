@@ -1,5 +1,8 @@
 package com.acgist.taoyao.interceptor;
 
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
+
 import com.acgist.taoyao.boot.config.TaoyaoProperties;
 import com.acgist.taoyao.boot.interceptor.InterceptorAdapter;
 
@@ -43,13 +46,13 @@ public class SlowInterceptor extends InterceptorAdapter {
     }
     
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         this.local.set(System.currentTimeMillis());
         return true;
     }
     
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception e) throws Exception {
+    public void afterCompletion(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler, @Nullable Exception e) throws Exception {
         final long duration = System.currentTimeMillis() - this.local.get();
         if(duration > this.taoyaoProperties.getTimeout()) {
             log.info("请求执行时间过慢：{} - {}", request.getRequestURI(), duration);
