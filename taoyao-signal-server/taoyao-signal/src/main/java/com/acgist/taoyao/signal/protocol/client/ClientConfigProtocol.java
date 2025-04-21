@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
@@ -52,7 +53,7 @@ public class ClientConfigProtocol extends ProtocolClientAdapter implements Appli
 
     @Async
     @Override
-    public void onApplicationEvent(ClientConfigEvent event) {
+    public void onApplicationEvent(@NonNull ClientConfigEvent event) {
         final Client client = event.getClient();
         final ClientType clientType = client.getClientType();
         client.push(this.build(clientType));

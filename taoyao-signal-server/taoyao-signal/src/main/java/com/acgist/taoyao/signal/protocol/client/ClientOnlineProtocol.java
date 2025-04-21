@@ -1,6 +1,7 @@
 package com.acgist.taoyao.signal.protocol.client;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
@@ -49,7 +50,7 @@ public class ClientOnlineProtocol extends ProtocolClientAdapter implements Appli
 
     @Async
     @Override
-    public void onApplicationEvent(ClientOnlineEvent event) {
+    public void onApplicationEvent(@NonNull ClientOnlineEvent event) {
         final Client client   = event.getClient();
         final String clientId = event.getClientId();
         this.clientManager.broadcast(

@@ -2,6 +2,7 @@ package com.acgist.taoyao.boot.configuration;
 
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.context.ApplicationContext;
+import org.springframework.lang.NonNull;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -23,7 +24,7 @@ public class WebMvcConfigurerAutoConfiguration implements WebMvcConfigurer {
     private final ApplicationContext applicationContext;
     
     @Override
-    public void addInterceptors(InterceptorRegistry registry) {
+    public void addInterceptors(@NonNull InterceptorRegistry registry) {
         this.applicationContext.getBeansOfType(InterceptorAdapter.class).entrySet().stream()
         .sorted((a, z) -> a.getValue().compareTo(z.getValue()))
         .forEach(entry -> {

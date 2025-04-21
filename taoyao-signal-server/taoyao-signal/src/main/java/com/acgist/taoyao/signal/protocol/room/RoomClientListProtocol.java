@@ -3,6 +3,7 @@ package com.acgist.taoyao.signal.protocol.room;
 import java.util.Map;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
@@ -68,7 +69,7 @@ public class RoomClientListProtocol extends ProtocolRoomAdapter implements Appli
 
     @Async
     @Override
-    public void onApplicationEvent(RoomEnterEvent event) {
+    public void onApplicationEvent(@NonNull RoomEnterEvent event) {
         final Room room = event.getRoom();
         final Client client = event.getClient();
         client.push(this.build(Map.of(

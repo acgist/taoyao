@@ -6,6 +6,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import org.springframework.lang.NonNull;
 import org.springframework.test.context.TestContext;
 import org.springframework.test.context.TestExecutionListener;
 
@@ -20,13 +21,13 @@ import lombok.extern.slf4j.Slf4j;
 public class CostedTestTestExecutionListener implements TestExecutionListener {
     
     @Override
-    public void afterTestMethod(TestContext testContext) throws Exception {
+    public void afterTestMethod(@NonNull TestContext testContext) throws Exception {
         final CostedTest costedTest = testContext.getTestMethod().getDeclaredAnnotation(CostedTest.class);
         if(costedTest == null) {
             return;
         }
-        final int count  = costedTest.count();
-        final int thread  = costedTest.thread();
+        final int count    = costedTest.count();
+        final int thread   = costedTest.thread();
         final long timeout = costedTest.timeout();
         final TimeUnit timeUnit = costedTest.timeUnit();
         final long aTime = System.currentTimeMillis();

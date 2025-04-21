@@ -3,6 +3,7 @@ package com.acgist.taoyao.signal.protocol.client;
 import java.util.Map;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
@@ -38,7 +39,7 @@ public class ClientOfflineProtocol extends ProtocolClientAdapter implements Appl
 
     @Async
     @Override
-    public void onApplicationEvent(ClientOfflineEvent event) {
+    public void onApplicationEvent(@NonNull ClientOfflineEvent event) {
         final String clientId = event.getClientId();
         this.clientManager.broadcast(clientId, this.build(
             Map.of(Constant.CLIENT_ID, clientId)

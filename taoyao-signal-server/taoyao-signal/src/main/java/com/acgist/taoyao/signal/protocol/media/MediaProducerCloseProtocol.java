@@ -3,6 +3,7 @@ package com.acgist.taoyao.signal.protocol.media;
 import java.util.Map;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
@@ -50,7 +51,7 @@ public class MediaProducerCloseProtocol extends ProtocolRoomAdapter implements A
     
     @Async
     @Override
-    public void onApplicationEvent(MediaProducerCloseEvent event) {
+    public void onApplicationEvent(@NonNull MediaProducerCloseEvent event) {
         final Room room = event.getRoom();
         final Client mediaClient = event.getMediaClient();
         final Map<String, Object> body = Map.of(

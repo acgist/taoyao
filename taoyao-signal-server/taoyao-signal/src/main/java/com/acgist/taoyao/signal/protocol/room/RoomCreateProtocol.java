@@ -3,6 +3,7 @@ package com.acgist.taoyao.signal.protocol.room;
 import java.util.Map;
 
 import org.springframework.context.ApplicationListener;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Async;
 
 import com.acgist.taoyao.boot.annotation.Description;
@@ -55,7 +56,7 @@ public class RoomCreateProtocol extends ProtocolClientAdapter implements Applica
 
     @Async
     @Override
-    public void onApplicationEvent(MediaServerRegisterEvent event) {
+    public void onApplicationEvent(@NonNull MediaServerRegisterEvent event) {
         this.roomManager.recreate(event.getClient(), this.build());
     }
 
