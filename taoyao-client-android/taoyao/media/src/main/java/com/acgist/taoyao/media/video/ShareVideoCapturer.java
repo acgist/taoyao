@@ -13,10 +13,9 @@ import org.webrtc.VideoSink;
 import org.webrtc.VideoTrack;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 注意：只是功能验证，没有实现资源释放。
@@ -54,7 +53,7 @@ public class ShareVideoCapturer implements VideoCapturer {
                 null
             );
             this.clearBuffer(buffer);
-            final List<VideoFrame.I420Buffer> buffers = new ArrayList<>();
+            final AtomicInteger index = new AtomicInteger(0);
             while(ShareVideoCapturer.this.running) {
                 synchronized (ShareVideoCapturer.this.frames) {
                     do {
@@ -65,6 +64,7 @@ public class ShareVideoCapturer implements VideoCapturer {
                             Log.e(ShareVideoCapturer.class.getSimpleName(), "等待异常", e);
                         }
                     } while(ShareVideoCapturer.this.frames.isEmpty());
+                    index.set(0);
                     ShareVideoCapturer.this.frames.forEach((k, v) -> {
                         final VideoFrame.Buffer c = v.getBuffer();
                         final VideoFrame.Buffer o = c.cropAndScale(0, 0, c.getWidth(), c.getHeight(), width_, height_);
@@ -73,18 +73,19 @@ public class ShareVideoCapturer implements VideoCapturer {
 //                      buffer.getDataY().put(x.getDataY());
 //                      buffer.getDataU().put(x.getDataU());
 //                      buffer.getDataV().put(x.getDataV());
-                        buffers.add(x);
-                        o.release();
-                        v.release();
-                    });
-                    for (int i = 0; i < buffers.size(); i++) {
-                        final int row_ = i / col;
-                        final int col_ = i % col;
+                        final int row_ = index.get() / col;
+                        final int col_ = index.get() % col;
                         final int dstX = col_ * width_;
                         final int dstY = row_ * height_;
-                        ShareVideoCapturer.this.copyBuffer(buffers.get(i), buffer, dstX, dstY);
-                    }
-                    buffers.clear();
+                        ShareVideoCapturer.this.copyBuffer(x, buffer, dstX, dstY);
+                        x.release();
+                        o.release();
+                        v.release();
+                        index.incrementAndGet();
+                        if(index.get() >= col * row) {
+                            index.set(0);
+                        }
+                    });
                     ShareVideoCapturer.this.frames.clear();
                     final VideoFrame frame = new VideoFrame(
                         buffer,
