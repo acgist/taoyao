@@ -48,6 +48,6 @@
     <string name="videoFile"></string>
     <!-- 水印 -->
     <string name="watermark">"'TAOYAO' yyyy-MM-dd HH:mm:ss"</string>
-    <!-- 视频来源：FILE|BACK|FRONT|SCREEN -->
+    <!-- 视频来源：FILE|BACK|FRONT|SCREEN|SHARE -->
     <string name="videoSourceType">BACK</string>
 </resources>

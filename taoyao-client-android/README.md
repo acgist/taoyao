@@ -15,6 +15,8 @@
 * [libmediasoupclient文档](https://mediasoup.org/documentation/v3/libmediasoupclient)
 * [libmediasoupclient接口](https://mediasoup.org/documentation/v3/libmediasoupclient/api)
 
+> 分支：`3.4.2`
+
 ## 项目配置
 
 可以自己编译`WebRTC`依赖或者下载已有依赖，项目导入以后拷贝`libmediasoupclient`源码还有`WebRTC`头文件和库文件到`deps`目录。

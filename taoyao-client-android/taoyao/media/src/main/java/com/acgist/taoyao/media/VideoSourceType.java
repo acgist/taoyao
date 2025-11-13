@@ -22,7 +22,13 @@ public enum VideoSourceType {
     /**
      * 屏幕共享：ScreenCapturerAndroid
      */
-    SCREEN;
+    SCREEN,
+    /**
+     * 共享本地：ShareVideoCapturer
+     *
+     * 注意：这个模式只是用来测试很多功能没有兼容
+     */
+    SHARE;
 
     /**
      * @return 是否是摄像头

@@ -492,6 +492,7 @@ public class SessionClient extends Client {
                 SessionClient.this.remoteMediaStream = mediaStream;
                 SessionClient.this.playAudio();
                 SessionClient.this.playVideo();
+                SessionClient.this.mediaManager.addShare(mediaStream);
             }
 
             @Override
@@ -499,6 +500,7 @@ public class SessionClient extends Client {
                 Log.i(SessionClient.class.getSimpleName(), "删除远程媒体：" + SessionClient.this.clientId);
                 mediaStream.dispose();
                 SessionClient.this.remoteMediaStream = null;
+                SessionClient.this.mediaManager.removeShare(mediaStream);
             }
 
             @Override

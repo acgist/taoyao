@@ -16,6 +16,7 @@ import com.acgist.taoyao.media.config.MediaProperties;
 import com.acgist.taoyao.media.config.MediaVideoProperties;
 import com.acgist.taoyao.media.config.WebrtcProperties;
 import com.acgist.taoyao.media.signal.ITaoyao;
+import com.acgist.taoyao.media.video.ShareVideoCapturer;
 import com.acgist.taoyao.media.video.VideoProcesser;
 import com.acgist.taoyao.media.video.WatermarkProcesser;
 
@@ -491,6 +492,8 @@ public final class MediaManager {
             this.initCameraCapturer();
         } else if (this.videoSourceType == VideoSourceType.SCREEN) {
             this.initScreenCapturerPromise();
+        } else if(this.videoSourceType == VideoSourceType.SHARE) {
+            this.initShareCapturer();
         } else {
             // 其他来源
         }
@@ -542,6 +545,14 @@ public final class MediaManager {
                 Log.e(MediaManager.class.getSimpleName(), "等待录屏授权异常", e);
             }
         }
+    }
+
+    /**
+     * 加载本地共享
+     */
+    private void initShareCapturer() {
+        this.videoCapturer = new ShareVideoCapturer();
+        this.initVideoSource();
     }
 
     /**
@@ -1048,6 +1059,18 @@ public final class MediaManager {
             Log.i(MediaManager.class.getSimpleName(), "停止屏幕捕获");
         }
 
+    }
+
+    public void addShare(MediaStream mediaStream) {
+        if(this.videoSourceType == VideoSourceType.SHARE) {
+            ((ShareVideoCapturer) this.videoCapturer).addSource(mediaStream);
+        }
+    }
+
+    public void removeShare(MediaStream mediaStream) {
+        if(this.videoSourceType == VideoSourceType.SHARE) {
+            ((ShareVideoCapturer) this.videoCapturer).removeSource(mediaStream);
+        }
     }
 
     /**
