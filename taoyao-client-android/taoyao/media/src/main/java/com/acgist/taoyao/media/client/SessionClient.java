@@ -456,6 +456,9 @@ public class SessionClient extends Client {
                 SessionClient.this.logState();
             }
 
+            // 连接状态变更
+            // OnConnectionChange
+
             @Override
             public void onIceGatheringChange(PeerConnection.IceGatheringState iceGatheringState) {
                 Log.d(SessionClient.class.getSimpleName(), "PCIceGatheringState改变：" + iceGatheringState);

@@ -3601,6 +3601,8 @@ class Taoyao extends RemoteClient {
         peerConnection.restartIce();
       }
     }
+    // 连接状态变更
+    // peerConnection.onconnectionstatechange = event => {}
     const localStream = await this.getStream({
       audioEnabled: true,
       videoEnabled: true,
