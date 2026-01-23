@@ -84,6 +84,8 @@ acgist/taoyao-signal-server
 * [部署文档](./docs/Deploy.md)
 * [设计文档](./docs/Design.md)
 
+> 项目部署修改`MEDIASOUP_ANNOUNCED_IP`配置即可运行
+
 ## 终端预览
 
 ![Web终端](./docs/image/web.jpg)
