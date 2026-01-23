@@ -504,6 +504,8 @@ pm2 save
 pm2 start|stop|restart taoyao-client-media
 ```
 
+> 修改配置`MEDIASOUP_ANNOUNCED_IP`为服务器`IP`地址
+
 ### Mediasoup编译失败
 
 编译过程中的依赖下载容易失败，需要进入目录`mediasoup/worker/subprojects`，查看`*.wrap`文件依次下载所需依赖，修改名称放到`packagefiles`目录中，最后注释下载链接。将`package.json`中的`mediasoup`改为本地依赖`file:./mediasoup`，重新编译即可。
