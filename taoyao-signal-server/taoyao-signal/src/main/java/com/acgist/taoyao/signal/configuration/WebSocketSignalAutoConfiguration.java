@@ -9,11 +9,14 @@ import org.springframework.web.socket.server.standard.ServletServerContainerFact
 
 import com.acgist.taoyao.signal.client.websocket.WebSocketSignal;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * WebSocket信令自动配置
  * 
  * @author acgist
  */
+@Slf4j
 @EnableWebSocket
 @AutoConfiguration
 public class WebSocketSignalAutoConfiguration {
@@ -21,6 +24,7 @@ public class WebSocketSignalAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean
     public WebSocketSignal webSocketSignal() {
+        log.info("注册WebSocket信令");
         return new WebSocketSignal();
     }
     
