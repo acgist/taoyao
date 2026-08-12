@@ -84,7 +84,7 @@ import lombok.extern.slf4j.Slf4j;
 @EnableAsync
 @EnableScheduling
 @AutoConfiguration
-@EnableAspectJAutoProxy(exposeProxy = false)
+@EnableAspectJAutoProxy(exposeProxy = false, proxyTargetClass = false)
 @EnableConfigurationProperties({
     IdProperties.class,
     GbProperties.class,

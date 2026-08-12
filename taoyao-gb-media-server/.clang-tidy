@@ -1,0 +1,28 @@
+# -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+Checks: >
+  misc-*,
+  bugprone-*,
+  modernize-*,
+  performance-*,
+  readability-*,
+  -llvm-*,
+  -abseil-*,
+  -google-*,
+  -fuchsia-*,
+  -readability-function-size,
+  -readability-magic-numbers,
+  -readability-identifier-length,
+  -modernize-use-trailing-return-type,
+  -bugprone-easily-swappable-parameters,
+  -readability-redundant-access-specifiers,
+  -readability-function-cognitive-complexity,
+  -misc-non-private-member-variables-in-classes
+CheckOptions:
+  - key: modernize-use-nullptr.NullMacros
+    value: "NULL"
+  - key: readability-function-size.LineThreshold
+    value: "128"
+  - key: readability-function-size.ParameterThreshold
+    value: "8"
+  - key: readability-function-size.StatementThreshold
+    value: "128"

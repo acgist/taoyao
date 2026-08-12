@@ -23,7 +23,7 @@ public class GbServerLogger implements ServerLogger {
     
     @Override
     public void logMessage(SIPMessage message, String from, String to, String status, boolean sender) {
-        this.logMessage(message, from, to, status, sender, 0);
+        this.logMessage(message, from, to, status, sender, System.currentTimeMillis());
     }
 
     @Override
@@ -52,6 +52,7 @@ public class GbServerLogger implements ServerLogger {
     
     @Override
     public void setStackProperties(Properties stackProperties) {
+        // -
     }
 
 }

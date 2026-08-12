@@ -12,6 +12,7 @@ import com.acgist.taoyao.boot.config.SecurityProperties;
 import com.acgist.taoyao.boot.runner.OrderedCommandLineRunner;
 import com.acgist.taoyao.signal.client.ClientManager;
 import com.acgist.taoyao.signal.client.gb.GbServer;
+import com.acgist.taoyao.signal.client.gb.IGbServer;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
 
 import lombok.extern.slf4j.Slf4j;
@@ -23,19 +24,19 @@ public class GbSignalAutoConfiguration {
 
     @Bean
     @ConditionalOnMissingBean
-    public GbServer gbServer(
+    public IGbServer gbServer(
         GbProperties       gbProperties,
         ClientManager      clientManager,
         ProtocolManager    protocolManager,
         SecurityProperties securityProperties
     ) {
-        log.info("注册Gb信令");
+        log.info("注册GB信令");
         return new GbServer(gbProperties, clientManager, protocolManager, securityProperties);
     }
 
     @Bean
-    @ConditionalOnBean(GbServer.class)
-    public CommandLineRunner gbServerCommandLineRunner(GbServer gbServer) {
+    @ConditionalOnBean(IGbServer.class)
+    public CommandLineRunner gbServerCommandLineRunner(IGbServer gbServer) {
         return new OrderedCommandLineRunner() {
             @Override
             public void run(String ... args) throws Exception {

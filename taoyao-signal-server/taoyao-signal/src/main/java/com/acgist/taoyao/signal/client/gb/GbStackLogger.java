@@ -110,7 +110,7 @@ public class GbStackLogger implements StackLogger {
 
     @Override
     public void setStackProperties(Properties stackProperties) {
-        // 0
+        // -
     }
 
     @Override
