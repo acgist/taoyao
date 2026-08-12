@@ -323,7 +323,7 @@ void GbMediaServer::forward(const char* host, uint16_t port, uint32_t src_ssrc, 
         }
         // 修改SSRC
         uint32_t* data_ssrc = (uint32_t*) (data + 8);
-        uint32_t  ssrc      = htonl(this->dst_ssrc);
+        uint32_t  ssrc      = ::htonl(this->dst_ssrc);
         std::memcpy(data_ssrc, &ssrc, sizeof(uint32_t));
         // 发送数据
         this->send(this->rtp_addr, data, length);
