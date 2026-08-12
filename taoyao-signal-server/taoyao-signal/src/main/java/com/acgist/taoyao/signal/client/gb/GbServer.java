@@ -68,6 +68,10 @@ import com.acgist.taoyao.signal.client.gb.GbDevice.Message;
 import com.acgist.taoyao.signal.client.gb.GbXML.MessageType;
 import com.acgist.taoyao.signal.protocol.Protocol;
 import com.acgist.taoyao.signal.protocol.ProtocolManager;
+import com.acgist.taoyao.signal.protocol.media.MediaTransportPlainCreateProtocol;
+import com.acgist.taoyao.signal.protocol.room.RoomEnterProtocol;
+import com.acgist.taoyao.signal.protocol.room.RoomExpelProtocol;
+import com.acgist.taoyao.signal.protocol.room.RoomInviteProtocol;
 
 import gov.nist.core.LogLevels;
 import lombok.Getter;
@@ -144,11 +148,11 @@ public class GbServer implements SipListener, IGbServer {
         public void push(com.acgist.taoyao.boot.model.Message message) {
             final String signal = message.getHeader().getSignal();
             switch (signal) {
-                case "room::invite"                    -> this.invite(message);
-                case "room::enter"                     -> this.enter(message);
-                case "media::transport::plain::create" -> this.plain(message);
-                case "room::expel"                     -> this.expel(message);
-                default                                -> log.warn("没有适配的信令：{}", signal);
+                case RoomInviteProtocol.SIGNAL                -> this.invite(message);
+                case RoomEnterProtocol.SIGNAL                 -> this.enter(message);
+                case MediaTransportPlainCreateProtocol.SIGNAL -> this.plain(message);
+                case RoomExpelProtocol.SIGNAL                 -> this.expel(message);
+                default                                       -> log.warn("没有适配信令：{}", signal);
             }
         }
 

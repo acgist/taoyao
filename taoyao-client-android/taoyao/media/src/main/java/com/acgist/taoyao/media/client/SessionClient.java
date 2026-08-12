@@ -196,7 +196,7 @@ public class SessionClient extends Client {
             case "offer"     -> this.offer(message, body);
             case "answer"    -> this.answer(message, body);
             case "candidate" -> this.candidate(message, body);
-            default          -> Log.d(SessionClient.class.getSimpleName(), "没有适配的会话指令：" + type);
+            default          -> Log.d(SessionClient.class.getSimpleName(), "没有适配会话指令：" + type);
         }
     }
 
