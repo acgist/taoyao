@@ -7,3 +7,6 @@
 [submodule "taoyao-client-android/libmediasoupclient"]
 	path = taoyao-client-android/libmediasoupclient
 	url = https://github.com/versatica/libmediasoupclient.git
+[submodule "taoyao-gb-media-server/media-server"]
+	path = taoyao-gb-media-server/media-server
+	url = https://github.com/ireader/media-server.git

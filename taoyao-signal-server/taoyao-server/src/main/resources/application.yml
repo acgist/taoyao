@@ -190,6 +190,9 @@ taoyao:
     storage-image-path: /data/taoyao/storage/image
     # 视频存储目录
     storage-video-path: /data/taoyao/storage/video
+  # GB信令
+  gb:
+    enabled: true
   # Socket信令
   socket:
     enabled: true

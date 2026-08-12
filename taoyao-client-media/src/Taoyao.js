@@ -320,7 +320,7 @@ class Room {
    * 房间使用情况
    */
   usage() {
-    console.info("房间标识",          this.roomId);
+    console.info("房间标识",           this.roomId);
     console.info("房间媒体通道数量",   this.transports.size);
     console.info("房间媒体生产者数量", this.producers.size);
     console.info("房间媒体消费者数量", this.consumers.size);

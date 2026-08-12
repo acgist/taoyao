@@ -15,6 +15,7 @@ import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -41,6 +42,24 @@ public final class JSONUtils {
     
     private JSONUtils() {
     }
+
+	/**
+	 * JSON转NODE
+	 * 
+	 * @param json JSON
+	 * 
+	 * @return NODE
+	 */
+	public static final JsonNode toNode(String json) {
+		if (Objects.isNull(json)) {
+			return null;
+		}
+		try {
+			return MAPPER.readTree(json);
+		} catch (IOException e) {
+			throw MessageCodeException.of(e, "JSON转NODE失败：" + json);
+		}
+	}
     
     /**
      * Java转JSON

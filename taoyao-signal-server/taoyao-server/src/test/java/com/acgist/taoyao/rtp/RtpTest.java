@@ -25,9 +25,6 @@ import com.acgist.taoyao.signal.utils.CipherUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
-/**
- * TODO：验证不能生产两个媒体
- */
 @Slf4j
 public class RtpTest {
 
@@ -101,7 +98,7 @@ public class RtpTest {
 //      ffmpeg -re -i video.mp4 -c:a libopus -vn -f rtp rtp://192.168.1.110:8888 -c:v libx264 -an -f rtp rtp://192.168.1.110:9999 -sdp_file taoyao.sdp
 //      ffplay -protocol_whitelist "file,rtp,udp" -i taoyao.sdp
 //      ffmpeg -protocol_whitelist "file,rtp,udp" -i taoyao.sdp taoyao.mp4
-        // 发送命令：register/enter/create/audio/video
+        // 发送命令：register/transport/create/audio/video
         String command = "register";
         final Scanner scanner = new Scanner(System.in);
         do {

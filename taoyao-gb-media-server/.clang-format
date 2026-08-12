@@ -1,0 +1,8 @@
+BasedOnStyle: Google
+UseTab: Never
+TabWidth: 4
+IndentWidth: 4
+ColumnLimit: 512
+AccessModifierOffset: -4
+AlignConsecutiveAssignments: Consecutive
+AlignConsecutiveDeclarations: Consecutive

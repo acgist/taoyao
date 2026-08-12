@@ -43,6 +43,7 @@ import org.springframework.web.multipart.support.MissingServletRequestPartExcept
 import org.springframework.web.servlet.NoHandlerFoundException;
 
 import com.acgist.taoyao.boot.config.FfmpegProperties;
+import com.acgist.taoyao.boot.config.GbProperties;
 import com.acgist.taoyao.boot.config.IdProperties;
 import com.acgist.taoyao.boot.config.MediaProperties;
 import com.acgist.taoyao.boot.config.RewriteProperties;
@@ -83,9 +84,10 @@ import lombok.extern.slf4j.Slf4j;
 @EnableAsync
 @EnableScheduling
 @AutoConfiguration
-@EnableAspectJAutoProxy(exposeProxy = false)
+@EnableAspectJAutoProxy(exposeProxy = false, proxyTargetClass = false)
 @EnableConfigurationProperties({
     IdProperties.class,
+    GbProperties.class,
     MediaProperties.class,
     FfmpegProperties.class,
     ScriptProperties.class,

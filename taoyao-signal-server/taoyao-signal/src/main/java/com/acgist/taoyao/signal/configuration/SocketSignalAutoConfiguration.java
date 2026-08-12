@@ -38,6 +38,7 @@ public class SocketSignalAutoConfiguration {
         SocketProperties      socketProperties,
         PlatformErrorProtocol platformErrorProtocol
     ) {
+        log.info("注册Socket信令");
         this.buildSecret(socketProperties);
         return new SocketSignal(clientManager, protocolManager, socketProperties, platformErrorProtocol);
     }
@@ -73,7 +74,8 @@ public class SocketSignalAutoConfiguration {
         };
         if(bytes == null) {
             final Random random = new Random();
-            random.nextBytes(bytes);            socketProperties.setEncryptSecret(Base64.getMimeEncoder().encodeToString(bytes));
+            random.nextBytes(bytes);
+            socketProperties.setEncryptSecret(Base64.getMimeEncoder().encodeToString(bytes));
             log.info("Socket信令加密密码（随机）：{}", socketProperties.getEncryptSecret());
         } else {
             log.warn("Socket信令加密密码算法不支持的算法：{}", socketProperties.getEncrypt());

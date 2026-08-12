@@ -18,6 +18,11 @@
 
     <dependencies>
         <dependency>
+            <groupId>javax.sip</groupId>
+            <artifactId>jain-sip-ri</artifactId>
+            <version>1.3.0-91</version>
+        </dependency>
+        <dependency>
             <groupId>com.acgist</groupId>
             <artifactId>taoyao-boot</artifactId>
         </dependency>
@@ -28,6 +33,10 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.dataformat</groupId>
+            <artifactId>jackson-dataformat-xml</artifactId>
         </dependency>
     </dependencies>
 

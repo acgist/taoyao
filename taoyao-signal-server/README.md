@@ -42,4 +42,22 @@ c=* (connection information - optional if included at session-level)  # 连接�
 b=* (zero or more bandwidth information lines)                        # 零或多个带宽信息
 k=* (encryption key)                                                  # 加密密钥
 a=* (zero or more media attribute lines)                              # 零或多个会话属性
-````
+```
+
+## GB
+
+#### DeviceId
+
+D1  ‑ D6	 6 位 行政区划编码
+D7  ‑ D10	 4 位 设备类型编码
+D11 ‑ D20	10 位 设备序号
+
+1300 SIP 平台/上级平台
+1301 IPC 网络摄像机
+1302 NVR 硬盘录像机
+1303 DVR 模拟录像机
+1304 编码器
+1305 解码器
+1306 报警主机
+1307 门禁
+1308 显示器
