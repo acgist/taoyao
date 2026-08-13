@@ -94,7 +94,7 @@ jobs:
         with:
           java-version: 17
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
+        uses: android-actions/setup-android@v4
       - name: Build with Gradle
         if: runner.os != 'windows'
         run: |
