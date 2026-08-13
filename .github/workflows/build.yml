@@ -116,10 +116,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Setup CMake
-        uses: jwlawson/actions-setup-cmake@v2
+      - name: Checkout media-server
+        uses: actions/checkout@v3
         with:
-          cmake-version: 3.28.x
+          repository: ireader/media-server
+          path: ./taoyao-gb-media-server/media-server
+          ref: '5b9d159a7e3a029852407009d388ccd298627dcf'
       - name: Setup MSVC DEV CMD
         if: runner.os == 'windows'
         uses: ilammy/msvc-dev-cmd@v1
