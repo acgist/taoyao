@@ -107,4 +107,25 @@ jobs:
         run: |
           cd ./taoyao-client-android/taoyao
           ./gradlew.bat --no-daemon assembleRelease
-          
+  taoyao-gb-media-server:
+    name: Build taoyao gb media server
+    strategy:
+      matrix:
+        runs-on: [ ubuntu-latest, windows-latest ]
+    runs-on: ${{ matrix.runs-on }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+      - name: Setup CMake
+        uses: jwlawson/actions-setup-cmake@v2
+        with:
+          cmake-version: 3.28.x
+      - name: Setup MSVC DEV CMD
+        if: runner.os == 'windows'
+        uses: ilammy/msvc-dev-cmd@v1
+      - name: Build with CMake
+        shell: bash
+        run: |
+          mkdir -p build && cd build
+          cmake .. -DCMAKE_BUILD_TYPE=Release
+          cmake --build . --config Release
