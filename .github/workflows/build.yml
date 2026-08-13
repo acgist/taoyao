@@ -29,11 +29,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Use Node.js 16.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v3
         with:
           cache: npm
-          node-version:  16.x
+          node-version:  22.x
           cache-dependency-path: ./taoyao-client-web
       - name: Build with NodeJS
         run: |
@@ -49,11 +49,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-      - name: Use Node.js 16.x
+      - name: Use Node.js 22.x
         uses: actions/setup-node@v3
         with:
           cache: npm
-          node-version:  16.x
+          node-version:  22.x
           cache-dependency-path: ./taoyao-client-media
       - name: Build with NodeJS
         run: |
