@@ -21,6 +21,7 @@ import javax.sip.ObjectInUseException;
 import javax.sip.PeerUnavailableException;
 import javax.sip.RequestEvent;
 import javax.sip.ResponseEvent;
+import javax.sip.ServerTransaction;
 import javax.sip.SipException;
 import javax.sip.SipFactory;
 import javax.sip.SipListener;
@@ -86,10 +87,6 @@ import lombok.extern.slf4j.Slf4j;
  * 拉去终端
  * invite -> client -> invite response -> server -> ack -> client
  * bye    -> client -> bye response    -> server
- * 
- * TODO dialog 保活 re-invite 机制
- * TODO 上下级平台测试
- * 
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -158,6 +155,7 @@ public class GbServer implements SipListener, IGbServer {
 
         private void invite(com.acgist.taoyao.boot.model.Message message) {
             final Map<String, Object> map = new HashMap<>(message.body());
+            // 只生产不消费
             map.put(Constant.SUBSCRIBE_TYPE, "NONE");
             this.gbServer.protocolManager.execute(this.gbServer.roomEnterProtocol.build(map).toString(), this);
         }
@@ -201,13 +199,19 @@ public class GbServer implements SipListener, IGbServer {
         }
 
         private void expel(com.acgist.taoyao.boot.model.Message message) {
+            final Map<String, Object> map = message.body();
+            final String roomId = map.get(Constant.ROOM_ID).toString();
             this.gbServer.protocolManager.execute(this.gbServer.roomLeaveProtocol.build(message.body()).toString(), this);
-            this.gbServer.closeMedia(this);
+            try {
+                this.gbServer.byeToClient(this, this.gbServer.media.get(roomId));
+            } catch (SipException | ParseException | InvalidArgumentException e) {
+                log.error("关闭媒体异常", e);
+            }
         }
 
         @Override
         public void close() throws Exception {
-            this.gbServer.closeMedia(this);
+            // -
         }
 
     }
@@ -221,12 +225,12 @@ public class GbServer implements SipListener, IGbServer {
         private final String  localTag; // 本地TAG
         private final String  clientId; // 目标设备ID
         private final boolean local;    // 是否本地媒体
+        // 事务信息
+        private String   branch; // 分支
         // 会话信息
         private String   clientTag; // 目标设备TAG
         // 服务信息：如果上级邀请存在下面信息
-        private String   serverId;  // 上级服务ID
         private String   serverTag; // 上级服务TAG=本地TAG
-        private Request  request;   // 请求
         // 媒体信息
         private Integer  localPort;  // 本地服务端口
         private String   serverHost; // 目标主机
@@ -242,10 +246,15 @@ public class GbServer implements SipListener, IGbServer {
         // 本地信息
         private String   roomId;       // 通道ID
         private String   transportId;  // 通道ID
+        // 心跳信息
+        private LocalDateTime     lastActiveTime = LocalDateTime.now(); // 最后心跳时间
+        // 服务事务
+        private Request           serverRequest;
+        private ServerTransaction serverTransaction;
 
     }
 
-    public static final record CallIdWrapper(String callId, String localTag, String remoteTag, Long seqNum) { }
+    public static final record CallIdWrapper(String callId, String localTag, String remoteTag, String branch, Long seqNum) { }
     public static final record RequestWrapper(Request request, SipURI requestUri, SipURI fromUri, SipURI toUri, CallIdWrapper callId) { }
     public static final record MessageWrapper(String callId, String method, LocalDateTime time) { }
 
@@ -304,14 +313,14 @@ public class GbServer implements SipListener, IGbServer {
             try {
                 if (!v.isConnected()) {
                     log.warn("服务没有连接：{}", v.getDeviceId());
-                    this.registerToServer(v, this.gbProperties.getExpires());
+                    this.registerToServer(v);
                 } else if (v.checkActiveTime(now, this.gbProperties.getTimeout())) {
                     log.warn("服务心跳超时：{}", v.getDeviceId());
                     v.setConnected(false);
-                    this.registerToServer(v, this.gbProperties.getExpires());
+                    this.registerToServer(v);
                 } else if (Duration.between(v.getRegisterTime(), now).getSeconds() >= 1800) {
                     // 重新注册
-                    this.registerToServer(v, this.gbProperties.getExpires());
+                    this.registerToServer(v);
                 } else {
                     // 心跳保活
                     this.keepaliveToServer(v);
@@ -384,7 +393,7 @@ public class GbServer implements SipListener, IGbServer {
             gbDeviceServer.setPassword(v.password());
             this.servers.put(v.deviceId(), gbDeviceServer);
             try {
-                this.registerToServer(gbDeviceServer, this.gbProperties.getExpires());
+                this.registerToServer(gbDeviceServer);
             } catch (SipException | ParseException | InvalidArgumentException e) {
                 log.error("注册服务异常：{}", gbDeviceServer.getDeviceId(), e);
             }
@@ -400,15 +409,8 @@ public class GbServer implements SipListener, IGbServer {
         final ToHeader    toHeader    = (ToHeader)    request.getHeader(ToHeader.NAME);
         final URI         from        = fromHeader.getAddress().getURI();
         final URI         to          = toHeader.getAddress().getURI();
-        if (!Request.REGISTER.equals(method)) {
-            final GbDeviceClient gbDeviceClient = this.getGbDeviceClient(from);
-            final GbDeviceServer gbDeviceServer = this.getGbDeviceServer(from);
-            if (gbDeviceClient == null && gbDeviceServer == null) {
-                log.warn("消息来源没有注册：{}", from);
-                return;
-            }
-        }
         try {
+            log.info("收到SIP请求：{}", method);
             switch (method) {
                 case Request.REGISTER  -> this.register (sipProvider, from, to, event, request);
                 case Request.SUBSCRIBE -> this.subscribe(sipProvider, from, to, event, request);
@@ -416,6 +418,7 @@ public class GbServer implements SipListener, IGbServer {
                 case Request.INVITE    -> this.invite   (sipProvider, from, to, event, request);
                 case Request.CANCEL    -> this.cancel   (sipProvider, from, to, event, request);
                 case Request.NOTIFY    -> this.notify   (sipProvider, from, to, event, request);
+                case Request.INFO      -> this.info     (sipProvider, from, to, event, request);
                 case Request.ACK       -> this.ack      (sipProvider, from, to, event, request);
                 case Request.BYE       -> this.bye      (sipProvider, from, to, event, request);
                 default                -> log.info("没有适配SIP请求：{}", method);
@@ -436,6 +439,7 @@ public class GbServer implements SipListener, IGbServer {
         final URI         from        = fromHeader.getAddress().getURI();
         final URI         to          = toHeader.getAddress().getURI();
         try {
+            log.info("收到SIP响应：{}", method);
             switch (method) {
                 case Request.REGISTER  -> this.register (sipProvider, from, to, event, response);
                 case Request.SUBSCRIBE -> this.subscribe(sipProvider, from, to, event, response);
@@ -443,6 +447,7 @@ public class GbServer implements SipListener, IGbServer {
                 case Request.INVITE    -> this.invite   (sipProvider, from, to, event, response);
                 case Request.CANCEL    -> this.cancel   (sipProvider, from, to, event, response);
                 case Request.NOTIFY    -> this.notify   (sipProvider, from, to, event, response);
+                case Request.INFO      -> this.info     (sipProvider, from, to, event, response);
                 case Request.ACK       -> this.ack      (sipProvider, from, to, event, response);
                 case Request.BYE       -> this.bye      (sipProvider, from, to, event, response);
                 default                -> log.info("没有适配SIP响应：{}", method);
@@ -475,6 +480,19 @@ public class GbServer implements SipListener, IGbServer {
     @Override
     public void processTransactionTerminated(TransactionTerminatedEvent event) {
         log.info("事务终止：{} - {} - {}", event.getSource(), event.getClientTransaction(), event.getServerTransaction());
+        Dialog dialog = null;
+        if (event.getClientTransaction() != null) {
+            dialog = event.getClientTransaction().getDialog();
+        }
+        if (event.getServerTransaction() != null) {
+            dialog = event.getServerTransaction().getDialog();
+        }
+        if (dialog == null) {
+            return;
+        }
+        log.info("对话终止：{} - {} - {}", dialog.getDialogId(), dialog.getLocalTag(), dialog.getRemoteTag());
+        this.closeMedia(dialog.getCallId().getCallId());
+        dialog.delete();
     }
 
     private SipProvider getSipProvider(String transport) {
@@ -524,6 +542,7 @@ public class GbServer implements SipListener, IGbServer {
             UUID.randomUUID().toString(),
             UUID.randomUUID().toString(),
             null,
+            UUID.randomUUID().toString(),
             System.currentTimeMillis() / 1000L
         );
     }
@@ -533,8 +552,28 @@ public class GbServer implements SipListener, IGbServer {
             callId,
             localTag,
             remoteTag,
+            UUID.randomUUID().toString(),
             System.currentTimeMillis() / 1000L
         );
+    }
+
+    private ContactHeader getContact() throws ParseException, InvalidArgumentException {
+        final ContactHeader contact = this.headerFactory.createContactHeader(this.addressFactory.createAddress(this.createSipURI(
+            this.gbProperties.getHost(),
+            this.gbProperties.getPort(),
+            this.gbProperties.getTransport(),
+            this.gbProperties.getDeviceId()    
+        )));
+        contact.setExpires(this.gbProperties.getExpires());
+        return contact;
+    }
+
+    private void setToTag(String tag, Response response) throws ParseException {
+        final ToHeader toHeader = (ToHeader) response.getHeader(ToHeader.NAME);
+        if (toHeader == null) {
+            return;
+        }
+        toHeader.setTag(tag);
     }
 
     private GbDeviceClient getGbDeviceClient(URI request, URI uri, SubjectHeader subjectHeader) {
@@ -706,21 +745,19 @@ public class GbServer implements SipListener, IGbServer {
             this.headerFactory.createCSeqHeader(callId.seqNum, method),
             this.headerFactory.createFromHeader(this.addressFactory.createAddress(fromUri), callId.localTag),
             this.headerFactory.createToHeader(this.addressFactory.createAddress(toUri), callId.remoteTag),
-            List.of(this.headerFactory.createViaHeader(from.getHost(), from.getPort(), from.getTransport(), UUID.randomUUID().toString())),
+            List.of(this.headerFactory.createViaHeader(from.getHost(), from.getPort(), from.getTransport(), callId.branch)),
             this.headerFactory.createMaxForwardsHeader(70)
         );
         return new RequestWrapper(request, requestUri, fromUri, toUri, callId);
     }
 
-    private void registerToServer(GbDeviceServer server, Integer expires) throws SipException, ParseException, InvalidArgumentException {
+    private void registerToServer(GbDeviceServer server) throws SipException, ParseException, InvalidArgumentException {
         log.info("注册上级：{} - {}:{}", server.getDeviceId(), server.getHost(), server.getPort());
         final SipProvider sipProvider = this.getSipProvider(server.getTransport());
         final RequestWrapper wrapper = this.createRequest(Request.REGISTER, this.getCallId(), this.gbProperties, server);
         final Request request = wrapper.request;
-        final ContactHeader contact = this.headerFactory.createContactHeader(this.addressFactory.createAddress(wrapper.fromUri()));
-        contact.setExpires(expires);
-        request.addHeader(contact);
-        request.addHeader(this.headerFactory.createExpiresHeader(expires));
+        request.addHeader(this.getContact());
+        request.setExpires(this.headerFactory.createExpiresHeader(this.gbProperties.getExpires()));
         if(StringUtils.isNotEmpty(server.getRealm()) && StringUtils.isNotEmpty(server.getNonce())) {
             final String response = this.authorization(
                 server.getUsername(),
@@ -977,7 +1014,6 @@ public class GbServer implements SipListener, IGbServer {
             log.warn("邀请设备失败（没有端口）：{} - {}", client.deviceId, port);
             return null;
         }
-        gbMedia.setLocalPort(port);
         final CallIdWrapper callId = this.getCallId(gbMedia.getCallId(), gbMedia.getLocalTag(), gbMedia.getClientTag());
         final SipProvider sipProvider = this.getSipProvider(client.getTransport());
         final RequestWrapper wrapper = this.createRequest(Request.INVITE, callId, this.gbProperties, client);
@@ -988,11 +1024,13 @@ public class GbServer implements SipListener, IGbServer {
         log.debug("设备请求SDP:\n{}", sdp);
         request.setContent(sdp, this.headerFactory.createContentTypeHeader("Application", "SDP"));
         sipProvider.sendRequest(request);
+        gbMedia.setBranch(callId.branch);
+        gbMedia.setLocalPort(port);
         this.media.put(gbMedia.callId, gbMedia);
         if (gbMedia.isLocal()) {
             log.info("打开媒体：{} - {}", gbMedia.clientId, port);
         } else {
-            log.info("打开媒体：{} -> {}={}:{} - {}", gbMedia.clientId, gbMedia.serverId, gbMedia.serverHost, gbMedia.serverPort, port);
+            log.info("打开媒体：{} -> {}={}:{} - {}", gbMedia.clientId, gbMedia.serverHost, gbMedia.serverPort, port);
         }
         return gbMedia;
     }
@@ -1007,14 +1045,14 @@ public class GbServer implements SipListener, IGbServer {
         sipProvider.sendRequest(wrapper.request);
     }
 
-    private void ackToClient(GbDeviceClient client, GbMedia gbMedia) throws SipException, ParseException, InvalidArgumentException {
+    private void ackToClient(GbDeviceClient client, GbMedia gbMedia, Dialog dialog, Response response) throws SipException, ParseException, InvalidArgumentException {
         if (client == null || gbMedia == null) {
             return;
         }
-        final SipProvider sipProvider = this.getSipProvider(client.getTransport());
-        final CallIdWrapper callId = this.getCallId(gbMedia.getCallId(), gbMedia.getLocalTag(), gbMedia.getClientTag());
-        final RequestWrapper wrapper = this.createRequest(Request.ACK, callId, this.gbProperties, client);
-        sipProvider.sendRequest(wrapper.request);
+        final Request request = dialog.createAck(System.currentTimeMillis() / 1000);
+        request.setHeader(this.getContact());
+        request.setRequestURI(this.createSipURI(client.getHost(), client.getPort(), client.getTransport(), client.getDeviceId()));
+        dialog.sendAck(request);
     }
 
     private void byeToClient(GbDeviceClient client, GbMedia gbMedia) throws SipException, ParseException, InvalidArgumentException {
@@ -1040,6 +1078,8 @@ public class GbServer implements SipListener, IGbServer {
         ) {
             log.info("设备取消注册：{}", from);
             this.setClientStatus(this.getGbDeviceClient(from), "OFF");
+            final Response response = this.messageFactory.createResponse(Response.OK, request);
+            sipProvider.sendResponse(response);
             return;
         }
         final AuthorizationHeader authorizationHeader = (AuthorizationHeader) request.getHeader(AuthorizationHeader.NAME);
@@ -1090,7 +1130,7 @@ public class GbServer implements SipListener, IGbServer {
             gbDeviceServer.setRealm(wwwAuthenticateHeader.getRealm());
             gbDeviceServer.setNonce(wwwAuthenticateHeader.getNonce());
             log.info("服务注册确认：{}", to);
-            this.registerToServer(gbDeviceServer, this.gbProperties.getExpires());
+            this.registerToServer(gbDeviceServer);
         } else {
             log.warn("服务注册失败：{} - {}", response.getStatusCode(), to);
         }
@@ -1171,8 +1211,7 @@ public class GbServer implements SipListener, IGbServer {
 
     private synchronized void invite(SipProvider sipProvider, URI from, URI to, RequestEvent event, Request request) throws SipException, ParseException, InvalidArgumentException {
         final GbDeviceClient gbDeviceClient = this.getGbDeviceClient(request.getRequestURI(), to, (SubjectHeader) request.getHeader(SubjectHeader.NAME));
-        final GbDeviceServer gbDeviceServer = this.getGbDeviceServer(from);
-        if (gbDeviceClient == null || gbDeviceServer == null) {
+        if (gbDeviceClient == null) {
             log.warn("邀请设备失败（无效媒体）：{} - {}", from, to);
             final Response response = this.messageFactory.createResponse(Response.SERVER_INTERNAL_ERROR, request);
             sipProvider.sendResponse(response);
@@ -1193,71 +1232,100 @@ public class GbServer implements SipListener, IGbServer {
             sipProvider.sendResponse(response);
             return;
         }
+        final String callId;
+        final String serverTag;
+        final CallIdHeader callIdHeader;
         final Dialog dialog = event.getDialog();
-        final CallIdHeader callIdHeader = dialog.getCallId();
+        final FromHeader fromHeader = (FromHeader) request.getHeader(FromHeader.NAME);
+        if (dialog == null) {
+            callIdHeader = (CallIdHeader) request.getHeader(CallIdHeader.NAME);
+            callId = callIdHeader.getCallId();
+            serverTag = fromHeader.getTag();
+        } else {
+            callIdHeader = dialog.getCallId();
+            callId = callIdHeader.getCallId();
+            serverTag = dialog.getRemoteTag();
+        }
         // 直接使用上级CallId、RemoteTag
-        GbMedia gbMedia = this.createMedia(callIdHeader.getCallId(), dialog.getRemoteTag(), gbDeviceClient.getDeviceId(), false);
-        gbMedia.setServerId(gbDeviceServer.getDeviceId());
-        gbMedia.setServerTag(dialog.getRemoteTag());
+        GbMedia gbMedia = this.createMedia(callId, UUID.randomUUID().toString(), gbDeviceClient.getDeviceId(), false);
+        gbMedia.setServerTag(serverTag);
         gbMedia.setServerHost(host);
         gbMedia.setServerPort(port);
-        gbMedia.setRequest(request);
         gbMedia = this.inviteToClient(gbDeviceClient, gbMedia);
         if (gbMedia == null) {
             final Response response = this.messageFactory.createResponse(Response.SERVER_INTERNAL_ERROR, request);
             sipProvider.sendResponse(response);
         } else {
-            final Response response = this.messageFactory.createResponse(Response.TRYING, request);
-            sipProvider.sendResponse(response);
+            ServerTransaction serverTransaction = event.getServerTransaction();
+            if (serverTransaction == null) {
+                serverTransaction = sipProvider.getNewServerTransaction(request);
+            }
+            gbMedia.setServerRequest(request);
+            gbMedia.setServerTransaction(serverTransaction);
+            // trying
+            final Response tryingResponse = this.messageFactory.createResponse(Response.TRYING, request);
+            this.setToTag(gbMedia.getLocalTag(), tryingResponse);
+            serverTransaction.sendResponse(tryingResponse);
+            // ringing
+            final Response ringingResponse = this.messageFactory.createResponse(Response.RINGING, request);
+            this.setToTag(gbMedia.getLocalTag(), ringingResponse);
+            serverTransaction.sendResponse(ringingResponse);
         }
     }
 
     private synchronized void invite(SipProvider sipProvider, URI from, URI to, ResponseEvent event, Response response) throws SipException, ParseException, InvalidArgumentException {
         final int statusCode = response.getStatusCode();
-        if (statusCode == Response.TRYING) {
+        if (statusCode == Response.TRYING || statusCode == Response.RINGING) {
             return;
         }
-        final Dialog dialog = event.getDialog();
+        final String callId;
+        final String clientTag;
         final CallIdHeader callIdHeader;
+        final Dialog dialog = event.getDialog();
+        final ToHeader toHeader = (ToHeader) response.getHeader(ToHeader.NAME);
         if (dialog == null) {
             callIdHeader = (CallIdHeader) response.getHeader(CallIdHeader.NAME);
+            callId = callIdHeader.getCallId();
+            clientTag = toHeader.getTag();
         } else {
             callIdHeader = dialog.getCallId();
+            callId = callIdHeader.getCallId();
+            clientTag = dialog.getRemoteTag();
         }
-        final GbMedia gbMedia = this.media.get(callIdHeader.getCallId());
+        final GbMedia gbMedia = this.media.get(callId);
         if (gbMedia == null) {
-            log.warn("邀请设备失败（无效媒体）：{}", callIdHeader.getCallId());
+            log.warn("邀请设备失败（无效媒体）：{}", callId);
             return;
         }
         final GbDeviceClient gbDeviceClient = this.getGbDeviceClient(to);
         if (gbDeviceClient == null) {
-            log.warn("邀请设备失败（设备无效）：{}", callIdHeader.getCallId());
-            this.closeMedia(callIdHeader.getCallId());
+            log.warn("邀请设备失败（设备无效）：{}", callId);
+            this.closeMedia(callId);
             if (!gbMedia.isLocal()) {
-                final Response serverResponse = this.messageFactory.createResponse(statusCode, gbMedia.getRequest());
-                sipProvider.sendResponse(serverResponse);
+                final Response serverResponse = this.messageFactory.createResponse(Response.SERVER_INTERNAL_ERROR, gbMedia.getServerRequest());
+                gbMedia.getServerTransaction().sendResponse(serverResponse);
             }
         }
         if (statusCode != Response.OK) {
-            log.warn("邀请设备失败（响应失败）：{} - {}", callIdHeader.getCallId(), statusCode);
-            this.closeMedia(callIdHeader.getCallId());
+            log.warn("邀请设备失败（响应失败）：{} - {}", callId, statusCode);
+            this.closeMedia(callId);
             if (!gbMedia.isLocal()) {
-                final Response serverResponse = this.messageFactory.createResponse(statusCode, gbMedia.getRequest());
-                sipProvider.sendResponse(serverResponse);
+                final Response serverResponse = this.messageFactory.createResponse(statusCode, gbMedia.getServerRequest());
+                gbMedia.getServerTransaction().sendResponse(serverResponse);
             }
             return;
         }
         if(response.getRawContent() == null) {
-            log.warn("邀请设备失败（没有响应）：{}", callIdHeader.getCallId());
+            log.warn("邀请设备失败（没有响应）：{}", callId);
             this.closeMedia(gbMedia.getCallId());
             if (!gbMedia.isLocal()) {
-                final Response serverResponse = this.messageFactory.createResponse(Response.SERVER_INTERNAL_ERROR, gbMedia.getRequest());
-                sipProvider.sendResponse(serverResponse);
+                final Response serverResponse = this.messageFactory.createResponse(Response.SERVER_INTERNAL_ERROR, gbMedia.getServerRequest());
+                gbMedia.getServerTransaction().sendResponse(serverResponse);
             }
             return;
         }
         if (gbMedia.isRecv()) {
-            log.info("邀请设备失败（已经接受）：{}", callIdHeader.getCallId());
+            log.info("邀请设备失败（已经接受）：{}", callId);
             return;
         }
         gbMedia.setRecv(true);
@@ -1266,56 +1334,20 @@ public class GbServer implements SipListener, IGbServer {
         final Long srcSsrc = GbSDP.getSsrc(content);
         gbMedia.setSrcSsrc(srcSsrc);
         gbMedia.setDstSsrc(srcSsrc);
-        gbMedia.setClientTag(dialog.getRemoteTag());
-        this.ackToClient(gbDeviceClient, gbMedia);
+        gbMedia.setClientTag(clientTag);
+        this.ackToClient(gbDeviceClient, gbMedia, dialog, response);
         // 处理媒体
         if (gbMedia.isLocal()) {
             if (gbMedia.isSend()) {
-                log.info("媒体已经发送：{}", callIdHeader.getCallId());
+                log.info("媒体已经发送：{}", callId);
                 return;
             }
             log.info("发送媒体：{} - {}->{}:{}", gbMedia.getCallId(), gbMedia.getLocalPort(), gbMedia.getServerHost(), gbMedia.getServerPort());
             gbMedia.setSend(true);
             // 生成音频
-            this.protocolManager.execute(this.mediaProduceProtocol.build(Map.of(
-                "kind"         , "audio",
-                "roomId"       , gbMedia.getRoomId(),
-                "transportId"  , gbMedia.getTransportId(),
-                "appData"      , Map.of(),
-                "rtpParameters", Map.of(
-                    "codecs"   , List.of(Map.of(
-                        "mimeType"   , "audio/pcma",
-                        "channels"   , 1,
-                        "clockRate"  , 8000,
-                        "payloadType", 8
-                    )),
-                    "encodings", List.of(Map.of(
-                        "ssrc" , gbMedia.getAudioSsrc()
-                    ))
-                )
-            )).toString(), gbDeviceClient);
+            this.protocolManager.execute(this.mediaProduceProtocol.build(GbSDP.getAudioSDP(gbMedia)).toString(), gbDeviceClient);
             // 生成视频
-            this.protocolManager.execute(this.mediaProduceProtocol.build(Map.of(
-                "kind"         , "video",
-                "roomId"       , gbMedia.getRoomId(),
-                "transportId"  , gbMedia.getTransportId(),
-                "appData"      , Map.of(),
-                "rtpParameters", Map.of(
-                    "codecs"   , List.of(Map.of(
-                        "mimeType"    , "video/h264",
-                        "clockRate"   , 90000,
-                        "payloadType" , 107,
-                        "parameters"  , Map.of(
-                            "packetization-mode", 1,
-                            "profile-level-id"  , "42e01f"
-                        ),
-                        "rtcpFeedback", List.of()
-                    )),
-                    "encodings", List.of(Map.of(
-                        "ssrc" , gbMedia.getVideoSsrc()
-                    ))
-                )
-            )).toString(), gbDeviceClient);
+            this.protocolManager.execute(this.mediaProduceProtocol.build(GbSDP.getVideoSDP(gbMedia)).toString(), gbDeviceClient);
             // 开始发送媒体
             GbMediaServer.send(
                 gbMedia.getCallId(),
@@ -1326,31 +1358,18 @@ public class GbServer implements SipListener, IGbServer {
                 gbMedia.getVideoSsrc()
             );
         } else {
-            final Response serverResponse = this.messageFactory.createResponse(Response.OK, gbMedia.getRequest());
+            final Response serverResponse = this.messageFactory.createResponse(Response.OK, gbMedia.getServerRequest());
             final String sdp = GbSDP.sendSDP(this.gbProperties.getDeviceId(), this.gbProperties.getHost(), gbMedia.getLocalPort());
             log.debug("服务响应SDP:\n{}", sdp);
             serverResponse.setContent(sdp, this.headerFactory.createContentTypeHeader("Application", "SDP"));
-            sipProvider.sendResponse(serverResponse);
+            this.setToTag(gbMedia.getLocalTag(), serverResponse);
+            serverResponse.setHeader(this.getContact());
+            gbMedia.getServerTransaction().sendResponse(serverResponse);
         }
     }
 
     private void cancel(SipProvider sipProvider, URI from, URI to, RequestEvent event, Request request) throws SipException, ParseException, InvalidArgumentException {
-        final GbDeviceClient gbDeviceClient = this.getGbDeviceClient(request.getRequestURI(), to);
-        final GbDeviceServer gbDeviceServer = this.getGbDeviceServer(from);
-        if (gbDeviceClient == null || gbDeviceServer == null) {
-            log.warn("邀请设备取消失败（无效设备）：{} - {}", from, to);
-            return;
-        }
-        final Dialog dialog = event.getDialog();
-        final CallIdHeader callIdHeader = dialog.getCallId();
-        final GbMedia gbMedia = this.media.get(callIdHeader.getCallId());
-        if (gbMedia == null) {
-            log.warn("邀请设备取消失败（无效媒体）：{}", callIdHeader.getCallId());
-            return;
-        }
-        this.cancelToClient(gbDeviceClient, gbMedia);
-        final Response response = this.messageFactory.createResponse(Response.OK, request);
-        sipProvider.sendResponse(response);
+        // -
     }
 
     private void cancel(SipProvider sipProvider, URI from, URI to, ResponseEvent event, Response response) throws SipException, ParseException, InvalidArgumentException {
@@ -1365,15 +1384,56 @@ public class GbServer implements SipListener, IGbServer {
         // -
     }
 
+    private void info(SipProvider sipProvider, URI from, URI to, RequestEvent event, Request request) throws SipException, ParseException, InvalidArgumentException {
+        final Response response = this.messageFactory.createResponse(Response.OK, request);
+        sipProvider.sendResponse(response);
+        if(request.getRawContent() == null) {
+            log.warn("处理消息无效：{}", from);
+            return;
+        }
+        final String content = new String(request.getRawContent());
+        final Message message = GbXML.message(content);
+        final MessageType messageType = GbXML.messageType(content);
+        if (message == null || messageType == null) {
+            log.warn("消息解析失败：{}", content);
+            return;
+        }
+        final String cmdType = message.getCmdType();
+        final CallIdHeader callIdHeader;
+        final Dialog dialog = event.getDialog();
+        if (dialog == null) {
+            callIdHeader = (CallIdHeader) request.getHeader(CallIdHeader.NAME);
+        } else {
+            callIdHeader = dialog.getCallId();
+        }
+        if ("Keepalive".equals(cmdType)) {
+            final GbMedia gbMedia = this.media.get(callIdHeader.getCallId());
+            if (gbMedia == null) {
+                log.warn("媒体保活失败（无效媒体）：{}", callIdHeader.getCallId());
+                return;
+            }
+        } else {
+            log.warn("没有适配消息类型：{} - {}", messageType, cmdType);
+        }
+    }
+
+    private void info(SipProvider sipProvider, URI from, URI to, ResponseEvent event, Response response) throws SipException, ParseException, InvalidArgumentException {
+        // -
+    }
+
     private void ack(SipProvider sipProvider, URI from, URI to, RequestEvent event, Request request) throws SipException, ParseException, InvalidArgumentException {
         final GbDeviceClient gbDeviceClient = this.getGbDeviceClient(request.getRequestURI(), to);
-        final GbDeviceServer gbDeviceServer = this.getGbDeviceServer(from);
-        if (gbDeviceClient == null || gbDeviceServer == null) {
+        if (gbDeviceClient == null) {
             log.warn("邀请设备确认失败（无效设备）：{} - {}", from, to);
             return;
         }
+        final CallIdHeader callIdHeader;
         final Dialog dialog = event.getDialog();
-        final CallIdHeader callIdHeader = dialog.getCallId();
+        if (dialog == null) {
+            callIdHeader = (CallIdHeader) request.getHeader(CallIdHeader.NAME);
+        } else {
+            callIdHeader = dialog.getCallId();
+        }
         final GbMedia gbMedia = this.media.get(callIdHeader.getCallId());
         if (gbMedia == null) {
             log.warn("邀请设备确认失败（无效媒体）：{}", callIdHeader.getCallId());
@@ -1400,13 +1460,17 @@ public class GbServer implements SipListener, IGbServer {
 
     private void bye(SipProvider sipProvider, URI from, URI to, RequestEvent event, Request request) throws SipException, ParseException, InvalidArgumentException {
         final GbDeviceClient gbDeviceClient = this.getGbDeviceClient(request.getRequestURI(), to);
-        final GbDeviceServer gbDeviceServer = this.getGbDeviceServer(from);
-        if (gbDeviceClient == null || gbDeviceServer == null) {
+        if (gbDeviceClient == null) {
             log.warn("邀请设备关闭失败（无效设备）：{} - {}", from, to);
             return;
         }
+        final CallIdHeader callIdHeader;
         final Dialog dialog = event.getDialog();
-        final CallIdHeader callIdHeader = dialog.getCallId();
+        if (dialog == null) {
+            callIdHeader = (CallIdHeader) request.getHeader(CallIdHeader.NAME);
+        } else {
+            callIdHeader = dialog.getCallId();
+        }
         final GbMedia gbMedia = this.media.get(callIdHeader.getCallId());
         if (gbMedia == null) {
             log.warn("邀请设备关闭失败（无效媒体）：{}", callIdHeader.getCallId());
@@ -1414,7 +1478,11 @@ public class GbServer implements SipListener, IGbServer {
         }
         this.byeToClient(gbDeviceClient, gbMedia);
         final Response response = this.messageFactory.createResponse(Response.OK, request);
-        sipProvider.sendResponse(response);
+        if (event.getServerTransaction() != null) {
+            event.getServerTransaction().sendResponse(response);
+        } else {
+            sipProvider.sendResponse(response);
+        }
     }
 
     private void bye(SipProvider sipProvider, URI from, URI to, ResponseEvent event, Response response) throws SipException, ParseException, InvalidArgumentException {

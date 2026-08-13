@@ -193,6 +193,16 @@ taoyao:
   # GB信令
   gb:
     enabled: true
+    # host: 192.168.1.100
+    # jni-lib: D:/gitee/taoyao/taoyao-gb-media-server/build/Release/taoyao-gb-media-server.dll
+    # server:
+    #   - transport: UDP
+    #     host: 192.168.1.200
+    #     port: 5060
+    #     domain-id: 4101050000
+    #     device-id: 41010500002000000001
+    #     username: admin
+    #     password: 123456
   # Socket信令
   socket:
     enabled: true

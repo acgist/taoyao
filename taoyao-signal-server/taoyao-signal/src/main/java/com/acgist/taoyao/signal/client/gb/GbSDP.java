@@ -1,8 +1,12 @@
 package com.acgist.taoyao.signal.client.gb;
 
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang3.math.NumberUtils;
+
+import com.acgist.taoyao.signal.client.gb.GbServer.GbMedia;
 
 public class GbSDP {
 
@@ -78,6 +82,50 @@ public class GbSDP {
             host,
             host,
             port
+        );
+    }
+
+    public static final Map<String, Object> getAudioSDP(GbMedia gbMedia) {
+        return Map.of(
+            "kind"         , "audio",
+            "roomId"       , gbMedia.getRoomId(),
+            "transportId"  , gbMedia.getTransportId(),
+            "appData"      , Map.of(),
+            "rtpParameters", Map.of(
+                "codecs"   , List.of(Map.of(
+                    "mimeType"   , "audio/pcma",
+                    "channels"   , 1,
+                    "clockRate"  , 8000,
+                    "payloadType", 8
+                )),
+                "encodings", List.of(Map.of(
+                    "ssrc" , gbMedia.getAudioSsrc()
+                ))
+            )
+        );
+    }
+
+    public static final Map<String, Object> getVideoSDP(GbMedia gbMedia) {
+        return Map.of(
+            "kind"         , "video",
+            "roomId"       , gbMedia.getRoomId(),
+            "transportId"  , gbMedia.getTransportId(),
+            "appData"      , Map.of(),
+            "rtpParameters", Map.of(
+                "codecs"   , List.of(Map.of(
+                    "mimeType"    , "video/h264",
+                    "clockRate"   , 90000,
+                    "payloadType" , 107,
+                    "parameters"  , Map.of(
+                        "packetization-mode", 1,
+                        "profile-level-id"  , "42e01f"
+                    ),
+                    "rtcpFeedback", List.of()
+                )),
+                "encodings", List.of(Map.of(
+                    "ssrc" , gbMedia.getVideoSsrc()
+                ))
+            )
         );
     }
 

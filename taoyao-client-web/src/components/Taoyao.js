@@ -2035,7 +2035,7 @@ class Taoyao extends RemoteClient {
       console.debug("已经存在数据生产者");
       return;
     }
-    if(!this.dataProduce) {
+    if(!this.dataProduce || !this.mediasoupDevice.sctpCapabilities) {
       console.debug("不能生产数据");
       return;
     }

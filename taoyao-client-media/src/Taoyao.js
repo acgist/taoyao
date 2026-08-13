@@ -268,8 +268,9 @@ class Room {
     this.mediasoupRouter = mediasoupRouter;
     this.audioLevelObserver = audioLevelObserver;
     this.activeSpeakerObserver = activeSpeakerObserver;
-    this.handleAudioLevelObserver();
-    this.handleActiveSpeakerObserver();
+    // 建议直接通过页面监控音量
+    // this.handleAudioLevelObserver();
+    // this.handleActiveSpeakerObserver();
   }
 
   /**
@@ -320,7 +321,7 @@ class Room {
    * 房间使用情况
    */
   usage() {
-    console.info("房间标识",           this.roomId);
+    console.info("房间标识",          this.roomId);
     console.info("房间媒体通道数量",   this.transports.size);
     console.info("房间媒体生产者数量", this.producers.size);
     console.info("房间媒体消费者数量", this.consumers.size);
