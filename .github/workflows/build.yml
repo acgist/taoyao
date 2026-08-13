@@ -122,6 +122,11 @@ jobs:
           repository: ireader/media-server
           path: ./taoyao-gb-media-server/media-server
           ref: '5b9d159a7e3a029852407009d388ccd298627dcf'
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          java-version: 17
+          distribution: temurin
       - name: Setup MSVC DEV CMD
         if: runner.os == 'windows'
         uses: ilammy/msvc-dev-cmd@v1

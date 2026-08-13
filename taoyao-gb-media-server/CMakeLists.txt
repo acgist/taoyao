@@ -38,20 +38,12 @@ else()
     message(FATAL_ERROR "不支持的系统：${CMAKE_HOST_SYSTEM_NAME}")
 endif()
 
-if(CMAKE_HOST_UNIX)
-set(JDK_PATH "/usr/lib/jvm/java-17-openjdk-amd64")
-set(JVM_LIB ${JDK_PATH}/lib/server/libjvm.so)
-set(JVM_INC ${JDK_PATH}/include ${JDK_PATH}/include/linux)
-elseif(CMAKE_HOST_WIN32)
-set(JDK_PATH C:/develop/java/jdk-17)
-set(JVM_LIB ${JDK_PATH}/lib/jvm.lib)
-set(JVM_INC ${JDK_PATH}/include ${JDK_PATH}/include/win32)
-endif()
+find_package(JNI REQUIRED)
 
 include_directories(
     media-server/librtp/include
     media-server/libmpeg/include
-    ${JVM_INC}
+    ${JNI_INCLUDE_DIRS}
 )
 
 file(GLOB_RECURSE RTP_FILES
@@ -82,7 +74,7 @@ target_link_libraries(
     taoyao-gb-media-server
     taoyao-gb-media-rtp
     taoyao-gb-media-mpeg
-    ${JVM_LIB}
+    ${JNI_LIBRARIES}
 )
 if(CMAKE_HOST_WIN32)
 target_compile_options(taoyao-gb-media-server PRIVATE "/utf-8")
@@ -96,7 +88,7 @@ target_link_libraries(
     taoyao-gb-media-server-test
     taoyao-gb-media-rtp
     taoyao-gb-media-mpeg
-    ${JVM_LIB}
+    ${JNI_LIBRARIES}
 )
 if(CMAKE_HOST_WIN32)
 target_compile_options(taoyao-gb-media-server-test PRIVATE "/utf-8")
