@@ -1035,16 +1035,6 @@ public class GbServer implements SipListener, IGbServer {
         return gbMedia;
     }
 
-    private void cancelToClient(GbDeviceClient client, GbMedia gbMedia) throws SipException, ParseException, InvalidArgumentException {
-        if (client == null || gbMedia == null) {
-            return;
-        }
-        final SipProvider sipProvider = this.getSipProvider(client.getTransport());
-        final CallIdWrapper callId = this.getCallId(gbMedia.getCallId(), gbMedia.getLocalTag(), gbMedia.getClientTag());
-        final RequestWrapper wrapper = this.createRequest(Request.CANCEL, callId, this.gbProperties, client);
-        sipProvider.sendRequest(wrapper.request);
-    }
-
     private void ackToClient(GbDeviceClient client, GbMedia gbMedia, Dialog dialog, Response response) throws SipException, ParseException, InvalidArgumentException {
         if (client == null || gbMedia == null) {
             return;
@@ -1385,36 +1375,7 @@ public class GbServer implements SipListener, IGbServer {
     }
 
     private void info(SipProvider sipProvider, URI from, URI to, RequestEvent event, Request request) throws SipException, ParseException, InvalidArgumentException {
-        final Response response = this.messageFactory.createResponse(Response.OK, request);
-        sipProvider.sendResponse(response);
-        if(request.getRawContent() == null) {
-            log.warn("处理消息无效：{}", from);
-            return;
-        }
-        final String content = new String(request.getRawContent());
-        final Message message = GbXML.message(content);
-        final MessageType messageType = GbXML.messageType(content);
-        if (message == null || messageType == null) {
-            log.warn("消息解析失败：{}", content);
-            return;
-        }
-        final String cmdType = message.getCmdType();
-        final CallIdHeader callIdHeader;
-        final Dialog dialog = event.getDialog();
-        if (dialog == null) {
-            callIdHeader = (CallIdHeader) request.getHeader(CallIdHeader.NAME);
-        } else {
-            callIdHeader = dialog.getCallId();
-        }
-        if ("Keepalive".equals(cmdType)) {
-            final GbMedia gbMedia = this.media.get(callIdHeader.getCallId());
-            if (gbMedia == null) {
-                log.warn("媒体保活失败（无效媒体）：{}", callIdHeader.getCallId());
-                return;
-            }
-        } else {
-            log.warn("没有适配消息类型：{} - {}", messageType, cmdType);
-        }
+        // -
     }
 
     private void info(SipProvider sipProvider, URI from, URI to, ResponseEvent event, Response response) throws SipException, ParseException, InvalidArgumentException {
